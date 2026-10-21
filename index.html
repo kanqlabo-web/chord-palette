@@ -809,10 +809,10 @@ function renderPatEditor(){
 }
 const ARP_ORDER=['piano4','popanti','ballad','whole','sync','sync16','shuffle','shuff2','stacc','rock8','eighth','offbeat','garp','strum','bossa','alberti'];
 for(const k in ARPS){ const m={}; ARPS[k].ev.forEach(e=>{ (m[e[0]]=m[e[0]]||[]).push(e); }); ARPS[k].at=m; }
-const INSTS={spiano:'ピアノ（シンセ）',sepiano:'エレピ（シンセ）',sorgan:'オルガン（シンセ）',sguitar:'ギター（シンセ）',synth:'シンセ',
-  piano:'生ピアノ',epiano:'生エレピ',nylon:'ガットギター',steel:'アコギ',organ:'生オルガン',strings:'ストリングス'};
+const INSTS={spiano:'シンセピアノ',sepiano:'シンセエレピ',sorgan:'シンセオルガン',sguitar:'シンセギター',synth:'シンセ',
+  piano:'ピアノ',epiano:'エレピ',nylon:'ガットギター',steel:'アコギ',organ:'オルガン',strings:'ストリングス'};
 const SYNTH_INST={spiano:'piano',sepiano:'epiano',sorgan:'organ',sguitar:'nylon',synth:'synth'};
-const instShort=()=>INSTS[state.inst].replace('（シンセ）','');
+const instShort=()=>INSTS[state.inst];
 const isSynthInst=()=>state.inst in SYNTH_INST;
 const KITS={synth:'シンセドラム',std:'スタンダード',room:'ルーム',power:'パワー',brush:'ブラシ',elec:'エレクトロ',tr808:'TR-808'};
 const PRESETS=[
