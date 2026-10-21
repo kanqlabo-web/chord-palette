@@ -1521,7 +1521,7 @@ function scheduleStep(g,t){
     if(state.bass && rel===0 && !pushed) chokeBass(tt);
     if(state.bass && !pushed) playBass(bassOf(b),rel,tt,barTones,sd,cell.len-rel,nx.v);
   }
-  visQ.push({t,b:i,s:off,L,beat:g%4===0,abs:playedSteps,g});
+  if(!document.hidden) visQ.push({t,b:i,s:off,L,beat:g%4===0,abs:playedSteps,g});
 }
 function tick(){
   // チュートリアル中は、進行を1周したら止める
@@ -1530,19 +1530,52 @@ function tick(){
       TUT.stopT=setTimeout(()=>{ TUT.stopping=false; if(playing) stop(); const f=TUT.onLoopEnd; TUT.onLoopEnd=null; if(f) f(); },ms); }
     return;
   }
-  while(nextTime<ctx.currentTime+.12){
+  // 裏で止まっていた後に一気に鳴らさないよう、遅れすぎたら今の時刻から再開
+  if(nextTime<ctx.currentTime-.25) nextTime=ctx.currentTime+.05;
+  // 画面を閉じている間はタイマーが間引かれるので、先まで多めに予約しておく
+  const ahead = document.hidden ? 1.2 : .12;
+  while(nextTime<ctx.currentTime+ahead){
     const T=state.bars*slotSteps(); gpos%=T;
     scheduleStep(gpos,nextTime); nextTime+=stepDur(); gpos=(gpos+1)%T; playedSteps++;
   }
 }
 let starting=false;
-async function play(){ ensureAudio(); pendingSound=null; if(starting) return;
+// ---------- バックグラウンド再生 ----------
+// ・Worker のタイマーで刻む（画面を閉じてもメインのタイマーほど間引かれない）
+// ・無音の audio をループ再生して「メディア再生中」にし、ロック画面でも止まらないようにする（iPhone はオーディオセッションも playback に）
+// ・ロック画面・通知の再生／停止ボタン（Media Session）
+let tickWorker=null;
+try{ tickWorker=new Worker(URL.createObjectURL(new Blob(['let t=null;onmessage=e=>{clearInterval(t);t=null;if(e.data>0)t=setInterval(()=>postMessage(0),e.data)}'],{type:'text/javascript'})));
+  tickWorker.onmessage=()=>{ if(playing) tick(); }; tickWorker.onerror=()=>{ tickWorker=null; }; }catch(e){ tickWorker=null; }
+let bgAudio=null;
+function silentWav(sec){ const sr=8000, n=sr*sec, b=new ArrayBuffer(44+n), v=new DataView(b), w=(o,str)=>{ for(let i=0;i<str.length;i++) v.setUint8(o+i,str.charCodeAt(i)); };
+  w(0,'RIFF'); v.setUint32(4,36+n,true); w(8,'WAVE'); w(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,sr,true); v.setUint32(28,sr,true); v.setUint16(32,1,true); v.setUint16(34,8,true); w(36,'data'); v.setUint32(40,n,true);
+  for(let i=0;i<n;i++) v.setUint8(44+i,128);
+  return URL.createObjectURL(new Blob([b],{type:'audio/wav'})); }
+function bgStart(){
+  try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+  try{ if(!bgAudio){ bgAudio=new Audio(silentWav(5)); bgAudio.loop=true; bgAudio.setAttribute('playsinline',''); }
+    const pr=bgAudio.play(); if(pr&&pr.catch) pr.catch(()=>{}); }catch(e){}
+  if('mediaSession' in navigator){ try{
+    navigator.mediaSession.metadata=new MediaMetadata({title:$('progName').textContent||'コード進行パレット', artist:'コード進行パレット', album:`Key ${state.key} ・ BPM ${state.bpm}`});
+    navigator.mediaSession.playbackState='playing'; }catch(e){} }
+}
+function bgStop(){ try{ if(bgAudio) bgAudio.pause(); }catch(e){} if('mediaSession' in navigator) try{ navigator.mediaSession.playbackState='paused'; }catch(e){} }
+if('mediaSession' in navigator){ try{
+  navigator.mediaSession.setActionHandler('play',()=>{ if(!playing) play(); });
+  navigator.mediaSession.setActionHandler('pause',()=>{ if(playing) stop(); });
+  navigator.mediaSession.setActionHandler('stop',()=>{ if(playing) stop(); }); }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(!ctx) return;
+  if(playing && ctx.state!=='running') ctx.resume().catch(()=>{});
+  if(!document.hidden){ visQ=[]; dirty=true; } });
+async function play(){ ensureAudio(); pendingSound=null; if(starting) return; bgStart();
   if(loadingNow()){ starting=true; $('play').setAttribute('aria-label','読み込み中'); $('play').style.opacity=.55;
     await Promise.race([ensureSounds(), new Promise(r=>setTimeout(r,8000))]); starting=false; $('play').style.opacity=''; }
   lastR=null; barTones=null; pushedKey=null; playing=true; playedSteps=0; gpos=0;
-  if(TUT.on){ TUT.loopLen=state.bars*slotSteps(); TUT.stopping=false; clearTimeout(TUT.stopT); } visQ=[]; cur=null; nextTime=ctx.currentTime+.06; tick(); timer=setInterval(tick,25);
+  if(TUT.on){ TUT.loopLen=state.bars*slotSteps(); TUT.stopping=false; clearTimeout(TUT.stopT); } visQ=[]; cur=null; nextTime=ctx.currentTime+.06; tick(); timer=setInterval(tick,25); if(tickWorker) tickWorker.postMessage(25);
   $('play').innerHTML=STOP_SVG; $('play').setAttribute('aria-label','停止'); }
-function stop(){ playing=false; clearInterval(timer); visQ=[]; cur=null; dirty=true;
+function stop(){ playing=false; clearInterval(timer); if(tickWorker) tickWorker.postMessage(0); bgStop(); visQ=[]; cur=null; dirty=true;
   $('play').innerHTML=PLAY_SVG; $('play').setAttribute('aria-label','再生'); $('play').classList.remove('beat');
   slotsEl.querySelectorAll('.slot').forEach(s=>s.classList.remove('now')); renderPages(); }
 $('play').onclick=()=>playing?stop():play();
