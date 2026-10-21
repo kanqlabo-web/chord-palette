@@ -197,7 +197,13 @@ body:not(.pro) #drumLane .lanehead{display:none}
 body:not(.pro) #drumLane{margin-top:-6px}
 #bassLane{display:none}
 body.pro #bassLane{display:flex}
-.lane canvas#bassCv{height:22px}
+/* PROは帯が3段になるので、帯と再生ボタンを細くしてパレットの大きさを保つ */
+body.pro .lane canvas{height:20px}
+body.pro .lane canvas#bassCv{height:16px}
+body.pro .lane{gap:2px}
+body.pro .app{gap:7px}
+body.pro .play{width:52px;height:52px}
+body.pro .transport{gap:3px}
 .opt canvas.half{height:17px!important}
 
 /* page strip (8/16 bars) */
