@@ -957,21 +957,21 @@ function renderPatEditor(){
 const ARP_ORDER=['house','piano4','popanti','ballad','whole','sync','sync16','shuffle','shuff2','stacc','rock8','eighth','offbeat','garp','strum','rhodes','bossa','alberti'];
 // 通常モードの「伴奏スタイル」：ドラムとコードパターンの組み合わせ
 const STYLES=[
-  {name:'ポップス（定番）', drum:'pop', arp:'piano4', inst:'piano'},
-  {name:'ポップス（ノリノリ）', drum:'dpop', arp:'popanti', inst:'piano'},
-  {name:'ロック', drum:'eight', arp:'rock8', inst:'dist'},
-  {name:'ギターポップ', drum:'rride', arp:'strum', inst:'eguitar'},
-  {name:'バラード', drum:'ballad', arp:'ballad', inst:'piano'},
-  {name:'しっとり', drum:'xstick', arp:'garp', inst:'nylon'},
-  {name:'ゆったり', drum:'medium', arp:'whole', inst:'pad'},
-  {name:'どっしり', drum:'half', arp:'stacc', inst:'piano'},
-  {name:'スキップ風', drum:'shuffle', arp:'shuffle', inst:'piano'},
-  {name:'ファンキー', drum:'sixteen', arp:'offbeat', inst:'eguitar'},
-  {name:'ダンス', drum:'dance', arp:'house', inst:'synth'},
-  {name:'ジャジー', drum:'neosoul', arp:'rhodes', inst:'piano'},
-  {name:'ボサノバ', drum:'bossa', arp:'bossa', inst:'nylon'},
-  {name:'レゲエ', drum:'reggae', arp:'offbeat', inst:'organ'},
-  {name:'クラシック風', drum:'none', arp:'alberti', inst:'piano'},
+  {name:'ポップス（定番）', drum:'pop', arp:'piano4', inst:'piano', kit:'std', bass:true},
+  {name:'ポップス（ノリノリ）', drum:'dpop', arp:'popanti', inst:'piano', kit:'std', bass:true},
+  {name:'ロック', drum:'eight', arp:'rock8', inst:'dist', kit:'power', bass:true},
+  {name:'ギターポップ', drum:'rride', arp:'strum', inst:'eguitar', kit:'room', bass:true},
+  {name:'バラード', drum:'ballad', arp:'ballad', inst:'piano', kit:'room', bass:true},
+  {name:'しっとり', drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:true},
+  {name:'ゆったり', drum:'medium', arp:'whole', inst:'pad', kit:'room', bass:true},
+  {name:'どっしり', drum:'half', arp:'stacc', inst:'piano', kit:'power', bass:true},
+  {name:'スキップ風', drum:'shuffle', arp:'shuffle', inst:'piano', kit:'std', bass:true},
+  {name:'ファンキー', drum:'sixteen', arp:'offbeat', inst:'eguitar', kit:'std', bass:true},
+  {name:'ダンス', drum:'dance', arp:'house', inst:'synth', kit:'tr808', bass:true},
+  {name:'ジャジー', drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true},
+  {name:'ボサノバ', drum:'bossa', arp:'bossa', inst:'nylon', kit:'brush', bass:true},
+  {name:'レゲエ', drum:'reggae', arp:'offbeat', inst:'organ', kit:'std', bass:true},
+  {name:'クラシック風', drum:'none', arp:'alberti', inst:'piano', kit:'std', bass:false},
 ];
 const styleNow=()=>STYLES.find(x=>x.drum===state.drum&&x.arp===state.arp);
 // PROモードのベースパターン（0=ルート 12=オクターブ '3'/'5'/'6'=3度・5度・6度 'ap'=次のコードへつなぐ音）
@@ -1468,7 +1468,7 @@ function openSheet(kind){
   if(kind==='style'){ const opts=$('opts'); opts.innerHTML=''; const cur=styleNow();
     STYLES.forEach((st,k)=>{ const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', st===cur);
       b.innerHTML=`<canvas class="half"></canvas><canvas class="half"></canvas><span>${st.name}</span>`;
-      b.onclick=()=>{ state.drum=st.drum; state.arp=st.arp; if(st.inst) pickInst(st.inst); renderAll(); closeAll(); };
+      b.onclick=()=>{ state.drum=st.drum; state.arp=st.arp; state.bassPat='auto'; if(st.bass!=null) state.bass=st.bass; if(st.kit) state.kit=st.kit; if(st.inst) pickInst(st.inst); else { renderAll(); ensureSounds(); } closeAll(); };
       opts.appendChild(b); });
     const bassRow=()=>chips($('bassChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); renderAll(); bassRow(); });
     bassRow();
