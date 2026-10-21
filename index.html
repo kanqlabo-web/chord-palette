@@ -1565,6 +1565,7 @@ palette.addEventListener('keydown',e=>{
 // ---------- audio ----------
 let ctx=null, master, noiseBuf, compBus=null, OUT=null;
 function ensureAudio(noResume){
+  if(ctx && ctx.state==='closed') ctx=null;
   if(!ctx){
     ctx=new (window.AudioContext||window.webkitAudioContext)();
     const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=4;
@@ -1573,7 +1574,16 @@ function ensureAudio(noResume){
     noiseBuf=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);
     const ch=noiseBuf.getChannelData(0); for(let i=0;i<ch.length;i++) ch[i]=Math.random()*2-1;
   }
-  if(!noResume&&ctx.state==='suspended') ctx.resume();
+  // iPhone は別アプリから戻ると 'interrupted' という状態になる。'suspended' 以外でも起こし直す
+  if(!noResume&&ctx.state!=='running') ctx.resume().catch(()=>{});
+}
+// 起こし直せないときは、音の出口を作り直す（読み込んだ音源はそのまま使える）
+function resetAudio(){ const old=ctx; ctx=null; try{ old&&old.close(); }catch(e){} held=[]; bassHeld=[]; ensureAudio(); }
+async function wakeAudio(){
+  ensureAudio(); if(ctx.state==='running') return true;
+  await Promise.race([ctx.resume().catch(()=>{}), new Promise(r=>setTimeout(r,350))]);
+  if(ctx.state!=='running'){ resetAudio(); await Promise.race([ctx.resume().catch(()=>{}), new Promise(r=>setTimeout(r,350))]); }
+  return ctx.state==='running';
 }
 const mtof=m=>440*Math.pow(2,(m-69)/12);
 // sampled instruments (FluidR3 GM soundfont via WebAudioFont data), shipped as snd/*.json
@@ -1862,8 +1872,13 @@ if('mediaSession' in navigator){ try{
   navigator.mediaSession.setActionHandler('stop',()=>{ if(playing) stop(); }); }catch(e){} }
 document.addEventListener('visibilitychange',()=>{ if(!ctx) return;
   if(playing && ctx.state!=='running') ctx.resume().catch(()=>{});
-  if(!document.hidden){ visQ=[]; dirty=true; } });
+  if(!document.hidden){ visQ=[]; dirty=true;
+    // 戻ってきても音が止まったまま（時計が進まない）なら、いったん停止にして、次のタップで起こし直せるようにする
+    if(playing) setTimeout(()=>{ if(playing && ctx.state!=='running') stop(); },700); } });
+// 画面のどこかを触ったら、止まっている音の出口を起こす（iPhone は操作の中でしか起こせない）
+['pointerdown','touchend','keydown'].forEach(t=>document.addEventListener(t,()=>{ if(ctx && ctx.state!=='running') ctx.resume().catch(()=>{}); },{passive:true,capture:true}));
 async function play(){ ensureAudio(); pendingSound=null; if(starting) return; bgStart();
+  if(ctx.state!=='running'){ starting=true; await wakeAudio(); starting=false; }
   if(loadingNow()){ starting=true; $('play').setAttribute('aria-label','読み込み中'); $('play').style.opacity=.55;
     await Promise.race([ensureSounds(), new Promise(r=>setTimeout(r,8000))]); starting=false; $('play').style.opacity=''; }
   lastR=null; barTones=null; pushedKey=null; playing=true; playedSteps=0; gpos=0;
