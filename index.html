@@ -598,7 +598,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="opts" id="opts"></div>
   <div class="sheetsec" style="margin-top:16px"><h3 id="soundTitle"></h3><div class="chips" id="soundChips"></div></div>
   <div class="sheetsec" id="kitSec" hidden><h3>ドラムの音</h3><div class="chips" id="kitChips2"></div></div>
-  <div class="sheetsec" id="fillSec"><h3>フィルイン（4小節ごとにおかずとシンバル）</h3><div class="chips" id="fillChips"></div><h3>ベース</h3><div class="chips" id="bassChips"></div></div>
+  <div class="sheetsec" id="fillSec"><h3>フィルイン（4小節ごとにおかずとシンバル）</h3><div class="chips" id="fillChips"></div><h3>ベース</h3><div class="chips" id="bassChips"></div><h3>ベースの音</h3><div class="chips" id="bassSndChips"></div></div>
 </div>
 
 <script>
@@ -962,14 +962,14 @@ const STYLES=[
   {name:'ロック', drum:'eight', arp:'rock8', inst:'dist', kit:'power', bass:true},
   {name:'ギターポップ', drum:'rride', arp:'strum', inst:'eguitar', kit:'room', bass:true},
   {name:'バラード', drum:'ballad', arp:'ballad', inst:'piano', kit:'room', bass:true},
-  {name:'しっとり', drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:true},
+  {name:'しっとり', drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:true, bassSnd:'ubass'},
   {name:'ゆったり', drum:'medium', arp:'whole', inst:'pad', kit:'room', bass:true},
   {name:'どっしり', drum:'half', arp:'stacc', inst:'piano', kit:'power', bass:true},
   {name:'スキップ風', drum:'shuffle', arp:'shuffle', inst:'piano', kit:'std', bass:true},
   {name:'ファンキー', drum:'sixteen', arp:'offbeat', inst:'eguitar', kit:'std', bass:true},
-  {name:'ダンス', drum:'dance', arp:'house', inst:'synth', kit:'tr808', bass:true},
-  {name:'ジャジー', drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true},
-  {name:'ボサノバ', drum:'bossa', arp:'bossa', inst:'nylon', kit:'brush', bass:true},
+  {name:'ダンス', drum:'dance', arp:'house', inst:'synth', kit:'tr808', bass:true, bassSnd:'sbass'},
+  {name:'ジャジー', drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
+  {name:'ボサノバ', drum:'bossa', arp:'bossa', inst:'nylon', kit:'brush', bass:true, bassSnd:'ubass'},
   {name:'レゲエ', drum:'reggae', arp:'offbeat', inst:'organ', kit:'std', bass:true},
   {name:'クラシック風', drum:'none', arp:'alberti', inst:'piano', kit:'std', bass:false},
 ];
@@ -998,6 +998,8 @@ const INSTS={spiano:'シンセピアノ',sepiano:'シンセエレピ',sorgan:'�
 const SYNTH_INST={spiano:'piano',sepiano:'epiano',sorgan:'organ',sguitar:'nylon',synth:'synth'};
 const instShort=()=>INSTS[state.inst];
 const isSynthInst=()=>state.inst in SYNTH_INST;
+const BASS_SNDS={bass:'エレキベース',ubass:'ウッドベース',sbass:'シンセベース'};
+const BASS_FX={bass:{gain:1,cut:2200},ubass:{gain:1.15,cut:1800},sbass:{gain:.75,cut:3200,loop:true}};
 const KITS={synth:'シンセドラム',std:'スタンダード',room:'ルーム',power:'パワー',brush:'ブラシ',elec:'エレクトロ',tr808:'TR-808'};
 // 有名なコード進行の名前。数字＝ダイアトニック（0=Ⅰ 1=Ⅱm 2=Ⅲm 3=Ⅳ 4=Ⅴ 5=Ⅵm 6=Ⅶm-5）、文字＝それ以外のコード（CHROM）
 const CHROM={III7:{o:4,q:'maj',x:'7'}, bVII:{o:10,q:'maj',x:''}, bVI:{o:8,q:'maj',x:''}, IVm:{o:5,q:'m',x:''}, Vm:{o:7,q:'m',x:''}, II7:{o:2,q:'maj',x:'7'}, VI7:{o:9,q:'maj',x:'7'}};
@@ -1070,7 +1072,7 @@ function progLabel(){
 }
 
 // ---------- state ----------
-let state={slots:[3,4,2,5,...Array(12).fill(null)], bars:4, key:'C', label:'num', inst:'spiano', kit:'synth', drum:'pop', arp:'piano4', bassPat:'auto', fill:false, bass:true, pro:false, guide:false, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:7};
+let state={slots:[3,4,2,5,...Array(12).fill(null)], bars:4, key:'C', label:'num', inst:'spiano', kit:'synth', drum:'pop', arp:'piano4', bassPat:'auto', bassSnd:'bass', fill:false, bass:true, pro:false, guide:false, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:7};
 let FIRST_RUN=true;
 try{ const s=JSON.parse(localStorage.getItem('chord-palette-v3')); if(s) FIRST_RUN=false; if(s&&Array.isArray(s.slots)&&s.slots.length===16) state={...state,...s}; if(!s.ver||s.ver<6){ state.bass=true; } if(!s.ver||s.ver<7){ state.drum='pop'; state.fill=false; state.ver=7; } if(!s.ver||s.ver<4){ state.inst='spiano'; state.kit='synth'; } if(!INSTS[state.inst]) state.inst='spiano'; if(!KITS[state.kit]) state.kit='std'; }catch(e){}
 if(!Array.isArray(state.segs)) state.segs=Array.from({length:16},(_,i)=>state.split&&state.split[i]?[state.split[i]]:[]);
@@ -1078,7 +1080,7 @@ delete state.split; if(![1,2,4].includes(state.len)) state.len=4;
 if(state.myDrum){ state.myDrums=[{name:'マイパターン1',...state.myDrum}]; if(state.drum==='my') state.drum='my0'; } delete state.myDrum;
 if(state.myArp){ state.myArps=[{name:'マイパターン1',...state.myArp}]; if(state.arp==='my') state.arp='my0'; } delete state.myArp;
 rebuildMy();
-if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4'; if(!BASSES[state.bassPat]) state.bassPat='auto';
+if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4'; if(!BASSES[state.bassPat]) state.bassPat='auto'; if(!BASS_SNDS[state.bassSnd]) state.bassSnd='bass';
 const save=()=>{ try{ localStorage.setItem('chord-palette-v3', JSON.stringify(state)); }catch(e){} };
 let selected=null, page=0;
 
@@ -1468,10 +1470,10 @@ function openSheet(kind){
   if(kind==='style'){ const opts=$('opts'); opts.innerHTML=''; const cur=styleNow();
     STYLES.forEach((st,k)=>{ const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', st===cur);
       b.innerHTML=`<canvas class="half"></canvas><canvas class="half"></canvas><span>${st.name}</span>`;
-      b.onclick=()=>{ state.drum=st.drum; state.arp=st.arp; state.bassPat='auto'; if(st.bass!=null) state.bass=st.bass; if(st.kit) state.kit=st.kit; if(st.inst) pickInst(st.inst); else { renderAll(); ensureSounds(); } closeAll(); };
+      b.onclick=()=>{ state.drum=st.drum; state.arp=st.arp; state.bassPat='auto'; state.bassSnd=st.bassSnd||'bass'; if(st.bass!=null) state.bass=st.bass; if(st.kit) state.kit=st.kit; if(st.inst) pickInst(st.inst); else { renderAll(); ensureSounds(); } closeAll(); };
       opts.appendChild(b); });
     const bassRow=()=>chips($('bassChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); renderAll(); bassRow(); });
-    bassRow();
+    bassRow(); bassSndRow();
     sheet.classList.add('on'); scrim.classList.add('on');
     requestAnimationFrame(()=>{ const col=colors();
       [...opts.children].forEach((b,i)=>{ const [c1,c2]=b.querySelectorAll('canvas'), st=STYLES[i];
@@ -1481,7 +1483,7 @@ function openSheet(kind){
   const fillRow=()=>chips($('fillChips'), [[true,'入れる'],[false,'入れない']], state.fill, v=>{ state.fill=v; save(); dirty=true; fillRow(); });
   fillRow();
   const bassRow=()=>chips($('bassChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); renderAll(); bassRow(); });
-  bassRow();
+  bassRow(); bassSndRow();
   $('patHint').textContent = /^my\d+$/.test(state[kind]) ? '選んでいるマイパターンを編集します' : '選んでいるパターンをコピーして編集します';
   const opts=$('opts'); opts.innerHTML='';
   const order = kind==='drum'?drumOrder():arpOrder(), src = kind==='drum'?DRUMS:ARPS;
@@ -1512,13 +1514,14 @@ $('patDel').onclick=()=>{ const b=$('patDel');
   const list=listOf(patKind); list.splice(+state[patKind].slice(2),1); state[patKind]= patKind==='drum'?'pop':'piano4'; rebuildMy(); save(); renderAll(); closeAll(); };
 $('patClear').onclick=()=>{ if(patKind==='drum') curMy().v={}; else KEY_ROWS.forEach(([r])=>curMy().cells[r]=Array(16).fill(0)); rebuildMy(); save(); renderPatEditor(); dirty=true; };
 
+function bassSndRow(){ chips($('bassSndChips'), Object.entries(BASS_SNDS), state.bassSnd||'bass', v=>{ state.bassSnd=v; save(); renderAll(); ensureSounds().then(()=>{ if(!playing) whenRunning(()=>{ const t=ctx.currentTime+.03; [0,7,12].forEach((n,k)=>bassTone(36+n,t+k*.18,.16,.9)); }); }); bassSndRow(); }); }
 function openBassSheet(){
   sheetKind='bass'; document.querySelector('#sheet .proedit').style.display='none'; $('kitSec').hidden=true;
   $('sheetTitle').textContent='ベース';
   $('soundChips').parentElement.hidden=true; $('fillSec').hidden=false;
   $('fillChips').previousElementSibling.hidden = $('fillChips').hidden = true;
   const bassRow=()=>chips($('bassChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); renderAll(); bassRow(); });
-  bassRow();
+  bassRow(); bassSndRow();
   const opts=$('opts'); opts.innerHTML='';
   BASS_ORDER.forEach(k=>{ const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', (state.bassPat||'auto')===k);
     b.innerHTML=`<canvas></canvas><span>${BASSES[k].name}</span>`;
@@ -1675,7 +1678,7 @@ function loadSet(name){
   }
   return SETS[name];
 }
-function neededSets(){ const n=[]; if(state.kit!=='synth') n.push('kit-'+state.kit); if(!isSynthInst()) n.push(state.inst,'bass'); return n; }
+function neededSets(){ const n=[]; if(state.kit!=='synth') n.push('kit-'+state.kit); if(!isSynthInst()) n.push(state.inst); const b=state.bassSnd||'bass'; if(!isSynthInst()||b!=='bass') n.push(b); return n; }
 function loadingNow(){ return neededSets().some(n=>!LOADED[n]&&!FAILED[n]); }
 function ensureSounds(){ const p=Promise.all(neededSets().map(loadSet)); renderBadge(); return p; }
 function renderBadge(){ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中…':''); }
@@ -1705,7 +1708,8 @@ function keyTone(m,t,dur,v){
   const r = g || synthTone(m,t,dur,.34*Math.pow(v,1.3)); OUT=null; return r;
 }
 function bassTone(m,t,dur,vel=1){
-  const g=!isSynthInst()&&LOADED.bass&&playZone(LOADED.bass,m,t,dur,.7*vel,.08,2200);
+  const nm=state.bassSnd||'bass', fx=BASS_FX[nm]||BASS_FX.bass;   // シンセ系の音色で「エレキベース」のときは軽いシンセベースを使う
+  const g=(!isSynthInst()||nm!=='bass')&&LOADED[nm]&&playZone(LOADED[nm],m,t,dur,.7*vel*fx.gain,.08,fx.cut,fx.loop);
   const gg=g||synthBass(m,t,dur,vel); bassHeld.push(gg); return gg;
 }
 const DRUM_VOL={36:1.15,37:.75,38:.9,42:.3,46:.22,49:.28,51:.26,50:.8,47:.8,45:.85};
