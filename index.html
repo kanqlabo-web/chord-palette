@@ -1505,7 +1505,9 @@ function openSheet(kind){
   $('kitSec').hidden = kind!=='style';
   if(kind==='style'){ const kitRow=()=>chips($('kitChips2'), Object.entries(KITS), state.kit, v=>{ pickKit(v); kitRow(); }); kitRow(); }
   $('fillSec').hidden = kind!=='drum' && kind!=='style';
-  $('fillChips').previousElementSibling.hidden = $('fillChips').hidden = kind==='style';
+  $('fillChips').previousElementSibling.hidden = $('fillChips').hidden = false;
+  const fillRow=()=>chips($('fillChips'), [[true,'入れる'],[false,'入れない']], state.fill, v=>{ state.fill=v; save(); dirty=true; fillRow(); });
+  fillRow();
   if(kind==='style'){ const opts=$('opts'); opts.innerHTML=''; const cur=styleNow();
     STYLES.forEach((st,k)=>{ const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', st===cur);
       b.innerHTML=`<canvas class="half"></canvas><canvas class="half"></canvas><span>${st.name}</span>`;
@@ -1518,8 +1520,6 @@ function openSheet(kind){
         const g1=fit(c1); drawArpBar(g1,0,0,c1.width,c1.height,ARPS[st.arp],col.t,col);
         const g2=fit(c2); drawDrumBar(g2,0,0,c2.width,c2.height,DRUMS[st.drum],col); }); });
     return; }
-  const fillRow=()=>chips($('fillChips'), [[true,'入れる'],[false,'入れない']], state.fill, v=>{ state.fill=v; save(); dirty=true; fillRow(); });
-  fillRow();
   bassSndRow();
   $('patHint').textContent = /^my\d+$/.test(state[kind]) ? '選んでいるマイパターンを編集します' : '選んでいるパターンをコピーして編集します';
   const opts=$('opts'); opts.innerHTML='';
