@@ -425,7 +425,8 @@ body.tutlite .gstrip{visibility:hidden}
 .popchips span{border-radius:999px;padding:4px 10px;font-size:.74rem;font-weight:700;background:color-mix(in srgb,var(--fn) 14%,var(--surface));border:1.5px solid color-mix(in srgb,var(--fn) 45%,var(--line));color:var(--ink)}
 .popbtns{display:flex;gap:8px;width:100%;margin-top:6px}
 .popbtns button{flex:1;border:0;border-radius:12px;padding:12px;font:inherit;font-weight:700;cursor:pointer;background:var(--ink);color:var(--bg)}
-.popbtns button.alt{flex:.6;background:transparent;color:var(--muted);border:1.5px solid var(--line)}
+.popbtns button{white-space:nowrap;font-size:.86rem;padding:11px 6px}
+.popbtns button.alt{flex:.8;background:transparent;color:var(--muted);border:1.5px solid var(--line)}
 /* 最初のチュートリアルのあとに、マスの上の行の右に小さく出す案内 */
 .moodtip{display:inline-flex;align-items:center;gap:4px;border:1.5px solid var(--warn);background:color-mix(in srgb,var(--warn) 16%,var(--surface));color:var(--ink);
   border-radius:999px;padding:3px 4px 3px 10px;font-size:.7rem;font-weight:700;white-space:nowrap;cursor:pointer;line-height:1.2;animation:tin .4s ease}
@@ -508,6 +509,12 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="tutstage" id="tutStage"></div>
   <div class="tutnav"><button class="tutbtn alt" id="tutBack">もどる</button><button class="tutbtn" id="tutNext">つぎへ</button></div>
 </div>
+<div class="modalpop" id="resultPop" hidden><div class="popcard" role="dialog" aria-label="実践編の結果">
+  <div class="popeyebrow" id="resultEyebrow"></div>
+  <h2 id="resultTitle"></h2>
+  <p id="resultText"></p>
+  <div class="popbtns"><button class="alt" id="resultRetry">作り直す</button><button class="alt" id="resultOther">ほかのお題</button><button id="resultEnd">おわる</button></div>
+</div></div>
 <div class="modalpop" id="moodPop" hidden><div class="popcard" role="dialog" aria-label="雰囲気のつくり方の案内">
   <div class="popchips" id="moodPopChips"></div>
   <div class="popeyebrow">NEXT</div>
@@ -2149,6 +2156,7 @@ function openTutorial(deck){
 }
 function closeCoach(){ $('coach').hidden=true; document.body.classList.remove('tutlite'); clearInterval(TUT.wait); }
 function endTutorial(restore){
+  $('resultPop').hidden=true;
   const showTip = !restore && DECK===SLIDES;
   $('moodBar').hidden=true; document.body.classList.remove('practice'); TUT.practice=false;
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio(); closeCoach();
@@ -2207,6 +2215,13 @@ function coach(target, text, btns, keepLite){
 function unionRect(a,b){ const r1=a.getBoundingClientRect(), r2=b.getBoundingClientRect(); const l=Math.min(r1.left,r2.left), t=Math.min(r1.top,r2.top), rr=Math.max(r1.right,r2.right), bt=Math.max(r1.bottom,r2.bottom); return {left:l,top:t,right:rr,bottom:bt,width:rr-l,height:bt-t}; }
 const wideLayout=()=>matchMedia('(min-width:820px) and (min-aspect-ratio:5/4)').matches;
 const nextBtn=()=>['つぎへ',()=>showSlide(TUT.i+1)], backBtn=()=>['もどる',()=>showSlide(TUT.i-1),true];
+function moodResult(){
+  const m=PRACTICE[TUT.mood||'sad'], q=[0,1,2,3].map(k=>tokOf(state.slots[k])), good=q.every(t=>typeof t==='number') && m.check(q);
+  $('resultEyebrow').textContent=`お題「${m.name}」`;
+  $('resultTitle').textContent=good?'いい感じです！':'おしいです！';
+  $('resultText').textContent=good?m.ok:m.ng;
+  $('resultPop').hidden=false;
+}
 const moodDone=()=>[0,1,2,3].every(k=>state.slots[k]!==null&&state.slots[k]!==undefined);
 function moodBar(){
   const m=PRACTICE[TUT.mood||'sad'], bar=$('moodBar'); bar.hidden=false; document.body.classList.add('practice');
@@ -2245,14 +2260,21 @@ function runCoach(kind){
       coach($('play'), '♪ 再生中……', [backBtn()]);
       TUT.onLoopEnd=()=>coach($('play'),'どうですか？<br>いい曲はできましたか？', [backBtn(),nextBtn()]); } },200);
   } else if(kind==='mood'){
-    // 実践編：ふだんと同じメイン画面のまま、上の帯にお題を出して作ってもらう
-    tutStopAudio(); closeCoach(); document.body.classList.remove('tutlite'); TUT.practice=true;
+    // 実践編：画面はふだんと同じ（色・帯もそのまま）で、説明はほかのチュートリアルと同じ吹き出しで出す
+    tutStopAudio(); document.body.classList.remove('tutlite'); TUT.practice=true; $('resultPop').hidden=true;
     const m=PRACTICE[TUT.mood||'sad'];
     if(!TUT.moodInit){ const b=JSON.parse(TUT.backup);
       Object.assign(state,{label:b.label,key:b.key,guide:b.guide,pro:b.pro,inst:b.inst,kit:b.kit}); document.body.classList.toggle('pro',!!state.pro);
       tutLoadEx({degs:[],drum:m.drum,arp:m.arp,bpm:m.bpm}); TUT.moodInit=true; }
-    TUT.moodResult=null; moodBar();
-    let was=null; TUT.wait=setInterval(()=>{ const d=moodDone(); if(d!==was){ was=d; if(!TUT.moodResult) moodBar(); } },300);
+    const tgt=()=>wideLayout()?[palette,slotsEl]:unionRect(palette,slotsEl), quit=['やめる',()=>endTutorial(true),true];
+    const show=()=>{
+      if(playing) coach([slotsEl,$('play')], `♪ 再生中……<br>「${m.name}」な感じになっているかな？`, [quit]);
+      else if(!moodDone()) coach(tgt(), `お題：<b>「${m.name}」</b>な進行を作ってみましょう。<br><small>ヒント：${m.hint}</small>`, [backBtn(),quit]);
+      else coach([slotsEl,$('play')], `4つ並びました！<br>再生して、<b>「${m.name}」</b>になっているか聴いてみましょう。`, [backBtn(),quit]); };
+    show(); let was='';
+    TUT.wait=setInterval(()=>{ const k=(playing?'p':'')+(moodDone()?'d':''); if(k===was) return; was=k;
+      if(playing) TUT.onLoopEnd=()=>{ clearInterval(TUT.wait); closeCoach(); moodResult(); };
+      show(); },250);
   } else if(kind==='weird'){
     tutStopAudio(); tutLoad([6,3,2,1]);
     coach(slotsEl, 'では次は、こんなコードを<br>鳴らしてみます……', [backBtn()]);
@@ -2299,6 +2321,9 @@ $('tutBack').onclick=()=>{ const sl=DECK[TUT.i];
 $('tutSkip').onclick=()=>endTutorial(true);
 $('tutOpen').onclick=()=>openTutorial(SLIDES);
 $('moodOpen').onclick=()=>{ $('moodTip').hidden=true; openTutorial(MOOD); };
+$('resultRetry').onclick=()=>{ $('resultPop').hidden=true; runCoach('mood'); };
+$('resultOther').onclick=()=>{ $('resultPop').hidden=true; TUT.practice=false; showSlide(TUT.i-1); };
+$('resultEnd').onclick=()=>{ $('resultPop').hidden=true; finishMood(); };
 $('moodPopGo').onclick=()=>{ $('moodPop').hidden=true; openTutorial(MOOD); };
 $('moodPopLater').onclick=()=>{ $('moodPop').hidden=true; $('moodTip').hidden=false; clearTimeout(TUT.tipT); TUT.tipT=setTimeout(()=>$('moodTip').hidden=true,180000); };
 $('moodTip').onclick=e=>{ $('moodTip').hidden=true; if(e.target.id!=='moodTipX') openTutorial(MOOD); };
