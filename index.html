@@ -18,14 +18,14 @@
   --t:#3567D6; --s:#24946A; --d:#DA6A22;
   --display:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Rounded Mplus 1c",sans-serif;
   --body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
-  --gap:8px;
+  --gap:8px; --warn:#E3A82B;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#11151C; --surface:#1A202A; --ink:#E8ECF3; --muted:#8C97AA; --line:#2B3441; --lane:#161B23;
-  --t:#7EA4FF; --s:#5BCB97; --d:#FF9C5B; color-scheme:dark}}
+  --t:#7EA4FF; --s:#5BCB97; --d:#FF9C5B; --warn:#F2C14E; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#11151C; --surface:#1A202A; --ink:#E8ECF3; --muted:#8C97AA; --line:#2B3441; --lane:#161B23;
-  --t:#7EA4FF; --s:#5BCB97; --d:#FF9C5B; color-scheme:dark}
+  --t:#7EA4FF; --s:#5BCB97; --d:#FF9C5B; --warn:#F2C14E; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:var(--bg)}
@@ -84,7 +84,7 @@ h1{flex:none}
 .slothead{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.72rem;color:var(--muted);min-height:16px;line-height:16px}
 .slothead .right{display:flex;align-items:center;gap:8px;min-width:0;flex:none}
 #hint.guide{color:var(--ink);font-weight:700;font-family:var(--display)}
-.slot.warn{box-shadow:0 0 0 2px var(--bg),0 0 0 4px #D9534F}
+.slot.warn{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--warn)}
 #hint{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto}
 .edall{flex:none}
 #progName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
@@ -385,6 +385,9 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .exnote p::before{content:"";position:absolute;left:2px;top:.6em;width:6px;height:6px;border-radius:50%;background:var(--fn,var(--ink))}
 .listen{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:999px;padding:8px 16px;font:inherit;font-weight:700;cursor:pointer}
 .listen.on{background:var(--ink);color:var(--bg)}
+.okcard{width:100%;border-radius:16px;padding:14px 12px;background:color-mix(in srgb,var(--warn) 18%,var(--surface));border:2px solid var(--warn);display:flex;flex-direction:column;gap:6px}
+.okcard b{font-family:var(--display);font-weight:900;font-size:1.15rem;line-height:1.45}
+.okcard small{font-size:.78rem;color:var(--muted);line-height:1.6}
 .varopts{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;max-width:520px;margin:0 auto 12px}
 .varopts button{border:1.5px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font:inherit;color:var(--ink)}
 .varopts button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
@@ -404,7 +407,7 @@ body.guide .gstrip{display:block}
 body.tutlite .gstrip{visibility:hidden}
 .gstrip span{position:absolute;top:2px;height:16px;border:2px solid var(--fn);border-bottom:0;border-radius:7px 7px 0 0;font-size:.6rem;font-weight:700;color:var(--ink);display:flex;justify-content:center;align-items:flex-start;line-height:1;padding-top:2px;white-space:nowrap;overflow:hidden;font-family:var(--display)}
 .gstrip span.ol{border-left:0;border-top-left-radius:0}.gstrip span.or{border-right:0;border-top-right-radius:0}
-.gstrip span.bad{color:#D9534F}
+.gstrip span.bad{color:var(--ink)}
 .floaty{animation:tfl 3s ease-in-out infinite}
 @keyframes tfl{50%{transform:translateY(-6px)}}
 /* コーチマーク（メイン画面の上の吹き出し） */
@@ -1168,7 +1171,7 @@ function flowGroups(){
 function guideInfo(){
   const g=flowGroups();
   if(!g.groups.length && !g.noT) return {text:'',warn:g.warn,groups:[]};
-  const text = g.noT ? '△ Tがないので落ち着きません' : g.warn.size ? '△ Dの次はTへ進むと安定' : g.groups.every(x=>x.name) ? '◎ お手本どおりの流れ' : '△ お手本にない流れがあります';
+  const text = g.noT ? 'ヒント：T を入れると落ち着きます' : g.warn.size ? 'ヒント：D の次は T へ進むと安定' : g.groups.every(x=>x.name) ? '◎ お手本どおりの流れ' : 'ヒント：お手本にない流れがあります';
   return {text,warn:g.warn,groups:g.groups};
 }
 const FLOW_COL={'①':'var(--d)','②':'var(--s)','③':'var(--ink)'};
@@ -1196,9 +1199,9 @@ function drawGuide(gi){
       x0-=base.left; x1-=base.left; const w=x1-x0; if(w<6) return;
       const sp=document.createElement('span');
       const no=g.name?g.name[0]:'';
-      sp.style.cssText=`left:${x0}px;width:${w}px;--fn:${g.bad?'#D9534F':g.name?(FLOW_COL[no]||'var(--t)'):'var(--muted)'}`;
+      sp.style.cssText=`left:${x0}px;width:${w}px;--fn:${g.bad?'var(--warn)':g.name?(FLOW_COL[no]||'var(--t)'):'var(--muted)'}`;
       if(openL) sp.classList.add('ol'); if(openR) sp.classList.add('or'); if(g.bad) sp.classList.add('bad');
-      const full=g.bad?'△ D→S':g.name?g.name:'？', short=g.bad?'△':g.name?(FLOW_COL[no]?no:'T続く'):'？';
+      const full=g.bad?'D→S':g.name?g.name:'？', short=g.bad?'!':g.name?(FLOW_COL[no]?no:'T続く'):'？';
       sp.dataset.full=full; sp.dataset.short=short; sp.dataset.w=w;
       gs.appendChild(sp); made.push(sp); });
     // 1つの流れにつき、いちばん長い部分にだけ名前を書く
@@ -2010,7 +2013,7 @@ const SLIDES=[
      <h2 class="a" style="--dl:.1">では、実際に<br>作ってみましょう！</h2>
      <div class="flows"><div class="flow a" style="--dl:.6">${['T','S','D','T'].map((r,j)=>`${j?`<span class="arr" style="--dl:${.9+j*.15}"></span>`:''}<span class="tc ${r} pop" style="--dl:${.7+j*.15}"><b>${r}</b></span>`).join('')}</div></div>
      <p class="a" style="--dl:1.5">マスの上には、カデンツを線で表す<br>「カデンツガイド」を出しておきます。</p>
-     <p class="sub a" style="--dl:2.1">赤い線が出ても、聴いてカッコよければOK！<br>しっくりこないときのヒントにしてください。</p>`, last:true},
+     <div class="okcard a" style="--dl:2.1"><b>お手本どおりじゃなくても、<br>聴いてカッコよければOK！</b><small>黄色い線は「お手本と違うよ」の目印。<br>しっくりこないときのヒントにしてください。</small></div>`, last:true},
 ];
 // ================= 雰囲気のつくり方（2つめのチュートリアル） =================
 const SP=(o,q,x)=>({o,q,x:x||'',b:null});
@@ -2126,7 +2129,6 @@ function endTutorial(restore){
   if(restore && TUT.backup){ state=JSON.parse(TUT.backup); document.body.classList.toggle('pro',!!state.pro); }
   else { const b=JSON.parse(TUT.backup); state={...b, slots:Array(16).fill(null), segs:Array.from({length:16},()=>[]), bars:4, len:4, label:'num', guide:true}; document.body.classList.toggle('pro',!!state.pro); }
   page=0; selected=null; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save();
-  if(!restore && DECK===SLIDES) coach(unionRect($('hint'),slotsEl), 'カデンツガイドです。マスにコードを置くと、T から次の T までの流れ（カデンツ）がマスの上に線で表示されます。お手本どおりなら ◎、外れているところは赤で示します。赤でも、聴いて良ければそのままでOKです。', [['OK',closeCoach]], true);
 }
 function showSlide(i){
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio();
