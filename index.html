@@ -225,6 +225,11 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .sec h3{font-size:.72rem;letter-spacing:.08em;color:var(--muted);margin:0;font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .keys{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.selwrap{position:relative}
+.selwrap select{appearance:none;-webkit-appearance:none;width:100%;font:inherit;font-size:.9rem;font-weight:500;color:var(--ink);background:var(--surface);
+  border:1.5px solid var(--line);border-radius:12px;padding:10px 36px 10px 14px;cursor:pointer}
+.selwrap select:focus-visible{outline:2px solid var(--t);outline-offset:2px}
+.selwrap svg{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted)}
 .chip{border:1.5px solid var(--line);background:var(--surface);font-weight:500;font-size:.84rem;padding:7px 12px;border-radius:999px;cursor:pointer}
 .keys .chip{padding:8px 0;border-radius:10px;font-family:var(--display);font-weight:700}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -438,7 +443,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>音色</h3><div class="chips" id="instChips"></div></div>
   <div class="sec"><h3>ドラムの音</h3><div class="chips" id="kitChips"></div></div>
   <div class="sec"><h3>ベース</h3><div class="chips" id="bassMenuChips"></div></div>
-  <div class="sec"><h3>有名な進行を入れてみる</h3><div class="chips" id="presetChips"></div></div>
+  <div class="sec"><h3>有名な進行を入れてみる</h3><div class="selwrap"><select id="presetSel" aria-label="有名な進行を選ぶ"></select><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div></div>
   <div class="sec"><h3>色の意味</h3>
     <div class="legend">
       <span class="T"><b>T</b>トニック：落ち着く・帰ってくる場所</span>
@@ -1114,10 +1119,12 @@ function buildMenu(){
   chips($('guideChips'), [[true,'表示する'],[false,'表示しない']], state.guide, v=>{ state.guide=v; renderAll(); });
   chips($('proChips'), [[true,'オン'],[false,'オフ']], state.pro, v=>{ state.pro=v; document.body.classList.toggle('pro',v); renderAll(); });
   chips($('bassMenuChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); buildMenu(); });
-  chips($('presetChips'), PRESETS.map((p,i)=>[i,p.name]), -1, i=>{
+  const ps=$('presetSel'), deg=t=>typeof t==='number'?DEG[t].num:({III7:'3(7)',bVII:'♭7',bVI:'♭6',IVm:'4m',Vm:'5m',II7:'2(7)',VI7:'6(7)'})[t]||t;
+  ps.innerHTML='<option value="" selected disabled>進行を選ぶ…</option>'+[4,8].map(L=>`<optgroup label="${L}小節">${PRESETS.map((p,i)=>p.p.length===L?`<option value="${i}">${p.name}${/-[\d♭]/.test(p.name)?'':`：${p.p.map(deg).join('-')}`}</option>`:'').join('')}</optgroup>`).join('');
+  ps.onchange=()=>{ const i=+ps.value; if(isNaN(i)||ps.value==='') return;
     const p=PRESETS[i].p; state.bars=p.length;
-    state.slots=Array.from({length:16},(_,j)=>p[j]!==undefined?tokSpec(p[j]):null); state.segs=Array.from({length:16},()=>[]); state.ant=Array(16).fill(null); selected=null; page=0; renderAll(); closeAll();
-  });
+    state.slots=Array.from({length:16},(_,j)=>p[j]!==undefined?tokSpec(p[j]):null); state.segs=Array.from({length:16},()=>[]); state.ant=Array(16).fill(null); selected=null; page=0; renderAll(); closeAll(); ps.value='';
+  };
 }
 const scrim=$('scrim'), drawer=$('drawer'), sheet=$('sheet');
 function closeAll(){ drawer.classList.remove('on'); sheet.classList.remove('on'); $('edSheet').classList.remove('on'); $('patSheet').classList.remove('on'); scrim.classList.remove('on'); }
