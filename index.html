@@ -1844,6 +1844,8 @@ const SLIDES=[
 // ================= 雰囲気のつくり方（2つめのチュートリアル） =================
 const SP=(o,q,x)=>({o,q,x:x||'',b:null});
 Object.assign(EX,{
+  near:  {degs:[0,1,2,3], roles:['T','S','T','S'], groups:[], drum:'pop', arp:'piano4', bpm:96},
+  far:   {degs:[5,1,4,0], roles:['T','S','D','T'], groups:[], drum:'pop', arp:'piano4', bpm:96},
   calm:  {degs:[0,4,5,3], roles:['T','D','T','S'], groups:[], drum:'xstick', arp:'ballad', bpm:72},
   drive: {degs:[0,4,5,3], roles:['T','D','T','S'], groups:[], drum:'dpop', arp:'popanti', bpm:128},
   bright:{degs:[0,3,4,0], roles:['T','S','D','T'], groups:[], drum:'pop', arp:'piano4', bpm:120},
@@ -1867,7 +1869,7 @@ const MOOD=[
   {html:()=>`<div class="eyebrow a">雰囲気のつくり方</div>
      <div class="chips7">${[0,5,3,4].map((d,k)=>`<span class="floaty" style="animation-delay:${k*.4}s;display:inline-block">${tc(d,['bright','dark','bright','bright'][k],.2+k*.15)}</span>`).join('')}</div>
      <h2 class="a" style="--dl:.8">曲の雰囲気は<br>コード選びで決まります</h2>
-     <p class="a" style="--dl:1.2">明るい、切ない、おしゃれ…。<br>ねらった雰囲気に近づく3つのコツと、<br>そのまま使えるお手本を紹介します。</p>`},
+     <p class="a" style="--dl:1.2">明るい、切ない、おしゃれ…。<br>ねらった雰囲気に近づく4つのコツと、<br>そのまま使えるお手本を紹介します。</p>`},
   {html:()=>`<div class="eyebrow a">コツ①　明るいコードと暗いコードの割合</div>
      <h2 class="a" style="--dl:.1">明るいコードが多いと元気に<br>暗いコードが多いと切なく</h2>
      <div class="groups">
@@ -1883,7 +1885,15 @@ const MOOD=[
        <section class="S a" style="--dl:1.1"><span class="L">4</span><div><h3>4 で始める・終わる</h3><p>ふわっと浮かぶ。まだ続きそうな感じ。</p></div></section>
        <section class="D a" style="--dl:1.4"><span class="L">5</span><div><h3>5 で終わる</h3><p>次へ引っぱる。くり返しにぴったり。</p></div></section>
      </div>`},
-  {html:()=>`<div class="eyebrow a">コツ③　リズムとテンポ</div>
+  {html:()=>`<div class="eyebrow a">コツ③　コードどうしの距離</div>
+     <h2 class="a" style="--dl:.1">離れると力強く<br>近いと穏やかに</h2>
+     <div class="roles">
+       <section class="S a" style="--dl:.5"><span class="L" style="font-size:1.1rem">近い</span><div><h3>となりの数字へ進む</h3><p>1→2m、4→5 など。なめらか。</p></div></section>
+       <section class="D a" style="--dl:.9"><span class="L" style="font-size:1.1rem">遠い</span><div><h3>数字が離れたコードへ跳ぶ</h3><p>1→4、6m→2m など。力強い。</p></div></section>
+     </div>
+     <p class="a" style="--dl:1.4">サビで力強くしたいときは跳んで、<br>静かな所では、となりへ進んでみましょう。</p>
+     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${listenBtn('near').replace('聴いてみる','近い：1-2m-3m-4')}${listenBtn('far').replace('聴いてみる','遠い：6m-2m-5-1')}</div>`},
+  {html:()=>`<div class="eyebrow a">コツ④　リズムとテンポ</div>
      <h2 class="a" style="--dl:.1">同じ進行でも<br>リズムで雰囲気が変わります</h2>
      ${exampleHTML(EX.calm)}
      <p class="a" style="--dl:1">パターンとBPMを変えるだけで、<br>しっとりにも、ノリノリにもなります。</p>
@@ -1895,13 +1905,14 @@ const MOOD=[
   moodSlide('⑤','壮大・ドラマチック','長い進行を<br>ゆったり鳴らす','epic',['8小節のカノン進行を、ゆっくりのテンポで。','コードを伸ばす（のばす）パターンにすると、広がりが出ます。']),
   moodSlide('⑥','かっこいい・ロック','明るいのに<br>ちょっとワル','rock',['1 → ♭7 → 4 → 1。キーの外の ♭7 を混ぜると、ロックっぽい骨太な響きに。','♭7 は PROモードの「コードを編集」で、ルートを B♭ にすると作れます。']),
   {html:()=>`<div class="eyebrow a">まとめ</div>
-     <h2 class="a" style="--dl:.1">雰囲気づくりの3つのコツ</h2>
+     <h2 class="a" style="--dl:.1">雰囲気づくりの4つのコツ</h2>
      <div class="roles">
        <section class="T a" style="--dl:.5"><span class="L">①</span><div><h3>明るい・暗いの割合</h3><p>暗いコードが増えるほど、切なくなる。</p></div></section>
-       <section class="S a" style="--dl:.8"><span class="L">②</span><div><h3>始まりと終わり</h3><p>1 はスッキリ、6m は切ない、4 はふわっと。</p></div></section>
-       <section class="D a" style="--dl:1.1"><span class="L">③</span><div><h3>リズムとテンポ</h3><p>パターンとBPMで、しっとりにもノリノリにも。</p></div></section>
+       <section class="S a" style="--dl:.8"><span class="L">②</span><div><h3>始まりと終わり</h3><p>1 はスッキリ、6m は切ない。</p></div></section>
+       <section class="D a" style="--dl:1.1"><span class="L">③</span><div><h3>コードどうしの距離</h3><p>跳ぶと力強く、となりへ進むと穏やか。</p></div></section>
+       <section class="T a" style="--dl:1.4"><span class="L">④</span><div><h3>リズムとテンポ</h3><p>パターンとBPMで印象が変わる。</p></div></section>
      </div>
-     <p class="a" style="--dl:1.6">お手本をもとに、1つずつコードを入れ替えて<br>自分だけの雰囲気を探してみましょう！</p>`, last:true, finish:()=>endTutorial(true)},
+     <p class="a" style="--dl:1.9">お手本をもとに、1つずつコードを入れ替えて<br>自分だけの雰囲気を探してみましょう！</p>`, last:true, finish:()=>endTutorial(true)},
 ];
 let DECK=SLIDES;
 function tutDots(){ $('tutDots').innerHTML=DECK.map((_,k)=>`<i class="${k===TUT.i?'on':''}"></i>`).join(''); }
