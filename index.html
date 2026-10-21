@@ -1480,6 +1480,8 @@ function playEvents(evs,bt,ct,sd,pat){
 let bassHeld=[];
 function chokeBass(t){ bassHeld.forEach(g=>{ try{ g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0,t,.02); }catch(e){} }); bassHeld=[]; }
 // ベースの音：0=ルート 12=オクターブ '3'=3度 '5'=5度 '6'=6度 'ap'=次のコードへつなぐ音（今のコードの音から選ぶ）
+// シャッフル（ブギ）の「6」：明るいコードは6度、暗いコード（m・m-5）は短7度（Am なら F♯ではなく G）。どちらも和音やキーとぶつからない
+const sixthOf=bt=>(bt.third===3||bt.fifth===6)?10:9;
 const bassPcOf=v=>{ const sp=specOf(v); return (keyObj().pc+((sp.b!==null&&sp.b!==undefined)?sp.b:sp.o))%12; };
 function playBass(list,s,t,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,vel])=>{ if(st!==s) return;
   let n;
@@ -1491,7 +1493,7 @@ function playBass(list,s,t,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,v
       let best=12, bd=99;
       cand.forEach(c=>{ const m=bt.bass+c; for(const o of [-12,0,12]){ const d=Math.abs(m-(28+((pc-4+12)%12)+o)); if(d<bd&&c!==0){ bd=d; best=c; } } });
       n=best; }
-  } else if(typeof iv==='string'){ n = bt.slash ? 12 : iv==='3'?bt.third : iv==='5'?bt.fifth : iv==='6'?9 : 0; }
+  } else if(typeof iv==='string'){ n = bt.slash ? 12 : iv==='3'?bt.third : iv==='5'?bt.fifth : iv==='6'?sixthOf(bt) : 0; }
   else n = iv===7 ? (bt.slash?12:bt.fifth) : iv;
   bassTone(bt.bass+n,t,Math.min(len,room)*sd*.92,vel); }); }
 function scheduleStep(g,t){
