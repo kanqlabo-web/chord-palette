@@ -225,11 +225,19 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .sec h3{font-size:.72rem;letter-spacing:.08em;color:var(--muted);margin:0;font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .keys{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-.selwrap{position:relative}
-.selwrap select{appearance:none;-webkit-appearance:none;width:100%;font:inherit;font-size:.9rem;font-weight:500;color:var(--ink);background:var(--surface);
-  border:1.5px solid var(--line);border-radius:12px;padding:10px 36px 10px 14px;cursor:pointer}
-.selwrap select:focus-visible{outline:2px solid var(--t);outline-offset:2px}
-.selwrap svg{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted)}
+.acc{border:1.5px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.acc summary{list-style:none;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;font-size:.9rem;font-weight:500}
+.acc summary::-webkit-details-marker{display:none}
+.acc summary svg{color:var(--muted);transition:transform .2s}
+.acc[open] summary svg{transform:rotate(180deg)}
+.acc summary:focus-visible{outline:2px solid var(--t);outline-offset:-2px}
+.acclist{border-top:1px solid var(--line);display:flex;flex-direction:column}
+.acclist h4{margin:0;padding:10px 14px 4px;font-size:.66rem;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.acclist button{border:0;background:transparent;text-align:left;padding:9px 14px;display:flex;flex-direction:column;gap:1px;cursor:pointer;font:inherit;color:var(--ink)}
+.acclist button+button{border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.acclist button:active{background:var(--lane)}
+.acclist b{font-size:.9rem;font-weight:700}
+.acclist small{font-size:.74rem;color:var(--muted);font-family:var(--display);font-weight:700}
 .chip{border:1.5px solid var(--line);background:var(--surface);font-weight:500;font-size:.84rem;padding:7px 12px;border-radius:999px;cursor:pointer}
 .keys .chip{padding:8px 0;border-radius:10px;font-family:var(--display);font-weight:700}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -443,7 +451,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>音色</h3><div class="chips" id="instChips"></div></div>
   <div class="sec"><h3>ドラムの音</h3><div class="chips" id="kitChips"></div></div>
   <div class="sec"><h3>ベース</h3><div class="chips" id="bassMenuChips"></div></div>
-  <div class="sec"><h3>有名な進行を入れてみる</h3><div class="selwrap"><select id="presetSel" aria-label="有名な進行を選ぶ"></select><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div></div>
+  <div class="sec"><h3>有名な進行を入れてみる</h3><details class="acc" id="presetAcc"><summary><span>進行の一覧</span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><div class="acclist" id="presetList"></div></details></div>
   <div class="sec"><h3>色の意味</h3>
     <div class="legend">
       <span class="T"><b>T</b>トニック：落ち着く・帰ってくる場所</span>
@@ -847,18 +855,18 @@ const PRESETS=[
   {name:'アクシス進行（6m始まり）', p:[5,3,0,4]},
   {name:'アクシス進行（4始まり）', p:[3,0,4,5]},
   {name:'50年代進行', p:[0,5,3,4]},
-  {name:'循環コード（1-6m-2m-5）', p:[0,5,1,4]},
-  {name:'逆循環（2m-5-1-6m）', p:[1,4,0,5]},
-  {name:'3m-6m-2m-5', p:[2,5,1,4]},
+  {name:'循環コード', p:[0,5,1,4]},
+  {name:'逆循環', p:[1,4,0,5]},
+  {name:'サンロクニーゴー', p:[2,5,1,4]},
   {name:'ツーファイブワン', p:[1,4,0,0]},
-  {name:'スリーコード（1-4-5-1）', p:[0,3,4,0]},
-  {name:'スリーコード（1-4-1-5）', p:[0,3,0,4]},
-  {name:'下降進行（4-3m-2m-1）', p:[3,2,1,0]},
+  {name:'スリーコード', p:[0,3,4,0]},
+  {name:'スリーコード（5で終わる）', p:[0,3,0,4]},
+  {name:'下降進行', p:[3,2,1,0]},
   {name:'アンダルシア進行', p:[5,4,3,'III7']},
   {name:'丸サ進行', p:[3,'III7',5,'Vm']},
   {name:'Creep進行', p:[0,'III7',3,'IVm']},
   {name:'サブドミナントマイナー', p:[0,3,'IVm',0]},
-  {name:'ロック進行（1-♭7-4-1）', p:[0,'bVII',3,0]},
+  {name:'ロック進行', p:[0,'bVII',3,0]},
   {name:'カノン進行', p:[0,4,5,2,3,0,3,4]},
   {name:'王道進行（8小節）', p:[3,4,2,5,1,4,0,0]},
 ];
@@ -1119,12 +1127,13 @@ function buildMenu(){
   chips($('guideChips'), [[true,'表示する'],[false,'表示しない']], state.guide, v=>{ state.guide=v; renderAll(); });
   chips($('proChips'), [[true,'オン'],[false,'オフ']], state.pro, v=>{ state.pro=v; document.body.classList.toggle('pro',v); renderAll(); });
   chips($('bassMenuChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); buildMenu(); });
-  const ps=$('presetSel'), deg=t=>typeof t==='number'?DEG[t].num:({III7:'3(7)',bVII:'♭7',bVI:'♭6',IVm:'4m',Vm:'5m',II7:'2(7)',VI7:'6(7)'})[t]||t;
-  ps.innerHTML='<option value="" selected disabled>進行を選ぶ…</option>'+[4,8].map(L=>`<optgroup label="${L}小節">${PRESETS.map((p,i)=>p.p.length===L?`<option value="${i}">${p.name}${/-[\d♭]/.test(p.name)?'':`：${p.p.map(deg).join('-')}`}</option>`:'').join('')}</optgroup>`).join('');
-  ps.onchange=()=>{ const i=+ps.value; if(isNaN(i)||ps.value==='') return;
-    const p=PRESETS[i].p; state.bars=p.length;
-    state.slots=Array.from({length:16},(_,j)=>p[j]!==undefined?tokSpec(p[j]):null); state.segs=Array.from({length:16},()=>[]); state.ant=Array(16).fill(null); selected=null; page=0; renderAll(); closeAll(); ps.value='';
-  };
+  const deg=t=>typeof t==='number'?DEG[t].num:({III7:'3(7)',bVII:'♭7',bVI:'♭6',IVm:'4m',Vm:'5m',II7:'2(7)',VI7:'6(7)'})[t]||t;
+  const pl=$('presetList');
+  pl.innerHTML=[4,8].map(L=>`<h4>${L}小節</h4>`+PRESETS.map((p,i)=>p.p.length===L?`<button data-i="${i}"><b>${p.name}</b><small>${p.p.map(deg).join(' - ')}</small></button>`:'').join('')).join('');
+  pl.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    const p=PRESETS[+b.dataset.i].p; state.bars=p.length;
+    state.slots=Array.from({length:16},(_,j)=>p[j]!==undefined?tokSpec(p[j]):null); state.segs=Array.from({length:16},()=>[]); state.ant=Array(16).fill(null); selected=null; page=0; renderAll(); closeAll();
+  });
 }
 const scrim=$('scrim'), drawer=$('drawer'), sheet=$('sheet');
 function closeAll(){ drawer.classList.remove('on'); sheet.classList.remove('on'); $('edSheet').classList.remove('on'); $('patSheet').classList.remove('on'); scrim.classList.remove('on'); }
