@@ -412,6 +412,10 @@ body.tutlite .gstrip{visibility:hidden}
 @keyframes tfl{50%{transform:translateY(-6px)}}
 /* コーチマーク（メイン画面の上の吹き出し） */
 .coach{position:fixed;inset:0;z-index:55;pointer-events:none}
+/* 最初のチュートリアルのあとに、マスの上の行の右に小さく出す案内 */
+.moodtip{display:inline-flex;align-items:center;gap:4px;border:1.5px solid var(--warn);background:color-mix(in srgb,var(--warn) 16%,var(--surface));color:var(--ink);
+  border-radius:999px;padding:3px 4px 3px 10px;font-size:.7rem;font-weight:700;white-space:nowrap;cursor:pointer;line-height:1.2;animation:tin .4s ease}
+.moodtip i{font-style:normal;color:var(--muted);font-weight:400;padding:0 4px;font-size:.85rem}
 /* 実践編のお題の帯：メイン画面のいちばん上（タイトルの行）に重ねる */
 .app>.moodbar{grid-column:1/-1}
 body.practice .app>.top{display:none}
@@ -455,7 +459,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="palette" id="palette"></div>
 
   <div class="slotwrap">
-    <div class="slothead"><span id="hint">コードをマスへドラッグ</span><span class="right"><b id="progName"></b><button class="edall" id="edAll">コードを編集</button></span></div>
+    <div class="slothead"><span id="hint">コードをマスへドラッグ</span><span class="right"><button class="moodtip" id="moodTip" hidden>次は「雰囲気のつくり方」 ›<i id="moodTipX" aria-label="閉じる">×</i></button><b id="progName"></b><button class="edall" id="edAll">コードを編集</button></span></div>
     <div class="pages" id="pages"></div>
     <div class="gstrip" id="gstrip" aria-hidden="true"></div>
     <div class="slots" id="slots"></div>
@@ -2123,12 +2127,14 @@ function openTutorial(deck){
 }
 function closeCoach(){ $('coach').hidden=true; document.body.classList.remove('tutlite'); clearInterval(TUT.wait); }
 function endTutorial(restore){
+  const showTip = !restore && DECK===SLIDES;
   $('moodBar').hidden=true; document.body.classList.remove('practice'); TUT.practice=false;
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio(); closeCoach();
   $('tut').hidden=true; TUT.on=false;
   if(restore && TUT.backup){ state=JSON.parse(TUT.backup); document.body.classList.toggle('pro',!!state.pro); }
   else { const b=JSON.parse(TUT.backup); state={...b, slots:Array(16).fill(null), segs:Array.from({length:16},()=>[]), bars:4, len:4, label:'num', guide:true}; document.body.classList.toggle('pro',!!state.pro); }
   page=0; selected=null; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save();
+  if(showTip){ $('moodTip').hidden=false; clearTimeout(TUT.tipT); TUT.tipT=setTimeout(()=>$('moodTip').hidden=true,180000); }
 }
 function showSlide(i){
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio();
@@ -2270,7 +2276,8 @@ $('tutBack').onclick=()=>{ const sl=DECK[TUT.i];
   showSlide(TUT.i-1); };
 $('tutSkip').onclick=()=>endTutorial(true);
 $('tutOpen').onclick=()=>openTutorial(SLIDES);
-$('moodOpen').onclick=()=>openTutorial(MOOD);
+$('moodOpen').onclick=()=>{ $('moodTip').hidden=true; openTutorial(MOOD); };
+$('moodTip').onclick=e=>{ $('moodTip').hidden=true; if(e.target.id!=='moodTipX') openTutorial(MOOD); };
 window.addEventListener('resize',()=>{ if(TUT.on && !$('coach').hidden && DECK[TUT.i].coach) runCoach(DECK[TUT.i].coach); });
 
 // ピンチズームを禁止（iPhone の Safari は viewport の指定を無視するので、ジェスチャー自体を止める）
