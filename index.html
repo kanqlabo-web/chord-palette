@@ -190,6 +190,16 @@ body.pro .protag{display:inline-block}
 
 /* lanes */
 .lane{display:flex;flex-direction:column;gap:3px;min-height:0;border:0;background:transparent;padding:0;text-align:left;cursor:pointer}
+.mix{display:none;margin-left:auto;align-items:center;gap:4px;cursor:default}
+body.pro .mix{display:inline-flex}
+.mbtn{width:22px;height:18px;border-radius:5px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:inherit;font-size:.62rem;font-weight:900;padding:0;cursor:pointer;line-height:1}
+.mbtn[data-k="m"][aria-pressed="true"]{background:var(--d);border-color:var(--d);color:#fff}
+.mbtn[data-k="s"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:#1B2230}
+.mix input{width:64px;height:16px;accent-color:var(--ink);font-size:16px;margin:0}
+.lane.silent canvas{opacity:.35}
+.lanehead{width:100%;min-width:0;white-space:nowrap}
+.lanehead>svg{flex:none}
+.lanehead b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lanehead{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--muted);height:16px}
 .lanehead b{color:var(--ink);font-weight:700}
 .lanehead svg{margin-left:-2px}
@@ -494,18 +504,18 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <div class="slots" id="slots"></div>
   </div>
 
-  <button class="lane" id="arpLane" aria-label="コードパターンを選ぶ">
-    <span class="lanehead"><span id="arpLabel">コード</span> <b id="arpName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+  <div class="lane" id="arpLane" role="button" tabindex="0" aria-label="コードパターンを選ぶ">
+    <span class="lanehead"><span id="arpLabel">コード</span> <b id="arpName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mix" data-ch="arp"><button class="mbtn" data-k="m" aria-label="ミュート">M</button><button class="mbtn" data-k="s" aria-label="ソロ">S</button><input type="range" min="0" max="1.5" step="0.05" value="1" aria-label="音量"></span></span>
     <canvas id="arpCv"></canvas>
-  </button>
-  <button class="lane" id="drumLane" aria-label="ドラムパターンを選ぶ">
-    <span class="lanehead">ドラム <b id="drumName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+  </div>
+  <div class="lane" id="drumLane" role="button" tabindex="0" aria-label="ドラムパターンを選ぶ">
+    <span class="lanehead">ドラム <b id="drumName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mix" data-ch="drum"><button class="mbtn" data-k="m" aria-label="ミュート">M</button><button class="mbtn" data-k="s" aria-label="ソロ">S</button><input type="range" min="0" max="1.5" step="0.05" value="1" aria-label="音量"></span></span>
     <canvas id="drumCv"></canvas>
-  </button>
-  <button class="lane" id="bassLane" aria-label="ベースパターンを選ぶ">
-    <span class="lanehead">ベース <b id="bassName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+  </div>
+  <div class="lane" id="bassLane" role="button" tabindex="0" aria-label="ベースパターンを選ぶ">
+    <span class="lanehead">ベース <b id="bassName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mix" data-ch="bass"><button class="mbtn" data-k="m" aria-label="ミュート">M</button><button class="mbtn" data-k="s" aria-label="ソロ">S</button><input type="range" min="0" max="1.5" step="0.05" value="1" aria-label="音量"></span></span>
     <canvas id="bassCv"></canvas>
-  </button>
+  </div>
 
   <div class="transport">
     <button class="play" id="play" aria-label="再生"></button>
@@ -998,6 +1008,18 @@ const INSTS={spiano:'シンセピアノ',sepiano:'シンセエレピ',sorgan:'�
 const SYNTH_INST={spiano:'piano',sepiano:'epiano',sorgan:'organ',sguitar:'nylon',synth:'synth'};
 const instShort=()=>INSTS[state.inst];
 const isSynthInst=()=>state.inst in SYNTH_INST;
+// PROモードのミキサー：ドラム・コード・ベースの音量とミュート・ソロ
+const MIX_CH=['arp','drum','bass'];
+function mixOf(ch){ if(!state.mix) state.mix={}; return state.mix[ch]||(state.mix[ch]={v:1,m:false,s:false}); }
+function applyMix(){ if(!ctx||!drumBus) return;
+  const pro=!!state.pro, solo=pro&&MIX_CH.some(c=>mixOf(c).s), t=ctx.currentTime;
+  [['arp',compVol],['drum',drumBus],['bass',bassBus]].forEach(([c,node])=>{ const x=mixOf(c);
+    const g = !pro ? 1 : solo ? (x.s?x.v:0) : (x.m?0:x.v);
+    node.gain.setTargetAtTime(g,t,.03); });
+  document.querySelectorAll('.mix').forEach(el=>{ const x=mixOf(el.dataset.ch);
+    el.querySelector('[data-k="m"]').setAttribute('aria-pressed',x.m); el.querySelector('[data-k="s"]').setAttribute('aria-pressed',x.s);
+    el.querySelector('input').value=x.v; el.closest('.lane').classList.toggle('silent', pro && (solo?!x.s:x.m)); });
+}
 const BASS_SNDS={bass:'エレキベース',ubass:'ウッドベース',sbass:'シンセベース'};
 const BASS_FX={bass:{gain:1,cut:2200},ubass:{gain:1.15,cut:1800},sbass:{gain:.75,cut:3200,loop:true}};
 const KITS={synth:'シンセドラム',std:'スタンダード',room:'ルーム',power:'パワー',brush:'ブラシ',elec:'エレクトロ',tr808:'TR-808'};
@@ -1277,7 +1299,7 @@ function renderAll(){
   if(state.pro){ $('arpLabel').textContent='コード'; $('arpName').textContent=patName(ARPS[state.arp])+' ・ '+instShort(); $('arpLane').setAttribute('aria-label','コードパターンを選ぶ'); }
   else { const st=styleNow(); $('arpLabel').textContent='伴奏'; $('arpName').textContent=(st?st.name:`${patName(DRUMS[state.drum])}＋${patName(ARPS[state.arp])}`)+' ・ '+instShort(); $('arpLane').setAttribute('aria-label','伴奏スタイルを選ぶ'); }
   $('bassName').textContent=state.bass?BASSES[state.bassPat||'auto'].name:'なし';
-  buildMenu();
+  buildMenu(); applyMix();
 }
 
 // ---------- drawer ----------
@@ -1533,6 +1555,11 @@ function openBassSheet(){
       drawBassBar(g,0,0,cv.width,cv.height,BASSES[k].v||DRUMS[state.drum].bass||[],col.d,col); }); });
 }
 $('bassLane').onclick=()=>openSheet('bass');
+document.querySelectorAll('.lane').forEach(l=>l.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); l.click(); } }));
+document.querySelectorAll('.mix').forEach(el=>{ const ch=el.dataset.ch;
+  ['click','pointerdown'].forEach(t=>el.addEventListener(t,e=>e.stopPropagation()));
+  el.querySelectorAll('.mbtn').forEach(b=>b.onclick=e=>{ e.stopPropagation(); const x=mixOf(ch); x[b.dataset.k]=!x[b.dataset.k]; applyMix(); save(); });
+  el.querySelector('input').oninput=e=>{ mixOf(ch).v=+e.target.value; applyMix(); save(); }; });
 $('drumLane').onclick=()=>openSheet('drum');
 $('arpLane').onclick=()=>openSheet('arp');
 
@@ -1640,14 +1667,15 @@ palette.addEventListener('keydown',e=>{
 });
 
 // ---------- audio ----------
-let ctx=null, master, noiseBuf, compBus=null, OUT=null;
+let ctx=null, master, noiseBuf, compBus=null, compVol=null, drumBus=null, bassBus=null, OUT=null;
 function ensureAudio(noResume){
   if(ctx && ctx.state==='closed') ctx=null;
   if(!ctx){
     ctx=new (window.AudioContext||window.webkitAudioContext)();
     const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=4;
     master=ctx.createGain(); master.gain.value=.85; master.connect(comp); comp.connect(ctx.destination);
-    compBus=ctx.createGain(); compBus.connect(master);   // 伴奏（コード）だけを通す道。ダンスではキックに合わせて音量を沈める（サイドチェイン風）
+    compVol=ctx.createGain(); compVol.connect(master); drumBus=ctx.createGain(); drumBus.connect(master); bassBus=ctx.createGain(); bassBus.connect(master);
+    compBus=ctx.createGain(); compBus.connect(compVol); applyMix();   // 伴奏（コード）だけを通す道。ダンスではキックに合わせて音量を沈める（サイドチェイン風）
     noiseBuf=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);
     const ch=noiseBuf.getChannelData(0); for(let i=0;i<ch.length;i++) ch[i]=Math.random()*2-1;
   }
@@ -1703,11 +1731,12 @@ const INST_FX={piano:{gain:3.6,rel:.2,hold:1.15},epiano:{gain:3.4,rel:.18,hold:1
 function keyTone(m,t,dur,v){
   v=Math.max(.05,Math.min(1,v));
   const fx=INST_FX[state.inst], set=LOADED[state.inst];
-  OUT=compBus;
+  OUT=playing?compBus:null;
   const g = fx&&set&&playZone(set,m,t,Math.max(dur*fx.hold,.08),.36*fx.gain*Math.pow(v,1.6),fx.rel,900+9000*v*v,fx.loop);
   const r = g || synthTone(m,t,dur,.34*Math.pow(v,1.3)); OUT=null; return r;
 }
-function bassTone(m,t,dur,vel=1){
+function bassTone(m,t,dur,vel=1){ OUT=playing?bassBus:null; const r=bassTone_(m,t,dur,vel); OUT=null; return r; }
+function bassTone_(m,t,dur,vel=1){
   const nm=state.bassSnd||'bass', fx=BASS_FX[nm]||BASS_FX.bass;   // シンセ系の音色で「エレキベース」のときは軽いシンセベースを使う
   if(nm==='sbass'){ const a=analogBass(m+12,t,dur,vel); bassHeld.push(a); return a; }   // 1オクターブ上げてスマホのスピーカーでも聞こえるように
   const g=(!isSynthInst()||nm!=='bass')&&LOADED[nm]&&playZone(LOADED[nm],m,t,dur,.7*vel*fx.gain,.08,fx.cut,fx.loop);
@@ -1715,13 +1744,14 @@ function bassTone(m,t,dur,vel=1){
 }
 const DRUM_VOL={36:1.15,37:.75,38:.9,42:.3,46:.22,49:.28,51:.26,50:.8,47:.8,45:.85};
 function drum_(note,t,vel=1){ return drum(note,t,vel); }
-function drum(note,t,vel=1){
+function drum(note,t,vel=1){ OUT=playing?drumBus:null; drumIn(note,t,vel); OUT=null; }
+function drumIn(note,t,vel=1){
   const kit=LOADED['kit-'+state.kit];
   if(kit&&kit[note]&&playZone(kit[note],note,t,note===49?2.5:1.2,DRUM_VOL[note]*vel,.25)) return;
   const f={36:kick,37:rim,38:snare,42:t=>hat(t,vel>.7),46:ohat,49:t=>noise(t,'highpass',6000,1.2,.1*vel),51:t=>noise(t,'bandpass',6500,.4,.07*vel,2),
     50:t=>tom(t,220),47:t=>tom(t,160),45:t=>tom(t,115)}[note]; if(f) f(t);
 }
-function tom(t,f){ const g=ctx.createGain(); g.connect(master); const o=osc('sine',f,t,t+.4,g); o.frequency.exponentialRampToValueAtTime(f*.6,t+.3);
+function tom(t,f){ const g=ctx.createGain(); g.connect(OUT||master); const o=osc('sine',f,t,t+.4,g); o.frequency.exponentialRampToValueAtTime(f*.6,t+.3);
   g.gain.setValueAtTime(.7,t); g.gain.exponentialRampToValueAtTime(.0001,t+.35); }
 function previewKit(){ whenRunning(previewKitNow); }
 function previewKitNow(){ const t=ctx.currentTime+.03, sd=.13; drum(36,t); drum(42,t); drum(42,t+sd,.5); drum(38,t+sd*2); drum(42,t+sd*2); drum(36,t+sd*3); drum(46,t+sd*3); }
@@ -1764,7 +1794,7 @@ function synthTone(m,t,dur,vel){
 }
 // シンセベース：ノコギリ波＋1オクターブ下の矩形波を、フィルターを開いて閉じる「ブリッ」とした音に
 function analogBass(m,t,dur,vel=1){
-  const g=ctx.createGain(), lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=6; lp.connect(g); g.connect(master);
+  const g=ctx.createGain(), lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=6; lp.connect(g); g.connect(OUT||master);
   const f=mtof(m), end=t+dur+.4;
   osc('sawtooth',f,t,end,lp,-6); osc('sawtooth',f,t,end,lp,6);
   const g2=ctx.createGain(); g2.gain.value=.5; g2.connect(lp); osc('square',f/2,t,end,g2);
@@ -1773,7 +1803,7 @@ function analogBass(m,t,dur,vel=1){
   return g;
 }
 function synthBass(m,t,dur,vel=1){
-  const g=ctx.createGain(), lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=700; lp.connect(g); g.connect(master);
+  const g=ctx.createGain(), lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=700; lp.connect(g); g.connect(OUT||master);
   osc('triangle',mtof(m),t,t+dur+.5,lp);
   const g2=ctx.createGain(); g2.gain.value=.35; g2.connect(lp); osc('sine',mtof(m)*2,t,t+dur+.5,g2);   // 低い音でもスマホのスピーカーで聞こえるように倍音を足す
   g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.34*vel,t+.01); g.gain.setTargetAtTime(.34*vel*.5,t+.02,.45); g.gain.setTargetAtTime(.0001,t+dur,.06);   // 弾いた後は少しずつ減衰（ずっと同じ音量で伸ばすと低音がこもる）
@@ -1782,11 +1812,11 @@ function synthBass(m,t,dur,vel=1){
 function noise(t,type,freq,dur,vol,q=1){
   const s=ctx.createBufferSource(); s.buffer=noiseBuf; const f=ctx.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q;
   const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-  s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+dur+.02);
+  s.connect(f); f.connect(g); g.connect(OUT||master); s.start(t); s.stop(t+dur+.02);
 }
-function kick(t){ const g=ctx.createGain(); g.connect(master); const o=osc('sine',140,t,t+.35,g); o.frequency.setValueAtTime(140,t); o.frequency.exponentialRampToValueAtTime(42,t+.13);
+function kick(t){ const g=ctx.createGain(); g.connect(OUT||master); const o=osc('sine',140,t,t+.35,g); o.frequency.setValueAtTime(140,t); o.frequency.exponentialRampToValueAtTime(42,t+.13);
   g.gain.setValueAtTime(.95,t); g.gain.exponentialRampToValueAtTime(.0001,t+.32); }
-function snare(t){ noise(t,'bandpass',1900,.17,.5,.7); const g=ctx.createGain(); g.connect(master); osc('triangle',200,t,t+.1,g);
+function snare(t){ noise(t,'bandpass',1900,.17,.5,.7); const g=ctx.createGain(); g.connect(OUT||master); osc('triangle',200,t,t+.1,g);
   g.gain.setValueAtTime(.35,t); g.gain.exponentialRampToValueAtTime(.0001,t+.08); }
 const hat=(t,a)=>noise(t,'highpass',8000,.035,a?.1:.055);
 const ohat=t=>noise(t,'highpass',7500,.18,.07);
