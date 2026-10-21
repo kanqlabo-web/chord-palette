@@ -18,14 +18,14 @@
   --t:#3567D6; --s:#24946A; --d:#DA6A22;
   --display:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Rounded Mplus 1c",sans-serif;
   --body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
-  --gap:8px; --warn:#E3A82B;
+  --gap:8px; --warn:#E3A82B; --warnText:#A86F00;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#11151C; --surface:#1A202A; --ink:#E8ECF3; --muted:#8C97AA; --line:#2B3441; --lane:#161B23;
-  --t:#7EA4FF; --s:#5BCB97; --d:#FF9C5B; --warn:#F2C14E; color-scheme:dark}}
+  --t:#7EA4FF; --s:#5BCB97; --d:#FF9C5B; --warn:#F2C14E; --warnText:#F2C14E; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#11151C; --surface:#1A202A; --ink:#E8ECF3; --muted:#8C97AA; --line:#2B3441; --lane:#161B23;
-  --t:#7EA4FF; --s:#5BCB97; --d:#FF9C5B; --warn:#F2C14E; color-scheme:dark}
+  --t:#7EA4FF; --s:#5BCB97; --d:#FF9C5B; --warn:#F2C14E; --warnText:#F2C14E; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:var(--bg)}
@@ -407,7 +407,8 @@ body.guide .gstrip{display:block}
 body.tutlite .gstrip{visibility:hidden}
 .gstrip span{position:absolute;top:2px;height:16px;border:2px solid var(--fn);border-bottom:0;border-radius:7px 7px 0 0;font-size:.6rem;font-weight:700;color:var(--ink);display:flex;justify-content:center;align-items:flex-start;line-height:1;padding-top:2px;white-space:nowrap;overflow:hidden;font-family:var(--display)}
 .gstrip span.ol{border-left:0;border-top-left-radius:0}.gstrip span.or{border-right:0;border-top-right-radius:0}
-.gstrip span.bad{color:var(--ink)}
+.gstrip span.bad{color:var(--warnText)}
+#hint.guide.warn{color:var(--warnText)}
 .floaty{animation:tfl 3s ease-in-out infinite}
 @keyframes tfl{50%{transform:translateY(-6px)}}
 /* コーチマーク（メイン画面の上の吹き出し） */
@@ -1150,6 +1151,7 @@ function renderSlots(){
   document.body.classList.toggle('guide', !!state.guide);
   if(state.guide && selected===null && gi.text) $('hint').textContent = gi.text;
   $('hint').classList.toggle('guide', !!(state.guide && gi.text));
+  $('hint').classList.toggle('warn', !!(state.guide && selected===null && gi.text && gi.text.startsWith('！')));
   [...slotsEl.children].forEach(el=>{ const i=+el.dataset.abs; el.classList.toggle('warn', [...gi.warn].some(k=>k.startsWith(i+':'))); });
   LAST_GI=gi; requestAnimationFrame(()=>drawGuide(LAST_GI));
   renderPages(); save(); dirty=true;
@@ -1175,7 +1177,7 @@ function flowGroups(){
 function guideInfo(){
   const g=flowGroups();
   if(!g.groups.length && !g.noT) return {text:'',warn:g.warn,groups:[]};
-  const text = g.noT ? 'ヒント：T を入れると落ち着きます' : g.warn.size ? 'ヒント：D の次は T へ進むと安定' : g.groups.every(x=>x.name) ? '◎ お手本どおりの流れ' : 'ヒント：お手本にない流れがあります';
+  const text = g.noT ? '！ T を入れると落ち着きます' : g.warn.size ? '！ D の次は T へ進むと安定' : g.groups.every(x=>x.name) ? '◎ お手本どおりの流れ' : '！ お手本にない流れがあります';
   return {text,warn:g.warn,groups:g.groups};
 }
 const FLOW_COL={'①':'var(--d)','②':'var(--s)','③':'var(--ink)'};
