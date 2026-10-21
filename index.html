@@ -630,7 +630,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="opts" id="opts"></div>
   <div class="sheetsec" style="margin-top:16px"><h3 id="soundTitle"></h3><div class="chips" id="soundChips"></div></div>
   <div class="sheetsec" id="kitSec" hidden><h3>ドラムの音</h3><div class="chips" id="kitChips2"></div></div>
-  <div class="sheetsec" id="fillSec"><h3>フィルイン（4小節ごとにおかずとシンバル）</h3><div class="chips" id="fillChips"></div><h3>ベース</h3><div class="chips" id="bassChips"></div><h3>ベースの音</h3><div class="chips" id="bassSndChips"></div></div>
+  <div class="sheetsec" id="fillSec"><h3>フィルイン（4小節ごとにおかずとシンバル）</h3><div class="chips" id="fillChips"></div><h3>ベース</h3><div class="chips" id="bassSndChips"></div><div id="bassChips" hidden></div></div>
 </div>
 
 <script>
@@ -1565,7 +1565,7 @@ $('patDel').onclick=()=>{ const b=$('patDel');
   const list=listOf(patKind); list.splice(+state[patKind].slice(2),1); state[patKind]= patKind==='drum'?'pop':'piano4'; rebuildMy(); save(); renderAll(); closeAll(); };
 $('patClear').onclick=()=>{ if(patKind==='drum') curMy().v={}; else KEY_ROWS.forEach(([r])=>curMy().cells[r]=Array(16).fill(0)); rebuildMy(); save(); renderPatEditor(); dirty=true; };
 
-function bassSndRow(){ chips($('bassSndChips'), Object.entries(BASS_SNDS), state.bassSnd||'bass', v=>{ state.bassSnd=v; save(); renderAll(); ensureSounds().then(()=>{ if(!playing) whenRunning(()=>{ const t=ctx.currentTime+.03; [0,7,12].forEach((n,k)=>bassTone(36+n,t+k*.18,.16,.9)); }); }); bassSndRow(); }); }
+function bassSndRow(){ chips($('bassSndChips'), [...Object.entries(BASS_SNDS),['none','なし']], state.bass?(state.bassSnd||'bass'):'none', v=>{ if(v==='none'){ state.bass=false; save(); renderAll(); bassSndRow(); return; } state.bass=true; state.bassSnd=v; save(); renderAll(); ensureSounds().then(()=>{ if(!playing) whenRunning(()=>{ const t=ctx.currentTime+.03; [0,7,12].forEach((n,k)=>bassTone(36+n,t+k*.18,.16,.9)); }); }); bassSndRow(); }); }
 function openBassSheet(){
   sheetKind='bass'; document.querySelector('#sheet .proedit').style.display='none'; $('kitSec').hidden=true;
   $('sheetTitle').textContent='ベース';
