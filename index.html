@@ -271,6 +271,8 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .sheet{max-height:88%;overflow-y:auto;overscroll-behavior:contain}
 .opt canvas{height:28px!important}
 .sheet h2{font-family:var(--display);font-weight:900;font-size:1rem;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+/* スクロールしても見出しと×ボタンが上に残るように */
+.sheet h2{position:sticky;top:-12px;z-index:3;background:var(--surface);margin:-12px -4px 10px;padding:12px 4px 6px}
 .sheetsec{max-width:520px;margin:0 auto 14px;display:flex;flex-direction:column;gap:8px}
 .sheet h3{font-size:.72rem;letter-spacing:.08em;color:var(--muted);margin:0;font-weight:700}
 .sheeth3{max-width:520px;margin:0 auto 8px!important}
