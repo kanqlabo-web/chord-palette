@@ -1,0 +1,1807 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>コード進行パレット</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: one fixed phone screen — top bar, chord palette (4×2), bar slots, two DAW-style lanes (drums / arpeggio), transport. Settings live in a left drawer; pattern pickers in a bottom sheet. */
+:root{
+  --bg:#EDF0F5; --surface:#FFFFFF; --ink:#1B2230; --muted:#677285; --line:#D3D9E3; --lane:#E3E8EF;
+  --t:#3567D6; --s:#24946A; --d:#DA6A22;
+  --display:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Rounded Mplus 1c",sans-serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
+  --gap:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11151C; --surface:#1A202A; --ink:#E8ECF3; --muted:#8C97AA; --line:#2B3441; --lane:#161B23;
+  --t:#7EA4FF; --s:#5BCB97; --d:#FF9C5B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11151C; --surface:#1A202A; --ink:#E8ECF3; --muted:#8C97AA; --line:#2B3441; --lane:#161B23;
+  --t:#7EA4FF; --s:#5BCB97; --d:#FF9C5B; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:var(--bg)}
+body{color:var(--ink);font-family:var(--body);-webkit-tap-highlight-color:transparent;
+  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:6px 10px}
+button{font:inherit;color:inherit}
+.app{height:100%;max-width:520px;margin:0 auto;display:grid;gap:10px;
+  grid-template-rows:auto minmax(0,1fr) auto auto auto auto}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:10px;height:40px}
+.iconbtn{width:40px;height:40px;border-radius:12px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;flex:none}
+.iconbtn:focus-visible,.chip:focus-visible,.lane:focus-visible,.play:focus-visible{outline:2px solid var(--t);outline-offset:2px}
+h1{font-family:var(--display);font-weight:900;font-size:1.05rem;margin:0;white-space:nowrap}
+.badges{margin-left:auto;display:flex;gap:6px;min-width:0}
+.badge{font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 9px;white-space:nowrap;background:var(--surface)}
+
+/* palette */
+.palette{display:grid;grid-template-columns:repeat(3,minmax(0,auto));grid-template-rows:repeat(3,minmax(0,min(24vw,130px)));justify-content:center;align-content:center;gap:var(--gap) 10px;min-height:0}
+.palette .tile{height:min(100%,24vw,130px);aspect-ratio:1/.82;align-self:center;justify-self:center}
+.palette .tile:nth-child(7){grid-column:2}
+.tile{--fn:var(--t);position:relative;border-radius:16px;border:2px solid color-mix(in srgb,var(--fn) 40%,var(--line));
+  background:color-mix(in srgb,var(--fn) 10%,var(--surface));display:flex;align-items:center;justify-content:center;
+  touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;container-type:size;min-height:0;transition:transform .12s,box-shadow .12s}
+.tile.S,.slot.S,.ghost.S{--fn:var(--s)}
+.slot.X,.ghost.X{--fn:var(--muted)}
+.page i.X{background:color-mix(in srgb,var(--muted) 28%,var(--surface))}.tile.D,.slot.D,.ghost.D{--fn:var(--d)}
+.tile.sel{box-shadow:0 0 0 2px var(--bg),0 0 0 5px var(--fn)}
+.tile:active{transform:scale(.95)}
+.name{font-family:var(--display);font-weight:900;font-size:clamp(1rem,36cqmin,2.1rem);line-height:1;letter-spacing:-.02em;white-space:nowrap}
+.name sup{font-size:.5em;vertical-align:.85em;margin-left:1px}
+.deg{position:absolute;top:4px;left:8px;font-family:var(--display);font-weight:900;font-size:.8rem;color:var(--fn)}
+.deg sup,.slot .dg sup{font-size:.6em;vertical-align:.7em}
+.leg{width:0;min-width:100%;align-self:center;display:flex;flex-direction:column;gap:6px;font-size:.72rem;line-height:1.3;color:var(--muted)}
+.leg span{display:flex;gap:5px;align-items:baseline}
+.leg b{font-family:var(--display);font-weight:900;font-size:.8rem;flex:none}
+.leg .T b{color:var(--t)}.leg .S b{color:var(--s)}.leg .D b{color:var(--d)}
+.legL{grid-column:1;grid-row:3}.legR{grid-column:3;grid-row:3}
+.fn{position:absolute;top:5px;right:8px;font-family:var(--display);font-weight:900;font-size:.64rem;color:var(--fn)}
+.fn small{font-size:.85em;color:var(--s);margin-left:1px}
+.tile.dual{border-color:color-mix(in srgb,var(--t) 40%,var(--line));
+  background:linear-gradient(135deg,color-mix(in srgb,var(--d) 12%,var(--surface)) 0 50%,color-mix(in srgb,var(--t) 10%,var(--surface)) 50% 100%)}
+.slot .rl{position:absolute;bottom:3px;right:6px;font-family:var(--display);font-weight:900;font-size:.62rem;color:var(--fn)}
+.slot:not(.filled) .rl,.slot.split .rl{display:none}
+.slot .cell i b{color:var(--fn);margin-left:2px}
+.helper{border:1.5px dashed var(--line);border-radius:16px;display:flex;align-items:center;justify-content:center;text-align:center;
+  font-size:.66rem;line-height:1.45;color:var(--muted);padding:6px;min-height:0;overflow:hidden}
+
+/* slots */
+.slotwrap{display:flex;flex-direction:column;gap:4px;min-height:0}
+.slothead{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.72rem;color:var(--muted);min-height:16px;line-height:16px}
+.slothead .right{display:flex;align-items:center;gap:8px;min-width:0;flex:none}
+#hint.guide{color:var(--ink);font-weight:700;font-family:var(--display)}
+.slot.warn{box-shadow:0 0 0 2px var(--bg),0 0 0 4px #D9534F}
+#hint{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#progName{white-space:nowrap}
+.edall{white-space:nowrap}
+.edall{display:none;border:1.5px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:5px 12px;font-size:.78rem;font-weight:700;cursor:pointer;line-height:1.2}
+body.pro .edall{display:inline-block}
+.proedit{display:none;margin:0 auto 12px;max-width:520px}
+body.pro .proedit{display:flex;gap:8px;align-items:center}
+.proedit .chip{background:var(--ink);color:var(--bg);border-color:var(--ink);white-space:nowrap;flex:none}
+.proedit small{font-size:.7rem;color:var(--muted);line-height:1.4}
+.pgrid{display:grid;grid-template-columns:58px repeat(16,minmax(0,1fr));gap:2px 1px;max-width:520px;margin:0 auto 12px;touch-action:manipulation}
+.pgrid .lab{font-size:.6rem;color:var(--muted);align-self:center;white-space:nowrap;overflow:hidden;font-weight:700}
+.pcell{height:28px;border:0;padding:0;border-radius:3px;background:var(--lane);cursor:pointer;position:relative}
+.pcell.beat{box-shadow:inset 2px 0 0 color-mix(in srgb,var(--ink) 25%,transparent)}
+.pcell i{position:absolute;inset:2px;border-radius:2px;background:var(--ink);opacity:0}
+.pcell.kb i{background:var(--t)}
+.pcell[data-l="1"] i{opacity:.3}.pcell[data-l="2"] i{opacity:.6}.pcell[data-l="3"] i{opacity:1}
+.pcell:focus-visible{outline:2px solid var(--t)}
+.pname{flex:1;min-width:0;font:inherit;font-weight:700;font-size:.95rem;padding:7px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.pnote{max-width:520px;margin:0 auto 10px;font-size:.72rem;color:var(--muted);line-height:1.5}
+.prow{max-width:520px;margin:0 auto;display:flex;gap:8px;flex-wrap:wrap}
+.edtabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:6px;max-width:520px;margin:0 auto 12px}
+.edtab{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.edtab.sub{border-style:dashed}
+.edtab small{font-size:.6rem;color:var(--muted)}
+.edtab b{font-family:var(--display);font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.edtab[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.slothead b{font-family:var(--display);color:var(--ink)}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
+.slots .slot{aspect-ratio:1/1.05;max-height:21vh}
+.slot{--fn:var(--line);position:relative;border-radius:12px;border:2px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden;container-type:size;min-height:0}
+.slot .n{font-family:var(--display);font-weight:900;font-size:clamp(.9rem,30cqmin,1.6rem);line-height:1;white-space:nowrap}
+.slot .n sup{font-size:.5em;vertical-align:.85em}
+.slot .dg{font-family:var(--display);font-weight:900;font-size:.78rem;color:var(--fn);margin-top:3px}
+.slot .num{position:absolute;top:3px;left:7px;font-size:.6rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.slot.filled{border-style:solid;border-color:color-mix(in srgb,var(--fn) 45%,var(--line));background:color-mix(in srgb,var(--fn) 12%,var(--surface))}
+.slot.T{--fn:var(--t)}
+.slot.ready{border-color:color-mix(in srgb,var(--ink) 50%,var(--line))}
+.slot.over{border-color:var(--ink);border-style:solid}
+.slot.now{box-shadow:inset 0 0 0 2px var(--ink)}
+.slot .x{position:absolute;top:0;right:0;width:26px;height:26px;border:0;background:transparent;color:var(--muted);font-size:.9rem;padding:0;cursor:pointer}
+.slot:not(.filled) .x{display:none}
+.slot .ed{position:absolute;left:50%;transform:translateX(-50%);top:3px;height:20px;padding:0 7px;border-radius:999px;border:1px solid color-mix(in srgb,var(--fn) 50%,var(--line));
+  background:var(--surface);color:var(--ink);font-size:.62rem;font-weight:700;cursor:pointer;display:none}
+body.pro .slot.filled .ed{display:block}
+.protag{display:none;position:absolute;right:-6px;bottom:-2px;font-size:.5rem;line-height:1;font-weight:700;letter-spacing:.06em;color:var(--bg);background:var(--ink);border-radius:999px;padding:2px 7px}
+body.pro .protag{display:inline-block}
+.edhead{max-width:520px;margin:0 auto 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.edname{font-family:var(--display);font-weight:900;font-size:2rem;line-height:1;min-width:0;margin-right:auto}
+.edname sup{font-size:.5em;vertical-align:.8em}
+.edsub{font-size:.8rem;color:var(--muted);font-weight:700}
+.edcols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;max-width:520px;margin:0 auto}
+.edcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.edcol h3{text-align:center}
+/* スロット式ホイール：中央の帯に来たものが選ばれる */
+.wheel{--ih:40px;position:relative;height:calc(var(--ih)*5);border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:hidden}
+.wheel::before{content:"";position:absolute;left:4px;right:4px;top:calc(var(--ih)*2);height:var(--ih);border-radius:8px;background:var(--ink);pointer-events:none}
+.wheel::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:linear-gradient(var(--bg),transparent 32%,transparent 68%,var(--bg))}
+.edlist{position:relative;z-index:1;height:100%;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;
+  padding-block:calc(var(--ih)*2);scrollbar-width:none;display:flex;flex-direction:column}
+.edlist::-webkit-scrollbar{display:none}
+.edlist button{flex:none;height:var(--ih);scroll-snap-align:center;border:0;background:transparent;font-family:var(--display);font-weight:700;font-size:1rem;
+  color:var(--muted);cursor:pointer;white-space:nowrap;padding:0 2px;transition:color .1s}
+.edlist button.on{color:var(--bg)}
+.wheel.off{opacity:.35;pointer-events:none}
+.edlist button:focus-visible{outline:2px solid var(--t);outline-offset:-2px}
+.slot.split .n{position:absolute;inset:0;display:flex}
+.slot .cell{position:relative;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;--fn:var(--line);
+  background:color-mix(in srgb,var(--fn) 14%,var(--surface));container-type:inline-size}
+.slot .cell+.cell{border-left:2px solid var(--bg)}
+.slot .cell.T{--fn:var(--t)}.slot .cell.S{--fn:var(--s)}.slot .cell.D{--fn:var(--d)}.slot .cell.X{--fn:var(--muted)}
+.slot .cell b{font-family:var(--display);font-weight:900;font-size:clamp(.7rem,34cqi,1.3rem);line-height:1;white-space:nowrap;max-width:100%;overflow:hidden}
+.slot .cell small{font-family:var(--display);font-weight:700;font-size:.55rem;color:var(--fn);white-space:nowrap;max-width:100%;overflow:hidden}
+.slot .cell i{position:absolute;bottom:2px;font-style:normal;font-size:.5rem;color:var(--muted)}
+.slot .cell.over{box-shadow:inset 0 0 0 2px var(--ink)}
+.slot.split .num,.slot.split .x{z-index:2}
+.slot.split{border-style:solid;border-color:var(--line)}
+.slot.over-r::after{content:"";position:absolute;top:0;bottom:0;right:0;width:45%;background:color-mix(in srgb,var(--ink) 12%,transparent);border-left:2px dashed var(--ink);pointer-events:none}
+.slot .empty{font-size:.62rem;color:var(--muted)}
+
+/* lanes */
+.lane{display:flex;flex-direction:column;gap:3px;min-height:0;border:0;background:transparent;padding:0;text-align:left;cursor:pointer}
+.lanehead{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--muted);height:16px}
+.lanehead b{color:var(--ink);font-weight:700}
+.lanehead svg{margin-left:-2px}
+.lane canvas{height:28px;flex:none;width:100%;display:block;border-radius:8px}
+
+/* page strip (8/16 bars) */
+.pages{display:flex;gap:6px;height:30px;flex:none}
+.page{flex:1;min-width:0;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:3px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);cursor:pointer}
+.page.hover{border-color:var(--t);border-style:dashed}
+.page[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.page:focus-visible{outline:2px solid var(--t);outline-offset:2px}
+.page i{min-width:0;border-radius:3px;background:var(--lane);font-style:normal;font-family:var(--display);font-weight:700;font-size:.56rem;line-height:1;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;color:var(--ink)}
+.page i.T{background:color-mix(in srgb,var(--t) 28%,var(--surface))}
+.page i.S{background:color-mix(in srgb,var(--s) 28%,var(--surface))}
+.page i.D{background:color-mix(in srgb,var(--d) 28%,var(--surface))}
+.page i.now{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.pages.b16 .page i{font-size:0}
+
+/* transport */
+.transport{display:flex;flex-direction:column;align-items:center;gap:6px}
+.play{width:62px;height:62px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);display:grid;place-items:center;cursor:pointer;flex:none;transition:transform .08s}
+.play:active{transform:scale(.93)}
+.play.beat{transform:scale(1.06)}
+.bpm{width:100%;display:flex;align-items:center;gap:10px;min-width:0}
+.bpm label{font-family:var(--display);font-weight:900;font-size:.9rem}
+.bpm output{font-variant-numeric:tabular-nums;font-family:var(--display);font-weight:700;min-width:2.2em;text-align:right}
+input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
+
+/* overlays */
+.scrim{position:fixed;inset:0;background:rgba(10,14,20,.38);z-index:30;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;z-index:40;top:0;bottom:0;left:0;width:min(310px,84vw);background:var(--surface);border-right:1px solid var(--line);
+  transform:translateX(-102%);transition:transform .22s ease;overflow-y:auto;overscroll-behavior:contain;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 18px calc(env(safe-area-inset-bottom,0px) + 20px) max(18px,env(safe-area-inset-left,0px));
+  display:flex;flex-direction:column;gap:20px}
+.drawer.on{transform:none}
+.drawer h2{font-family:var(--display);font-weight:900;font-size:1.05rem;margin:0;display:flex;align-items:center;justify-content:space-between}
+.sec{display:flex;flex-direction:column;gap:8px}
+.sec h3{font-size:.72rem;letter-spacing:.08em;color:var(--muted);margin:0;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.keys{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.chip{border:1.5px solid var(--line);background:var(--surface);font-weight:500;font-size:.84rem;padding:7px 12px;border-radius:999px;cursor:pointer}
+.keys .chip{padding:8px 0;border-radius:10px;font-family:var(--display);font-weight:700}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.legend{display:flex;flex-direction:column;gap:5px;font-size:.8rem;color:var(--muted);line-height:1.5}
+.legend b{font-family:var(--display);font-weight:900;display:inline-block;width:1.4em}
+.legend .T b{color:var(--t)}.legend .S b{color:var(--s)}.legend .D b{color:var(--d)}
+.small{font-size:.74rem;color:var(--muted);line-height:1.6;margin:0}
+
+.sheet{position:fixed;z-index:40;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);border-radius:20px 20px 0 0;
+  transform:translateY(105%);transition:transform .22s ease;
+  padding:12px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(16px,env(safe-area-inset-left,0px))}
+.sheet.on{transform:none}
+.sheet{max-height:88%;overflow-y:auto;overscroll-behavior:contain}
+.opt canvas{height:28px!important}
+.sheet h2{font-family:var(--display);font-weight:900;font-size:1rem;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+.sheetsec{max-width:520px;margin:0 auto 14px;display:flex;flex-direction:column;gap:8px}
+.sheet h3{font-size:.72rem;letter-spacing:.08em;color:var(--muted);margin:0;font-weight:700}
+.sheeth3{max-width:520px;margin:0 auto 8px!important}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-width:520px;margin:0 auto}
+.opt{border:1.5px solid var(--line);border-radius:12px;background:var(--bg);padding:8px;display:flex;flex-direction:column;gap:6px;cursor:pointer;text-align:left}
+.opt[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.opt canvas{width:100%;height:34px;display:block}
+.opt span{font-size:.82rem;font-weight:700}
+
+.ghost{position:fixed;z-index:50;pointer-events:none;transform:translate(-50%,-65%) scale(1.06);width:74px;height:60px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--fn) 22%,var(--surface));border:2px solid var(--fn);box-shadow:0 10px 24px rgba(0,0,0,.2)}
+.ghost{--fn:var(--t)}
+.ghost .name{font-size:1.5rem}
+/* ---- チュートリアル ---- */
+.tut{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + 10px) max(18px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 14px) max(18px,env(safe-area-inset-left,0px))}
+.tutbar{display:flex;align-items:center;justify-content:space-between;gap:10px;height:32px}
+.tutdots{display:flex;gap:4px;flex-wrap:wrap}
+.tutdots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.tutdots i.on{background:var(--ink);width:16px;border-radius:3px}
+.tutskip{border:0;background:transparent;color:var(--muted);font:inherit;font-size:.8rem;cursor:pointer;padding:6px}
+.tutstage{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:16px;max-width:460px;margin:0 auto;width:100%;overflow:hidden}
+.tutstage h2{font-family:var(--display);font-weight:900;font-size:1.45rem;margin:0;text-wrap:balance;line-height:1.3}
+.tutstage .eyebrow{font-size:.72rem;letter-spacing:.14em;color:var(--muted);font-weight:700}
+.tutstage p{margin:0;font-size:.95rem;line-height:1.7;color:var(--ink);width:100%;word-break:auto-phrase;line-break:strict}
+.tutstage h2{word-break:auto-phrase}
+.coach .bubble p{word-break:auto-phrase}
+.tutstage p.sub{font-size:.82rem;color:var(--muted)}
+.tutnav{display:flex;gap:10px;max-width:460px;margin:0 auto;width:100%}
+.tutbtn{flex:1;height:48px;border-radius:14px;border:0;background:var(--ink);color:var(--bg);font:inherit;font-weight:700;font-size:1rem;cursor:pointer}
+.tutbtn.alt{flex:.5;background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.tutbtn:disabled{opacity:.35}
+.tutbtn.busy{opacity:.4}
+.tutstage.skip *{animation-delay:0s!important;animation-duration:.01s!important}
+.tutbtn:focus-visible,.tutskip:focus-visible{outline:2px solid var(--t);outline-offset:2px}
+/* 出てくるアニメーション：.a は順番に、--d で遅らせる */
+.tutstage .a{opacity:0;transform:translateY(14px);animation:tin .55s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--dl,0) * 1s)}
+@keyframes tin{to{opacity:1;transform:none}}
+.tutstage .pop{opacity:0;transform:scale(.6);animation:tpop .5s cubic-bezier(.3,1.6,.5,1) forwards;animation-delay:calc(var(--dl,0) * 1s)}
+@keyframes tpop{to{opacity:1;transform:none}}
+.chordbig{font-family:var(--display);font-weight:900;font-size:5.2rem;line-height:1;display:flex;align-items:flex-end;gap:2px}
+.chordbig span{display:inline-block;padding:0 6px;border-radius:14px;transition:background .3s}
+.chordbig .hl1{animation:thl 1.2s ease forwards;animation-delay:1s}
+.chordbig .hl2{animation:thl2 1.2s ease forwards;animation-delay:2.2s}
+@keyframes thl{to{background:color-mix(in srgb,var(--t) 22%,transparent)}}
+@keyframes thl2{to{background:color-mix(in srgb,var(--s) 26%,transparent)}}
+.chordbig{transition:font-size .4s}.chordbig .A,.chordbig .M{transition:background .4s,color .4s}
+.chordbig span{padding:0 4px}
+.chordbig.sA .A,.chordbig.sM .M{transition-delay:0s;transition-duration:.5s}
+.chordbig.sA .A{background:color-mix(in srgb,var(--t) 22%,transparent);color:var(--t)}
+.chordbig.sM .M{background:color-mix(in srgb,var(--s) 24%,transparent);color:var(--s)}
+.explain{display:flex;flex-direction:column;gap:10px;width:100%;text-align:left}
+.explain .card{--fn:var(--ink);border-radius:14px;padding:12px 14px;background:color-mix(in srgb,var(--fn) 7%,var(--surface));border:1.5px solid color-mix(in srgb,var(--fn) 30%,var(--line))}
+.explain .card.T{--fn:var(--t)}.explain .card.S{--fn:var(--s)}
+.explain .card b{display:block;font-family:var(--display);font-size:1rem;color:var(--fn);margin-bottom:4px}
+.explain .card p{font-size:.84rem;line-height:1.65}
+.annot{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+.annot div{border-radius:14px;padding:10px;background:var(--surface);border:1px solid var(--line);font-size:.85rem;line-height:1.5}
+.annot b{display:block;font-family:var(--display);font-size:1rem}
+.scale{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;width:100%}
+.scale div{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.scale small{font-size:.72rem;color:var(--muted)}
+.scale b{font-family:var(--display);font-size:1.15rem;position:relative;height:1.3em;width:100%}
+.scale b span{position:absolute;inset:0;transition:opacity .4s}
+.scale b .num{opacity:0;color:var(--t)}
+.scale.nums b .alpha{opacity:0}.scale.nums b .num{opacity:1}
+.chips7{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.tc{--fn:var(--muted);display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:58px;padding:8px 10px;border-radius:14px;
+  border:2px solid color-mix(in srgb,var(--fn) 45%,var(--line));background:color-mix(in srgb,var(--fn) 12%,var(--surface));transition:transform .2s,box-shadow .2s}
+.tc b{font-family:var(--display);font-weight:900;font-size:1.35rem;line-height:1.1}
+.tc small{font-size:.66rem;color:var(--fn);font-weight:700}
+.tc.T{--fn:var(--t)}.tc.S{--fn:var(--s)}.tc.D{--fn:var(--d)}
+.tc.bright{--fn:#E0A030}.tc.dark{--fn:#6C6FA8}
+.tc{transition:translate .2s,box-shadow .2s,background .2s}
+.tc.now{translate:0 -3px;box-shadow:inset 0 0 0 2px var(--fn);background:color-mix(in srgb,var(--fn) 28%,var(--surface))}
+.tc.dash{border-style:dashed;opacity:.75}
+.groups{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%}
+.groups section{border-radius:16px;padding:12px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px;align-items:center}
+.groups h3{margin:0;font-family:var(--display);font-size:1rem}
+.roles{display:flex;flex-direction:column;gap:10px;width:100%}
+.roles section{--fn:var(--muted);display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:12px;text-align:left;border-radius:16px;padding:10px 12px;
+  background:color-mix(in srgb,var(--fn) 10%,var(--surface));border:1.5px solid color-mix(in srgb,var(--fn) 35%,var(--line))}
+.roles section.T{--fn:var(--t)}.roles section.S{--fn:var(--s)}.roles section.D{--fn:var(--d)}
+.roles .L{font-family:var(--display);font-weight:900;font-size:2rem;color:var(--fn);text-align:center}
+.roles h3{margin:0;font-size:.95rem}.roles p{font-size:.8rem;line-height:1.5;color:var(--muted)}
+.roles .cs{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:150px}
+.roles .cs .tc{min-width:40px;padding:4px 6px}.roles .cs .tc b{font-size:1rem}
+.flows{display:flex;flex-direction:column;gap:12px;width:100%}
+.flow{display:flex;align-items:center;justify-content:center;gap:6px}
+.flow .no{font-family:var(--display);font-weight:900;width:28px;color:var(--muted)}
+.flow .arr{width:0;height:2px;background:var(--muted);position:relative;animation:tarr .4s ease forwards;animation-delay:calc(var(--dl,0) * 1s)}
+.flow .arr::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:6px solid var(--muted);border-right:0}
+@keyframes tarr{to{width:22px}}
+.ex{display:flex;flex-direction:column;gap:6px;width:100%;align-items:center}
+.exrow{display:grid;gap:6px;width:100%}
+.brk{height:22px;position:relative;width:100%}
+.brk span{position:absolute;top:0;height:18px;border:2px solid var(--fn,var(--ink));border-bottom:0;border-radius:8px 8px 0 0;font-size:.64rem;font-weight:700;
+  display:flex;justify-content:center;align-items:flex-start;line-height:1;padding-top:3px;color:var(--ink);transform-origin:left;transform:scaleX(0);animation:tgrow .5s ease forwards;animation-delay:calc(var(--dl,0) * 1s)}
+@keyframes tgrow{to{transform:none}}
+.brk.u span{top:auto;bottom:0;border-top:0;border-bottom:2px solid var(--fn,var(--ink));border-radius:0 0 8px 8px;align-items:flex-end;padding:0 0 3px}
+.exrow.sm{gap:3px}.exrow.sm .tc{min-width:0;padding:6px 0;border-radius:10px}.exrow.sm .tc b{font-size:.95rem}
+.exnote{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%}
+.exnote p{font-size:.84rem;line-height:1.6;padding-left:14px;position:relative}
+.exnote p::before{content:"";position:absolute;left:2px;top:.6em;width:6px;height:6px;border-radius:50%;background:var(--fn,var(--ink))}
+.listen{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:999px;padding:8px 16px;font:inherit;font-weight:700;cursor:pointer}
+.listen.on{background:var(--ink);color:var(--bg)}
+.ic{width:12px;height:12px;flex:none;display:inline-block;vertical-align:-1px}
+/* カデンツガイド（メイン画面）：マスの上に役割の流れを括弧で表示 */
+.gstrip{position:relative;height:20px;flex:none;display:none}
+body.guide .gstrip{display:block}
+body.tutlite .gstrip{visibility:hidden}
+.gstrip span{position:absolute;top:2px;height:16px;border:2px solid var(--fn);border-bottom:0;border-radius:7px 7px 0 0;font-size:.6rem;font-weight:700;color:var(--ink);display:flex;justify-content:center;align-items:flex-start;line-height:1;padding-top:2px;white-space:nowrap;overflow:hidden;font-family:var(--display)}
+.gstrip span.ol{border-left:0;border-top-left-radius:0}.gstrip span.or{border-right:0;border-top-right-radius:0}
+.gstrip span.bad{color:#D9534F}
+.floaty{animation:tfl 3s ease-in-out infinite}
+@keyframes tfl{50%{transform:translateY(-6px)}}
+/* コーチマーク（メイン画面の上の吹き出し） */
+.coach{position:fixed;inset:0;z-index:55;pointer-events:none}
+.coach .hole{position:fixed;border-radius:18px;box-shadow:0 0 0 9999px rgba(8,12,20,.55);transition:all .35s cubic-bezier(.2,.8,.2,1)}
+.coach .bubble{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));max-width:420px;margin:0 auto;
+  background:var(--surface);color:var(--ink);border-radius:16px;padding:14px 16px;box-shadow:0 12px 30px rgba(0,0,0,.25);pointer-events:auto;transition:top .35s}
+.coach .bubble p{margin:0 0 10px;font-size:.92rem;line-height:1.6;font-weight:500}
+.coach .bbtns{display:flex;gap:8px;justify-content:flex-end}
+.coach .bbtns button{border:0;border-radius:10px;padding:9px 16px;font:inherit;font-weight:700;background:var(--ink);color:var(--bg);cursor:pointer}
+.coach .bbtns button.alt{background:transparent;color:var(--muted)}
+/* チュートリアル中は役割（T・S・D）の文字と色を出さない */
+body.tutlite .tile .fn,body.tutlite .slot .rl{display:none}
+body.tutlite .tile,body.tutlite .slot.filled,body.tutlite .slot .cell,body.tutlite .ghost{--fn:var(--muted)}
+body.tutlite .slot.warn{box-shadow:none}
+body.tutlite .tile.dual{background:color-mix(in srgb,var(--muted) 10%,var(--surface));border-color:color-mix(in srgb,var(--muted) 40%,var(--line))}
+body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body.tutlite .slothead .right,body.tutlite .pages{visibility:hidden}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}.tutstage .a,.tutstage .pop,.brk span,.flow .arr{animation-duration:.01s!important;animation-delay:0s!important}}
+</style>
+
+<div class="app" id="app">
+  <div class="top">
+    <button class="iconbtn" id="menuBtn" aria-label="メニュー" style="position:relative"><span class="protag">PRO</span>
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    </button>
+    <h1>コード進行パレット</h1>
+    <div class="badges"><span class="badge" id="keyBadge">Key C</span><span class="badge" id="instBadge">ピアノ</span></div>
+  </div>
+
+  <div class="palette" id="palette"></div>
+
+  <div class="slotwrap">
+    <div class="slothead"><span id="hint">コードをマスへドラッグ</span><span class="right"><b id="progName"></b><button class="edall" id="edAll">コードを編集</button></span></div>
+    <div class="pages" id="pages"></div>
+    <div class="gstrip" id="gstrip" aria-hidden="true"></div>
+    <div class="slots" id="slots"></div>
+  </div>
+
+  <button class="lane" id="arpLane" aria-label="コードパターンを選ぶ">
+    <span class="lanehead">コード <b id="arpName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+    <canvas id="arpCv"></canvas>
+  </button>
+  <button class="lane" id="drumLane" aria-label="ドラムパターンを選ぶ">
+    <span class="lanehead">ドラム <b id="drumName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+    <canvas id="drumCv"></canvas>
+  </button>
+
+  <div class="transport">
+    <button class="play" id="play" aria-label="再生"></button>
+    <div class="bpm">
+      <label for="bpm">BPM</label>
+      <input type="range" id="bpm" min="60" max="180" step="1" value="96">
+      <output id="bpmOut">96</output>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="tut" id="tut" hidden>
+  <div class="tutbar"><div class="tutdots" id="tutDots"></div><button class="tutskip" id="tutSkip">スキップ</button></div>
+  <div class="tutstage" id="tutStage"></div>
+  <div class="tutnav"><button class="tutbtn alt" id="tutBack">もどる</button><button class="tutbtn" id="tutNext">つぎへ</button></div>
+</div>
+<div class="coach" id="coach" hidden><div class="hole" id="coachHole"></div><div class="bubble" id="coachBubble"><p id="coachText"></p><div class="bbtns" id="coachBtns"></div></div></div>
+
+<aside class="drawer" id="drawer" aria-label="設定">
+  <h2>設定 <button class="iconbtn" id="closeDrawer" aria-label="閉じる"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></h2>
+  <div class="sec"><h3>キー</h3><div class="keys" id="keyChips"></div></div>
+  <div class="sec"><h3>小節数</h3><div class="chips" id="barChips"></div></div>
+  <div class="sec" id="lenSec"><h3>コードの切り替え（1マスの長さ）</h3><div class="chips" id="lenChips"></div>
+    <p class="small" id="lenNote"></p></div>
+  <div class="sec"><h3>コードの表示</h3><div class="chips" id="labelChips"></div></div>
+  <div class="sec"><h3>音色</h3><div class="chips" id="instChips"></div></div>
+  <div class="sec"><h3>ドラムの音</h3><div class="chips" id="kitChips"></div></div>
+  <div class="sec"><h3>ベース</h3><div class="chips" id="bassMenuChips"></div></div>
+  <div class="sec"><h3>有名な進行を入れてみる</h3><div class="chips" id="presetChips"></div></div>
+  <div class="sec"><h3>色の意味</h3>
+    <div class="legend">
+      <span class="T"><b>T</b>トニック：落ち着く・帰ってくる場所</span>
+      <span class="S"><b>S</b>サブドミナント：広がる・動き出す</span>
+      <span class="D"><b>D</b>ドミナント：緊張してTに戻りたくなる</span>
+    </div>
+  </div>
+  <div class="sec"><h3>カデンツガイド</h3><div class="chips" id="guideChips"></div>
+    <p class="small">マスの上に、役割の流れ（T・S・D）と、お手本の流れに当てはまっているかを表示します。</p></div>
+  <div class="sec"><h3>チュートリアル</h3><div class="chips"><button class="chip" id="tutOpen">はじめから見る</button></div></div>
+  <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
+    <p class="small">オンにすると、マスの右上に「コードを編集」ボタンが出ます。コードを変える拍や食いも小節ごとに決められます。マスをダブルタップしても開けます。sus4・7th・分数コードなど、パレットにないコードを作れます。</p></div>
+  <p class="small">ドラムとコードの帯をタップすると、パターンと音色を選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
+</aside>
+
+<div class="sheet" id="edSheet" role="dialog" aria-label="コードを編集">
+  <h2><span id="edTitle"></span><button class="iconbtn" id="closeEd" aria-label="閉じる"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></h2>
+  <div class="edtabs" id="edTabs"></div>
+  <div class="edhead"><span class="edname" id="edName"></span><span class="edsub" id="edSub"></span>
+    <button class="chip" id="edPlay">試し弾き</button><button class="chip" id="edReset">元に戻す</button></div>
+  <div class="sheetsec"><h3>コードを変える拍（いくつでも）</h3><div class="chips" id="edBeat"></div></div>
+  <div class="sheetsec" id="edAntSec"><h3>このコードに入るタイミング（食い）</h3><div class="chips" id="edAnt"></div></div>
+  <div class="edcols">
+    <div class="edcol"><h3>ルート</h3><div class="wheel"><div class="edlist" id="edRoot"></div></div></div>
+    <div class="edcol"><h3>種類</h3><div class="wheel"><div class="edlist" id="edQual"></div></div></div>
+    <div class="edcol"><h3>テンション</h3><div class="wheel"><div class="edlist" id="edExt"></div></div></div>
+    <div class="edcol"><h3>ベース</h3><div class="wheel"><div class="edlist" id="edBass"></div></div></div>
+  </div>
+</div>
+<div class="sheet" id="patSheet" role="dialog" aria-label="パターンを編集">
+  <h2><span id="patTitle"></span><button class="iconbtn" id="closePat" aria-label="閉じる"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></h2>
+  <div class="prow" style="margin-bottom:10px"><input id="patName" class="pname" maxlength="16" aria-label="パターンの名前"><button class="chip" id="patNew">＋ 新規</button><button class="chip" id="patDup">複製</button></div>
+  <p class="pnote">マスをタップするたびに 弱 → 中 → 強 → なし と変わります。再生しながら変えるとすぐ反映されます。</p>
+  <div class="pgrid" id="patGrid"></div>
+  <div class="sheetsec"><h3 id="patOptTitle"></h3><div class="chips" id="patOptChips"></div></div>
+  <div class="prow"><button class="chip" id="patPlay">再生／停止</button><button class="chip" id="patClear">全部消す</button><button class="chip" id="patDel">このパターンを消す</button></div>
+</div>
+<div class="sheet" id="sheet" role="dialog" aria-label="パターン選択">
+  <h2><span id="sheetTitle"></span><button class="iconbtn" id="closeSheet" aria-label="閉じる"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></h2>
+  <div class="proedit"><button class="chip" id="patEditBtn">パターンを編集</button><button class="chip" id="patNewBtn">＋ 新しく作る</button><small id="patHint"></small></div>
+  <h3 class="sheeth3">パターン</h3>
+  <div class="opts" id="opts"></div>
+  <div class="sheetsec" style="margin-top:16px"><h3 id="soundTitle"></h3><div class="chips" id="soundChips"></div></div>
+  <div class="sheetsec" id="fillSec"><h3>フィルイン（4小節ごとにおかずとシンバル）</h3><div class="chips" id="fillChips"></div><h3>ベース</h3><div class="chips" id="bassChips"></div></div>
+</div>
+
+<script>
+// ---------- music data ----------
+const KEYS = [
+  {id:'C', pc:0, sc:['C','D','E','F','G','A','B']},
+  {id:'D♭',pc:1, sc:['D♭','E♭','F','G♭','A♭','B♭','C']},
+  {id:'D', pc:2, sc:['D','E','F♯','G','A','B','C♯']},
+  {id:'E♭',pc:3, sc:['E♭','F','G','A♭','B♭','C','D']},
+  {id:'E', pc:4, sc:['E','F♯','G♯','A','B','C♯','D♯']},
+  {id:'F', pc:5, sc:['F','G','A','B♭','C','D','E']},
+  {id:'F♯',pc:6, sc:['F♯','G♯','A♯','B','C♯','D♯','E♯']},
+  {id:'G', pc:7, sc:['G','A','B','C','D','E','F♯']},
+  {id:'A♭',pc:8, sc:['A♭','B♭','C','D♭','E♭','F','G']},
+  {id:'A', pc:9, sc:['A','B','C♯','D','E','F♯','G♯']},
+  {id:'B♭',pc:10,sc:['B♭','C','D','E♭','F','G','A']},
+  {id:'B', pc:11,sc:['B','C♯','D♯','E','F♯','G♯','A♯']},
+];
+const STEPS=[0,2,4,5,7,9,11];
+const DEG=[
+  {deg:'Ⅰ',num:'1',fn:'T',q:'',  iv:[0,4,7]},
+  {deg:'Ⅱm',num:'2m',fn:'S',q:'m', iv:[0,3,7]},
+  {deg:'Ⅲm',num:'3m',fn:'T',q:'m', iv:[0,3,7]},
+  {deg:'Ⅳ',num:'4',fn:'S',q:'',  iv:[0,4,7]},
+  {deg:'Ⅴ',num:'5',fn:'D',q:'',  iv:[0,4,7]},
+  {deg:'Ⅵm',num:'6m',fn:'T',q:'m', iv:[0,3,7]},
+  {deg:'Ⅶm-5',num:'7m-5',fn:'D',q:'m-5',iv:[0,3,6]},
+];
+const keyObj=()=>KEYS.find(k=>k.id===state.key)||KEYS[0];
+// ---- コードの表し方 ----
+// マスの値は「数字（ダイアトニックの何番目か）」または「PROモードで作ったコード {o:キーからの半音, q:種類, x:テンション, b:分数コードのベース(半音) or null}」
+const QUAL={maj:[0,4,7],m:[0,3,7],sus2:[0,2,7],sus4:[0,5,7],'5':[0,7],'m-5':[0,3,6],aug:[0,4,8]};
+const QUAL_LABEL={maj:'なし',m:'m',sus2:'sus2',sus4:'sus4','5':'5','m-5':'m-5',aug:'aug'};
+const QUAL_ORDER=['maj','m','sus2','sus4','5','m-5','aug'];
+const EXT={'':[], '6':[9], '7':[10], 'M7':[11], 'add9':[14], '9':[10,14]};
+const EXT_LABEL={'':'なし','6':'6','7':'7','M7':'M7','add9':'add9','9':'9'};
+const EXT_ORDER=['','6','7','M7','add9','9'];
+const NUM_OF=['1','♭2','2','♭3','3','4','♯4','5','♭6','6','♭7','7'];
+const ROM_OF=['Ⅰ','♭Ⅱ','Ⅱ','♭Ⅲ','Ⅲ','Ⅳ','♯Ⅳ','Ⅴ','♭Ⅵ','Ⅵ','♭Ⅶ','Ⅶ'];
+const FLAT_NAMES=['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+const SHARP_NAMES=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const FN_OF={0:'T',4:'T',9:'T',2:'S',5:'S',7:'D',11:'D'};
+const isNum=v=>typeof v==='number';
+function specOf(v){
+  if(isNum(v)) return {o:STEPS[v], q:DEG[v].q===''?'maj':DEG[v].q, x:'', b:null};
+  return v;
+}
+// 分数コードのベース名：コードのルートの文字から度数ぶん数えて綴る（A の3度 → C♯）
+const LETTERS=['C','D','E','F','G','A','B'], NAT=[0,2,4,5,7,9,11], REL_LETTER=[0,1,1,2,2,3,4,4,5,5,6,6];
+function spellRel(rootName,rootPc,rel){
+  const li=(LETTERS.indexOf(rootName[0])+REL_LETTER[rel])%7, pc=(rootPc+rel)%12;
+  const d=((pc-NAT[li]+18)%12)-6;
+  return LETTERS[li]+({'-2':'♭♭','-1':'♭','0':'','1':'♯','2':'♯♯'}[d]??'');
+}
+function noteName(off){       // キー基準の半音 → 音名（キーの音階にある音はその綴り）
+  const k=keyObj(), di=STEPS.indexOf(off);
+  if(di>=0) return k.sc[di];
+  const pc=(k.pc+off)%12, flatKey=k.id.includes('♭')||k.id==='F';
+  return off===6 && !flatKey ? SHARP_NAMES[pc] : (flatKey||true ? FLAT_NAMES[pc] : SHARP_NAMES[pc]);
+}
+// マスに置いたときの役割：Ⅰ・Ⅳ・Ⅴ 以外は、前後のコードとの関係で決まる
+function ctxRole(v,prev,next,minor){
+  const sp=specOf(v), o=sp.o, q=sp.q;
+  if(minor){   // Am中心（短調）として見る：Am=Ⅰm、Em=Ⅴm、Bm-5=Ⅱm-5、F=♭Ⅵ、G=♭Ⅶ、C=♭Ⅲ
+    if(o===2 && sp.b===7) return 'D';
+    const m={9:'T',0:'T',4:'D',7:'D',5:'S',2:(q==='maj'||q==='aug')?'D':'S',11:'S',8:'S',10:'S'}[o];
+    if(m) return m;
+  }
+  const nO=next!=null?specOf(next).o:null, pO=prev!=null?specOf(prev).o:null;
+  if(o===2 && sp.b===7) return 'D';                       // Ⅱm/Ⅴ（Dm7/G）はドミナント
+  switch(o){
+    case 0: return 'T';
+    case 5: return 'S';
+    case 7: return 'D';
+    case 2: return (q==='maj'||q==='aug') ? 'D' : 'S';    // Ⅱ7 はⅤへのドミナント
+    case 4: if(q==='maj'||q==='aug') return 'D';          // Ⅲ（メジャー）はⅥmへのドミナント
+            return nO===9 ? 'D' : 'T';                     // Ⅲm→Ⅵm は解決するようなD、それ以外はTの代理
+    case 9: if(pO===7) return 'T';                         // Ⅴ→Ⅵm（偽終止）はT
+            if(pO===4 && ['maj','aug'].includes(specOf(prev).q)) return 'T';   // Ⅲ(7)→Ⅵm：短調（Amキー）のⅤ→Ⅰmに解決したのでT
+            return (nO===7||nO===11) ? 'S' : 'T';          // Ⅴの前に置くとSとして働く
+    case 11: return (nO===4) ? 'S' : 'D';                  // Ⅶm-5→Ⅲ はⅥmへのツーファイブの「2」
+    case 8: case 10: return 'S';                           // ♭Ⅵ・♭Ⅶ はサブドミナントマイナー
+    default: return 'X';
+  }
+}
+let ROLES={}, MINOR=false, FLOW=[];
+function computeRoles(){
+  ROLES={}; const flat=[];
+  for(let i=0;i<state.bars;i++) cellsOf(i).forEach(c=>{ if(c.v!==null&&c.v!==undefined) flat.push({k:i+':'+c.h,v:c.v}); });
+  // Am中心かどうか：1つ目がAm、E/E7（Amへのドミナント）がある、AmがCより多い、で点数をつける
+  const os=flat.map(c=>specOf(c.v)), cnt=o=>os.filter(x=>x.o===o).length;
+  let score=0;
+  if(os.length){ if(os[0].o===9&&os[0].q!=='maj') score+=2; if(os[0].o===0) score-=3; }
+  if(os.some(x=>x.o===4&&(x.q==='maj'||x.q==='aug'))) score+=3;
+  if(cnt(9)>cnt(0)) score+=1;
+  MINOR = score>=2;
+  flat.forEach((c,n)=>{ const prev=flat.length>1?flat[(n-1+flat.length)%flat.length].v:null, next=flat.length>1?flat[(n+1)%flat.length].v:null;
+    ROLES[c.k]=ctxRole(c.v,prev,next,MINOR); });
+  FLOW=flat.map(c=>({k:c.k,r:ROLES[c.k]}));
+}
+const roleAt=(i,h,v)=>ROLES[i+':'+h]||fnOf(v);
+function fnOf(v){ return isNum(v) ? DEG[v].fn : (FN_OF[v.o]||'X'); }
+function suffix(sp,html,kind){
+  let t='';
+  if(sp.q==='m'||sp.q==='m-5') t+='m';
+  if(sp.q==='5') return t+(kind==='alpha'?'5':'(5)');
+  if(sp.x) t+= kind==='alpha' ? sp.x : html ? `<sup>${sp.x}</sup>` : `(${sp.x})`;
+  if(sp.q==='m-5') t+= html?'<sup>-5</sup>':'-5';
+  if(sp.q==='sus2'||sp.q==='sus4') t+=sp.q;
+  if(sp.q==='aug') t+='aug';
+  return t;
+}
+function nameOf(v,kind,html){
+  const sp=specOf(v);
+  const head = kind==='alpha' ? noteName(sp.o) : kind==='roman' ? ROM_OF[sp.o] : NUM_OF[sp.o];
+  let t=head+suffix(sp,html,kind);
+  if(sp.b!==null&&sp.b!==undefined) t+='/'+(kind==='alpha'?spellRel(noteName(sp.o),(keyObj().pc+sp.o)%12,(sp.b-sp.o+12)%12):kind==='roman'?ROM_OF[sp.b]:NUM_OF[sp.b]);
+  return t;
+}
+function chordHTML(v){ return nameOf(v,'alpha',true); }
+function chordText(v){ return nameOf(v,'alpha',false); }
+function labelOf(v,kind){
+  const t=nameOf(v,kind,true), len=nameOf(v,kind,false).length;
+  const size = len>=8 ? .5 : len>=6 ? .62 : len>=4 ? .78 : 1;
+  return size<1 ? `<span style="font-size:${size}em">${t}</span>` : t;
+}
+const bigHTML=v=>labelOf(v,state.label);
+const smallHTML=v=>labelOf(v,state.label==='alpha'?'num':'alpha');
+const plainLabel=v=>nameOf(v,state.label,false).replace('-5','⁻⁵');
+const LABELS={num:'数字',roman:'ローマ数字',alpha:'アルファベット'};
+// ボイシング：左手はルート（分数コードならその音）、右手は前の和音から近い形を選ぶ（なめらかなボイスリーディング）
+// 音の番号: 0=左手 1〜3=右手（低→高） 4=左手5度 5=左手オクターブ 6〜8=右手のオクターブ上 9,10=右手4音目
+function voiceFor(pcs,prev){
+  const n=Math.min(pcs.length,4), cands=[];
+  for(let lo=56;lo<=68;lo++){ if(!pcs.includes(lo%12)) continue;   // 右手の一番下の音：A♭3〜A♭4
+    const v=[lo]; for(let k=1;k<n;k++){ let m=v[k-1]+1; while(!pcs.includes(m%12)||v.some(x=>x%12===m%12)) m++; v.push(m); }
+    cands.push(v); }
+  const ref=prev||[58,63,67,70], dist=a=>a.reduce((s,m,i)=>s+Math.abs(m-(ref[i]??ref[ref.length-1]+3)),0);
+  cands.sort((a,b)=>dist(a)-dist(b));
+  return cands[0];
+}
+function chordNotes(v,prev){
+  const sp=specOf(v), k=keyObj(), rpc=(k.pc+sp.o)%12;
+  const ivs=[...QUAL[sp.q], ...(sp.q==='5'?[]:EXT[sp.x])];
+  let pcs=[...new Set(ivs.map(i=>(rpc+i)%12))];
+  if(pcs.length>4) pcs=pcs.filter(pc=>pc!==rpc);                 // 5音以上ならルートは左手に任せる
+  const slash = sp.b!==null&&sp.b!==undefined, bpc = slash ? (k.pc+sp.b)%12 : rpc;
+  const L=43+((bpc-7+12)%12), R=voiceFor(pcs,prev);   // 左手：G2〜F♯3
+  const r=[R[0],R[1]??R[0]+12,R[2]??(R[1]??R[0])+12];               // 2音（パワーコード）でも3つの役割を埋める
+  // 5度はそのコードの本当の5度（m-5なら減5度、augなら増5度）。左手やベースが和音とぶつからないように
+  const fifth = ivs.includes(7)?7 : ivs.includes(6)?6 : ivs.includes(8)?8 : 12;
+  const third = ivs.includes(4)?4 : ivs.includes(3)?3 : ivs.includes(5)?5 : ivs.includes(2)?2 : 12;
+  return {tones:[L,...r, slash?L+12:L+fifth, L+12, ...r.map(x=>x+12), R[3]??null, R[3]!=null?R[3]+12:null], R, bass:28+((bpc-4+12)%12), slash, fifth, third};   // ベースはE1〜E♭2（実際のベースの音域）
+}
+
+// ---- drum patterns: 16 steps per voice. X=強 x=中 o=弱 g=ゴースト .=休み
+const VEL={X:1,x:.75,o:.5,g:.25};
+const VOICE={k:36,s:38,x:37,h:42,o:46,r:51,c:49,t1:50,t2:47,t3:45};
+// フィル：4小節目は「小フィル」（4拍目だけ）、8小節目は「大フィル」（3〜4拍目）。big/small とも16分16個の書き方で、使う所だけ読む
+const FILLS={
+  tom:  {big:  {k:'........X......X', s:'........XxXx....', t1:'............Xx..', t3:'..............XX'},
+         small:{k:'...............X', s:'............Xx..', t3:'..............Xx'}},
+  snare:{big:  {k:'........X.......', s:'........x.x.xxXX'},
+         small:{s:'............xxXX', k:'............X...'}},
+  kime: {big:  {k:'........X..X..X.', s:'........X..X..X.', h:'...........g..g.'},
+         small:{k:'............X.X.', s:'............X.X.'}},
+  // 4つ打ち系：フィルの間もキックの4つ打ちは止めない
+  dance:{big:  {k:'........X...X...', s:'........ggooxxXX', h:'..........o...o.'},   // 弱→強のスネアロールで盛り上げる
+         small:{k:'............X...', s:'.............oxX', h:'..............o.'}},
+  four: {big:  {k:'........X...X...', s:'........x.xx....', t1:'............X...', t2:'.............X..', t3:'..............XX'},   // タタッタ＋タム回し
+         small:{k:'............X...', s:'............x.xx', t3:'...............X'}},
+  soft: {big:  {k:'........X.......', s:'............o.x.', t2:'.............o..', t3:'...............x', h:'........g...g...'},
+         small:{s:'..............ox', t3:'...............o'}},
+  shuf: {big:  {k:'........X.......', s:'........x..x.xxX'},
+         small:{s:'............x.xX', k:'............X...'}},
+  // drum_.mid（Vintage Rock）から：小フィルはスネア→4拍目にフロアタム1発、大フィルはキックとスネアの掛け合いからフロアタム
+  rock: {big:  {k:'........x.o.x...', s:'..........x.X.gx', t3:'........X.......'},
+         small:{s:'...........gx...', t3:'..............X.'}},
+  // drum1.mid（Halftime Pulse）から：リムショットで3・4拍をつなぐ
+  halfp:{big:  {k:'........x.x....X', s:'............x...', x:'....X...........', o:'..........o.....'},
+         small:{s:'............X...', k:'...............x'}},
+};
+// v=1小節目, vB=2小節目（交互にくり返す）。bass: [step, 半音, 長さ, 強さ]。bassFill=フィルの小節のベース
+const DRUMS = {
+  pop:    {name:'ポップス8ビート', v:{k:'x.....o.x.......', s:'....x.......x...', h:'o.g.o.g.o.g.o.g.'},
+           vB:{k:'x.x...o.x...x...', s:'....x.......x...', h:'g.g.o.g.o.g.o...', o:'..............g.'}, fill:'tom',
+           bass:[[0,0,3,1],[3,0,1,.55],[4,0,2,.8],[6,0,2,.7],[8,0,2,.9],[10,0,2,.7],[12,'5',2,.8],[14,'ap',2,.75]]},
+  dpop:   {name:'4つ打ちポップ', v:{k:'x...x...x...x...', s:'.g..X..g.g..X..o', h:'g.o.g.o.g.o.g.o.'},
+           vB:{k:'x...x...x...o...', s:'.g..X..g.g..X..o', h:'g.o.g.o.g.o.....', o:'............g.g.'}, fill:'four',
+           bass:[[0,0,2,1],[2,12,2,.7],[4,0,2,.85],[6,12,2,.7],[8,0,2,.9],[10,12,2,.7],[12,0,2,.85],[14,'ap',2,.75]]},
+  // ↓ drum_.mid（EZX Vintage Rock）の2つ目のグルーヴ：スネアのゴーストが入ったロック
+  eight:  {name:'ロック8ビート', v:{k:'x......gx.o.....', s:'.g..X..g....X..g', h:'o.o.o.o.o.o.o.o.'},
+           vB:{k:'x......gx.o.....', s:'....X..g.o..X..g', h:'o.o.o.o.o.o.x.o.'}, fill:'rock',
+           bass:[[0,0,1.8,1],[2,0,1.8,.75],[4,0,1.8,.85],[6,0,1.8,.75],[8,0,1.8,.95],[10,0,1.8,.75],[12,'5',1.8,.85],[14,'ap',1.8,.8]]},
+  // ↓ drum_.mid の3つ目のグルーヴ：ライド＋足のハイハット
+  rride:  {name:'ロック（ライド）', v:{k:'x.o.....x......o', s:'.g..X..g....X..g', r:'o.o.x.o.x.o.x.o.', h:'....g...g...g...'},
+           vB:{k:'x......o..x.....', s:'.g..X..g.g..X..g', r:'o.o.x.o.o.o.x.o.', h:'g...g...g...g...'}, fill:'rock',
+           bass:[[0,0,3,1],[3,0,1,.6],[4,0,2,.8],[6,'5',2,.7],[8,0,3,.9],[11,0,1,.6],[12,'5',2,.75],[14,'ap',2,.75]]},
+  // ↓ drum_.mid のイントロ：サイドスティックと裏のハイハットだけ
+  xstick: {name:'サイドスティック', v:{k:'x.......x.....x.', x:'....x.......x...', h:'..x...x...x...x.'}, fill:'rock',
+           bass:[[0,0,6,1],[6,'5',2,.7],[8,0,4,.85],[12,'5',2,.7],[14,'ap',2,.7]]},
+  medium: {name:'ミディアム', v:{k:'x.............o.', s:'....X.......X...', h:'o.g.x.g.o.g.x.g.'},
+           vB:{k:'x.............o.', s:'....X.......X...', h:'o.g.x.g.o.g.x.g.'}, fill:'kime',
+           bass:[[0,0,3,1],[4,0,2,.8],[6,'3',2,.7],[8,'5',3,.85],[12,0,2,.8],[14,'ap',2,.75]]},
+  half:   {name:'ハーフタイム', v:{k:'x.......x.......', s:'..g.....X.......', h:'o...o...o...o...'},
+           vB:{k:'x.......x.......', s:'..g.....X.....o.', h:'g.......g...o...'}, fill:'snare',
+           bass:[[0,0,6,1],[6,0,2,.6],[8,'5',4,.85],[12,12,2,.75],[14,'ap',2,.7]]},
+  ballad: {name:'バラード', v:{k:'X.......X.......', x:'....X.......X...', h:'g...g...g...g...'}, fill:'soft',
+           bass:[[0,0,8,1],[8,'5',6,.8],[14,'ap',2,.7]]},
+  shuffle:{name:'シャッフル（ライド）', v:{k:'x.....o.......g.', s:'.g..Xg.g.g..Xg.g', r:'o...o...o...o...', h:'..g...g...g...g.'}, swing:true, fill:'shuf',
+           bass:[[0,0,2,1],[2,'3',2,.7],[4,'5',2,.85],[6,'6',2,.7],[8,12,2,.9],[10,'6',2,.7],[12,'5',2,.85],[14,'3',2,.7]]},
+  sixteen:{name:'16ビート', v:{k:'X..x....X.X..x..', s:'....X..g.g..X..g', h:'o.g.o.g.o.g.o.g.'}, fill:'kime',
+           bass:[[0,0,2,1],[3,12,1,.7],[6,0,1,.7],[7,0,1,.5],[8,0,2,.9],[10,12,1,.7],[11,'5',1,.6],[13,0,1,.7],[14,'ap',2,.8]]},
+  dance:  {name:'4つ打ち（クラブ）', v:{k:'X...X...X...X...', s:'....X.......X...', h:'..o...o...o...o.'}, fill:'dance',
+           bass:[[2,0,1.5,.9],[6,12,1.5,.8],[10,0,1.5,.9],[14,12,1.5,.8]]},
+  bossa:  {name:'ボサノバ', v:{k:'X..xX..xX..xX..x', x:'X..X..X...X..X..', h:'g.g.g.g.g.g.g.g.'}, fill:null,
+           bass:[[0,0,3,1],[3,'5',1,.6],[4,'5',4,.9],[8,0,3,1],[11,'5',1,.6],[12,'5',4,.9]]},
+  reggae: {name:'レゲエ', v:{k:'........X.......', x:'........X.......', h:'g.g.g.g.g.g.g.g.'}, fill:'soft',
+           bass:[[0,0,3,1],[6,0,2,.8],[8,'5',2,.8],[10,'3',2,.75],[12,0,3,.9]]},
+  none:   {name:'なし', v:{}, fill:null, bass:[[0,0,7,1],[8,'5',6,.85],[14,'ap',2,.7]]},
+};
+const DRUM_ORDER=['pop','dpop','eight','rride','xstick','medium','half','ballad','shuffle','sixteen','dance','bossa','reggae','none'];
+function parseVoices(v){ const o={}; for(const k in v) o[VOICE[k]]=[...v[k]].map(c=>VEL[c]||0); return o; }
+for(const k in DRUMS){ const d=DRUMS[k]; d.V=parseVoices(d.v); if(d.vB) d.VB=parseVoices(d.vB); if(d.fill){ d.F=parseVoices(FILLS[d.fill].big); d.FS=parseVoices(FILLS[d.fill].small); } }
+
+// ---- コードパターン。音の番号: 0=左手ルート 1〜3=右手（低→高） 4=左手5度 5=左手オクターブ 6〜8=右手1オクターブ上
+// 各イベント [step, 音の番号, 長さ(16分), 強さ, ストローク(d/u)]
+const ALL=[0,1,2,3], RH=[1,2,3], WIDE=[0,4,5,6,7,8];
+function each(steps,ns,len,vel){ return steps.map((st,i)=>[st,Array.isArray(ns[0])?ns[i%ns.length]:ns,len,typeof vel==='function'?vel(st,i):vel]); }
+function twice(ev){ return [...ev, ...ev.map(e=>[e[0]+8,...e.slice(1)])]; }
+const ARPS = {
+  whole:  {name:'全音符（ジャーン）', ev:[[0,ALL,16,.75]]},
+  piano4: {name:'ピアノ4分＋左手8分', ev:[[0,ALL,6,.62],[4,RH,4,.58],[6,[0],4,.45],[8,RH,4,.64],[10,[0],4,.48],[12,RH,4,.6],[14,[0],2,.5]]},
+  // C-F-G-Am.mid / F-E-Am-C.mid の右手・左手をそのまま写したもの（長さ・強さもMIDIの値）
+  popanti:{name:'ポップス（食い）', legato:true, ev:[[0,ALL,4,.8],[4,[0],3,.78],[5,RH,2,.6],[7,ALL,5,.8],[10,RH,6,.75],[12,[0],4,.85],[14,[3],2,.68]]},
+  ballad: {name:'バラード分散和音', legato:true, ev:twice([[0,[0],8,.78],[0,[3],8,.66],[3,[4],5,.56],[4,[5],4,.58],[6,[1,2],2.5,.52]])},
+  sync:   {name:'シンコペーション', ev:[[0,ALL,3,.8],[3,RH,.7,.72],[6,ALL,2,.78],[10,RH,2,.72],[14,ALL,2,.86]]},
+  sync16: {name:'16分シンコペ', ev:[[0,ALL,1,.82],[3,RH,.6,.6],[6,RH,1,.72],[8,[0],2,.65],[10,RH,.6,.68],[11,RH,2.5,.78],[14,RH,.6,.62]]},
+  shuffle:{name:'シャッフル（ピアノ）', swing:true, ev:[[0,ALL,1.5,.8],[2,RH,1,.52],[4,[0],1.5,.68],[6,RH,1,.6],[8,ALL,1.5,.76],[10,RH,1,.52],[12,[0],1.5,.68],[14,RH,1,.62]]},
+  shuff2: {name:'シャッフル（刻み）', swing:true, ev:[[0,ALL,1.3,.8],[4,ALL,1.3,.72],[6,RH,1,.6],[8,ALL,3.5,.78],[12,[0],1.3,.66],[14,RH,1.5,.7]]},
+  stacc:  {name:'スタッカート4分', ev:each([0,4,8,12],ALL,1.1,(s,i)=>i%2?.7:.8)},
+  rock8:  {name:'ロック（オープン）', legato:true, ev:[[0,WIDE,4,.82],[4,WIDE,4,.72],[8,[0,4,5],4,.75],[10,[6,7,8],6,.8],[12,[0,4,5],4,.68],[14,WIDE,3,.82]]},
+  eighth: {name:'8分刻み', ev:each([0,2,4,6,8,10,12,14],RH,1.6,st=>st%4===0?.75:.5)},
+  offbeat:{name:'裏打ち（カッティング）', ev:each([2,6,10,14],RH,.8,.68)},
+  garp:   {name:'ギターアルペジオ', ev:twice([[0,[0],8,.72],[2,[1],3,.45],[3,[3],5,.6],[5,[1],3,.48],[6,[2],2,.56]])},
+  // 低音弦は次のダウンまで鳴らし続け、アップは高音弦だけを重ねる
+  strum:  {name:'ギターストローク', legato:true, ev:[[0,[0,4,5,2,3],4.5,.8,'d'],[4,[0,4,5,2,3],8.5,.65,'d'],[6,[3,2,5],4,.45,'u'],[10,[3,2,5],2.5,.45,'u'],[12,[0,4,5,2,3],4.5,.68,'d'],[14,[3,2,5],2.5,.45,'u']]},
+  bossa:  {name:'ボサノバ', ev:each([0,3,6,10,13],RH,2,(s,i)=>i===0?.72:.6)},
+  alberti:{name:'アルベルティ', ev:each([0,2,4,6,8,10,12,14],[[1],[3],[2],[3]],2,(s,i)=>i%4===0?.7:.5)},
+};
+// ---- PROモード：マイパターン（ドラムとコードを自分で打ち込む）
+const DRUM_ROWS=[['c','クラッシュ'],['r','ライド'],['o','オープンHH'],['h','ハイハット'],['t1','タム高'],['t2','タム中'],['t3','フロア'],['s','スネア'],['x','リム'],['k','キック']];
+const KEY_ROWS=[[3,'右手 上'],[2,'右手 中'],[1,'右手 下'],[5,'左手 8度'],[4,'左手 5度'],[0,'左手 根音']];
+const LV=[0,.5,.75,1], CH=['.','o','x','X'];
+const lvOf=v=>v>=.95?3:v>=.65?2:v>0?1:0;
+// マイパターンは何個でも作れる：DRUMS.my0, my1… / ARPS.my0, my1…
+const myKeys=(src)=>Object.keys(src).filter(k=>/^my\d+$/.test(k)).sort((a,b)=>+a.slice(2)-+b.slice(2));
+const drumOrder=()=>(state.pro?myKeys(DRUMS):[]).concat(DRUM_ORDER);
+const arpOrder=()=>(state.pro?myKeys(ARPS):[]).concat(ARP_ORDER);
+function rebuildMy(){
+  myKeys(DRUMS).forEach(k=>delete DRUMS[k]); myKeys(ARPS).forEach(k=>delete ARPS[k]);
+  (state.myDrums||[]).forEach((m,i)=>{
+    const d=DRUMS['my'+i]={name:m.name||`マイパターン${i+1}`, v:m.v, fill:m.fill||null, bass:DRUMS.pop.bass};
+    d.V=parseVoices(d.v); d.VB=null;
+    if(d.fill){ d.F=parseVoices(FILLS[d.fill].big); d.FS=parseVoices(FILLS[d.fill].small); } else { d.F=null; d.FS=null; }
+  });
+  (state.myArps||[]).forEach((m,i)=>{
+    const ev=[];
+    for(const r in m.cells){ const row=m.cells[r];
+      row.forEach((v,st)=>{ if(!v) return;
+        let len=m.len; if(len==='next'){ let n=st+1; while(n<16&&!row[n]) n++; len=n-st; }
+        ev.push([st,[+r],len,v]); }); }
+    const a=ARPS['my'+i]={name:m.name||`マイパターン${i+1}`, legato:m.len==='next', ev}; const mm={}; ev.forEach(e=>{ (mm[e[0]]=mm[e[0]]||[]).push(e); }); a.at=mm;
+  });
+}
+const listOf=kind=>kind==='drum'?(state.myDrums=state.myDrums||[]):(state.myArps=state.myArps||[]);
+function newMy(kind,from){        // from: もとにするパターンのキー（null なら空っぽから）
+  const list=listOf(kind), name=`マイパターン${list.length+1}`;
+  if(kind==='drum'){
+    const v={}, d=from?DRUMS[from]:null;
+    if(d) DRUM_ROWS.forEach(([k])=>{ if(d.v[k]) v[k]=d.v[k]; });
+    list.push({name, v, fill:d?d.fill||null:'tom'});
+  } else {
+    const cells={}; KEY_ROWS.forEach(([r])=>cells[r]=Array(16).fill(0));
+    const a=from?ARPS[from]:null; let tot=0,n=0;
+    if(a) a.ev.forEach(([st,ns,len,vel])=>ns.forEach(r=>{ const rr=r>5&&r<9?r-5:r; if(cells[rr]){ cells[rr][st]=Math.max(cells[rr][st],LV[lvOf(vel)]); tot+=len; n++; } }));
+    const avg=n?tot/n:2;
+    list.push({name, cells, len: !a?2 : a.legato?'next' : avg<=1.3?1 : avg<=2.5?2 : avg<=4.5?4 : 'next'});
+  }
+  state[kind]='my'+(list.length-1);
+  rebuildMy(); save();
+}
+let patKind='drum';
+const curMy=()=>listOf(patKind)[+state[patKind].slice(2)];
+function openPatEditor(kind,mode){  // mode: 'edit'=今のマイパターンを編集 / 'copy'=今のパターンをコピーして新規 / 'new'=空っぽから新規
+  patKind=kind;
+  const isMy=/^my\d+$/.test(state[kind]);
+  if(mode==='new') newMy(kind,null);
+  else if(mode==='copy' || !isMy) newMy(kind,state[kind]);
+  sheet.classList.remove('on'); $('patSheet').classList.add('on'); scrim.classList.add('on');
+  renderPatEditor(); renderAll();
+}
+function renderPatEditor(){
+  const drum=patKind==='drum', g=$('patGrid'); g.innerHTML='';
+  $('patTitle').textContent = drum ? 'ドラムのマイパターン' : 'コードのマイパターン';
+  const nm=$('patName'); nm.value=curMy().name; nm.oninput=()=>{ curMy().name=nm.value||'マイパターン'; rebuildMy(); save(); renderAll(); };
+  $('patDel').textContent='このパターンを消す'; $('patDel').dataset.armed='';
+  const rows = drum ? DRUM_ROWS : KEY_ROWS;
+  rows.forEach(([key,label])=>{
+    const lab=document.createElement('span'); lab.className='lab'; lab.textContent=label; g.appendChild(lab);
+    for(let st=0;st<16;st++){
+      const b=document.createElement('button'); b.className='pcell'+(st%4===0?' beat':'')+(drum?'':' kb'); b.innerHTML='<i></i>';
+      const get=()=> drum ? CH.indexOf((curMy().v[key]||'................')[st]==='g'?'o':(curMy().v[key]||'................')[st]) : lvOf(curMy().cells[key][st]);
+      const paint=()=>{ const l=Math.max(0,get()); b.dataset.l=l; b.setAttribute('aria-label',`${label} ${st+1}番目 ${['なし','弱','中','強'][l]}`); };
+      b.onclick=()=>{
+        const l=(Math.max(0,get())+1)%4;
+        if(drum){ const str=[...(curMy().v[key]||'................')]; str[st]=CH[l]; curMy().v[key]=str.join(''); if(!/[^.]/.test(curMy().v[key])) delete curMy().v[key]; }
+        else curMy().cells[key][st]=LV[l];
+        rebuildMy(); save(); paint(); dirty=true;
+        if(!playing && l>0) whenRunning(()=>{ const t=ctx.currentTime+.02;
+          if(drum) drum_(+VOICE[key],t,LV[l]); else { const v=state.slots[page*4]??0, bt=chordNotes(v,null); keyTone(bt.tones[key],t,.5,COMP_LEVEL*LV[l]); } });
+      };
+      paint(); g.appendChild(b);
+    }
+  });
+  if(drum){
+    $('patOptTitle').textContent='フィル（4小節ごと）';
+    chips($('patOptChips'), [['tom','タム回し'],['snare','スネア'],['kime','キメ'],['dance','ロール'],['soft','ソフト'],['rock','ロック'],[null,'なし']], curMy().fill??null,
+      v=>{ curMy().fill=v; rebuildMy(); save(); renderPatEditor(); dirty=true; });
+  } else {
+    $('patOptTitle').textContent='音の長さ';
+    chips($('patOptChips'), [[1,'短く'],[2,'8分'],[4,'4分'],['next','次の音まで伸ばす']], curMy().len,
+      v=>{ curMy().len=v; rebuildMy(); save(); renderPatEditor(); dirty=true; });
+  }
+}
+const ARP_ORDER=['piano4','popanti','ballad','whole','sync','sync16','shuffle','shuff2','stacc','rock8','eighth','offbeat','garp','strum','bossa','alberti'];
+for(const k in ARPS){ const m={}; ARPS[k].ev.forEach(e=>{ (m[e[0]]=m[e[0]]||[]).push(e); }); ARPS[k].at=m; }
+const INSTS={spiano:'ピアノ（シンセ）',sepiano:'エレピ（シンセ）',sorgan:'オルガン（シンセ）',sguitar:'ギター（シンセ）',synth:'シンセ',
+  piano:'生ピアノ',epiano:'生エレピ',nylon:'ガットギター',steel:'アコギ',organ:'生オルガン',strings:'ストリングス'};
+const SYNTH_INST={spiano:'piano',sepiano:'epiano',sorgan:'organ',sguitar:'nylon',synth:'synth'};
+const instShort=()=>INSTS[state.inst].replace('（シンセ）','');
+const isSynthInst=()=>state.inst in SYNTH_INST;
+const KITS={synth:'シンセドラム',std:'スタンダード',room:'ルーム',power:'パワー',brush:'ブラシ',elec:'エレクトロ',tr808:'TR-808'};
+const PRESETS=[
+  {name:'王道進行', p:[3,4,2,5]},
+  {name:'小室進行', p:[5,3,4,0]},
+  {name:'カノン風', p:[0,4,5,2]},
+  {name:'ポップスの定番', p:[0,4,5,3]},
+  {name:'50年代進行', p:[0,5,3,4]},
+  {name:'ツーファイブワン', p:[1,4,0,0]},
+  {name:'カノン進行（8小節）', p:[0,4,5,2,3,0,3,4]},
+];
+
+// ---------- state ----------
+let state={slots:[3,4,2,5,...Array(12).fill(null)], bars:4, key:'C', label:'num', inst:'spiano', kit:'synth', drum:'pop', arp:'piano4', fill:true, bass:true, pro:false, guide:false, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:6};
+let FIRST_RUN=true;
+try{ const s=JSON.parse(localStorage.getItem('chord-palette-v3')); if(s) FIRST_RUN=false; if(s&&Array.isArray(s.slots)&&s.slots.length===16) state={...state,...s}; if(!s.ver||s.ver<6){ state.bass=true; } if(!s.ver||s.ver<4){ state.inst='spiano'; state.kit='synth'; } if(!INSTS[state.inst]) state.inst='spiano'; if(!KITS[state.kit]) state.kit='std'; }catch(e){}
+if(!Array.isArray(state.segs)) state.segs=Array.from({length:16},(_,i)=>state.split&&state.split[i]?[state.split[i]]:[]);
+delete state.split; if(![1,2,4].includes(state.len)) state.len=4;
+if(state.myDrum){ state.myDrums=[{name:'マイパターン1',...state.myDrum}]; if(state.drum==='my') state.drum='my0'; } delete state.myDrum;
+if(state.myArp){ state.myArps=[{name:'マイパターン1',...state.myArp}]; if(state.arp==='my') state.arp='my0'; } delete state.myArp;
+rebuildMy();
+if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4';
+const save=()=>{ try{ localStorage.setItem('chord-palette-v3', JSON.stringify(state)); }catch(e){} };
+let selected=null, page=0;
+
+// ---------- elements ----------
+const $=id=>document.getElementById(id);
+const app=$('app'), palette=$('palette'), slotsEl=$('slots');
+
+for(let d=0;d<7;d++){
+  const el=document.createElement('div');
+  el.className=`tile ${DEG[d].fn}`; el.dataset.deg=d; el.tabIndex=0; el.setAttribute('role','button');
+  const fl = d===2 ? '<b style="color:var(--d)">D</b>/<b style="color:var(--t)">T</b>' : d===5 ? 'T<small>(S)</small>' : DEG[d].fn;
+  if(d===2) el.classList.add('dual');
+  el.innerHTML=`<span class="deg"></span><span class="fn">${fl}</span><span class="name"></span>`;
+  palette.appendChild(el);
+}
+palette.insertAdjacentHTML('beforeend',
+  '<div class="leg legL" aria-hidden="true"><span class="T"><b>T</b>安定する</span><span class="S"><b>S</b>広がる</span></div>'+
+  '<div class="leg legR" aria-hidden="true"><span class="D"><b>D</b>緊張する</span><span class="D"><b>→</b>Tへ戻りたい</span></div>');
+
+for(let i=0;i<4;i++){
+  const el=document.createElement('div'); el.className='slot'; el.dataset.abs=i;
+  el.innerHTML=`<span class="num"></span><button class="x"></button><span class="n"></span><span class="dg"></span><span class="rl"></span>`;
+  el.querySelector('.x').textContent='×';
+  slotsEl.appendChild(el);
+}
+const pagesEl=$('pages');
+function renderPages(){
+  pagesEl.hidden = state.bars===4;
+  pagesEl.classList.toggle('b16', state.bars===16);
+  const n=state.bars/4;
+  if(pagesEl.children.length!==n){
+    pagesEl.innerHTML='';
+    for(let p=0;p<n;p++){
+      const b=document.createElement('button'); b.className='page'; b.dataset.page=p;
+      b.setAttribute('aria-label', `${p*4+1}〜${p*4+4}小節を編集`);
+      b.innerHTML='<i></i><i></i><i></i><i></i>';
+      b.onclick=()=>{ page=p; renderSlots(); };
+      pagesEl.appendChild(b);
+    }
+  }
+  [...pagesEl.children].forEach((b,p)=>{
+    b.setAttribute('aria-pressed', p===page);
+    [...b.children].forEach((c,j)=>{
+      const i=p*4+j, d=state.slots[i];
+      const cells=cellsOf(i);
+      if(cells.length>1){
+        // 分割されたマスは、拍の長さに合わせて役割の色だけで表示
+        const tot=cells.reduce((t,x)=>t+x.len,0); let acc=0;
+        const col=x=>{ if(x.v===null||x.v===undefined) return 'var(--lane)'; const r=roleAt(i,x.h,x.v); return r==='X'?'color-mix(in srgb,var(--muted) 28%,var(--surface))':`color-mix(in srgb,var(--${r.toLowerCase()}) 28%,var(--surface))`; };
+        const stops=cells.map((x,k)=>{ const a0=acc/tot*100; acc+=x.len; const a1=acc/tot*100;
+          return `${col(x)} ${a0}% calc(${a1}% - ${k<cells.length-1?1:0}px)${k<cells.length-1?`,var(--surface) calc(${a1}% - 1px) ${a1}%`:''}`; }).join(',');
+        c.className='split'; c.innerHTML=''; c.style.background=`linear-gradient(90deg,${stops})`;
+      } else {
+        c.style.background='';
+        c.className = d!==null&&d!==undefined ? roleAt(i,0,d) : '';
+        c.innerHTML = d!==null&&d!==undefined ? plainLabel(d) : '';
+      }
+      c.classList.toggle('now', playing&&cur&&cur.b===i);
+    });
+  });
+}
+
+function renderTiles(){
+  palette.querySelectorAll('.tile').forEach(t=>{
+    const d=+t.dataset.deg;
+    t.querySelector('.name').innerHTML=bigHTML(d);
+    t.querySelector('.deg').innerHTML=smallHTML(d);
+    t.setAttribute('aria-label', `${chordText(d)}（${DEG[d].deg}）`);
+    t.classList.toggle('sel', selected===d);
+  });
+}
+// PROモード：1小節の中で拍ごとにコードを変える。state.segs[i] = [{beat:2〜4, v:コード}, …]
+const segsOf=i=>state.pro ? (state.segs[i]||[]).filter(x=>x&&x.v!==null&&x.v!==undefined).sort((a,b)=>a.beat-b.beat) : [];
+const slotSteps=()=>state.pro?16:(state.len||4)*4;           // 1マスの長さ（16分音符の数）
+function cellsOf(i){
+  const L=slotSteps(), out=[{h:0,off:0,v:state.slots[i]}];
+  segsOf(i).forEach((x,k)=>out.push({h:k+1,off:(x.beat-1)*4,v:x.v,beat:x.beat}));
+  out.forEach((c,k)=>c.len=(out[k+1]?out[k+1].off:L)-c.off);
+  return out;
+}
+const getV=(i,h)=>h? (segsOf(i)[h-1]||{}).v ?? null : state.slots[i];
+function setV(i,h,v){
+  if(!h){ state.slots[i]=v; return; }
+  const sg=segsOf(i)[h-1];
+  if(sg) sg.v=v; else { state.segs[i]=state.segs[i]||[]; state.segs[i].push({beat:3,v}); }
+}
+function renderSlots(){
+  if(page*4>=state.bars) page=0;
+  computeRoles();
+  [...slotsEl.children].forEach((el,j)=>{
+    const i=page*4+j; el.dataset.abs=i;
+    el.querySelector('.num').textContent = (i+1) + (state.slots[i]!=null && antOf(i)>0 ? ' ←食' : '');
+    el.querySelector('.x').setAttribute('aria-label',`${i+1}小節目を空にする`);
+    el.classList.toggle('now', playing&&cur&&cur.b===i);
+    const d=state.slots[i];
+    el.classList.remove('T','S','D','X','filled');
+    el.classList.toggle('ready', selected!==null);
+    const cells=cellsOf(i), split=cells.length>1;
+    el.classList.toggle('split', split);
+    if(split){
+      // マスを拍の長さで分割して、それぞれを1つのマスのように表示
+      el.classList.add('filled');
+      el.querySelector('.n').innerHTML=cells.map(c=>{ const e=c.v===null||c.v===undefined;
+        const r=e?'':roleAt(i,c.h,c.v);
+        return `<span class="cell ${r}" data-h="${c.h}" style="flex:${c.len}"><b>${e?'空き':bigHTML(c.v)}</b><small>${e?'':smallHTML(c.v)}</small><i>${c.off/4+1}拍${r&&r!=='X'?`<b>${r}</b>`:''}</i></span>`; }).join('');
+      el.querySelector('.dg').textContent='';
+    } else if(d!==null && d!==undefined){
+      const r=roleAt(i,0,d); el.classList.add('filled', r);
+      el.querySelector('.n').innerHTML=bigHTML(d); el.querySelector('.dg').innerHTML=smallHTML(d);
+      el.querySelector('.rl').textContent = r==='X'?'':r;
+    } else { el.querySelector('.n').innerHTML='<span class="empty">空き</span>'; el.querySelector('.dg').textContent=''; }
+  });
+  const used=state.slots.slice(0,state.bars);
+  const m=PRESETS.find(p=>p.p.length===state.bars && p.p.every((d,i)=>d===used[i] && !segsOf(i).length));
+  $('progName').textContent = m ? m.name : (MINOR ? `${noteName(9)}m中心（短調）` : '');
+  $('hint').textContent = selected!==null ? `${chordText(selected)} を置くマスをタップ`
+    : !state.pro && state.len<4 ? `1マス＝${state.len}拍 ・ コードをマスへドラッグ`
+    : state.bars===4 ? (state.pro?'マスの右側に置くと3拍目から':'4小節 ・ コードをマスへドラッグ') : `${state.bars}小節中 ${page*4+1}〜${page*4+4}小節目を編集中`;
+  const gi = state.guide ? guideInfo() : {text:'',warn:new Set(),groups:[]};
+  document.body.classList.toggle('guide', !!state.guide);
+  if(state.guide && selected===null && gi.text) $('hint').textContent = gi.text;
+  $('hint').classList.toggle('guide', !!(state.guide && gi.text));
+  [...slotsEl.children].forEach(el=>{ const i=+el.dataset.abs; el.classList.toggle('warn', [...gi.warn].some(k=>k.startsWith(i+':'))); });
+  LAST_GI=gi; requestAnimationFrame(()=>drawGuide(LAST_GI));
+  renderPages(); save(); dirty=true;
+}
+// カデンツガイド：役割の流れと、T→D→T / T→S→T / T→S→D→T に当てはまるかを表示
+const FLOW_NAME={TDT:'①T→D→T',TST:'②T→S→T',TSDT:'③T→S→D→T'};
+// 役割の流れを、T から次の T までのまとまり（流れ）に分ける。同じ役割が続くのはまとめて判定
+function flowGroups(){
+  const idx=FLOW.map((f,n)=>n).filter(n=>FLOW[n].r!=='X'), L=idx.length;
+  if(L<2) return {groups:[],noT:false,warn:new Set()};
+  const warn=new Set();
+  idx.forEach((n,j)=>{ const nx=idx[(j+1)%L]; if(FLOW[n].r==='D'&&FLOW[nx].r==='S') warn.add(FLOW[nx].k); });
+  const tpos=idx.map((n,j)=>FLOW[n].r==='T'?j:-1).filter(j=>j>=0);
+  if(!tpos.length) return {groups:[],noT:true,warn};
+  const groups=tpos.map((a,g)=>{ const b=tpos[(g+1)%tpos.length]; const len=((b-a+L)%L)||L;
+    const ns=[]; for(let q=0;q<=len;q++) ns.push(idx[(a+q)%L]);
+    const rs=ns.map(n=>FLOW[n].r), col=rs.filter((r,q)=>q===0||r!==rs[q-1]).join('');
+    const bad=ns.some(n=>warn.has(FLOW[n].k));
+    const name=bad?null:(FLOW_NAME[col]||(col==='T'?'Tが続く':null));
+    return {ns,name,bad}; });
+  return {groups,noT:false,warn};
+}
+function guideInfo(){
+  const g=flowGroups();
+  if(!g.groups.length && !g.noT) return {text:'',warn:g.warn,groups:[]};
+  const text = g.noT ? '△ Tがないので落ち着きません' : g.warn.size ? '△ Dの次はTへ進むと安定' : g.groups.every(x=>x.name) ? '◎ お手本どおりの流れ' : '△ お手本にない流れがあります';
+  return {text,warn:g.warn,groups:g.groups};
+}
+const FLOW_COL={'①':'var(--d)','②':'var(--s)','③':'var(--ink)'};
+function drawGuide(gi){
+  const gs=$('gstrip'); if(!gs) return; gs.innerHTML='';
+  if(!state.guide || !gi.groups || !gi.groups.length) return;
+  const base=gs.getBoundingClientRect(); if(!base.width) return;
+  const elOf=n=>{ const [i,h]=FLOW[n].k.split(':').map(Number); if(Math.floor(i/4)!==page) return null;
+    const sl=slotsEl.children[i%4]; return sl.classList.contains('split') ? sl.querySelector(`.cell[data-h="${h}"]`) : sl; };
+  gi.groups.forEach(g=>{
+    // 同じページ内で、ループの折り返しをまたがない部分ごとに描く
+    const runs=[]; let run=null;
+    g.ns.forEach((n,q)=>{ const el=elOf(n);
+      if(!el){ run=null; return; }
+      if(run && n>run.last) { run.items.push({n,q,el}); run.last=n; }
+      else { run={items:[{n,q,el}],last:n}; runs.push(run); } });
+    const last=g.ns.length-1; const made=[];
+    runs.forEach(r=>{
+      const a=r.items[0], b=r.items[r.items.length-1];
+      const ra=a.el.getBoundingClientRect(), rb=b.el.getBoundingClientRect();
+      const openL=a.q!==0, openR=b.q!==last;
+      let x0=openL? (a.q===0?ra.left:ra.left-6) : ra.left+ra.width/2, x1=openR? rb.right : rb.left+rb.width/2;
+      if(openL && r.items[0]===a && ra.left-base.left<8) x0=base.left;
+      if(openR && rb.right>base.right-8) x1=base.right;
+      x0-=base.left; x1-=base.left; const w=x1-x0; if(w<6) return;
+      const sp=document.createElement('span');
+      const no=g.name?g.name[0]:'';
+      sp.style.cssText=`left:${x0}px;width:${w}px;--fn:${g.bad?'#D9534F':g.name?(FLOW_COL[no]||'var(--t)'):'var(--muted)'}`;
+      if(openL) sp.classList.add('ol'); if(openR) sp.classList.add('or'); if(g.bad) sp.classList.add('bad');
+      const full=g.bad?'△ D→S':g.name?g.name:'？', short=g.bad?'△':g.name?(FLOW_COL[no]?no:'T続く'):'？';
+      sp.dataset.full=full; sp.dataset.short=short; sp.dataset.w=w;
+      gs.appendChild(sp); made.push(sp); });
+    // 1つの流れにつき、いちばん長い部分にだけ名前を書く
+    const big=made.reduce((m,x)=>!m||+x.dataset.w>+m.dataset.w?x:m,null);
+    if(big){ const w=+big.dataset.w, f=big.dataset.full, sh=big.dataset.short; big.textContent = w>f.length*9+10 ? f : w>sh.length*9+4 ? sh : ''; }
+  });
+}
+let LAST_GI=null; addEventListener('resize',()=>{ if(LAST_GI) drawGuide(LAST_GI); });
+function renderAll(){
+  renderTiles(); renderSlots();
+  $('keyBadge').textContent='Key '+state.key;
+  $('instBadge').textContent=instShort()+(loadingNow()?' 読込中…':'');
+  $('drumName').textContent=DRUMS[state.drum].name+' ・ '+KITS[state.kit];
+  $('arpName').textContent=ARPS[state.arp].name+' ・ '+instShort();
+  buildMenu();
+}
+
+// ---------- drawer ----------
+function chips(el, items, cur, onPick){
+  el.innerHTML='';
+  items.forEach(([v,label])=>{
+    const b=document.createElement('button'); b.className='chip'; b.textContent=label;
+    b.setAttribute('aria-pressed', v===cur); b.onclick=()=>onPick(v);
+    el.appendChild(b);
+  });
+}
+function buildMenu(){
+  chips($('keyChips'), KEYS.map(k=>[k.id,k.id]), state.key, v=>{ state.key=v; renderAll(); if(!playing) preview(0); });
+  const unit = !state.pro && state.len<4 ? 'マス' : '小節';
+  chips($('barChips'), [[4,'4'+unit],[8,'8'+unit],[16,'16'+unit]], state.bars, v=>{ state.bars=v; if(page*4>=v) page=0; renderAll(); });
+  chips($('lenChips'), [[4,'4拍（1小節）'],[2,'2拍'],[1,'1拍']], state.len, v=>{ state.len=v; renderAll(); });
+  $('lenChips').style.opacity = state.pro ? .4 : ''; $('lenChips').style.pointerEvents = state.pro ? 'none' : '';
+  $('lenNote').textContent = state.pro ? 'PROモードでは1マス＝1小節です。コードを変える拍は、コードの編集画面で小節ごとに決めます。' : '2拍にすると、1マスが2拍になります（4マスで2小節）。';
+  chips($('labelChips'), Object.entries(LABELS), state.label, v=>{ state.label=v; renderAll(); });
+  chips($('instChips'), Object.entries(INSTS), state.inst, pickInst);
+  chips($('kitChips'), Object.entries(KITS), state.kit, pickKit);
+  chips($('guideChips'), [[true,'表示する'],[false,'表示しない']], state.guide, v=>{ state.guide=v; renderAll(); });
+  chips($('proChips'), [[true,'オン'],[false,'オフ']], state.pro, v=>{ state.pro=v; document.body.classList.toggle('pro',v); renderAll(); });
+  chips($('bassMenuChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); buildMenu(); });
+  chips($('presetChips'), PRESETS.map((p,i)=>[i,p.name]), -1, i=>{
+    const p=PRESETS[i].p; state.bars=p.length;
+    state.slots=Array.from({length:16},(_,j)=>p[j]??null); selected=null; page=0; renderAll(); closeAll();
+  });
+}
+const scrim=$('scrim'), drawer=$('drawer'), sheet=$('sheet');
+function closeAll(){ drawer.classList.remove('on'); sheet.classList.remove('on'); $('edSheet').classList.remove('on'); $('patSheet').classList.remove('on'); scrim.classList.remove('on'); }
+
+// ---------- PROモード：コード編集 ----------
+let edIndex=null, edHalf=0, edOrig={};
+function openEditor(i,h=0){
+  edIndex=i; edHalf=h; edOrig={}; const p0=Math.floor(i/4)*4; for(let k=p0;k<p0+4;k++) edOrig[k]=[state.slots[k], JSON.parse(JSON.stringify(state.segs[k]||[]))];
+  $('edSheet').classList.add('on'); scrim.classList.add('on');
+  renderEditor(true);
+}
+const curSpec=()=>{ const v=getV(edIndex,edHalf); return (v===null||v===undefined)?{o:0,q:'maj',x:'',b:null}:{...specOf(v)}; };
+function pickField(f,val){
+  const sp=curSpec();
+  if(f==='o' && sp.b!==null && sp.b!==undefined) sp.b=(sp.b+val-sp.o+12)%12;   // ルートを変えてもベースの度数（関係）は保つ
+  if(f==='br') sp.b = val===0 ? null : (sp.o+val)%12;                         // ベースはコードのルートから数えた度数
+  else sp[f]=val;
+  if(sp.q==='5') sp.x='';
+  const di=STEPS.indexOf(sp.o);
+  const plain = di>=0 && sp.x==='' && (sp.b===null||sp.b===sp.o) && (DEG[di].q===''?'maj':DEG[di].q)===sp.q;
+  setV(edIndex, edHalf, plain ? di : {o:sp.o,q:sp.q,x:sp.x,b:(sp.b===sp.o?null:sp.b)});
+  renderSlots(); renderEditor(false); preview(getV(edIndex,edHalf));
+}
+// スロット式ホイール：スクロールが止まった位置の項目をそのまま選ぶ。タップした項目へは自動でスクロール
+function wheel(el,items,cur,field){
+  const ih=40;
+  if(el._key!==items.map(x=>x[1]).join('|')){
+    el._key=items.map(x=>x[1]).join('|'); el.innerHTML='';
+    items.forEach(([v,label],i)=>{ const b=document.createElement('button'); b.textContent=label; b.tabIndex=-1;
+      b.onclick=()=>el.scrollTo({top:i*ih,behavior:'smooth'}); el.appendChild(b); });
+    el.onscroll=()=>{
+      const i=Math.max(0,Math.min(items.length-1,Math.round(el.scrollTop/ih)));
+      [...el.children].forEach((b,k)=>b.classList.toggle('on',k===i));
+      clearTimeout(el._t);
+      el._t=setTimeout(()=>{ const v=el._items[i][0]; if(v!==el._cur){ el._cur=v; pickField(el._field,v); } },140);
+    };
+    el.tabIndex=0;
+    el.onkeydown=e=>{ if(e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault(); el.scrollBy({top:e.key==='ArrowDown'?ih:-ih,behavior:'smooth'}); } };
+  }
+  el._items=items; el._field=field;
+  const idx=Math.max(0,items.findIndex(x=>x[0]===cur));
+  if(el._cur!==cur || Math.round(el.scrollTop/ih)!==idx){ el._cur=cur; el.scrollTop=idx*ih; }
+  [...el.children].forEach((b,k)=>b.classList.toggle('on',k===idx));
+}
+function renderEditor(full){
+  const v=getV(edIndex,edHalf), empty=v===null||v===undefined, sp=curSpec();
+  $('edTitle').textContent='コードを編集';
+  const p0=Math.floor(edIndex/4)*4, tabs=$('edTabs'); tabs.innerHTML='';
+  for(let k=p0;k<Math.min(p0+4,state.bars);k++){
+    cellsOf(k).forEach(c=>{
+      const h=c.h, vk=c.v, ek=vk===null||vk===undefined, t=document.createElement('button');
+      t.className='edtab'+(h?' sub':''); t.setAttribute('aria-pressed',k===edIndex&&h===edHalf);
+      t.innerHTML=`<small>${h?`${c.beat}拍目〜`:`${k+1}小節目`}</small><b>${ek?'空き':chordText(vk)}</b>`;
+      t.onclick=()=>{ edIndex=k; edHalf=h; renderEditor(true); if(!ek) preview(vk); };
+      tabs.appendChild(t);
+    });
+  }
+  // コードを変える拍（複数選べる）
+  const beatsNow=segsOf(edIndex).map(x=>x.beat), bt=$('edBeat'); bt.innerHTML='';
+  [[0,'変えない'],[2,'2拍目'],[3,'3拍目'],[4,'4拍目']].forEach(([b,label])=>{
+    const c=document.createElement('button'); c.className='chip'; c.textContent=label;
+    c.setAttribute('aria-pressed', b===0 ? beatsNow.length===0 : beatsNow.includes(b));
+    c.onclick=()=>{
+      const list=state.segs[edIndex]=(state.segs[edIndex]||[]).filter(x=>x&&x.v!=null);
+      if(b===0){ state.segs[edIndex]=[]; edHalf=0; }
+      else if(beatsNow.includes(b)){ state.segs[edIndex]=list.filter(x=>x.beat!==b); edHalf=0; }
+      else { const prev=cellsOf(edIndex).filter(x=>x.off<(b-1)*4).pop(); list.push({beat:b, v:prev&&prev.v!=null?prev.v:(state.slots[edIndex]??0)});
+        edHalf=segsOf(edIndex).findIndex(x=>x.beat===b)+1; }
+      save(); renderSlots(); renderEditor(true);
+    };
+    bt.appendChild(c);
+  });
+  $('edAntSec').hidden = edHalf!==0;
+  chips($('edAnt'), ANT_CHOICES, state.ant&&state.ant[edIndex]||0, v=>{ if(!state.ant) state.ant=Array(16).fill(null); state.ant[edIndex]=v; save(); renderSlots(); renderEditor(false); });
+  $('edName').innerHTML=empty?'<span style="font-size:.6em;color:var(--muted)">空き（回すと入ります）</span>':chordHTML(v);
+  $('edSub').textContent=empty?'':nameOf(v,'num',false);
+  const offs=[...Array(12).keys()];
+  wheel($('edRoot'), offs.map(o=>[o,noteName(o)]), sp.o, 'o');
+  wheel($('edQual'), QUAL_ORDER.map(q=>[q,QUAL_LABEL[q]]), sp.q, 'q');
+  wheel($('edExt'), EXT_ORDER.map(x=>[x,EXT_LABEL[x]]), sp.x, 'x');
+  $('edExt').parentNode.classList.toggle('off', sp.q==='5');
+  wheel($('edBass'), offs.map(o=>[o,NUM_OF[o]]), (sp.b===null||sp.b===undefined)?0:(sp.b-sp.o+12)%12, 'br');
+}
+$('closeEd').onclick=closeAll;
+$('edPlay').onclick=()=>{ const v=getV(edIndex,edHalf); if(v!=null) preview(v); };
+$('edReset').onclick=()=>{ const o=edOrig[edIndex]; if(o){ state.slots[edIndex]=o[0]??null; state.segs[edIndex]=JSON.parse(JSON.stringify(o[1])); } if(edHalf>segsOf(edIndex).length) edHalf=0; renderSlots(); renderEditor(true); const v=getV(edIndex,edHalf); if(v!=null) preview(v); };
+$('edAll').onclick=()=>openEditor(page*4);
+$('menuBtn').onclick=()=>{ drawer.classList.add('on'); scrim.classList.add('on'); };
+$('closeDrawer').onclick=closeAll; $('closeSheet').onclick=closeAll; scrim.onclick=closeAll;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeAll(); });
+
+// ---------- bottom sheet ----------
+let sheetKind=null;
+function openSheet(kind){
+  sheetKind=kind;
+  $('sheetTitle').textContent = kind==='drum' ? 'ドラム' : 'コードパターン';
+  $('soundTitle').textContent = kind==='drum' ? 'ドラムの音' : '音色';
+  const soundRow=()=>chips($('soundChips'), Object.entries(kind==='drum'?KITS:INSTS), kind==='drum'?state.kit:state.inst,
+    v=>{ (kind==='drum'?pickKit:pickInst)(v); soundRow(); });
+  soundRow();
+  $('fillSec').hidden = kind!=='drum';
+  const fillRow=()=>chips($('fillChips'), [[true,'入れる'],[false,'入れない']], state.fill, v=>{ state.fill=v; save(); dirty=true; fillRow(); });
+  fillRow();
+  const bassRow=()=>chips($('bassChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); bassRow(); });
+  bassRow();
+  $('patHint').textContent = /^my\d+$/.test(state[kind]) ? '選んでいるマイパターンを編集します' : '選んでいるパターンをコピーして編集します';
+  const opts=$('opts'); opts.innerHTML='';
+  const order = kind==='drum'?drumOrder():arpOrder(), src = kind==='drum'?DRUMS:ARPS;
+  order.forEach(k=>{
+    const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', state[kind]===k);
+    b.innerHTML=`<canvas></canvas><span>${src[k].name}</span>`;
+    b.onclick=()=>{ state[kind]=k; renderAll(); closeAll(); };
+    opts.appendChild(b);
+  });
+  sheet.classList.add('on'); scrim.classList.add('on');
+  requestAnimationFrame(()=>{
+    const col=colors();
+    [...opts.children].forEach((b,i)=>{
+      const cv=b.querySelector('canvas'), g=fit(cv), k=order[i];
+      if(kind==='drum') drawDrumBar(g,0,0,cv.width,cv.height,DRUMS[k],col);
+      else drawArpBar(g,0,0,cv.width,cv.height,ARPS[k],col.t,col);
+    });
+  });
+}
+$('patEditBtn').onclick=()=>openPatEditor(sheetKind,'edit');
+$('patNewBtn').onclick=()=>openPatEditor(sheetKind,'new');
+$('closePat').onclick=closeAll;
+$('patPlay').onclick=()=>playing?stop():play();
+$('patNew').onclick=()=>{ newMy(patKind,null); renderPatEditor(); renderAll(); };
+$('patDup').onclick=()=>{ newMy(patKind,state[patKind]); renderPatEditor(); renderAll(); };
+$('patDel').onclick=()=>{ const b=$('patDel');
+  if(!b.dataset.armed){ b.dataset.armed='1'; b.textContent='もう一度押すと消します'; return; }
+  const list=listOf(patKind); list.splice(+state[patKind].slice(2),1); state[patKind]= patKind==='drum'?'pop':'piano4'; rebuildMy(); save(); renderAll(); closeAll(); };
+$('patClear').onclick=()=>{ if(patKind==='drum') curMy().v={}; else KEY_ROWS.forEach(([r])=>curMy().cells[r]=Array(16).fill(0)); rebuildMy(); save(); renderPatEditor(); dirty=true; };
+
+$('drumLane').onclick=()=>openSheet('drum');
+$('arpLane').onclick=()=>openSheet('arp');
+
+function pickInst(v){ state.inst=v; renderAll(); ensureSounds().then(()=>{ if(!playing) preview(selected ?? 0); }); }
+function pickKit(v){ state.kit=v; renderAll(); ensureSounds().then(()=>{ if(!playing) previewKit(); }); }
+
+// ---------- BPM / play ----------
+const bpmIn=$('bpm'); bpmIn.value=state.bpm; $('bpmOut').textContent=state.bpm;
+bpmIn.oninput=()=>{ state.bpm=+bpmIn.value; $('bpmOut').textContent=state.bpm; save(); };
+const PLAY_SVG='<svg width="26" height="26" viewBox="0 0 30 30" aria-hidden="true"><path d="M9 5.5v19a1 1 0 0 0 1.5.9l15-9.5a1 1 0 0 0 0-1.7l-15-9.5A1 1 0 0 0 9 5.5z" fill="currentColor"/></svg>';
+const STOP_SVG='<svg width="22" height="22" viewBox="0 0 26 26" aria-hidden="true"><rect x="4" y="4" width="18" height="18" rx="3" fill="currentColor"/></svg>';
+$('play').innerHTML=PLAY_SVG;
+
+// ---------- drag / tap ----------
+let drag=null, lastTap=null;
+function begin(e, source){
+  drag={source,x0:e.clientX,y0:e.clientY,moving:false,ghost:null,over:null};
+  try{ e.target.setPointerCapture(e.pointerId); }catch(_){}
+}
+palette.addEventListener('pointerdown',e=>{ const t=e.target.closest('.tile'); if(t) begin(e,{type:'tile',deg:+t.dataset.deg}); });
+slotsEl.addEventListener('pointerdown',e=>{
+  if(e.target.closest('.x')) return;
+  const s=e.target.closest('.slot'); if(!s) return;
+  const i=+s.dataset.abs; begin(e,{type:'slot',index:i,deg:state.slots[i]});
+});
+window.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  if(!drag.moving){
+    if(drag.source.deg===null||drag.source.deg===undefined) return;
+    if(Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)<8) return;
+    drag.moving=true;
+    const g=document.createElement('div'); g.className='ghost '+fnOf(drag.source.deg);
+    g.innerHTML=`<span class="name">${bigHTML(drag.source.deg)}</span>`;
+    document.body.appendChild(g); drag.ghost=g;
+  }
+  drag.ghost.style.left=e.clientX+'px'; drag.ghost.style.top=e.clientY+'px';
+  const hit=document.elementFromPoint(e.clientX,e.clientY);
+  // かたまりの上で0.6秒止まったときだけ切り替える（通り過ぎただけでは切り替えない）
+  const pg=hit?.closest('.page');
+  if(pg!==drag.pg){
+    clearTimeout(drag.pgT); if(drag.pg) drag.pg.classList.remove('hover'); drag.pg=pg;
+    if(pg && +pg.dataset.page!==page){ pg.classList.add('hover');
+      drag.pgT=setTimeout(()=>{ if(drag&&drag.pg===pg){ page=+pg.dataset.page; pg.classList.remove('hover'); renderSlots(); } },600); }
+  }
+  const over=hit?.closest('.slot'), cell=hit?.closest('.cell');
+  if(drag.over&&drag.over!==over) drag.over.classList.remove('over','over-r');
+  if(drag.cell&&drag.cell!==cell) drag.cell.classList.remove('over');
+  drag.right=false; drag.h=0; drag.cell=null;
+  if(over){
+    const r=over.getBoundingClientRect(), i=+over.dataset.abs, filled=state.slots[i]!=null;
+    if(cell && drag.source.type==='tile'){ drag.h=+cell.dataset.h; drag.cell=cell; cell.classList.add('over'); over.classList.remove('over','over-r'); }
+    else {
+      // PROモード：まだ分けていないマスの右側に落とすと3拍目からのコードになる
+      drag.right = state.pro && drag.source.type==='tile' && filled && !segsOf(i).length && (e.clientX-r.left) > r.width*.58;
+      over.classList.toggle('over',!drag.right); over.classList.toggle('over-r',drag.right);
+    }
+  }
+  drag.over=over||null;
+});
+function end(e){
+  if(!drag) return; const d=drag; drag=null;
+  clearTimeout(d.pgT); if(d.pg) d.pg.classList.remove('hover');
+  if(d.ghost) d.ghost.remove(); if(d.over) d.over.classList.remove('over','over-r'); if(d.cell) d.cell.classList.remove('over');
+  if(d.moving){
+    const to=d.over?+d.over.dataset.abs:null;
+    if(d.source.type==='tile'){ if(to!==null){ if(d.right){ state.segs[to]=[{beat:3,v:d.source.deg}]; } else setV(to, d.h||0, d.source.deg); preview(d.source.deg); } }
+    else { const f=d.source.index;
+      if(to===null){ state.slots[f]=null; state.segs[f]=[]; }
+      else if(to!==f){ [state.slots[to],state.slots[f]]=[state.slots[f],state.slots[to]]; [state.segs[to],state.segs[f]]=[state.segs[f],state.segs[to]]; } }
+    selected=null; renderTiles(); renderSlots(); return;
+  }
+  if(e.type==='pointercancel') return;
+  if(e.clientX!==undefined){ const tgt=document.elementFromPoint(e.clientX,e.clientY); if(tgt) e={clientX:e.clientX,target:tgt,type:e.type}; }
+  if(d.source.type==='tile'){ selected = selected===d.source.deg?null:d.source.deg; preview(d.source.deg); }
+  else { const i=d.source.index, now=performance.now();
+    const tcell=e.target&&e.target.closest?e.target.closest('.cell'):null, th=tcell?+tcell.dataset.h:0;   // 分けたマスはタップした区切り
+    if(state.pro && selected===null && lastTap && lastTap.i===i && lastTap.h===th && now-lastTap.t<380){ lastTap=null; openEditor(i,th); return; }   // ダブルタップで編集
+    lastTap={i,h:th,t:now};
+    if(selected!==null){
+      const tc=e.target&&e.target.closest?e.target.closest('.cell'):null;
+      setV(i, tc?+tc.dataset.h:0, selected); preview(selected); selected=null; }
+    else if(state.slots[i]!==null) preview(state.slots[i]); }
+  renderTiles(); renderSlots();
+}
+window.addEventListener('pointerup',end); window.addEventListener('pointercancel',end);
+slotsEl.addEventListener('click',e=>{ const x=e.target.closest('.x'); if(!x) return; const i=+x.closest('.slot').dataset.abs;
+  const sg=segsOf(i); if(sg.length){ const last=sg[sg.length-1]; state.segs[i]=state.segs[i].filter(x=>x!==last); }   // 分けたマスは最後のコードから消す
+  else { state.slots[i]=null; state.segs[i]=[]; }
+  renderSlots(); });
+palette.addEventListener('keydown',e=>{
+  const t=e.target.closest('.tile'); if(!t||(e.key!=='Enter'&&e.key!==' ')) return;
+  e.preventDefault(); const d=+t.dataset.deg; selected=selected===d?null:d; preview(d); renderTiles(); renderSlots();
+});
+
+// ---------- audio ----------
+let ctx=null, master, noiseBuf;
+function ensureAudio(noResume){
+  if(!ctx){
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=4;
+    master=ctx.createGain(); master.gain.value=.85; master.connect(comp); comp.connect(ctx.destination);
+    noiseBuf=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);
+    const ch=noiseBuf.getChannelData(0); for(let i=0;i<ch.length;i++) ch[i]=Math.random()*2-1;
+  }
+  if(!noResume&&ctx.state==='suspended') ctx.resume();
+}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+// sampled instruments (FluidR3 GM soundfont via WebAudioFont data), shipped as snd/*.json
+const SETS={}, LOADED={}, FAILED={};
+function decode(ab){ return new Promise((res,rej)=>{ const p=ctx.decodeAudioData(ab,res,rej); if(p&&p.then) p.then(res,rej); }); }
+async function decZone(z){ if(z.buf) return; const bin=atob(z.f), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); z.buf=await decode(u.buffer); delete z.f; }
+function loadSet(name){
+  if(!SETS[name]){
+    if(!ctx) ensureAudio(true);
+    SETS[name]=fetch(`snd/${name}.json`).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(async data=>{
+      const zones=Array.isArray(data)?data:Object.values(data).flat();
+      await Promise.all(zones.map(decZone)); LOADED[name]=data; return data;
+    }).catch(e=>{ FAILED[name]=true; console.warn('sound load failed',name,e); });
+    SETS[name].finally(()=>{ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中…':''); });
+  }
+  return SETS[name];
+}
+function neededSets(){ const n=[]; if(state.kit!=='synth') n.push('kit-'+state.kit); if(!isSynthInst()) n.push(state.inst,'bass'); return n; }
+function loadingNow(){ return neededSets().some(n=>!LOADED[n]&&!FAILED[n]); }
+function ensureSounds(){ const p=Promise.all(neededSets().map(loadSet)); renderBadge(); return p; }
+function renderBadge(){ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中…':''); }
+function playZone(zones,m,t,dur,vel,rel,cutoff,loop){
+  let z=zones.find(z=>m>=z.lo&&m<=z.hi);
+  if(!z) z=zones.reduce((a,b)=>Math.abs((b.lo+b.hi)/2-m)<Math.abs((a.lo+a.hi)/2-m)?b:a);
+  if(!z||!z.buf) return false;
+  const s=ctx.createBufferSource(); s.buffer=z.buf;
+  const base=z.op-100*z.ct-z.ft; s.playbackRate.value=Math.pow(2,(100*m-base)/1200);
+  if(loop&&z.ls>1&&z.le>z.ls+10){ s.loop=true; s.loopStart=z.ls/z.sr; s.loopEnd=z.le/z.sr; }
+  const g=ctx.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel,t+.004);
+  g.gain.setValueAtTime(vel,t+dur); g.gain.setTargetAtTime(0,t+dur,rel);
+  if(cutoff){ const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=cutoff; lp.Q.value=.5; s.connect(lp); lp.connect(g); }
+  else s.connect(g);
+  g.connect(master); s.start(t); s.stop(t+dur+rel*7);
+  return g;
+}
+const INST_FX={piano:{gain:3.6,rel:.2,hold:1.15},epiano:{gain:3.4,rel:.18,hold:1.1},nylon:{gain:3.6,rel:.2,hold:1.3},steel:{gain:3.2,rel:.2,hold:1.3},
+  organ:{gain:2.2,rel:.05,hold:1,loop:true},strings:{gain:2.4,rel:.25,hold:1,loop:true}};
+// v = ベロシティ(0〜1)。弱いほど音量を下げ、高音も丸くする
+function keyTone(m,t,dur,v){
+  v=Math.max(.05,Math.min(1,v));
+  const fx=INST_FX[state.inst], set=LOADED[state.inst];
+  const g = fx&&set&&playZone(set,m,t,Math.max(dur*fx.hold,.08),.36*fx.gain*Math.pow(v,1.6),fx.rel,900+9000*v*v,fx.loop);
+  return g || synthTone(m,t,dur,.34*Math.pow(v,1.3));
+}
+function bassTone(m,t,dur,vel=1){
+  const g=!isSynthInst()&&LOADED.bass&&playZone(LOADED.bass,m,t,dur,.7*vel,.08,2200);
+  const gg=g||synthBass(m,t,dur,vel); bassHeld.push(gg); return gg;
+}
+const DRUM_VOL={36:1.15,37:.75,38:.9,42:.3,46:.22,49:.28,51:.26,50:.8,47:.8,45:.85};
+function drum_(note,t,vel=1){ return drum(note,t,vel); }
+function drum(note,t,vel=1){
+  const kit=LOADED['kit-'+state.kit];
+  if(kit&&kit[note]&&playZone(kit[note],note,t,note===49?2.5:1.2,DRUM_VOL[note]*vel,.25)) return;
+  const f={36:kick,37:rim,38:snare,42:t=>hat(t,vel>.7),46:ohat,49:t=>noise(t,'highpass',6000,1.2,.1*vel),51:t=>noise(t,'bandpass',6500,.4,.07*vel,2),
+    50:t=>tom(t,220),47:t=>tom(t,160),45:t=>tom(t,115)}[note]; if(f) f(t);
+}
+function tom(t,f){ const g=ctx.createGain(); g.connect(master); const o=osc('sine',f,t,t+.4,g); o.frequency.exponentialRampToValueAtTime(f*.6,t+.3);
+  g.gain.setValueAtTime(.7,t); g.gain.exponentialRampToValueAtTime(.0001,t+.35); }
+function previewKit(){ whenRunning(previewKitNow); }
+function previewKitNow(){ const t=ctx.currentTime+.03, sd=.13; drum(36,t); drum(42,t); drum(42,t+sd,.5); drum(38,t+sd*2); drum(42,t+sd*2); drum(36,t+sd*3); drum(46,t+sd*3); }
+function osc(type,f,t,end,dest,detune=0){ const o=ctx.createOscillator(); o.type=type; o.frequency.value=f; o.detune.value=detune; o.connect(dest); o.start(t); o.stop(end); return o; }
+// 減衰つきエンベロープ（短い音でも音量が戻らない形）
+function env(g,t,peak,sus,dec,dur,rel,att=.005){
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(peak,t+att);
+  g.gain.setTargetAtTime(peak*sus,t+att,dec/3);
+  g.gain.setTargetAtTime(.0001,t+Math.max(dur,att+.01),rel);
+}
+function synthTone(m,t,dur,vel){
+  const f=mtof(m), g=ctx.createGain(), lp=ctx.createBiquadFilter(); lp.type='lowpass';
+  g.connect(lp); lp.connect(master); dur=Math.max(dur,.06);
+  const inst=SYNTH_INST[state.inst]||state.inst;
+  if(inst==='piano'){
+    lp.frequency.setValueAtTime(3200,t); lp.frequency.exponentialRampToValueAtTime(1100,t+.5);
+    const end=t+dur+.8; osc('triangle',f,t,end,g); const g2=ctx.createGain(); g2.gain.value=.3; g2.connect(g); osc('sine',f*2,t,end,g2);
+    env(g,t,vel,.35,.3,dur,.1,.006);
+  } else if(inst==='epiano'){
+    lp.frequency.value=4000; const end=t+dur+1;
+    const car=ctx.createOscillator(); car.type='sine'; car.frequency.value=f; car.connect(g);
+    const mod=ctx.createOscillator(); mod.frequency.value=f; const mg=ctx.createGain();
+    mg.gain.setValueAtTime(f*1.6,t); mg.gain.exponentialRampToValueAtTime(f*.08,t+.7); mod.connect(mg); mg.connect(car.frequency);
+    car.start(t); mod.start(t); car.stop(end); mod.stop(end);
+    env(g,t,vel*1.2,.5,.5,dur,.12,.004);
+  } else if(inst==='organ'){
+    lp.frequency.value=3500; const end=t+dur+.2;
+    [[1,.6],[2,.35],[3,.22],[4,.12]].forEach(([r,a])=>{ const gg=ctx.createGain(); gg.gain.value=a; gg.connect(g); osc('sine',f*r,t,end,gg); });
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.8,t+.01); g.gain.setValueAtTime(vel*.8,t+dur); g.gain.linearRampToValueAtTime(0,t+dur+.05);
+  } else if(inst==='nylon'||inst==='steel'){
+    lp.Q.value=2; lp.frequency.setValueAtTime(5000,t); lp.frequency.exponentialRampToValueAtTime(700,t+.25);
+    const end=t+dur+1.2; osc('sawtooth',f,t,end,g);
+    env(g,t,vel*.9,.25,.4,dur,.15,.003);
+  } else {
+    lp.frequency.setValueAtTime(900,t); lp.frequency.linearRampToValueAtTime(2200,t+.15); const end=t+dur+.6;
+    osc('sawtooth',f,t,end,g,-8); osc('sawtooth',f,t,end,g,8);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.55,t+.03); g.gain.setValueAtTime(vel*.5,t+dur); g.gain.setTargetAtTime(.0001,t+dur,.15);
+  }
+  return g;
+}
+function synthBass(m,t,dur,vel=1){
+  const g=ctx.createGain(), lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=700; lp.connect(g); g.connect(master);
+  osc('triangle',mtof(m),t,t+dur+.5,lp);
+  const g2=ctx.createGain(); g2.gain.value=.35; g2.connect(lp); osc('sine',mtof(m)*2,t,t+dur+.5,g2);   // 低い音でもスマホのスピーカーで聞こえるように倍音を足す
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.34*vel,t+.01); g.gain.setTargetAtTime(.0001,t+dur,.06);
+  return g;
+}
+function noise(t,type,freq,dur,vol,q=1){
+  const s=ctx.createBufferSource(); s.buffer=noiseBuf; const f=ctx.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q;
+  const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+dur+.02);
+}
+function kick(t){ const g=ctx.createGain(); g.connect(master); const o=osc('sine',140,t,t+.35,g); o.frequency.setValueAtTime(140,t); o.frequency.exponentialRampToValueAtTime(42,t+.13);
+  g.gain.setValueAtTime(.95,t); g.gain.exponentialRampToValueAtTime(.0001,t+.32); }
+function snare(t){ noise(t,'bandpass',1900,.17,.5,.7); const g=ctx.createGain(); g.connect(master); osc('triangle',200,t,t+.1,g);
+  g.gain.setValueAtTime(.35,t); g.gain.exponentialRampToValueAtTime(.0001,t+.08); }
+const hat=(t,a)=>noise(t,'highpass',8000,.035,a?.1:.055);
+const ohat=t=>noise(t,'highpass',7500,.18,.07);
+const rim=t=>noise(t,'bandpass',3200,.03,.4,4);
+
+// 音が止まっている（スマホで音の準備ができていない）間に試し弾きをためこまない。
+// 準備ができてから、最後の1回分だけ鳴らす
+let pendingSound=null;
+function whenRunning(fn){
+  ensureAudio();
+  if(ctx.state==='running'){ pendingSound=null; fn(); return; }
+  pendingSound=fn;
+  ctx.resume().then(()=>{ if(pendingSound===fn && ctx.state==='running'){ pendingSound=null; fn(); } }).catch(()=>{});
+}
+function preview(d){
+  if(playing||d===null||d===undefined) return;
+  whenRunning(()=>{ if(!playing) previewNow(d); });
+}
+function previewNow(d){
+  const t=ctx.currentTime+.02, {tones,bass}=chordNotes(d,null);
+  [...tones.slice(0,4),tones[9]].filter(m=>m!=null).forEach((m,i,a)=>keyTone(m,t+i*.02,.9,i===a.length-1?.62:.5)); if(state.bass) bassTone(bass,t,.9);
+}
+
+// ---------- scheduler ----------
+const COMP_LEVEL=.85;
+let lastR=null, barTones=null;
+// 次の和音を弾くとき、前の和音を自然に離す（音が重なって濁るのを防ぐ）
+let held=[];
+function choke(t){ held=held.filter(h=>{ if(h.end>t){ try{ h.g.gain.cancelScheduledValues(t); h.g.gain.setTargetAtTime(0,t,.025); }catch(e){} } return false; }); }
+let playedSteps=0, gpos=0;
+const totalBars=()=>state.bars*slotSteps()/16;
+const isFillBar=b=>b%4===3;
+const fillModeOf=(b,dr)=> state.fill && dr.F && isFillBar(b) ? (b%8===7?'big':'small') : null;   // フィルは再生を始めてから4小節ごと（コードの切り替えやマスの数とは関係なし）
+let playing=false, timer=null, nextTime=0, visQ=[], cur=null;
+const stepDur=()=>60/state.bpm/4;
+const ANT_CHOICES=[[0,'小節の頭'],[2,'8分前（食い）'],[1,'16分前（食い）']];
+let pushedKey=null;
+const antOf=i=>{ if(!state.pro) return 0; const a=state.ant?state.ant[i]:null; return a||0; };   // 食いはPROだけ
+function playEvents(evs,bt,ct,sd,pat){
+  const tones=bt.tones;
+  evs.forEach(([st0,ns0,len,vel,dir])=>{
+    let ns=ns0;
+    if(tones[9]!=null){ if(ns.includes(1)&&ns.includes(2)&&ns.includes(3)) ns=[...ns,9]; if(ns.includes(6)&&ns.includes(7)&&ns.includes(8)) ns=[...ns,10]; }
+    const top=dir==='u'?ns[0]:ns[ns.length-1];
+    ns.forEach((ix,k)=>{
+      const w = ix===top ? 1 : ix===0 ? .8 : .66;          // 一番上の音を少し立たせ、内声は控えめ
+      const hv = 1+(Math.random()-.5)*.14;                 // 人間っぽい揺れ
+      const ht = st0%4===0 ? 0 : (Math.random()-.5)*.004;   // 拍の頭はジャストで
+      const g=keyTone(tones[ix], ct+ht+k*(dir?.016:.0015), len*sd, COMP_LEVEL*vel*w*hv); if(g) held.push({g,end:ct+len*sd*1.4+.5});
+    });
+  });
+}
+// ベース：5度はコードの本当の5度に。コードが変わる所で必ず切る（次のコードにはみ出さない）
+let bassHeld=[];
+function chokeBass(t){ bassHeld.forEach(g=>{ try{ g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0,t,.02); }catch(e){} }); bassHeld=[]; }
+// ベースの音：0=ルート 12=オクターブ '3'=3度 '5'=5度 '6'=6度 'ap'=次のコードへつなぐ音（今のコードの音から選ぶ）
+const bassPcOf=v=>{ const sp=specOf(v); return (keyObj().pc+((sp.b!==null&&sp.b!==undefined)?sp.b:sp.o))%12; };
+function playBass(list,s,t,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,vel])=>{ if(st!==s) return;
+  let n;
+  if(iv==='ap'){
+    if(nextV===null||nextV===undefined){ n=bt.slash?12:bt.fifth; }
+    else {
+      // 次のコードのルートに一番近い「今のコードの音」（ルート・3度・5度・オクターブ）を選ぶ。今の和音とぶつからない
+      const pc=bassPcOf(nextV), cand=bt.slash?[0,12]:[0,bt.third,bt.fifth,12].filter(x=>x<=12);
+      let best=12, bd=99;
+      cand.forEach(c=>{ const m=bt.bass+c; for(const o of [-12,0,12]){ const d=Math.abs(m-(28+((pc-4+12)%12)+o)); if(d<bd&&c!==0){ bd=d; best=c; } } });
+      n=best; }
+  } else if(typeof iv==='string'){ n = bt.slash ? 12 : iv==='3'?bt.third : iv==='5'?bt.fifth : iv==='6'?9 : 0; }
+  else n = iv===7 ? (bt.slash?12:bt.fifth) : iv;
+  bassTone(bt.bass+n,t,Math.min(len,room)*sd*.92,vel); }); }
+function scheduleStep(g,t){
+  const L=slotSteps(), s=g%16, b=Math.floor(playedSteps/16);     // b = 再生を始めてから何小節目か（ドラム用）
+  const dr=DRUMS[state.drum], sd=stepDur(), tt=t+(dr.swing&&s%4===2?sd*.34:0);
+  const fm = fillModeOf(b,dr), V = (fm && s>=(fm==='big'?8:12)) ? (fm==='big'?dr.F:dr.FS) : (b%2===1 && dr.VB ? dr.VB : dr.V);
+  for(const n in V){ const v=V[n][s]; if(v) drum(+n,tt,v); }
+  if(state.fill && dr.F && s===0 && b%4===0 && b>0) drum(49,tt,.6);
+  const pat=ARPS[state.arp], ct=t+((dr.swing||pat.swing)&&s%4===2?sd*.34:0);   // シャッフル系は裏拍を跳ねさせる
+  const bassOf=bb=>dr.bass;
+  // いま鳴らすコード（マス i の中の何番目のコードか）
+  const i=Math.floor(g/L), off=g%L, cells=cellsOf(i), ci=cells.findIndex(c=>off>=c.off&&off<c.off+c.len), cell=cells[ci], rel=off-cell.off;
+  let nx, nxKey, an=0;
+  if(ci<cells.length-1){ nx=cells[ci+1]; nxKey=i+':'+nx.h; }
+  else { const ni=(i+1)%state.bars; nx=cellsOf(ni)[0]; nxKey=ni+':0'; an=antOf(ni); }
+  if(nx.v===null||nx.v===undefined) an=0;
+  an=Math.min(an,cell.len-1);
+  if(an>0 && rel>=cell.len-an){
+    // 次のコードを「食って」先に鳴らす（このコードの残りは鳴らさない）
+    if(rel===cell.len-an){
+      barTones=chordNotes(nx.v,lastR); lastR=barTones.R; pushedKey=nxKey; choke(ct);
+      playEvents(pat.at[0]||[], barTones, ct, sd, pat);
+      if(state.bass){ chokeBass(ct); playBass(bassOf(b),0,ct,barTones,sd,an+nx.len); }
+    }
+  } else if(cell.v!==null&&cell.v!==undefined){
+    // コードが変わった所から、パターンを頭から弾く（短いコードはパターンの前の部分だけ）
+    const key=i+':'+cell.h, pushed = rel===0 && pushedKey===key;
+    if((rel===0&&!pushed)||!barTones){ barTones=chordNotes(cell.v,lastR); lastR=barTones.R; }
+    if(rel===0) pushedKey=null;
+    const evs = pushed ? null : pat.at[rel];
+    if(rel===0 && !pushed) choke(ct);
+    else if(evs && !pat.legato && evs.some(e=>e[1].length>1)) choke(ct);
+    if(evs) playEvents(evs, barTones, ct, sd, pat);
+    if(state.bass && rel===0 && !pushed) chokeBass(tt);
+    if(state.bass && !pushed) playBass(bassOf(b),rel,tt,barTones,sd,cell.len-rel,nx.v);
+  }
+  visQ.push({t,b:i,s:off,L,beat:g%4===0,abs:playedSteps,g});
+}
+function tick(){
+  // チュートリアル中は、進行を1周したら止める
+  if(TUT.on && playedSteps>=TUT.loopLen){
+    if(!TUT.stopping){ TUT.stopping=true; const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+500;
+      TUT.stopT=setTimeout(()=>{ TUT.stopping=false; if(playing) stop(); const f=TUT.onLoopEnd; TUT.onLoopEnd=null; if(f) f(); },ms); }
+    return;
+  }
+  while(nextTime<ctx.currentTime+.12){
+    const T=state.bars*slotSteps(); gpos%=T;
+    scheduleStep(gpos,nextTime); nextTime+=stepDur(); gpos=(gpos+1)%T; playedSteps++;
+  }
+}
+let starting=false;
+async function play(){ ensureAudio(); pendingSound=null; if(starting) return;
+  if(loadingNow()){ starting=true; $('play').setAttribute('aria-label','読み込み中'); $('play').style.opacity=.55;
+    await Promise.race([ensureSounds(), new Promise(r=>setTimeout(r,8000))]); starting=false; $('play').style.opacity=''; }
+  lastR=null; barTones=null; pushedKey=null; playing=true; playedSteps=0; gpos=0;
+  if(TUT.on){ TUT.loopLen=state.bars*slotSteps(); TUT.stopping=false; clearTimeout(TUT.stopT); } visQ=[]; cur=null; nextTime=ctx.currentTime+.06; tick(); timer=setInterval(tick,25);
+  $('play').innerHTML=STOP_SVG; $('play').setAttribute('aria-label','停止'); }
+function stop(){ playing=false; clearInterval(timer); visQ=[]; cur=null; dirty=true;
+  $('play').innerHTML=PLAY_SVG; $('play').setAttribute('aria-label','再生'); $('play').classList.remove('beat');
+  slotsEl.querySelectorAll('.slot').forEach(s=>s.classList.remove('now')); renderPages(); }
+$('play').onclick=()=>playing?stop():play();
+
+// ---------- lane drawing ----------
+function colors(){ const s=getComputedStyle(document.documentElement), v=n=>s.getPropertyValue(n).trim();
+  return {ink:v('--ink'),muted:v('--muted'),line:v('--line'),surface:v('--surface'),lane:v('--lane'),t:v('--t'),s:v('--s'),d:v('--d')}; }
+function fit(cv){ const r=devicePixelRatio||1, w=Math.round(cv.clientWidth*r), h=Math.round(cv.clientHeight*r);
+  if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; } return cv.getContext('2d'); }
+function rr(g,x,y,w,h,r){ g.beginPath(); if(g.roundRect) g.roundRect(x,y,w,h,r); else g.rect(x,y,w,h); }
+function drawDrumBar(g,x,y,w,h,dr,col,fill,from=0,n=16){
+  const sw=w/n, rh=h/3, r=devicePixelRatio||1;
+  g.fillStyle=col.line; for(let i=4;i<n;i+=4) g.fillRect(x+i*sw,y+2*r,1*r,h-4*r);
+  const rows=[[[42,51],[46,49],col.muted],[[38,50,47,45],[37],col.ink],[[36],[],col.ink]];
+  for(let i=from;i<from+n;i++){
+    const fs=fill==='big'?8:12, inF=fill&&dr.F&&i>=fs, V=inF?(fill==='big'?dr.F:dr.FS):dr.V, xi=x+(i-from)*sw;
+    rows.forEach(([main,alt,c],ri)=>{
+      const yy=y+ri*rh+rh*.18, hh=rh*.64;
+      const mv=Math.max(0,...main.map(n=>V[n]?V[n][i]:0)), av=Math.max(0,...alt.map(n=>V[n]?V[n][i]:0));
+      if(mv){ g.globalAlpha=.3+.7*mv; g.fillStyle=(inF&&ri>0)?col.d:c; rr(g,xi+r*.6,yy,Math.max(sw-1.2*r,1),hh,1.5*r); g.fill(); }
+      else if(av){ g.globalAlpha=.4+.6*av; g.strokeStyle=c; g.lineWidth=1.1*r; rr(g,xi+1.2*r,yy+.6*r,Math.max(sw-2.4*r,1),hh-1.2*r,1.5*r); g.stroke(); }
+    });
+  }
+  g.globalAlpha=1;
+}
+function drawArpBar(g,x,y,w,h,a,c,col,n=16){
+  const sw=w/n, rh=h/9, r=devicePixelRatio||1, ROW={0:0,4:1,5:2,1:3,2:4,3:5,6:6,7:7,8:8};
+  g.fillStyle=col.line; for(let i=4;i<n;i+=4) g.fillRect(x+i*sw,y+2*r,1*r,h-4*r);
+  g.fillStyle=c;
+  a.ev.forEach(([st,ns,len,vel])=>{ if(st>=n) return; ns.forEach(ix=>{
+    const l=Math.min(len,n-st); g.globalAlpha=.35+.65*vel;
+    rr(g,x+st*sw+r*.5,y+(8-ROW[ix])*rh+rh*.12,Math.max(l*sw-1*r,1.5*r),rh*.76,1.2*r); g.fill(); }); });
+  g.globalAlpha=1;
+}
+let dirty=true;
+function drawLane(cv,kind){
+  const g=fit(cv), W=cv.width, H=cv.height, r=devicePixelRatio||1, col=colors(), gap=8*r, cw=(W-3*gap)/4;
+  g.clearRect(0,0,W,H);
+  const row = (playing&&cur) ? Math.floor(cur.b/4) : page;   // 再生中はいま鳴っている4マスを表示
+  for(let c=0;c<4;c++){
+    const x=c*(cw+gap), b=row*4+c;
+    g.fillStyle=col.lane; rr(g,x,0,cw,H,8*r); g.fill();
+    const px=x+4*r, pw=cw-8*r, py=4*r, ph=H-8*r;
+    const L=slotSteps(), start=b*L;
+    // 帯は実際に鳴る小節に合わせる（再生中はいまのくり返しの位置、止まっている時は1回目）
+    if(kind==='drum'){ const dr=DRUMS[state.drum], base=(playing&&cur&&cur.abs!=null)?cur.abs-cur.g:0, db=Math.floor((base+start)/16);
+      drawDrumBar(g,px,py,pw,ph,(db%2===1&&dr.VB)?{...dr,V:dr.VB}:dr,col,b<state.bars?fillModeOf(db,dr):null,start%16,L); }
+    else {
+      const cells=b<state.bars?cellsOf(b):[{off:0,len:L,v:null}];
+      cells.forEach(c=>{ const cx=px+c.off/L*pw, cwid=c.len/L*pw;
+        if(c.v!==null&&c.v!==undefined) drawArpBar(g,cx,py,cwid,ph,ARPS[state.arp],(r=>r==='X'?col.muted:col[r.toLowerCase()])(roleAt(b,c.h,c.v)),col,c.len);
+        else { g.fillStyle=col.muted; g.font=`${10*r}px sans-serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText('—',cx+cwid/2,H/2); }
+        if(c.off>0){ g.fillStyle=col.surface; g.fillRect(cx-r,0,2*r,H); } });
+    }
+    if(playing&&cur&&cur.b===b){
+      const frac=Math.min(1,(ctx.currentTime-cur.t)/stepDur());
+      const hx=px+(cur.s+frac)/(cur.L||16)*pw; g.fillStyle=col.ink; g.fillRect(hx-r,0,2*r,H);
+    }
+  }
+}
+function frame(){
+  if(playing&&ctx){
+    let n=null; while(visQ.length&&visQ[0].t<=ctx.currentTime) n=visQ.shift();
+    if(n){ const changed=!cur||n.b!==cur.b; cur=n;
+      if(changed){ slotsEl.querySelectorAll('.slot').forEach(el=>el.classList.toggle('now',+el.dataset.abs===n.b)); renderPages(); }
+      $('play').classList.toggle('beat',!!n.beat);
+      if(TUT.on) document.querySelectorAll('.tut [data-ti]').forEach(e=>e.classList.toggle('now', +e.dataset.ti===n.b)); }
+    dirty=true;
+  }
+  if(dirty){ drawLane($('drumCv'),'drum'); drawLane($('arpCv'),'arp'); dirty=false; }
+  requestAnimationFrame(frame);
+}
+window.addEventListener('resize',()=>dirty=true);
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>dirty=true);
+new MutationObserver(()=>dirty=true).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts) document.fonts.ready.then(()=>dirty=true);
+
+// ================= チュートリアル =================
+const TUT={on:false, i:0, backup:null, wait:null, timer:null, loopLen:Infinity, stopping:false, stopT:null, onLoopEnd:null};
+const nm=d=>DEG[d].num.replace('m-5','m♭5'), al=d=>chordText(d);
+const tc=(d,cls,delay,ti)=>`<span class="tc ${cls||''} pop" style="--dl:${delay||0}"${ti!=null?` data-ti="${ti}"`:''}><b>${nm(d)}</b><small>${al(d)}</small></span>`;
+function exampleHTML(ex){
+  const n=ex.degs.length, cols=`repeat(${n},minmax(0,1fr))`;
+  const brk=(row,u)=>`<div class="brk${u?' u':''}">${row.map((g,k)=>`<span style="--fn:var(--${g.c});left:calc(${g.a}/${n}*100% + 2px);width:calc(${g.b-g.a+1}/${n}*100% - 4px);--dl:${1+k*.5+(g.row||0)*.25}">${g.t}</span>`).join('')}</div>`;
+  const top=ex.groups.filter(g=>!g.row), bot=ex.groups.filter(g=>g.row);
+  return `<div class="ex">
+    ${top.length?brk(top):''}
+    <div class="exrow${n>4?' sm':''}" style="grid-template-columns:${cols}">${ex.degs.map((d,k)=>`<span class="tc ${ex.roles[k]} pop" style="--dl:${.15+k*.12}" data-ti="${k}"><b>${nm(d)}</b><small>${ex.roles[k]}</small></span>`).join('')}</div>
+    ${bot.length?brk(bot,true):''}
+  </div>`;
+}
+const EX={
+  komuro:{degs:[5,3,4,0], roles:['T','S','D','T'], groups:[{a:0,b:3,t:'③ T→S→D→T',c:'ink'}]},
+  ohdo:  {degs:[3,4,2,5], roles:['S','D','D','T'], groups:[{a:0,b:3,t:'③の頭のTを省略',c:'ink'},{a:1,b:2,t:'Dが続く',c:'d',row:1}]},
+  canon: {degs:[0,4,5,2,3,0,3,4], roles:['T','D','T','T','S','T','S','D'], groups:[{a:0,b:2,t:'① T→D→T',c:'d'},{a:3,b:5,t:'② T→S→T',c:'s'},{a:5,b:7,t:'③ T→S→D →(1へ)',c:'ink',row:1}]},
+};
+const IC_PLAY='<svg class="ic" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.6v8.8c0 .5.5.8.9.5l6.6-4.4c.4-.2.4-.8 0-1L3.9 1.1c-.4-.3-.9 0-.9.5z" fill="currentColor"/></svg>';
+const IC_STOP='<svg class="ic" viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="2" width="8" height="8" rx="1.5" fill="currentColor"/></svg>';
+function listenBtn(key){ return `<button class="listen a" style="--dl:1.6" data-ex="${key}">${IC_PLAY}<span>聴いてみる</span></button>`; }
+const SLIDES=[
+  {html:()=>`<div class="eyebrow a">TUTORIAL</div>
+     <div class="chips7">${[0,3,4,5].map((d,k)=>`<span class="floaty" style="animation-delay:${k*.4}s;display:inline-block">${tc(d,'',.2+k*.15)}</span>`).join('')}</div>
+     <h2 class="a" style="--dl:.8">こんにちは！</h2>
+     <p class="a" style="--dl:1.1">このアプリは『コード進行』が<br>（たぶん）作れるアプリです。</p>`},
+  // 1枚の画面のまま「つぎへ」で説明を足していく（steps＝追加で見せる段階の数）
+  {steps:2, html:()=>`<div class="eyebrow a"><span data-upto="0">コード進行とは？</span><span data-st="1">コードの見方</span></div>
+     <h2 class="a" style="--dl:.2" data-upto="0">コードを、順番に<br>つなげたものです</h2>
+     <h2 data-st="1" data-upto="1" data-dl=".5" data-dur="1" style="color:var(--t)">左側の部分は<br>音の高さを表しています</h2>
+     <h2 data-st="2" data-dl=".5" data-dur="1" style="color:var(--s)">右側の部分は<br>明るさを表しています</h2>
+     <p class="a" style="--dl:.6" data-upto="0">コードは、こんな見た目をしています。</p>
+     <div class="chordbig pop" style="--dl:1" id="tutAm"><span class="A">A</span><span class="M">m</span></div>
+     <p class="sub a" style="--dl:1.6" data-upto="0">コード＝いくつかの音を同時に鳴らした「和音」のこと</p>
+     <p data-st="2" data-dl="1.5" data-dur="1">何も付いていなければ<b>明るい</b>コード<br>「m」が付いていれば<b>暗い</b>コードです</p>`},
+  {steps:1, html:()=>`<div class="eyebrow a">音の高さ</div>
+     <h2 class="a" style="--dl:.1" data-upto="0">ドレミファソラシは<br>アルファベットで書きます</h2>
+     <p data-st="1">でも、覚えるのがめんどくさいので…</p>
+     <h2 data-st="1">全部、数字に<br>しちゃいましょう！</h2>
+     <div class="scale" id="tutScale">${['ド','レ','ミ','ファ','ソ','ラ','シ'].map((j,k)=>`<div class="a" style="--dl:${.5+k*.1}"><small>${j}</small><b><span class="alpha">${'CDEFGAB'[k]}</span><span class="num">${k+1}</span></b></div>`).join('')}</div>
+     <p class="sub a" style="--dl:1.2" data-upto="0">ド＝C、レ＝D … シ＝B です</p>
+     <p class="sub" data-st="1">ド＝1、レ＝2 … シ＝7<br>このアプリでは、この数字を使います</p>`,
+   onStep:k=>{ const sc=$('tutScale'); if(sc) sc.classList.toggle('nums',k>=1); }},
+  {html:()=>`<div class="eyebrow a">明るいコード・暗いコード</div>
+     <h2 class="a" style="--dl:.1">明るいか暗いかは<br>数字で決まっています</h2>
+     <div class="groups">
+       <section class="a" style="--dl:.5"><h3>☀ 明るい</h3><div class="chips7">${[0,3,4].map((d,k)=>tc(d,'bright',.8+k*.15)).join('')}</div></section>
+       <section class="a" style="--dl:1.2"><h3>☾ 暗い</h3><div class="chips7">${[1,2,5,6].map((d,k)=>tc(d,'dark',1.5+k*.15)).join('')}</div></section>
+     </div>
+     <p class="sub a" style="--dl:2.4">7m♭5 には変なのがついていますが、気にしなくて大丈夫です</p>`},
+  {html:()=>`<div class="eyebrow a">作り方</div>
+     <h2 class="a" style="--dl:.1">この7個を好きにつなげると<br>コード進行のできあがり</h2>
+     <div class="chips7">${[0,1,2,3,4,5,6].map((d,k)=>tc(d,'',.5+k*.08)).join('')}</div>
+     <p class="a" style="--dl:1.4">だいたい4つか8つで一周します。<br>まずは<b>4つ</b>で作ってみましょう。</p>`},
+  {coach:'place'}, {coach:'play'}, {coach:'weird'},
+  {html:()=>`<div class="eyebrow a">コードの役割</div>
+     <h2 class="a" style="--dl:.1">実は、コードには<br>それぞれ役割があります</h2>
+     <p class="a" style="--dl:.5">さっきの進行は、この役割をうまく果たせていなかったんです。</p>
+     <div class="roles">
+       <section class="T a" style="--dl:1"><span class="L">T</span><div><h3>トニック</h3><p>主役。いちばん安定していて、帰ってくる場所。</p></div></section>
+       <section class="S a" style="--dl:1.4"><span class="L">S</span><div><h3>サブドミナント</h3><p>脇役。変化や彩りを出す。</p></div></section>
+       <section class="D a" style="--dl:1.8"><span class="L">D</span><div><h3>ドミナント</h3><p>緊張感がある。トニックに行きたい気持ちがとても強い。</p></div></section>
+     </div>`},
+  {html:()=>`<div class="eyebrow a">7つのコードの役割</div>
+     <h2 class="a" style="--dl:.1">7つのコードは<br>こう分けられます</h2>
+     <div class="roles">
+       <section class="T a" style="--dl:.5"><span class="L">T</span><div><h3>トニック</h3></div><div class="cs">${[0,5,2].map((d,k)=>tc(d,'T'+(d===2?' dash':''),.8+k*.12)).join('')}</div></section>
+       <section class="S a" style="--dl:1.1"><span class="L">S</span><div><h3>サブドミナント</h3></div><div class="cs">${[3,1].map((d,k)=>tc(d,'S',1.4+k*.12)).join('')}</div></section>
+       <section class="D a" style="--dl:1.7"><span class="L">D</span><div><h3>ドミナント</h3></div><div class="cs">${[4,6,2].map((d,k)=>tc(d,'D'+(d===2?' dash':''),2+k*.12)).join('')}</div></section>
+     </div>
+     <p class="sub a" style="--dl:2.6">点線の <b>3m</b> は、トニックにもドミナントにもなれる便利なコードです</p>`},
+  {html:()=>`<div class="eyebrow a">役割の流れ</div>
+     <h2 class="a" style="--dl:.1">役割をつかった<br>お手本の流れは3つ</h2>
+     <div class="flows">${[['①','TDT'],['②','TST'],['③','TSDT']].map(([no,f],k)=>`<div class="flow a" style="--dl:${.6+k*.6}"><span class="no">${no}</span>${[...f].map((r,j)=>`${j?`<span class="arr" style="--dl:${.9+k*.6+j*.15}"></span>`:''}<span class="tc ${r} pop" style="--dl:${.7+k*.6+j*.15}"><b>${r}</b></span>`).join('')}</div>`).join('')}</div>
+     <p class="a" style="--dl:2.6">この流れにコードを当てはめて、<br>組み合わせるとコード進行ができます。</p>
+     <p class="sub a" style="--dl:3.1">このような役割の流れを<b>「カデンツ」</b>と呼びます</p>`},
+  {html:()=>`<div class="eyebrow a">実例①　小室進行</div>
+     <h2 class="a" style="--dl:.1">6m → 4 → 5 → 1</h2>
+     ${exampleHTML(EX.komuro)}
+     <div class="exnote"><p class="a" style="--dl:1.4;--fn:var(--t)">お手本③（T→S→D→T）そのままの形。</p><p class="a" style="--dl:1.7;--fn:var(--t)">始まりの T を <b>1</b> ではなく、同じトニックの <b>6m</b> にすると、少し切ないドラマチックな雰囲気に。</p></div>
+     ${listenBtn('komuro')}`},
+  {html:()=>`<div class="eyebrow a">実例②　王道進行</div>
+     <h2 class="a" style="--dl:.1">4 → 5 → 3m → 6m</h2>
+     ${exampleHTML(EX.ohdo)}
+     <div class="exnote"><p class="a" style="--dl:1.4;--fn:var(--s)"><b>始まりが T でなくても OK。</b>くり返すと最後の 6m（T）から 4 に戻るので、ちゃんと T→S→D→T の流れになっています。</p><p class="a" style="--dl:1.8;--fn:var(--d)"><b>同じ役割が続いても OK。</b>5→3m は D→D。2つのドミナントで引っぱって、6m（T）に着地します。3m を 3（E7）にすると、もっとはっきり 6m に向かいます。</p></div>
+     ${listenBtn('ohdo')}`},
+  {html:()=>`<div class="eyebrow a">実例③　カノン進行</div>
+     <h2 class="a" style="--dl:.1">流れを組み合わせると<br>長い進行も作れます</h2>
+     ${exampleHTML(EX.canon)}
+     <div class="exnote"><p class="a" style="--dl:2;--fn:var(--d)">①T→D→T、②T→S→T、③T→S→D の3つを、つなぎ目の 6m や 1 を共有しながら並べています。</p><p class="a" style="--dl:2.3;--fn:var(--ink)">最後の D（5）は、先頭の 1 に戻って解決します。</p></div>
+     ${listenBtn('canon')}`},
+  {html:()=>`<div class="eyebrow a">さあ、作ってみよう</div>
+     <h2 class="a" style="--dl:.1">では、実際に<br>作ってみましょう！</h2>
+     <div class="flows"><div class="flow a" style="--dl:.6">${['T','S','D','T'].map((r,j)=>`${j?`<span class="arr" style="--dl:${.9+j*.15}"></span>`:''}<span class="tc ${r} pop" style="--dl:${.7+j*.15}"><b>${r}</b></span>`).join('')}</div></div>
+     <p class="a" style="--dl:1.5">マスの上に、カデンツ（役割の流れ）を<br>線で表示する「カデンツガイド」を出しておきます。</p>`, last:true},
+];
+function tutDots(){ $('tutDots').innerHTML=SLIDES.map((_,k)=>`<i class="${k===TUT.i?'on':''}"></i>`).join(''); }
+function tutStopAudio(){ TUT.onLoopEnd=null; clearTimeout(TUT.stopT); TUT.stopping=false; if(playing) stop(); document.querySelectorAll('.listen.on').forEach(b=>b.classList.remove('on')); }
+function tutLoad(degs){ state.slots=Array.from({length:16},(_,j)=>degs[j]??null); state.segs=Array.from({length:16},()=>[]); state.bars=degs.length<=4?4:8; state.len=4; state.ant=Array(16).fill(null); page=0; renderAll(); }
+function openTutorial(){
+  if(TUT.on) return;
+  TUT.on=true; TUT.backup=JSON.stringify(state); TUT.i=0;
+  closeAll(); tutStopAudio();
+  state.pro=false; document.body.classList.remove('pro'); state.label='num'; state.key='C'; state.guide=false;
+  renderAll(); showSlide(0);
+}
+function closeCoach(){ $('coach').hidden=true; document.body.classList.remove('tutlite'); clearInterval(TUT.wait); }
+function endTutorial(restore){
+  clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio(); closeCoach();
+  $('tut').hidden=true; TUT.on=false;
+  if(restore && TUT.backup){ state=JSON.parse(TUT.backup); document.body.classList.toggle('pro',!!state.pro); }
+  else { const b=JSON.parse(TUT.backup); state={...b, slots:Array(16).fill(null), segs:Array.from({length:16},()=>[]), bars:4, len:4, label:'num', guide:true}; document.body.classList.toggle('pro',!!state.pro); }
+  page=0; selected=null; renderAll(); save();
+  if(!restore) coach(unionRect($('hint'),slotsEl), 'カデンツガイドです。マスにコードを置くと、T から次の T までの流れ（カデンツ）がマスの上に線で表示されます。お手本どおりなら ◎、気になるところは赤で示します。', [['OK',closeCoach]], true);
+}
+function showSlide(i){
+  clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio();
+  TUT.i=Math.max(0,Math.min(SLIDES.length-1,i));
+  const sl=SLIDES[TUT.i];
+  if(sl.coach){ $('tut').hidden=true; runCoach(sl.coach); return; }
+  closeCoach(); $('tut').hidden=false;
+  const st=$('tutStage'); st.innerHTML=sl.html(); tutDots(); TUT.step=0; TUT.slideStart=performance.now(); applyStep();
+  $('tutBack').disabled=TUT.i===0 && !SLIDES[0].steps;
+  st.querySelectorAll('.listen').forEach(b=>b.onclick=()=>{
+    if(b.classList.contains('on')){ tutStopAudio(); return; }
+    tutStopAudio(); tutLoad(EX[b.dataset.ex].degs); b.classList.add('on'); b.innerHTML=IC_STOP+'<span>止める</span>';
+    TUT.onLoopEnd=()=>{ b.classList.remove('on'); b.dataset.again=1; b.innerHTML=IC_PLAY+'<span>もう一度聴く</span>'; }; play();
+    const fix=()=>{ if(!b.classList.contains('on')) b.innerHTML=IC_PLAY+`<span>${b.dataset.again?'もう一度聴く':'聴いてみる'}</span>`; }; const iv=setInterval(()=>{ if(!b.isConnected||!b.classList.contains('on')){ clearInterval(iv); fix(); } },300);
+  });
+  if(sl.enter) sl.enter();
+}
+// メイン画面の上で、場所を示しながら吹き出しを出す
+function coach(target, text, btns, keepLite){
+  const c=$('coach'); c.hidden=false;
+  const r=(target.getBoundingClientRect?target.getBoundingClientRect():target), pad=8, hole=$('coachHole');
+  Object.assign(hole.style,{left:(r.left-pad)+'px',top:(r.top-pad)+'px',width:(r.width+pad*2)+'px',height:(r.height+pad*2)+'px'});
+  $('coachText').innerHTML=text;
+  const bb=$('coachBtns'); bb.innerHTML='';
+  btns.forEach(([label,fn,ghost])=>{ const b=document.createElement('button'); b.textContent=label; if(ghost) b.className='alt'; b.onclick=fn; bb.appendChild(b); });
+  const bub=$('coachBubble'), below=r.top+r.height/2 < innerHeight/2;
+  requestAnimationFrame(()=>{ const h=bub.offsetHeight; bub.style.top = below ? Math.min(innerHeight-h-12, r.bottom+pad+12)+'px' : Math.max(12, r.top-pad-12-h)+'px'; });
+}
+function unionRect(a,b){ const r1=a.getBoundingClientRect(), r2=b.getBoundingClientRect(); const l=Math.min(r1.left,r2.left), t=Math.min(r1.top,r2.top), rr=Math.max(r1.right,r2.right), bt=Math.max(r1.bottom,r2.bottom); return {left:l,top:t,right:rr,bottom:bt,width:rr-l,height:bt-t}; }
+const nextBtn=()=>['つぎへ',()=>showSlide(TUT.i+1)], backBtn=()=>['もどる',()=>showSlide(TUT.i-1),true];
+function runCoach(kind){
+  document.body.classList.add('tutlite');
+  if(kind==='place'){
+    tutLoad([]);
+    const done=()=>[0,1,2,3].every(k=>state.slots[k]!==null&&state.slots[k]!==undefined);
+    const show=()=>coach(unionRect(palette,slotsEl), done() ? 'いいですね！4つ並びました。' : '上のパレットから、下の4つのマスに好きなコードをドラッグしてはめてみましょう。<br><small>（タップして選んでから、マスをタップしてもOK）</small>', done()?[backBtn(),nextBtn()]:[backBtn(),['あとで',()=>showSlide(TUT.i+1),true]]);
+    show(); let was=done(); TUT.wait=setInterval(()=>{ const d=done(); if(d!==was){ was=d; show(); } },300);
+  } else if(kind==='play'){
+    if(![0,1,2,3].every(k=>state.slots[k]!=null)) tutLoad([0,4,5,3]);
+    coach($('play'), `再生ボタン（${IC_PLAY.replace('class="ic"','class="ic" style="width:.8em;height:.8em"')}）を押して、さっそく再生してみましょう。`, [backBtn()]);
+    TUT.wait=setInterval(()=>{ if(playing){ clearInterval(TUT.wait);
+      coach($('play'), '♪ 再生中……', [backBtn()]);
+      TUT.onLoopEnd=()=>coach($('play'),'どうですか？<br>いい曲はできましたか？', [backBtn(),nextBtn()]); } },200);
+  } else if(kind==='weird'){
+    tutStopAudio(); tutLoad([6,3,2,1]);
+    coach(slotsEl, 'では次は、こんなコードを<br>鳴らしてみます……', [backBtn()]);
+    TUT.onLoopEnd=()=>coach(slotsEl, '<b>なんか、違和感がありますね……。</b>', [backBtn(),['もう一度聴く',()=>{ tutStopAudio(); runCoach('weird'); },true],['つぎへ',()=>{ tutStopAudio(); showSlide(TUT.i+1); }]]);
+    play();
+  }
+}
+// アニメーションが終わるまでは「つぎへ」を薄くして「スキップ」にする（押すとアニメーションを飛ばす）
+function animEnd(){
+  const st=$('tutStage'), now=performance.now(); let mx=0;
+  st.querySelectorAll('.a,.pop,.brk span,.flow .arr').forEach(e=>{ if(e.closest('[hidden]')) return;
+    const cs=getComputedStyle(e), d=parseFloat(cs.animationDelay)||0, du=parseFloat(cs.animationDuration)||0;
+    const start=+(e.dataset.shown||e.closest('[data-shown]')?.dataset.shown||TUT.slideStart);
+    mx=Math.max(mx, start+(d+du)*1000-now); });
+  return mx/1000;
+}
+function setBusy(){
+  const st=$('tutStage'), nb=$('tutNext'); st.classList.remove('skip');
+  clearTimeout(TUT.busyT);
+  const t=animEnd();
+  if(t>0.05){ nb.classList.add('busy'); nb.textContent='スキップ'; TUT.busyT=setTimeout(clearBusy,t*1000); }
+  else clearBusy();
+}
+function clearBusy(){ const nb=$('tutNext'), sl=SLIDES[TUT.i]; nb.classList.remove('busy');
+  nb.textContent = (sl && sl.last && !(sl.steps && TUT.step<sl.steps)) ? 'はじめる' : 'つぎへ'; }
+function applyStep(){
+  const st=$('tutStage'), k=TUT.step;
+  // data-st＝この段階から表示、data-upto＝この段階まで表示（両方あれば、その間だけ表示）
+  st.querySelectorAll('[data-st],[data-upto]').forEach(e=>{
+    const from=e.dataset.st!==undefined?+e.dataset.st:0, to=e.dataset.upto!==undefined?+e.dataset.upto:99, on=k>=from&&k<=to;
+    if(on&&e.hidden){ e.hidden=false; if(e.dataset.st!==undefined){ e.classList.remove('a'); void e.offsetWidth; e.classList.add('a'); e.style.setProperty('--dl',e.dataset.dl||'0'); if(e.dataset.dur) e.style.animationDuration=e.dataset.dur+'s'; e.dataset.shown=performance.now(); } }
+    else if(!on) e.hidden=true; });
+  const am=$('tutAm'); if(am){ am.classList.toggle('sA',k===1); am.classList.toggle('sM',k>=2); }
+  const sl=SLIDES[TUT.i]; if(sl&&sl.onStep) sl.onStep(k);
+  setBusy();
+}
+$('tutNext').onclick=()=>{ const sl=SLIDES[TUT.i];
+  if($('tutNext').classList.contains('busy')){ $('tutStage').classList.add('skip'); clearTimeout(TUT.busyT); clearBusy(); return; }
+  if(sl.steps && TUT.step<sl.steps){ TUT.step++; applyStep(); return; }
+  if(sl.last) endTutorial(false); else showSlide(TUT.i+1); };
+$('tutBack').onclick=()=>{ const sl=SLIDES[TUT.i];
+  if(sl.steps && TUT.step>0){ TUT.step--; applyStep(); return; }
+  showSlide(TUT.i-1); };
+$('tutSkip').onclick=()=>endTutorial(true);
+$('tutOpen').onclick=openTutorial;
+window.addEventListener('resize',()=>{ if(TUT.on && !$('coach').hidden && SLIDES[TUT.i].coach) runCoach(SLIDES[TUT.i].coach); });
+
+document.body.classList.toggle('pro',!!state.pro);
+renderAll(); frame(); ensureSounds();
+if(FIRST_RUN) openTutorial();
+</script>
+
+</body>
+</html>
