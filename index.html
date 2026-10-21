@@ -1752,7 +1752,8 @@ const SLIDES=[
   {html:()=>`<div class="eyebrow a">さあ、作ってみよう</div>
      <h2 class="a" style="--dl:.1">では、実際に<br>作ってみましょう！</h2>
      <div class="flows"><div class="flow a" style="--dl:.6">${['T','S','D','T'].map((r,j)=>`${j?`<span class="arr" style="--dl:${.9+j*.15}"></span>`:''}<span class="tc ${r} pop" style="--dl:${.7+j*.15}"><b>${r}</b></span>`).join('')}</div></div>
-     <p class="a" style="--dl:1.5">マスの上に、カデンツ（役割の流れ）を<br>線で表示する「カデンツガイド」を出しておきます。</p>`, last:true},
+     <p class="a" style="--dl:1.5">マスの上には、カデンツを線で表す<br>「カデンツガイド」を出しておきます。</p>
+     <p class="sub a" style="--dl:2.1">赤い線が出ても、聴いてカッコよければOK！<br>しっくりこないときのヒントにしてください。</p>`, last:true},
 ];
 function tutDots(){ $('tutDots').innerHTML=SLIDES.map((_,k)=>`<i class="${k===TUT.i?'on':''}"></i>`).join(''); }
 function tutStopAudio(){ TUT.onLoopEnd=null; clearTimeout(TUT.stopT); TUT.stopping=false; if(playing) stop(); document.querySelectorAll('.listen.on').forEach(b=>b.classList.remove('on')); }
@@ -1771,7 +1772,7 @@ function endTutorial(restore){
   if(restore && TUT.backup){ state=JSON.parse(TUT.backup); document.body.classList.toggle('pro',!!state.pro); }
   else { const b=JSON.parse(TUT.backup); state={...b, slots:Array(16).fill(null), segs:Array.from({length:16},()=>[]), bars:4, len:4, label:'num', guide:true}; document.body.classList.toggle('pro',!!state.pro); }
   page=0; selected=null; renderAll(); save();
-  if(!restore) coach(unionRect($('hint'),slotsEl), 'カデンツガイドです。マスにコードを置くと、T から次の T までの流れ（カデンツ）がマスの上に線で表示されます。お手本どおりなら ◎、気になるところは赤で示します。', [['OK',closeCoach]], true);
+  if(!restore) coach(unionRect($('hint'),slotsEl), 'カデンツガイドです。マスにコードを置くと、T から次の T までの流れ（カデンツ）がマスの上に線で表示されます。お手本どおりなら ◎、外れているところは赤で示します。赤でも、聴いて良ければそのままでOKです。', [['OK',closeCoach]], true);
 }
 function showSlide(i){
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio();
