@@ -584,6 +584,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <h3 class="sheeth3">パターン</h3>
   <div class="opts" id="opts"></div>
   <div class="sheetsec" style="margin-top:16px"><h3 id="soundTitle"></h3><div class="chips" id="soundChips"></div></div>
+  <div class="sheetsec" id="kitSec" hidden><h3>ドラムの音</h3><div class="chips" id="kitChips2"></div></div>
   <div class="sheetsec" id="fillSec"><h3>フィルイン（4小節ごとにおかずとシンバル）</h3><div class="chips" id="fillChips"></div><h3>ベース</h3><div class="chips" id="bassChips"></div></div>
 </div>
 
@@ -1385,10 +1386,12 @@ function openSheet(kind){
   if(kind==='bass') return openBassSheet();
   sheetKind=kind; document.querySelector('#sheet .proedit').style.display='';
   $('sheetTitle').textContent = kind==='drum' ? 'ドラム' : kind==='style' ? '伴奏スタイル' : 'コードパターン';
-  $('soundTitle').textContent = kind==='drum' ? 'ドラムの音' : '音色';
+  $('soundTitle').textContent = kind==='drum' ? 'ドラムの音' : kind==='style' ? 'コードの音色' : '音色';
   const soundRow=()=>chips($('soundChips'), Object.entries(kind==='drum'?KITS:INSTS), kind==='drum'?state.kit:state.inst,
     v=>{ (kind==='drum'?pickKit:pickInst)(v); soundRow(); });
   soundRow(); $('soundChips').parentElement.hidden=false;
+  $('kitSec').hidden = kind!=='style';
+  if(kind==='style'){ const kitRow=()=>chips($('kitChips2'), Object.entries(KITS), state.kit, v=>{ pickKit(v); kitRow(); }); kitRow(); }
   $('fillSec').hidden = kind!=='drum' && kind!=='style';
   $('fillChips').previousElementSibling.hidden = $('fillChips').hidden = kind==='style';
   if(kind==='style'){ const opts=$('opts'); opts.innerHTML=''; const cur=styleNow();
@@ -1439,7 +1442,7 @@ $('patDel').onclick=()=>{ const b=$('patDel');
 $('patClear').onclick=()=>{ if(patKind==='drum') curMy().v={}; else KEY_ROWS.forEach(([r])=>curMy().cells[r]=Array(16).fill(0)); rebuildMy(); save(); renderPatEditor(); dirty=true; };
 
 function openBassSheet(){
-  sheetKind='bass'; document.querySelector('#sheet .proedit').style.display='none';
+  sheetKind='bass'; document.querySelector('#sheet .proedit').style.display='none'; $('kitSec').hidden=true;
   $('sheetTitle').textContent='ベース';
   $('soundChips').parentElement.hidden=true; $('fillSec').hidden=false;
   $('fillChips').previousElementSibling.hidden = $('fillChips').hidden = true;
