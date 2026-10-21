@@ -546,7 +546,9 @@ function ctxRole(v,prev,next,minor){
   const sp=specOf(v), o=sp.o, q=sp.q;
   if(minor){   // Am中心（短調）として見る：Am=Ⅰm、Em=Ⅴm、Bm-5=Ⅱm-5、F=♭Ⅵ、G=♭Ⅶ、C=♭Ⅲ
     if((o===2||o===5) && sp.b===7) return 'D';
-    const m={9:'T',0:'T',4:'D',7:'D',5:'S',2:(q==='maj'||q==='aug')?'D':'S',11:'S',8:'S',10:'S'}[o];
+    // G（♭Ⅶ）は、F・Dm（サブドミナント）へ下りていくときはSの仲間（Am→G→F→E など）。Am・Cへ進むときはD
+    const nx=next!=null?specOf(next).o:null;
+    const m={9:'T',0:'T',4:'D',7:(nx===5||nx===2)?'S':'D',5:'S',2:(q==='maj'||q==='aug')?'D':'S',11:'S',8:'S',10:'S'}[o];
     if(m) return m;
   }
   const nO=next!=null?specOf(next).o:null, pO=prev!=null?specOf(prev).o:null;
