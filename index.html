@@ -850,7 +850,7 @@ const DRUMS = {
   half:   {name:'どっしり', pro:'ハーフタイム', v:{k:'x.....x...x.....', s:'........X.......', h:'o.g.o.g.o.g.o.g.'},
            vB:{k:'x.....x.......x.', s:'........X.....g.', h:'o.g.o.g.o.g.o.o.'}, fill:'halfp',   // スネアは3拍目だけ。ハイハットは8分のままで「半分の速さ」に聴こえる
            bass:[[0,0,6,1],[6,0,4,.8],[10,0,4,.75],[14,'ap',2,.7]]},
-  ballad: {name:'バラード', v:{k:'X.......X.......', x:'....X.......X...', h:'g...g...g...g...'}, fill:'soft',
+  ballad: {name:'バラード', v:{k:'X.......X.......', x:'....X.......X...', h:'o.g.o.g.o.g.o.g.'}, vB:{k:'X.......X.....x.', x:'....X.......X...', h:'o.g.o.g.o.g.o.g.'}, fill:'soft',   // ハイハットは8分でそっと刻み、2小節目の終わりにキックで次へつなぐ
            bass:[[0,0,7,.85],[8,'5',5,.7],[14,'ap',2,.6]]},
   shuffle:{name:'スキップ風', pro:'シャッフル（ライド）', v:{k:'x.....o.......g.', s:'.g..Xg.g.g..Xg.g', r:'o...o...o...o...', h:'..g...g...g...g.'}, swing:true, fill:'shuf',
            bass:[[0,0,2,1],[2,'3',2,.7],[4,'5',2,.85],[6,'6',2,.7],[8,12,2,.9],[10,'6',2,.7],[12,'5',2,.85],[14,'3',2,.7]]},
@@ -892,6 +892,8 @@ const ARPS = {
   piano4: {name:'ピアノ（定番）', pro:'4分刻み（左手は裏拍）', ev:[[0,ALL,6,.62],[4,RH,4,.58],[6,[0],4,.45],[8,RH,4,.64],[10,[0],4,.48],[12,RH,4,.6],[14,[0],2,.5]]},
   // C-F-G-Am.mid / F-E-Am-C.mid の右手・左手をそのまま写したもの（長さ・強さもMIDIの値）
   popanti:{name:'ピアノ（前のめり）', pro:'3拍目食い（16分）', legato:true, ev:[[0,ALL,4,.8],[4,[0],3,.78],[5,RH,2,.6],[7,ALL,5,.8],[10,RH,6,.75],[12,[0],4,.85],[14,[3],2,.68]]},
+  // J-POPのピアノバラード定番：左手は「ルート→5度→オクターブ→5度」の8分の分散和音、右手は1・3拍目で和音を伸ばし、4拍目の裏で次へつなぐ
+  pballad:{name:'ピアノバラード', pro:'バラード（左手分散＋右手ブロック）', legato:true, ev:[[0,[0],4,.68],[0,RH,7.5,.58],[2,[4],2,.46],[4,[5],4,.5],[6,[4],2,.44],[8,[0],4,.62],[8,RH,5.5,.52],[10,[4],2,.44],[12,[5],4,.48],[14,[4],2,.42],[14,[3],2,.4]]},
   ballad: {name:'ポロロン（バラード）', pro:'アルペジオ（バラード）', legato:true, ev:[[0,[0],15,.72],[2,[4],13,.5],[4,[5],11,.54],[6,[1],9,.56],[8,[2],7,.62],[10,[3],5,.6],[12,[2],3.5,.52],[14,[1],2,.5]]},   // 8分で 1→5→8→上の和音へ上って下りる
   sync:   {name:'リズミカル', pro:'シンコペ（付点8分）', ev:[[0,ALL,3,.8],[3,RH,.7,.72],[6,ALL,2,.78],[10,RH,2,.72],[14,ALL,2,.86]]},
   sync16: {name:'リズミカル（細かめ）', pro:'16分シンコペ', ev:[[0,ALL,1,.82],[3,RH,.6,.6],[6,RH,1,.72],[8,[0],2,.65],[10,RH,.6,.68],[11,RH,2.5,.78],[14,RH,.6,.62]]},
@@ -992,15 +994,15 @@ function renderPatEditor(){
       v=>{ curMy().len=v; rebuildMy(); save(); renderPatEditor(); dirty=true; });
   }
 }
-const ARP_ORDER=['hardrock','house','piano4','popanti','ballad','whole','sync','sync16','shuffle','shuff2','stacc','rock8','eighth','offbeat','garp','strum','rhodes','bossa','alberti'];
+const ARP_ORDER=['pballad','hardrock','house','piano4','popanti','ballad','whole','sync','sync16','shuffle','shuff2','stacc','rock8','eighth','offbeat','garp','strum','rhodes','bossa','alberti'];
 // 通常モードの「伴奏スタイル」：ドラムとコードパターンの組み合わせ
 const STYLES=[
   {name:'ポップス（定番）', drum:'pop', arp:'piano4', inst:'piano', kit:'std', bass:true},
   {name:'ポップス（ノリノリ）', drum:'dpop', arp:'popanti', inst:'piano', kit:'std', bass:true},
   {name:'ロック', drum:'hard', arp:'hardrock', inst:'dist', kit:'power', bass:true},
   {name:'ギターポップ', drum:'rride', arp:'strum', inst:'eguitar', kit:'room', bass:true},
-  {name:'バラード', drum:'ballad', arp:'ballad', inst:'piano', kit:'room', bass:true},
-  {name:'しっとり', drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:true, bassSnd:'ubass'},
+  {name:'バラード', drum:'ballad', arp:'pballad', inst:'piano', kit:'room', bass:true},
+  {name:'しっとり', drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
   {name:'ゆったり', drum:'medium', arp:'whole', inst:'pad', kit:'room', bass:true},
   {name:'どっしり', drum:'half', arp:'stacc', inst:'piano', kit:'power', bass:true},
   {name:'スキップ風', drum:'shuffle', arp:'shuffle', inst:'piano', kit:'std', bass:true},
