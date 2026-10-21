@@ -1735,7 +1735,7 @@ function loadSet(name){
   }
   return SETS[name];
 }
-function neededSets(){ const n=[]; if(state.kit!=='synth') n.push('kit-'+state.kit); if(!isSynthInst()) n.push(state.inst); const b=state.bassSnd||'bass'; if(b!=='sbass' && (!isSynthInst()||b!=='bass')) n.push(b); return n; }
+function neededSets(){ const n=[]; if(state.kit!=='synth') n.push('kit-'+state.kit); if(!isSynthInst()) n.push(state.inst==='dist'?'eguitar':state.inst); const b=state.bassSnd||'bass'; if(b!=='sbass' && (!isSynthInst()||b!=='bass')) n.push(b); return n; }
 function loadingNow(){ return neededSets().some(n=>!LOADED[n]&&!FAILED[n]); }
 function ensureSounds(){ const p=Promise.all(neededSets().map(loadSet)); renderBadge(); return p; }
 function renderBadge(){ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中…':''); }
@@ -1757,8 +1757,27 @@ const INST_FX={piano:{gain:3.6,rel:.2,hold:1.15},epiano:{gain:3.4,rel:.18,hold:1
   organ:{gain:2.2,rel:.05,hold:1,loop:true},strings:{gain:2.4,rel:.25,hold:1,loop:true},
   eguitar:{gain:3.2,rel:.15,hold:1.1},dist:{gain:1.9,rel:.12,hold:1,loop:true},pad:{gain:2.4,rel:.45,hold:1,loop:true}};
 // v = ベロシティ(0〜1)。弱いほど音量を下げ、高音も丸くする
+// アンプ風のひずみ：入力を持ち上げて波形をつぶし、低すぎ・高すぎを削ってキャビネットっぽい箱鳴りにする
+let DIST=null;
+function distChain(){
+  if(DIST&&DIST.ctx===ctx) return DIST.inp;
+  const inp=ctx.createGain(); inp.gain.value=4;
+  const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=110;
+  const sh=ctx.createWaveShaper(); const n=2048, c=new Float32Array(n), k=9; for(let i=0;i<n;i++){ const x=i/(n-1)*2-1; c[i]=Math.tanh(k*x)/Math.tanh(k); } sh.curve=c; sh.oversample='4x';
+  const mid=ctx.createBiquadFilter(); mid.type='peaking'; mid.frequency.value=750; mid.Q.value=.8; mid.gain.value=-4;
+  const pres=ctx.createBiquadFilter(); pres.type='peaking'; pres.frequency.value=2200; pres.Q.value=1; pres.gain.value=4;
+  const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=4800; lp.Q.value=.7;
+  const lp2=ctx.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=6500;
+  const out=ctx.createGain(); out.gain.value=.16;
+  inp.connect(hp); hp.connect(sh); sh.connect(mid); mid.connect(pres); pres.connect(lp); lp.connect(lp2); lp2.connect(out); out.connect(compBus);
+  DIST={ctx,inp}; return inp;
+}
 function keyTone(m,t,dur,v){
   v=Math.max(.05,Math.min(1,v));
+  if(state.inst==='dist' && LOADED.eguitar){
+    // ひずみギター：クリーンのエレキをアンプ風のひずみに通す。短い音（ブリッジミュート）はこもらせて「ズン」と
+    OUT=distChain(); const mute=dur<.12;
+    const g=playZone(LOADED.eguitar,m,t,Math.max(dur,.06),.9*Math.pow(v,1.1),mute?.05:.1,mute?900:5000,false); OUT=null; return g; }
   const fx=INST_FX[state.inst], set=LOADED[state.inst];
   OUT=playing?compBus:null;
   const g = fx&&set&&playZone(set,m,t,Math.max(dur*fx.hold,.08),.36*fx.gain*Math.pow(v,1.6),fx.rel,900+9000*v*v,fx.loop);
