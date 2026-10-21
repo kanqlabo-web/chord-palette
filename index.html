@@ -545,12 +545,12 @@ function noteName(off){       // キー基準の半音 → 音名（キーの音
 function ctxRole(v,prev,next,minor){
   const sp=specOf(v), o=sp.o, q=sp.q;
   if(minor){   // Am中心（短調）として見る：Am=Ⅰm、Em=Ⅴm、Bm-5=Ⅱm-5、F=♭Ⅵ、G=♭Ⅶ、C=♭Ⅲ
-    if(o===2 && sp.b===7) return 'D';
+    if((o===2||o===5) && sp.b===7) return 'D';
     const m={9:'T',0:'T',4:'D',7:'D',5:'S',2:(q==='maj'||q==='aug')?'D':'S',11:'S',8:'S',10:'S'}[o];
     if(m) return m;
   }
   const nO=next!=null?specOf(next).o:null, pO=prev!=null?specOf(prev).o:null;
-  if(o===2 && sp.b===7) return 'D';                       // Ⅱm/Ⅴ（Dm7/G）はドミナント
+  if((o===2||o===5) && sp.b===7) return 'D';             // Ⅱm/Ⅴ（Dm7/G）・Ⅳ/Ⅴ（F/G）はドミナント（Ⅴの音の上にのったsus系の響き）
   switch(o){
     case 0: return 'T';
     case 5: return 'S';
