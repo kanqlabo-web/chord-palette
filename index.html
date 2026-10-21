@@ -29,7 +29,9 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:var(--bg)}
-html{touch-action:pan-x pan-y}   /* ピンチズーム・ダブルタップズームを止める */
+html{touch-action:pan-x pan-y}
+/* iPhone は16pxより小さい入力欄を触ると自動で拡大するので、入力欄はすべて16px以上に */
+input,select,textarea{font-size:16px}   /* ピンチズーム・ダブルタップズームを止める */
 body{color:var(--ink);font-family:var(--body);-webkit-tap-highlight-color:transparent;
   padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:6px 10px}
 button{font:inherit;color:inherit}
@@ -104,7 +106,7 @@ body.pro .proedit{display:flex;gap:8px;align-items:center}
 .pcell.kb i{background:var(--t)}
 .pcell[data-l="1"] i{opacity:.3}.pcell[data-l="2"] i{opacity:.6}.pcell[data-l="3"] i{opacity:1}
 .pcell:focus-visible{outline:2px solid var(--t)}
-.pname{flex:1;min-width:0;font:inherit;font-weight:700;font-size:.95rem;padding:7px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.pname{flex:1;min-width:0;font:inherit;font-weight:700;font-size:16px;padding:7px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
 .pnote{max-width:520px;margin:0 auto 10px;font-size:.72rem;color:var(--muted);line-height:1.5}
 .prow{max-width:520px;margin:0 auto;display:flex;gap:8px;flex-wrap:wrap}
 .edtabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:6px;max-width:520px;margin:0 auto 12px}
@@ -256,7 +258,7 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .acclist button:active{background:var(--lane)}
 .acclist b{font-size:.9rem;font-weight:700}
 .presetfind{padding:10px 12px 4px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
-.presetfind input{width:100%;font:inherit;font-size:.86rem;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.presetfind input{width:100%;font:inherit;font-size:16px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
 .tagrow{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .tagrow::-webkit-scrollbar{display:none}
 .tagrow button{flex:none;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 10px;font:inherit;font-size:.74rem;cursor:pointer}
