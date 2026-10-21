@@ -1293,17 +1293,51 @@ function buildMenu(){
 }
 // 有名な進行の一覧：名前・雰囲気のタグ・数字で絞り込める
 let presetTag=null;
+// あいまい検索：ひらがな／カタカナ・全角半角をそろえ、似た言葉（悲しい→切ない など）も探す
+const kana=t=>t.normalize('NFKC').toLowerCase().replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[\s・、。「」（）()〜~]/g,'');
+const SYN={切ない:['かなしい','悲しい','哀しい','さみしい','寂しい','せつない','泣','メランコリー','暗い','くらい','ブルー','失恋'],
+  エモい:['えも','感動','泣ける','エモ','胸','青春','サビ','熱い'],
+  明るい:['あかるい','元気','たのしい','楽しい','ハッピー','うれしい','嬉しい','ポップ','陽気','前向き'],
+  穏やか:['おだやか','優しい','やさしい','静か','しずか','落ち着','チル','癒','ゆったり','のんびり','ほっこり'],
+  おしゃれ:['お洒落','オシャレ','大人','ジャズ','シティ','都会','カフェ','洗練'],
+  力強い:['ちからづよい','かっこいい','カッコいい','格好いい','クール','強い','パワフル','激しい'],
+  ロック:['ろっく','バンド','ギター','ワル'],
+  壮大:['そうだい','映画','雄大','広い','感動的','卒業','エンディング'],
+  ドラマチック:['ドラマ','劇的','盛り上が'],
+  爽やか:['さわやか','夏','青空','すっきり','スッキリ'],
+  レトロ:['懐かしい','なつかしい','昔','古い','オールディーズ','昭和'],
+  情熱的:['情熱','スペイン','フラメンコ','ラテン','妖しい','あやしい'],
+  不思議:['ふしぎ','変','奇妙','浮遊','ミステリアス','怪しい'],
+  定番:['ていばん','王道','よくある','基本','有名','人気']};
+const READ={王道:'おうどう',小室:'こむろ',カノン:'かのん',アクシス:'あくしす',循環:'じゅんかん',逆循環:'ぎゃくじゅんかん',丸サ:'まるさ',下降:'かこう',スリーコード:'すりーこーど',
+  ツーファイブ:'つーふぁいぶ',サンロク:'さんろく',アンダルシア:'あんだるしあ',サブドミナント:'さぶどみなんと',ロック:'ろっく'};
+const near=(a,b)=>{ if(Math.abs(a.length-b.length)>1) return false; let i=0,j=0,e=0; while(i<a.length&&j<b.length){ if(a[i]===b[j]){i++;j++;continue;} if(++e>1) return false; if(a.length>b.length) i++; else if(a.length<b.length) j++; else {i++;j++;} } return e+(a.length-i)+(b.length-j)<=1; };
+const subseq=(q,t)=>{ let i=0; for(const c of t){ if(c===q[i]) i++; if(i===q.length) return true; } return false; };
+function presetScore(p,query){
+  const words=query.split(/[\s,、]+/).map(kana).filter(Boolean); if(!words.length) return 1;
+  const degs=p.p.map(PDEG).join('-'), reads=Object.entries(READ).filter(([k])=>p.name.includes(k)).map(([,v])=>v).join('');
+  const hay=kana(p.name+reads+(p.tags||[]).join('')+degs+degs.replace(/-/g,''));
+  const cands=[...(p.tags||[]),p.name,...Object.entries(READ).filter(([k])=>p.name.includes(k)).map(([,v])=>v)].map(kana);
+  let total=0;
+  for(const w of words){
+    let sc=0;
+    if(hay.includes(w)) sc=3;
+    else if((p.tags||[]).some(t=>(SYN[t]||[]).some(x=>{ const k=kana(x); return k.includes(w)||w.includes(k); }))) sc=2;
+    else if(w.length>=2 && cands.some(t=>near(w,t)||near(w,t.slice(0,w.length)))) sc=1.5;
+    else if(w.length>=3 && subseq(w,hay)) sc=1;
+    if(!sc) return 0; total+=sc; }
+  return total;
+}
 const PDEG=t=>typeof t==='number'?DEG[t].num:({III7:'3(7)',bVII:'♭7',bVI:'♭6',IVm:'4m',Vm:'5m',II7:'2(7)',VI7:'6(7)'})[t]||t;
 const ALL_TAGS=[...new Set(PRESETS.flatMap(p=>p.tags||[]))];
 function renderPresetList(){
   const tr=$('presetTags');
   if(!tr.children.length) tr.innerHTML=['すべて',...ALL_TAGS].map(t=>`<button data-t="${t}">${t}</button>`).join('');
   tr.querySelectorAll('button').forEach(b=>{ b.setAttribute('aria-pressed', (presetTag||'すべて')===b.dataset.t); b.onclick=()=>{ presetTag=b.dataset.t==='すべて'?null:b.dataset.t; renderPresetList(); }; });
-  const q=($('presetQ').value||'').trim().toLowerCase().replace(/\s+/g,'');
-  const hit=p=>{ if(presetTag && !(p.tags||[]).includes(presetTag)) return false; if(!q) return true;
-    const degs=p.p.map(PDEG).join('-'); return (p.name+(p.tags||[]).join('')+degs+degs.replace(/-/g,'')).toLowerCase().includes(q); };
+  const q=($('presetQ').value||'').trim();
+  const sc=PRESETS.map(p=>(presetTag && !(p.tags||[]).includes(presetTag)) ? 0 : presetScore(p,q));
   const pl=$('presetList');
-  const html=[4,8].map(L=>{ const rows=PRESETS.map((p,i)=>p.p.length===L&&hit(p)?`<button data-i="${i}"><b>${p.name}</b><small>${p.p.map(PDEG).join(' - ')}</small><span class="ptags">${(p.tags||[]).map(t=>`<i>${t}</i>`).join('')}</span></button>`:'').join('');
+  const html=[4,8].map(L=>{ const rows=PRESETS.map((p,i)=>i).sort((a,b)=>q?sc[b]-sc[a]||a-b:a-b).map(i=>[PRESETS[i],i]).map(([p,i])=>p.p.length===L&&sc[i]>0?`<button data-i="${i}"><b>${p.name}</b><small>${p.p.map(PDEG).join(' - ')}</small><span class="ptags">${(p.tags||[]).map(t=>`<i>${t}</i>`).join('')}</span></button>`:'').join('');
     return rows?`<h4>${L}小節</h4>`+rows:''; }).join('');
   pl.innerHTML = html || '<p class="none">見つかりませんでした。ほかの言葉やタグで探してみてください。</p>';
   pl.querySelectorAll('button').forEach(b=>b.onclick=()=>{
