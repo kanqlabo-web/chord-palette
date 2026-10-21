@@ -149,9 +149,6 @@ body.pro .proedit{display:flex;gap:8px;align-items:center}
 .slot.now{box-shadow:inset 0 0 0 2px var(--ink)}
 .slot .x{position:absolute;top:0;right:0;width:26px;height:26px;border:0;background:transparent;color:var(--muted);font-size:.9rem;padding:0;cursor:pointer}
 .slot:not(.filled) .x{display:none}
-.slot .ed{position:absolute;left:50%;transform:translateX(-50%);top:3px;height:20px;padding:0 7px;border-radius:999px;border:1px solid color-mix(in srgb,var(--fn) 50%,var(--line));
-  background:var(--surface);color:var(--ink);font-size:.62rem;font-weight:700;cursor:pointer;display:none}
-body.pro .slot.filled .ed{display:block}
 .protag{display:none;position:absolute;right:-6px;bottom:-2px;font-size:.5rem;line-height:1;font-weight:700;letter-spacing:.06em;color:var(--bg);background:var(--ink);border-radius:999px;padding:2px 7px}
 body.pro .protag{display:inline-block}
 .edhead{max-width:520px;margin:0 auto 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -469,19 +466,6 @@ body.tutlite .gstrip{visibility:hidden}
 .moodtip{display:inline-flex;align-items:center;gap:4px;border:1.5px solid var(--warn);background:color-mix(in srgb,var(--warn) 16%,var(--surface));color:var(--ink);
   border-radius:999px;padding:3px 4px 3px 10px;font-size:.7rem;font-weight:700;white-space:nowrap;cursor:pointer;line-height:1.2;animation:tin .4s ease}
 .moodtip i{font-style:normal;color:var(--muted);font-weight:400;padding:0 4px;font-size:.85rem}
-/* 実践編のお題の帯：メイン画面のいちばん上（タイトルの行）に重ねる */
-.app>.moodbar{grid-column:1/-1}
-body.practice .app>.top{display:none}
-.moodbar{background:var(--ink);color:var(--bg);border-radius:14px;padding:8px 10px 8px 14px;display:flex;align-items:center;gap:10px;
-  box-shadow:0 8px 24px rgba(0,0,0,.25);animation:tin .35s ease}
-.moodbar p{margin:0;flex:1;min-width:0;font-size:.8rem;line-height:1.45}
-.moodbar p small{opacity:.75;font-size:.72rem}
-.moodbar{flex-wrap:wrap;row-gap:6px}
-.moodbar.stack p{flex:1 1 100%}
-.moodbar div{display:flex;gap:6px;flex:none;margin-left:auto}
-.moodbar button{border:0;border-radius:999px;padding:5px 12px;font:inherit;font-size:.74rem;font-weight:700;background:transparent;color:var(--bg);cursor:pointer;white-space:nowrap;border:1px solid color-mix(in srgb,var(--bg) 40%,transparent)}
-.moodbar button.main{background:var(--bg);color:var(--ink);border-color:var(--bg)}
-.moodbar button:disabled{opacity:.35}
 .coach .dim{position:fixed;inset:0;width:100%;height:100%}
 .coach .dim rect{transition:x .35s,y .35s,width .35s,height .35s}
 .coach .bubble{position:fixed;max-width:420px;margin:0;
@@ -500,7 +484,6 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
 </style>
 
 <div class="app" id="app">
-  <div class="moodbar" id="moodBar" hidden></div>
   <div class="top">
     <button class="iconbtn" id="menuBtn" aria-label="メニュー" style="position:relative"><span class="protag">PRO</span>
       <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
@@ -547,12 +530,6 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="tutstage" id="tutStage"></div>
   <div class="tutnav"><button class="tutbtn alt" id="tutBack">もどる</button><button class="tutbtn" id="tutNext">つぎへ</button></div>
 </div>
-<div class="modalpop" id="resultPop" hidden><div class="popcard" role="dialog" aria-label="実践編の結果">
-  <div class="popeyebrow" id="resultEyebrow"></div>
-  <h2 id="resultTitle"></h2>
-  <p id="resultText"></p>
-  <div class="popbtns"><button class="alt" id="resultRetry">作り直す</button><button class="alt" id="resultOther">ほかのお題</button><button id="resultEnd">おわる</button></div>
-</div></div>
 <div class="modalpop" id="moodPop" hidden><div class="popcard" role="dialog" aria-label="雰囲気のつくり方の案内">
   <div class="popchips" id="moodPopChips"></div>
   <div class="popeyebrow">NEXT</div>
@@ -570,9 +547,6 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec" id="lenSec"><h3>コードの切り替え（1マスの長さ）</h3><div class="chips" id="lenChips"></div>
     <p class="small" id="lenNote"></p></div>
   <div class="sec"><h3>コードの表示</h3><div class="chips" id="labelChips"></div></div>
-  <div class="sec"><h3>音色</h3><div class="chips" id="instChips"></div></div>
-  <div class="sec"><h3>ドラムの音</h3><div class="chips" id="kitChips"></div></div>
-  <div class="sec"><h3>ベース</h3><div class="chips" id="bassMenuChips"></div></div>
   <div class="sec"><h3>保存・共有</h3>
     <div class="saverow"><input type="text" id="songName" placeholder="名前（例：サビの進行）" maxlength="30" autocomplete="off"><button class="chip main" id="songSave">保存</button></div>
     <button class="chip" id="shareNow">今の進行の共有リンクを作る</button>
@@ -592,8 +566,8 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <p class="small">マスの上に、役割の流れ（T・S・D）と、お手本の流れに当てはまっているかを表示します。</p></div>
   <div class="sec"><h3>チュートリアル</h3><div class="chips"><button class="chip" id="tutOpen">はじめから見る</button><button class="chip" id="moodOpen">雰囲気のつくり方</button></div></div>
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
-    <p class="small">オンにすると、マスの右上に「コードを編集」ボタンが出ます。コードを変える拍や食いも小節ごとに決められます。マスをダブルタップしても開けます。sus4・7th・分数コードなど、パレットにないコードを作れます。</p></div>
-  <p class="small">ドラムとコードの帯をタップすると、パターンと音色を選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
+    <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
+  <p class="small">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -630,7 +604,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="opts" id="opts"></div>
   <div class="sheetsec" style="margin-top:16px"><h3 id="soundTitle"></h3><div class="chips" id="soundChips"></div></div>
   <div class="sheetsec" id="kitSec" hidden><h3>ドラムの音</h3><div class="chips" id="kitChips2"></div></div>
-  <div class="sheetsec" id="fillSec"><h3>フィルイン（4小節ごとにおかずとシンバル）</h3><div class="chips" id="fillChips"></div><h3>ベース</h3><div class="chips" id="bassSndChips"></div><div id="bassChips" hidden></div></div>
+  <div class="sheetsec" id="fillSec"><h3>フィルイン（4小節ごとにおかずとシンバル）</h3><div class="chips" id="fillChips"></div><h3>ベース</h3><div class="chips" id="bassSndChips"></div></div>
 </div>
 
 <script>
@@ -784,9 +758,6 @@ function voiceFor(pcs,prev,minLo=56){
 function chordNotes(v,prev){
   const sp=specOf(v), k=keyObj(), rpc=(k.pc+sp.o)%12;
   let ivs=[...QUAL[sp.q], ...(sp.q==='5'?[]:EXT[sp.x])];
-  // ジャジーなパターンでは、7th の付いていない和音に自動でキーに合った 7th を足す（1・4→M7、5→7、暗いコード→m7）
-  if(ARPS[state.arp]&&ARPS[state.arp].sevenths && !sp.x && (sp.q==='maj'||sp.q==='m')){ const SC=[0,2,4,5,7,9,11], k7=SC.indexOf(sp.o);
-    ivs.push(k7>=0 ? ((SC[(k7+6)%7]-sp.o+12)%12) : 10); }
   let pcs=[...new Set(ivs.map(i=>(rpc+i)%12))];
   if(pcs.length>4) pcs=pcs.filter(pc=>pc!==rpc);                 // 5音以上ならルートは左手に任せる
   const slash = sp.b!==null&&sp.b!==undefined, bpc = slash ? (k.pc+sp.b)%12 : rpc;
@@ -836,11 +807,11 @@ const DRUMS = {
            vB:{k:'x...x...x...o...', s:'.g..X..g.g..X..o', h:'g.o.g.o.g.o.....', o:'............g.g.'}, fill:'four',
            bass:[[0,0,2,1],[2,12,2,.7],[4,0,2,.85],[6,12,2,.7],[8,0,2,.9],[10,12,2,.7],[12,0,2,.85],[14,'ap',2,.75]]},
   // ↓ drum_.mid（EZX Vintage Rock）の2つ目のグルーヴ：スネアのゴーストが入ったロック
-  eight:  {name:'ロック', pro:'ロック8ビート', v:{k:'x......gx.o.....', s:'.g..X..g....X..g', h:'o.o.o.o.o.o.o.o.'},
+  eight:  {name:'ロック（8ビート）', pro:'ロック8ビート', v:{k:'x......gx.o.....', s:'.g..X..g....X..g', h:'o.o.o.o.o.o.o.o.'},
            vB:{k:'x......gx.o.....', s:'....X..g.o..X..g', h:'o.o.o.o.o.o.x.o.'}, fill:'rock',
            bass:[[0,0,1.8,1],[2,0,1.8,.75],[4,0,1.8,.85],[6,0,1.8,.75],[8,0,1.8,.95],[10,0,1.8,.75],[12,'5',1.8,.85],[14,'ap',1.8,.8]]},
   // ↓ drum_.mid の3つ目のグルーヴ：ライド＋足のハイハット
-  rride:  {name:'ロック（広がる）', pro:'ロック（ライド）', v:{k:'x.o.....x......o', s:'.g..X..g....X..g', r:'o.o.x.o.x.o.x.o.', h:'....g...g...g...'},
+  rride:  {name:'ギターポップ', pro:'ロック（ライド）', v:{k:'x.o.....x......o', s:'.g..X..g....X..g', r:'o.o.x.o.x.o.x.o.', h:'....g...g...g...'},
            vB:{k:'x......o..x.....', s:'.g..X..g.g..X..g', r:'o.o.x.o.o.o.x.o.', h:'g...g...g...g...'}, fill:'rock',
            bass:[[0,0,3,1],[3,0,1,.6],[4,0,2,.8],[6,'5',2,.7],[8,0,3,.9],[11,0,1,.6],[12,'5',2,.75],[14,'ap',2,.75]]},
   // ↓ drum_.mid のイントロ：サイドスティックと裏のハイハットだけ
@@ -856,9 +827,9 @@ const DRUMS = {
            bass:[[0,0,13.5,.82],[14,0,1.8,.55]]},   // ベースは白玉（全音符）で支える
   shuffle:{name:'スキップ風', pro:'シャッフル（ライド）', v:{k:'x.....o.......g.', s:'.g..Xg.g.g..Xg.g', r:'o...o...o...o...', h:'..g...g...g...g.'}, swing:true, fill:'shuf',
            bass:[[0,0,2,1],[2,'3',2,.7],[4,'5',2,.85],[6,'6',2,.7],[8,12,2,.9],[10,'6',2,.7],[12,'5',2,.85],[14,'3',2,.7]]},
-  sixteen:{name:'ファンキー（16ビート）', pro:'16ビート', v:{k:'X..x....X.X..x..', s:'....X..g.g..X..g', h:'o.g.o.g.o.g.o.g.'}, fill:'kime',
+  sixteen:{name:'ファンキー', pro:'16ビート', v:{k:'X..x....X.X..x..', s:'....X..g.g..X..g', h:'o.g.o.g.o.g.o.g.'}, fill:'kime',
            bass:[[0,0,2,1],[3,12,1,.7],[6,0,1,.7],[7,0,1,.5],[8,0,2,.9],[10,12,1,.7],[11,'5',1,.6],[13,0,1,.7],[14,'ap',2,.8]]},
-  dance:  {name:'ダンス（クラブ）', pro:'4つ打ち（クラブ）', duck:true, v:{k:'X...X...X...X...', s:'....X.......X...', h:'..o...o...o...o.'}, fill:'dance',
+  dance:  {name:'ダンス', pro:'4つ打ち（クラブ）', duck:true, v:{k:'X...X...X...X...', s:'....X.......X...', h:'..o...o...o...o.'}, fill:'dance',
            bass:[[2,0,1.5,.9],[6,12,1.5,.8],[10,0,1.5,.9],[14,12,1.5,.8]]},
   bossa:  {name:'ボサノバ', v:{k:'X..xX..xX..xX..x', x:'X..X..X...X..X..', h:'g.g.g.g.g.g.g.g.'}, fill:null,
            bass:[[0,0,3,1],[3,'5',1,.6],[4,'5',4,.9],[8,0,3,1],[11,'5',1,.6],[12,'5',4,.9]]},
@@ -869,7 +840,7 @@ const DRUMS = {
            vB:{k:'x......x..x..x..', s:'....X..g.g..X.g.', h:'x.o.x.o.x.o.x.o.'}, fill:'kime',
            bass:[[0,0,3,1],[3,0,1,.55],[6,'5',2,.75],[8,0,2.5,.9],[11,12,1,.6],[12,'5',1.5,.7],[14,'ap',2,.8]]},
   // ハードロック：オープン気味のハイハットで8分を叩きつけ、2・4拍目に強いスネア。2小節目の頭にクラッシュ
-  hard:   {name:'ハードロック', pro:'ハードロック8ビート', v:{k:'X.....x.X.x.....', s:'....X.......X...', o:'x.o.x.o.x.o.x.o.'},
+  hard:   {name:'ロック', pro:'ハードロック8ビート', v:{k:'X.....x.X.x.....', s:'....X.......X...', o:'x.o.x.o.x.o.x.o.'},
            vB:{k:'X.....x.X.x...x.', s:'....X.......X...', o:'..o.x.o.x.o.x.o.', c:'X...............'}, fill:'tom',
            bass:[[0,0,1.7,1],[2,0,1.7,.8],[4,0,1.7,.9],[6,0,1.7,.85],[8,0,1.7,1],[10,0,1.7,.8],[12,0,1.7,.9],[14,'ap',1.7,.85]]},
   none:   {name:'なし', v:{}, fill:null, bass:[[0,0,7,1],[8,'5',6,.85],[14,'ap',2,.7]]},
@@ -888,6 +859,7 @@ function twice(ev){ return [...ev, ...ev.map(e=>[e[0]+8,...e.slice(1)])]; }
 const ARPS = {
   // パワーコード（ルート・5度・オクターブ）を8分で刻む。普段はブリッジミュートで短く、アクセントだけ伸ばす
   hardrock:{name:'パワーコード（刻み）', pro:'パワーコード8分（ブリッジミュート）', ev:[[0,[0,4,5],3.5,.95],[4,[0,4,5],.7,.5],[6,[0,4,5],1.8,.88],[8,[0,4,5],.7,.55],[10,[0,4,5],.7,.5],[12,[0,4,5],1.8,.88],[14,[0,4,5],1.8,.84]]},
+  // キー名 rhodes は保存データとの互換のため（中身はネオソウル風のピアノ）
   rhodes: {name:'ジャジー', pro:'ネオソウル・コンピング（16分）', legato:true, ev:[[0,RH,4,.7],[0,[0],6,.7],[4,RH,3,.6],[6,[0],2,.55],[7,RH,.9,.66],[8,[0],2,.62],[9,RH,3,.6],[10,[0],4,.58],[12,RH,4,.64],[14,[0],2,.55]]},   // 右手 0・4・7・9・12、左手 0・6・8・10・14（次の音まで伸ばす）
   house:  {name:'ズンチャ（ダンス）', pro:'裏拍シンセ（サイドチェイン）', legato:true, ev:[[0,ALL,2,.3],[2,RH,2,.85],[4,ALL,2,.3],[6,RH,2,.85],[8,ALL,2,.3],[10,RH,2,.85],[12,ALL,2,.3],[14,RH,2,.85]]},
   whole:  {name:'のばす（ジャーン）', pro:'白玉（全音符）', ev:[[0,ALL,16,.75]]},
@@ -995,7 +967,7 @@ function renderPatEditor(){
         else curMy().cells[key][st]=LV[l];
         rebuildMy(); save(); paint(); dirty=true;
         if(!playing && l>0) whenRunning(()=>{ const t=ctx.currentTime+.02;
-          if(drum) drum_(+VOICE[key],t,LV[l]); else if(bassK){ const v=state.slots[page*4]??0, bt=chordNotes(v,null), n={'0':0,'12':12,'5':bt.fifth,'3':bt.third,'6':sixthOf(bt),'ap':bt.fifth}[key]; bassTone(bt.bass+n,t,.4,LV[l]); } else { const v=state.slots[page*4]??0, bt=chordNotes(v,null); keyTone(bt.tones[key],t,.5,COMP_LEVEL*LV[l]); } });
+          if(drum) window.drum(+VOICE[key],t,LV[l]); else if(bassK){ const v=state.slots[page*4]??0, bt=chordNotes(v,null), n={'0':0,'12':12,'5':bt.fifth,'3':bt.third,'6':sixthOf(bt),'ap':bt.fifth}[key]; bassTone(bt.bass+n,t,.4,LV[l]); } else { const v=state.slots[page*4]??0, bt=chordNotes(v,null); keyTone(bt.tones[key],t,.5,COMP_LEVEL*LV[l]); } });
       };
       paint(); g.appendChild(b);
     }
@@ -1050,7 +1022,7 @@ const bassList=dr=>(state.pro&&state.bassPat&&state.bassPat!=='auto'&&BASSES[sta
 for(const k in ARPS){ const m={}; ARPS[k].ev.forEach(e=>{ (m[e[0]]=m[e[0]]||[]).push(e); }); ARPS[k].at=m; }
 const INSTS={spiano:'シンセピアノ',synth:'シンセ',
   piano:'ピアノ',nylon:'ガットギター',eguitar:'エレキギター',dist:'ひずみギター',organ:'オルガン',pad:'シンセパッド'};
-const SYNTH_INST={spiano:'piano',sepiano:'epiano',sorgan:'organ',sguitar:'nylon',synth:'synth'};
+const SYNTH_INST={spiano:'piano',synth:'synth'};
 const instShort=()=>INSTS[state.inst];
 const isSynthInst=()=>state.inst in SYNTH_INST;
 // PROモードのミキサー：ドラム・コード・ベースの音量とミュート・ソロ
@@ -1142,10 +1114,10 @@ function progLabel(){
 }
 
 // ---------- state ----------
-let state={slots:Array(16).fill(null), bars:4, key:'C', label:'num', inst:'spiano', kit:'synth', drum:'pop', arp:'piano4', bassPat:'auto', bassSnd:'bass', fill:false, bass:true, pro:false, guide:true, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:7};
+let state={slots:Array(16).fill(null), bars:4, key:'C', label:'num', inst:'piano', kit:'std', drum:'pop', arp:'piano4', bassPat:'auto', bassSnd:'bass', fill:false, bass:true, pro:false, guide:true, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:7};
 const DEFAULT_STATE=JSON.parse(JSON.stringify(state));   // リセット用の初期設定
 let FIRST_RUN=true;
-try{ const s=JSON.parse(localStorage.getItem('chord-palette-v3')); if(s) FIRST_RUN=false; if(s&&Array.isArray(s.slots)&&s.slots.length===16) state={...state,...s}; if(!s.ver||s.ver<6){ state.bass=true; } if(!s.ver||s.ver<7){ state.drum='pop'; state.fill=false; state.ver=7; } if(!s.ver||s.ver<4){ state.inst='spiano'; state.kit='synth'; } if(!INSTS[state.inst]) state.inst='spiano'; if(!KITS[state.kit]) state.kit='std'; }catch(e){}
+try{ const s=JSON.parse(localStorage.getItem('chord-palette-v3')); if(s) FIRST_RUN=false; if(s&&Array.isArray(s.slots)&&s.slots.length===16) state={...state,...s}; if(!s.ver||s.ver<6){ state.bass=true; } if(!s.ver||s.ver<7){ state.drum='pop'; state.fill=false; state.ver=7; } if(!s.ver||s.ver<4){ state.inst='spiano'; state.kit='synth'; } if(!INSTS[state.inst]) state.inst='piano'; if(!KITS[state.kit]) state.kit='std'; }catch(e){}
 if(!Array.isArray(state.segs)) state.segs=Array.from({length:16},(_,i)=>state.split&&state.split[i]?[state.split[i]]:[]);
 delete state.split; if(![1,2,4].includes(state.len)) state.len=4;
 if(state.myDrum){ state.myDrums=[{name:'マイパターン1',...state.myDrum}]; if(state.drum==='my') state.drum='my0'; } delete state.myDrum;
@@ -1367,12 +1339,8 @@ function buildMenu(){
   chips($('lenChips'), [[4,'4拍（1小節）'],[2,'2拍'],[1,'1拍']], state.len, v=>{ state.len=v; renderAll(); });
   $('lenNote').textContent = '2拍にすると、1マスが2拍になります（4マスで2小節）。' + (state.pro ? 'PROモードの拍ごとの切り替えは、1マスの中（2拍なら2拍目）で使えます。' : '');
   chips($('labelChips'), Object.entries(LABELS), state.label, v=>{ state.label=v; renderAll(); });
-  chips($('instChips'), Object.entries(INSTS), state.inst, pickInst);
-  chips($('kitChips'), Object.entries(KITS), state.kit, pickKit);
   chips($('guideChips'), [[true,'表示する'],[false,'表示しない']], state.guide, v=>{ state.guide=v; renderAll(); });
   chips($('proChips'), [[true,'オン'],[false,'オフ']], state.pro, v=>{ state.pro=v; document.body.classList.toggle('pro',v); renderAll(); });
-  chips($('bassMenuChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); buildMenu(); });
-  const deg=t=>typeof t==='number'?DEG[t].num:({III7:'3(7)',bVII:'♭7',bVI:'♭6',IVm:'4m',Vm:'5m',II7:'2(7)',VI7:'6(7)'})[t]||t;
   renderPresetList();
 }
 // 有名な進行の一覧：名前・雰囲気のタグ・数字で絞り込める
@@ -1541,10 +1509,9 @@ function openSheet(kind){
   if(kind==='style'){ const opts=$('opts'); opts.innerHTML=''; const cur=styleNow();
     STYLES.forEach((st,k)=>{ const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', st===cur);
       b.innerHTML=`<canvas class="half"></canvas><canvas class="half"></canvas><span>${st.name}</span>`;
-      b.onclick=()=>{ state.drum=st.drum; state.arp=st.arp; state.bassPat='auto'; state.bassSnd=st.bassSnd||'bass'; if(st.bass!=null) state.bass=st.bass; if(st.kit) state.kit=st.kit; if(st.inst) pickInst(st.inst); else { renderAll(); ensureSounds(); } closeAll(); };
+      b.onclick=()=>{ setStyle(st); pickInst(st.inst); closeAll(); };
       opts.appendChild(b); });
-    const bassRow=()=>chips($('bassChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); renderAll(); bassRow(); });
-    bassRow(); bassSndRow();
+    bassSndRow();
     sheet.classList.add('on'); scrim.classList.add('on');
     requestAnimationFrame(()=>{ const col=colors();
       [...opts.children].forEach((b,i)=>{ const [c1,c2]=b.querySelectorAll('canvas'), st=STYLES[i];
@@ -1553,8 +1520,7 @@ function openSheet(kind){
     return; }
   const fillRow=()=>chips($('fillChips'), [[true,'入れる'],[false,'入れない']], state.fill, v=>{ state.fill=v; save(); dirty=true; fillRow(); });
   fillRow();
-  const bassRow=()=>chips($('bassChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); renderAll(); bassRow(); });
-  bassRow(); bassSndRow();
+  bassSndRow();
   $('patHint').textContent = /^my\d+$/.test(state[kind]) ? '選んでいるマイパターンを編集します' : '選んでいるパターンをコピーして編集します';
   const opts=$('opts'); opts.innerHTML='';
   const order = kind==='drum'?drumOrder():arpOrder(), src = kind==='drum'?DRUMS:ARPS;
@@ -1593,8 +1559,7 @@ function openBassSheet(){
   $('sheetTitle').textContent='ベース';
   $('soundChips').parentElement.hidden=true; $('fillSec').hidden=false;
   $('fillChips').previousElementSibling.hidden = $('fillChips').hidden = true;
-  const bassRow=()=>chips($('bassChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); renderAll(); bassRow(); });
-  bassRow(); bassSndRow();
+  bassSndRow();
   const opts=$('opts'); opts.innerHTML='';
   BASS_ORDER.forEach(k=>{ const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', (state.bassPat||'auto')===k);
     b.innerHTML=`<canvas></canvas><span>${BASSES[k].name}</span>`;
@@ -1775,8 +1740,8 @@ function playZone(zones,m,t,dur,vel,rel,cutoff,loop){
   g.connect(OUT||master); s.start(t); s.stop(t+dur+rel*7);
   return g;
 }
-const INST_FX={piano:{gain:3.6,rel:.2,hold:1.15},epiano:{gain:3.4,rel:.18,hold:1.1},nylon:{gain:3.6,rel:.2,hold:1.3},steel:{gain:3.2,rel:.2,hold:1.3},
-  organ:{gain:2.2,rel:.05,hold:1,loop:true},strings:{gain:2.4,rel:.25,hold:1,loop:true},
+const INST_FX={piano:{gain:3.6,rel:.2,hold:1.15},nylon:{gain:3.6,rel:.2,hold:1.3},
+  organ:{gain:2.2,rel:.05,hold:1,loop:true},
   eguitar:{gain:3.2,rel:.15,hold:1.1},dist:{gain:1.9,rel:.12,hold:1,loop:true},pad:{gain:2.4,rel:.45,hold:1,loop:true}};
 // v = ベロシティ(0〜1)。弱いほど音量を下げ、高音も丸くする
 // アンプ風のひずみ：入力を持ち上げて波形をつぶし、低すぎ・高すぎを削ってキャビネットっぽい箱鳴りにする
@@ -1813,7 +1778,6 @@ function bassTone_(m,t,dur,vel=1){
   const gg=g||synthBass(m,t,dur,vel); bassHeld.push(gg); return gg;
 }
 const DRUM_VOL={36:1.15,37:.75,38:.9,42:.3,46:.22,49:.28,51:.26,50:.8,47:.8,45:.85};
-function drum_(note,t,vel=1){ return drum(note,t,vel); }
 function drum(note,t,vel=1){ OUT=playing?drumBus:null; drumIn(note,t,vel); OUT=null; }
 function drumIn(note,t,vel=1){
   const kit=LOADED['kit-'+state.kit];
@@ -1840,18 +1804,11 @@ function synthTone(m,t,dur,vel){
     lp.frequency.setValueAtTime(3200,t); lp.frequency.exponentialRampToValueAtTime(1100,t+.5);
     const end=t+dur+.8; osc('triangle',f,t,end,g); const g2=ctx.createGain(); g2.gain.value=.3; g2.connect(g); osc('sine',f*2,t,end,g2);
     env(g,t,vel,.35,.3,dur,.1,.006);
-  } else if(inst==='epiano'){
-    lp.frequency.value=4000; const end=t+dur+1;
-    const car=ctx.createOscillator(); car.type='sine'; car.frequency.value=f; car.connect(g);
-    const mod=ctx.createOscillator(); mod.frequency.value=f; const mg=ctx.createGain();
-    mg.gain.setValueAtTime(f*1.6,t); mg.gain.exponentialRampToValueAtTime(f*.08,t+.7); mod.connect(mg); mg.connect(car.frequency);
-    car.start(t); mod.start(t); car.stop(end); mod.stop(end);
-    env(g,t,vel*1.2,.5,.5,dur,.12,.004);
   } else if(inst==='organ'){
     lp.frequency.value=3500; const end=t+dur+.2;
     [[1,.6],[2,.35],[3,.22],[4,.12]].forEach(([r,a])=>{ const gg=ctx.createGain(); gg.gain.value=a; gg.connect(g); osc('sine',f*r,t,end,gg); });
     g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.8,t+.01); g.gain.setValueAtTime(vel*.8,t+dur); g.gain.linearRampToValueAtTime(0,t+dur+.05);
-  } else if(inst==='nylon'||inst==='steel'){
+  } else if(inst==='nylon'){
     lp.Q.value=2; lp.frequency.setValueAtTime(5000,t); lp.frequency.exponentialRampToValueAtTime(700,t+.25);
     const end=t+dur+1.2; osc('sawtooth',f,t,end,g);
     env(g,t,vel*.9,.25,.4,dur,.15,.003);
@@ -2267,22 +2224,22 @@ const SLIDES=[
 // ================= 雰囲気のつくり方（2つめのチュートリアル） =================
 const SP=(o,q,x)=>({o,q,x:x||'',b:null});
 Object.assign(EX,{
-  near:  {degs:[0,1,2,3], roles:['T','S','T','S'], groups:[], drum:'pop', arp:'piano4', bpm:96},
-  far:   {degs:[5,1,4,0], roles:['T','S','D','T'], groups:[], drum:'pop', arp:'piano4', bpm:96},
-  calm:  {degs:[0,4,5,3], roles:['T','D','T','S'], groups:[], drum:'xstick', arp:'ballad', bpm:72},
-  drive: {degs:[0,4,5,3], roles:['T','D','T','S'], groups:[], drum:'dpop', arp:'popanti', bpm:128},
-  bright:{degs:[0,3,4,0], roles:['T','S','D','T'], groups:[], drum:'pop', arp:'piano4', bpm:120},
-  sad:   {degs:[5,3,4,0], roles:['T','S','D','T'], groups:[], drum:'medium', arp:'ballad', bpm:88},
-  emo:   {degs:[3,4,2,5], roles:['S','D','D','T'], groups:[], drum:'pop', arp:'whole', bpm:84},
-  chic:  {degs:[SP(2,'m','7'),{o:5,q:'maj',x:'',b:7},SP(0,'maj','M7'),SP(9,'m','7')], roles:['S','D','T','T'], groups:[], drum:'bossa', arp:'bossa', bpm:104},
-  epic:  {degs:[0,4,5,2,3,0,3,4], roles:['T','D','T','T','S','T','S','D'], groups:[], drum:'half', arp:'whole', bpm:76},
-  rock:  {degs:[0,SP(10,'maj'),3,0], roles:['T','S','S','T'], groups:[], drum:'eight', arp:'rock8', bpm:132},
+  near:  {degs:[0,1,2,3], roles:['T','S','T','S'], groups:[], style:'ポップス（定番）', bpm:96},
+  far:   {degs:[5,1,4,0], roles:['T','S','D','T'], groups:[], style:'ポップス（定番）', bpm:96},
+  calm:  {degs:[0,4,5,3], roles:['T','D','T','S'], groups:[], style:'しっとり', bpm:72},
+  drive: {degs:[0,4,5,3], roles:['T','D','T','S'], groups:[], style:'ポップス（ノリノリ）', bpm:128},
+  bright:{degs:[0,3,4,0], roles:['T','S','D','T'], groups:[], style:'ポップス（定番）', bpm:120},
+  sad:   {degs:[5,3,4,0], roles:['T','S','D','T'], groups:[], style:'バラード', bpm:84},
+  emo:   {degs:[3,4,2,5], roles:['S','D','D','T'], groups:[], style:'ゆったり', bpm:84},
+  chic:  {degs:[SP(2,'m','7'),{o:5,q:'maj',x:'',b:7},SP(0,'maj','M7'),SP(9,'m','7')], roles:['S','D','T','T'], groups:[], style:'ボサノバ', bpm:104},
 });
-// お手本を鳴らすときは、その雰囲気に合うドラム・パターン・テンポにする（ないときは元の設定）
-function tutLoadEx(ex){ const b=TUT.backup?JSON.parse(TUT.backup):state;
-  state.drum=ex.drum||b.drum; state.arp=ex.arp||b.arp; state.bpm=ex.bpm||b.bpm; state.fill=false;
-  if(DRUMS[state.drum]==null) state.drum='pop'; if(ARPS[state.arp]==null) state.arp='piano4';
-  $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; tutLoad(ex.degs); }
+// お手本を鳴らすときは、その雰囲気に合う伴奏スタイル（メイン画面で選べるものと同じ）とテンポにする（ないときは元の設定）
+const styleBy=name=>STYLES.find(x=>x.name===name);
+function setStyle(st){ state.drum=st.drum; state.arp=st.arp; state.bassPat='auto'; state.bassSnd=st.bassSnd||'bass'; state.bass=st.bass!==false; state.kit=st.kit; state.inst=st.inst; }
+function tutLoadEx(ex){ const b=TUT.backup?JSON.parse(TUT.backup):state, st=ex.style&&styleBy(ex.style);
+  if(st) setStyle(st); else Object.assign(state,{drum:b.drum,arp:b.arp,inst:b.inst,kit:b.kit,bass:b.bass,bassSnd:b.bassSnd,bassPat:b.bassPat});
+  state.bpm=ex.bpm||b.bpm; state.fill=false;
+  $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; tutLoad(ex.degs); ensureSounds(); }
 const moodSlide=(no,title,h,key,notes)=>({html:()=>`<div class="eyebrow a">雰囲気${no}　${title}</div>
      <h2 class="a" style="--dl:.1">${h}</h2>
      ${exampleHTML(EX[key])}
@@ -2292,16 +2249,16 @@ const moodSlide=(no,title,h,key,notes)=>({html:()=>`<div class="eyebrow a">雰�
 const BRIGHT=new Set([0,3,4]), DARK=new Set([1,2,5,6]);
 const pdist=(a,b)=>{ const d=Math.abs(a-b)%7; return Math.min(d,7-d); };   // 数字どうしの距離（1と5は3、1と2mは1）
 const PRACTICE={
-  bright:{name:'明るい・元気', icon:'☀', sub:'晴れた日の朝みたいに', drum:'pop', arp:'piano4', bpm:120,
+  bright:{name:'明るい・元気', icon:'☀', sub:'晴れた日の朝みたいに', style:'ポップス（定番）', bpm:120,
     hint:'明るいコード（1・4・5）を多めに使って、1 から始めてみましょう。',
     check:q=>q.filter(d=>BRIGHT.has(d)).length>=3, ok:'明るいコードが多くて、元気でまっすぐな響きになっています。', ng:'暗いコードが多めです。1・4・5 を増やしてみましょう。'},
-  sad:{name:'切ない', icon:'☾', sub:'夕暮れの帰り道みたいに', drum:'ballad', arp:'ballad', bpm:80,
+  sad:{name:'切ない', icon:'☾', sub:'夕暮れの帰り道みたいに', style:'バラード', bpm:80,
     hint:'暗いコード（6m・3m・2m）を混ぜて、6m から始めるか、6m で終わってみましょう。',
     check:q=>q[0]===5||q[q.length-1]===5||q.filter(d=>DARK.has(d)).length>=2, ok:'暗いコードと始まり・終わりの選び方で、切ない雰囲気が出ています。', ng:'6m から始めるか 6m で終わるか、暗いコードをもう1つ混ぜてみましょう。'},
-  strong:{name:'力強い', icon:'⚡', sub:'サビで盛り上がるように', drum:'eight', arp:'rock8', bpm:128,
+  strong:{name:'力強い', icon:'⚡', sub:'サビで盛り上がるように', style:'ロック', bpm:128,
     hint:'数字が離れたコードへ跳んでみましょう（1→4、6m→2m、5→1 など）。',
     check:q=>q.filter((d,k)=>pdist(d,q[(k+1)%q.length])===3).length>=2, ok:'大きく跳ぶ動きが多くて、力強く進んでいます。', ng:'となり同士の動きが多めです。1→4、6m→2m のように跳んでみましょう。'},
-  calm:{name:'穏やか', icon:'☁', sub:'ゆっくり流れる雲みたいに', drum:'xstick', arp:'garp', bpm:76,
+  calm:{name:'穏やか', icon:'☁', sub:'ゆっくり流れる雲みたいに', style:'しっとり', bpm:76,
     hint:'となりの数字へ進んでみましょう（1→2m、4→3m、6m→5 など）。',
     check:q=>q.filter((d,k)=>pdist(d,q[(k+1)%q.length])===1).length>=2, ok:'となりへ進む動きが多くて、なめらかで穏やかです。', ng:'跳ぶ動きが多めです。1→2m、4→3m のように、となりへ進んでみましょう。'},
 };
@@ -2336,7 +2293,7 @@ const MOOD=[
   {html:()=>`<div class="eyebrow a">コツ④　リズムとテンポ</div>
      <h2 class="a" style="--dl:.1">同じ進行でも<br>リズムで雰囲気が変わります</h2>
      ${exampleHTML(EX.calm)}
-     <p class="a" style="--dl:1">パターンとBPMを変えるだけで、<br>しっとりにも、ノリノリにもなります。</p>
+     <p class="a" style="--dl:1">伴奏スタイルとBPMを変えるだけで、<br>しっとりにも、ノリノリにもなります。</p>
      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${listenBtn('calm').replace('聴いてみる','しっとり版')}${listenBtn('drive').replace('聴いてみる','ノリノリ版')}</div>`},
   moodSlide('①','明るい・元気','明るいコードで<br>まっすぐ進む','bright',['明るいコード（1・4・5）だけ。迷いのない元気な響きに。','テンポは速め（BPM 110〜130）がおすすめ。']),
   moodSlide('②','切ない','暗いコードから<br>始めてみる','sad',['6m で始めると、出だしから切ない雰囲気に（小室進行）。','最後は 1 で明るく着地。切ないのに前向き。']),
@@ -2348,7 +2305,7 @@ const MOOD=[
        <section class="T a" style="--dl:.5"><span class="L">①</span><div><h3>明るい・暗いの割合</h3><p>暗いコードが増えるほど、切なくなる。</p></div></section>
        <section class="S a" style="--dl:.8"><span class="L">②</span><div><h3>始まりと終わり</h3><p>1 はスッキリ、6m は切ない。</p></div></section>
        <section class="D a" style="--dl:1.1"><span class="L">③</span><div><h3>コードどうしの距離</h3><p>跳ぶと力強く、となりへ進むと穏やか。</p></div></section>
-       <section class="T a" style="--dl:1.4"><span class="L">④</span><div><h3>リズムとテンポ</h3><p>パターンとBPMで印象が変わる。</p></div></section>
+       <section class="T a" style="--dl:1.4"><span class="L">④</span><div><h3>リズムとテンポ</h3><p>伴奏スタイルとBPMで印象が変わる。</p></div></section>
      </div>
      <p class="a" style="--dl:1.9">では、このコツを使って<br>実際に作ってみましょう！</p>`},
   {html:()=>`<div class="eyebrow a">実践編</div>
@@ -2373,9 +2330,8 @@ function openTutorial(deck){
 }
 function closeCoach(){ $('coach').hidden=true; document.body.classList.remove('tutlite'); clearInterval(TUT.wait); }
 function endTutorial(restore){
-  $('resultPop').hidden=true;
   const showTip = !restore && DECK===SLIDES;
-  $('moodBar').hidden=true; document.body.classList.remove('practice'); TUT.practice=false;
+  TUT.practice=false;
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio(); closeCoach();
   $('tut').hidden=true; TUT.on=false;
   if(restore && TUT.backup){ state=JSON.parse(TUT.backup); document.body.classList.toggle('pro',!!state.pro); }
@@ -2438,27 +2394,8 @@ function moodResult(){
     [['作り直す',()=>runCoach('mood'),true],['ほかのお題',()=>{ TUT.practice=false; showSlide(TUT.i-1); },true],['おわる',finishMood]]);
 }
 const moodDone=()=>[0,1,2,3].every(k=>state.slots[k]!==null&&state.slots[k]!==undefined);
-function moodBar(){
-  const m=PRACTICE[TUT.mood||'sad'], bar=$('moodBar'); bar.hidden=false; document.body.classList.add('practice');
-  const r=TUT.moodResult;
-  const text = r==='play' ? `♪ 再生中……「${m.name}」になっているかな？`
-    : r==='good' ? `<b>いい感じです！</b> ${m.ok}` : r==='ng' ? `<b>おしいです！</b> ${m.ng}`
-    : `<b>お題：「${m.name}」</b>　<small>${m.hint}</small>`;
-  const btns = r==='good'||r==='ng' ? [['作り直す',()=>{ TUT.moodResult=null; moodBar(); }],['ほかのお題',()=>{ $('moodBar').hidden=true; document.body.classList.remove('practice'); TUT.practice=false; showSlide(TUT.i-1); }],['おわる',finishMood,true]]
-    : r==='play' ? [] : [['確かめる',checkMood,true,!moodDone()],['おわる',finishMood]];
-  bar.classList.toggle('stack', btns.length>2);
-  bar.innerHTML=`<p>${text}</p><div>${btns.map((b,k)=>`<button data-k="${k}" class="${b[2]?'main':''}"${b[3]?' disabled':''}>${b[0]}</button>`).join('')}</div>`;
-  bar.querySelectorAll('button').forEach(el=>el.onclick=btns[+el.dataset.k][1]);
-}
-function checkMood(){
-  if(!moodDone()) return;
-  const m=PRACTICE[TUT.mood||'sad']; tutStopAudio(); TUT.moodResult='play'; moodBar();
-  TUT.onLoopEnd=()=>{ const q=[0,1,2,3].map(k=>tokOf(state.slots[k])), good=q.every(t=>typeof t==='number') && m.check(q);
-    TUT.moodResult=good?'good':'ng'; moodBar(); };
-  play();
-}
 // 実践編を終えるときは、作った進行と伴奏をそのまま残す
-function finishMood(){ $('moodBar').hidden=true; document.body.classList.remove('practice'); TUT.practice=false; clearInterval(TUT.wait); const keep={slots:[...state.slots],segs:state.segs,bars:state.bars,drum:state.drum,arp:state.arp,bpm:state.bpm};
+function finishMood(){ TUT.practice=false; clearInterval(TUT.wait); const keep={slots:[...state.slots],segs:state.segs,bars:state.bars,drum:state.drum,arp:state.arp,inst:state.inst,kit:state.kit,bass:state.bass,bassSnd:state.bassSnd,bassPat:state.bassPat,bpm:state.bpm};
   endTutorial(true); Object.assign(state,keep); state.ant=Array(16).fill(null); page=0;
   $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save(); }
 function runCoach(kind){
@@ -2476,11 +2413,11 @@ function runCoach(kind){
       TUT.onLoopEnd=()=>coach($('play'),'どうですか？<br>いい曲はできましたか？', [backBtn(),nextBtn()]); } },200);
   } else if(kind==='mood'){
     // 実践編：画面はふだんと同じ（色・帯もそのまま）で、説明はほかのチュートリアルと同じ吹き出しで出す
-    tutStopAudio(); document.body.classList.remove('tutlite'); TUT.practice=true; $('resultPop').hidden=true;
+    tutStopAudio(); document.body.classList.remove('tutlite'); TUT.practice=true;
     const m=PRACTICE[TUT.mood||'sad'];
     if(!TUT.moodInit){ const b=JSON.parse(TUT.backup);
-      Object.assign(state,{label:b.label,key:b.key,guide:b.guide,pro:b.pro,inst:b.inst,kit:b.kit}); document.body.classList.toggle('pro',!!state.pro);
-      tutLoadEx({degs:[],drum:m.drum,arp:m.arp,bpm:m.bpm}); TUT.moodInit=true; }
+      Object.assign(state,{label:b.label,key:b.key,guide:b.guide,pro:b.pro}); document.body.classList.toggle('pro',!!state.pro);
+      tutLoadEx({degs:[],style:m.style,bpm:m.bpm}); TUT.moodInit=true; }
     const tgt=()=>wideLayout()?[palette,slotsEl]:unionRect(palette,slotsEl), quit=['やめる',()=>endTutorial(true),true];
     const show=()=>{
       if(playing) coach([slotsEl,$('play')], `♪ 再生中……<br>「${m.name}」な感じになっているかな？`, [quit]);
@@ -2537,9 +2474,6 @@ $('tutSkip').onclick=()=>endTutorial(true);
 $('tutOpen').onclick=()=>openTutorial(SLIDES);
 $('presetQ').oninput=renderPresetList;
 $('moodOpen').onclick=()=>{ $('moodTip').hidden=true; MOODPOP.pending=false; openTutorial(MOOD); };
-$('resultRetry').onclick=()=>{ $('resultPop').hidden=true; runCoach('mood'); };
-$('resultOther').onclick=()=>{ $('resultPop').hidden=true; TUT.practice=false; showSlide(TUT.i-1); };
-$('resultEnd').onclick=()=>{ $('resultPop').hidden=true; finishMood(); };
 $('moodPopGo').onclick=()=>{ $('moodPop').hidden=true; openTutorial(MOOD); };
 $('moodPopLater').onclick=()=>{ $('moodPop').hidden=true; $('moodTip').hidden=false; clearTimeout(TUT.tipT); TUT.tipT=setTimeout(()=>$('moodTip').hidden=true,180000); };
 $('moodTip').onclick=e=>{ $('moodTip').hidden=true; MOODPOP.pending=false; if(e.target.id!=='moodTipX') openTutorial(MOOD); };
@@ -2570,7 +2504,7 @@ function unpackSong(o){ if(!o||!Array.isArray(o.slots)) return false;
   if(o.myArp){ listOf('arp').push({...o.myArp,name:(o.myArp.name||'共有パターン')}); state.arp='my'+(listOf('arp').length-1); }
   if(o.myBass){ listOf('bass').push({...o.myBass,name:(o.myBass.name||'共有パターン')}); state.bassPat='my'+(listOf('bass').length-1); }
   rebuildMy(); if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4';
-  if(!INSTS[state.inst]) state.inst='spiano'; if(!KITS[state.kit]) state.kit='std';
+  if(!INSTS[state.inst]) state.inst='piano'; if(!KITS[state.kit]) state.kit='std';
   state.slots=Array.from({length:16},(_,i)=>state.slots[i]??null); state.segs=Array.from({length:16},(_,i)=>(state.segs||[])[i]||[]); state.ant=Array.from({length:16},(_,i)=>(state.ant||[])[i]??null);
   document.body.classList.toggle('pro',!!state.pro); page=0; selected=null;
   $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save(); ensureSounds(); return true; }
@@ -2608,7 +2542,7 @@ function armed(btn,label,fn){ btn.onclick=()=>{ if(!btn.dataset.armed){ btn.data
   clearTimeout(btn._t); btn._t=setTimeout(()=>{ delete btn.dataset.armed; btn.textContent=o; btn.classList.remove('danger'); },3000); return; }
   clearTimeout(btn._t); delete btn.dataset.armed; btn.classList.remove('danger'); fn(); }; }
 armed($('resetSlots'),'もう一度押すと空にします',()=>{ if(playing) stop(); state.slots=Array(16).fill(null); state.segs=Array.from({length:16},()=>[]); state.ant=Array(16).fill(null); page=0; selected=null; renderAll(); save(); closeAll(); toast('マスを空にしました'); $('resetSlots').textContent='マスを空にする'; });
-armed($('resetAll'),'もう一度押すと全部戻します',()=>{ if(playing) stop(); const keep={myDrums:state.myDrums,myArps:state.myArps};
+armed($('resetAll'),'もう一度押すと全部戻します',()=>{ if(playing) stop(); const keep={myDrums:state.myDrums,myArps:state.myArps,myBasses:state.myBasses};
   state={...JSON.parse(JSON.stringify(DEFAULT_STATE)),...keep, slots:Array(16).fill(null), segs:Array.from({length:16},()=>[]), ant:Array(16).fill(null), mix:{}};
   rebuildMy(); document.body.classList.toggle('pro',!!state.pro); page=0; selected=null; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm;
   renderAll(); save(); applyMix(); closeAll(); toast('最初の状態に戻しました'); $('resetAll').textContent='設定もすべて最初に戻す'; });
