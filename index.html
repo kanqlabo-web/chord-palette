@@ -706,7 +706,7 @@ const FILLS={
          small:{k:'............X...', s:'............x.xx', t3:'...............X'}},
   soft: {big:  {k:'........X.......', s:'............o.x.', t2:'.............o..', t3:'...............x', h:'........g...g...'},
          small:{s:'..............ox', t3:'...............o'}},
-  shuf: {big:  {k:'........X.......', s:'........x.x.x.xX'},
+  shuf: {big:  {k:'........X.......', s:'........x..x.xxX'},
          small:{s:'............x.xX', k:'............X...'}},
   // drum_.mid（Vintage Rock）から：小フィルはスネア→4拍目にフロアタム1発、大フィルはキックとスネアの掛け合いからフロアタム
   rock: {big:  {k:'........x.o.x...', s:'..........x.X.gx', t3:'........X.......'},
@@ -732,22 +732,21 @@ const DRUMS = {
            vB:{k:'x......o..x.....', s:'.g..X..g.g..X..g', r:'o.o.x.o.o.o.x.o.', h:'g...g...g...g...'}, fill:'rock',
            bass:[[0,0,3,1],[3,0,1,.6],[4,0,2,.8],[6,'5',2,.7],[8,0,3,.9],[11,0,1,.6],[12,'5',2,.75],[14,'ap',2,.75]]},
   // ↓ drum_.mid のイントロ：サイドスティックと裏のハイハットだけ
-  xstick: {name:'しっとり', pro:'クロススティック8ビート', v:{k:'x.......x.......', x:'....x.......x...', h:'o.g.o.g.o.g.o.g.'},
-           vB:{k:'x.......x.x.....', x:'....x.......x...', h:'o.g.o.g.o.g.o.g.'}, fill:'soft',
+  xstick: {name:'しっとり', pro:'クロススティック8ビート', v:{k:'x.......x.....x.', x:'....x.......x...', h:'..x...x...x...x.'}, fill:'rock',
            bass:[[0,0,6,1],[6,'5',2,.7],[8,0,4,.85],[12,'5',2,.7],[14,'ap',2,.7]]},
-  medium: {name:'ゆったり', pro:'ミディアム8ビート', v:{k:'x.......x.x.....', s:'....X.......X...', h:'o.g.o.g.o.g.o.g.'},
-           vB:{k:'x.......x.x.....', s:'....X.......X..g', h:'o.g.o.g.o.g.o.o.'}, fill:'tom',
+  medium: {name:'ゆったり', pro:'ミディアム8ビート', v:{k:'x.............o.', s:'....X.......X...', h:'o.g.x.g.o.g.x.g.'},
+           vB:{k:'x.............o.', s:'....X.......X...', h:'o.g.x.g.o.g.x.g.'}, fill:'kime',
            bass:[[0,0,3,1],[4,0,2,.8],[6,'3',2,.7],[8,'5',3,.85],[12,0,2,.8],[14,'ap',2,.75]]},
-  half:   {name:'どっしり', pro:'ハーフタイム', v:{k:'x.......x.......', s:'..g.....X.......', h:'o...o...o...o...'},
-           vB:{k:'x.......x.......', s:'..g.....X.....o.', h:'g.......g...o...'}, fill:'snare',
-           bass:[[0,0,6,1],[6,0,2,.6],[8,'5',4,.85],[12,12,2,.75],[14,'ap',2,.7]]},
+  half:   {name:'どっしり', pro:'ハーフタイム', v:{k:'x.....x...x.....', s:'........X.......', h:'o.g.o.g.o.g.o.g.'},
+           vB:{k:'x.....x.......x.', s:'........X.....g.', h:'o.g.o.g.o.g.o.o.'}, fill:'halfp',   // スネアは3拍目だけ。ハイハットは8分のままで「半分の速さ」に聴こえる
+           bass:[[0,0,6,1],[6,0,4,.8],[10,0,4,.75],[14,'ap',2,.7]]},
   ballad: {name:'バラード', v:{k:'X.......X.......', x:'....X.......X...', h:'g...g...g...g...'}, fill:'soft',
            bass:[[0,0,7,.85],[8,'5',5,.7],[14,'ap',2,.6]]},
-  shuffle:{name:'スキップ風', pro:'シャッフル（ライド）', v:{k:'x.....o.x.......', s:'....X.g.....X.g.', r:'o.o.o.o.o.o.o.o.', h:'....g.......g...'}, swing:true, fill:'shuf',
+  shuffle:{name:'スキップ風', pro:'シャッフル（ライド）', v:{k:'x.....o.......g.', s:'.g..Xg.g.g..Xg.g', r:'o...o...o...o...', h:'..g...g...g...g.'}, swing:true, fill:'shuf',
            bass:[[0,0,2,1],[2,'3',2,.7],[4,'5',2,.85],[6,'6',2,.7],[8,12,2,.9],[10,'6',2,.7],[12,'5',2,.85],[14,'3',2,.7]]},
-  sixteen:{name:'ファンキー（16ビート）', pro:'16ビート', v:{k:'X..x....X.X..x..', s:'....X..g.g..X..g', h:'xgogxgogxgogxgog'}, fill:'kime',
+  sixteen:{name:'ファンキー（16ビート）', pro:'16ビート', v:{k:'X..x....X.X..x..', s:'....X..g.g..X..g', h:'o.g.o.g.o.g.o.g.'}, fill:'kime',
            bass:[[0,0,2,1],[3,12,1,.7],[6,0,1,.7],[7,0,1,.5],[8,0,2,.9],[10,12,1,.7],[11,'5',1,.6],[13,0,1,.7],[14,'ap',2,.8]]},
-  dance:  {name:'ダンス（クラブ）', pro:'4つ打ち（クラブ）', v:{k:'X...X...X...X...', s:'....X.......X...', h:'..o...o...o...o.'}, fill:'dance',
+  dance:  {name:'ダンス（クラブ）', pro:'4つ打ち（クラブ）', duck:true, v:{k:'X...X...X...X...', s:'....X.......X...', h:'..o...o...o...o.'}, fill:'dance',
            bass:[[2,0,1.5,.9],[6,12,1.5,.8],[10,0,1.5,.9],[14,12,1.5,.8]]},
   bossa:  {name:'ボサノバ', v:{k:'X..xX..xX..xX..x', x:'X..X..X...X..X..', h:'g.g.g.g.g.g.g.g.'}, fill:null,
            bass:[[0,0,3,1],[3,'5',1,.6],[4,'5',4,.9],[8,0,3,1],[11,'5',1,.6],[12,'5',4,.9]]},
@@ -767,15 +766,16 @@ const ALL=[0,1,2,3], RH=[1,2,3], WIDE=[0,4,5,6,7,8];
 function each(steps,ns,len,vel){ return steps.map((st,i)=>[st,Array.isArray(ns[0])?ns[i%ns.length]:ns,len,typeof vel==='function'?vel(st,i):vel]); }
 function twice(ev){ return [...ev, ...ev.map(e=>[e[0]+8,...e.slice(1)])]; }
 const ARPS = {
+  house:  {name:'ズンチャ（ダンス）', pro:'裏拍シンセ（サイドチェイン）', legato:true, ev:[[0,ALL,2,.3],[2,RH,2,.85],[4,ALL,2,.3],[6,RH,2,.85],[8,ALL,2,.3],[10,RH,2,.85],[12,ALL,2,.3],[14,RH,2,.85]]},
   whole:  {name:'のばす（ジャーン）', pro:'白玉（全音符）', ev:[[0,ALL,16,.75]]},
   piano4: {name:'ピアノ（定番）', pro:'4分刻み（左手は裏拍）', ev:[[0,ALL,6,.62],[4,RH,4,.58],[6,[0],4,.45],[8,RH,4,.64],[10,[0],4,.48],[12,RH,4,.6],[14,[0],2,.5]]},
   // C-F-G-Am.mid / F-E-Am-C.mid の右手・左手をそのまま写したもの（長さ・強さもMIDIの値）
   popanti:{name:'ピアノ（前のめり）', pro:'3拍目食い（16分）', legato:true, ev:[[0,ALL,4,.8],[4,[0],3,.78],[5,RH,2,.6],[7,ALL,5,.8],[10,RH,6,.75],[12,[0],4,.85],[14,[3],2,.68]]},
-  ballad: {name:'ポロロン（バラード）', pro:'アルペジオ（バラード）', legato:true, ev:twice([[0,[0],8,.78],[0,[3],8,.66],[3,[4],5,.56],[4,[5],4,.58],[6,[1,2],2.5,.52]])},
-  sync:   {name:'リズミカル', pro:'シンコペ（3-3-2）', ev:[[0,ALL,5.5,.82],[6,ALL,5.5,.76],[12,ALL,3.5,.8]]},
-  sync16: {name:'リズミカル（細かめ）', pro:'16分カッティング', ev:[[0,ALL,1.5,.8],[3,RH,1,.62],[6,RH,1.5,.74],[8,[0],1.5,.7],[10,RH,1,.6],[12,RH,1.5,.74],[14,RH,1,.62]]},
+  ballad: {name:'ポロロン（バラード）', pro:'アルペジオ（バラード）', legato:true, ev:[[0,[0],15,.72],[2,[4],13,.5],[4,[5],11,.54],[6,[1],9,.56],[8,[2],7,.62],[10,[3],5,.6],[12,[2],3.5,.52],[14,[1],2,.5]]},   // 8分で 1→5→8→上の和音へ上って下りる
+  sync:   {name:'リズミカル', pro:'シンコペ（付点8分）', ev:[[0,ALL,3,.8],[3,RH,.7,.72],[6,ALL,2,.78],[10,RH,2,.72],[14,ALL,2,.86]]},
+  sync16: {name:'リズミカル（細かめ）', pro:'16分シンコペ', ev:[[0,ALL,1,.82],[3,RH,.6,.6],[6,RH,1,.72],[8,[0],2,.65],[10,RH,.6,.68],[11,RH,2.5,.78],[14,RH,.6,.62]]},
   shuffle:{name:'スキップ風（ピアノ）', pro:'シャッフル（ピアノ）', swing:true, ev:[[0,ALL,1.5,.8],[2,RH,1,.52],[4,[0],1.5,.68],[6,RH,1,.6],[8,ALL,1.5,.76],[10,RH,1,.52],[12,[0],1.5,.68],[14,RH,1,.62]]},
-  shuff2: {name:'スキップ風（刻む）', pro:'シャッフル（2・4拍）', swing:true, ev:[[0,[0],1.5,.75],[4,RH,1.5,.72],[6,RH,1,.55],[8,[0],1.5,.75],[12,RH,1.5,.74],[14,RH,1,.55]]},
+  shuff2: {name:'スキップ風（刻む）', pro:'シャッフル（刻み）', swing:true, ev:[[0,ALL,1.3,.8],[4,ALL,1.3,.72],[6,RH,1,.6],[8,ALL,3.5,.78],[12,[0],1.3,.66],[14,RH,1.5,.7]]},
   stacc:  {name:'ポンポン短く', pro:'スタッカート4分', ev:each([0,4,8,12],ALL,1.1,(s,i)=>i%2?.7:.8)},
   rock8:  {name:'ロック（ジャーン系）', pro:'オープンボイシング8分', legato:true, ev:[[0,WIDE,4,.82],[4,WIDE,4,.72],[8,[0,4,5],4,.75],[10,[6,7,8],6,.8],[12,[0,4,5],4,.68],[14,WIDE,3,.82]]},
   eighth: {name:'タタタタ刻む', pro:'8分刻み', ev:each([0,2,4,6,8,10,12,14],RH,1.6,st=>st%4===0?.75:.5)},
@@ -871,7 +871,7 @@ function renderPatEditor(){
       v=>{ curMy().len=v; rebuildMy(); save(); renderPatEditor(); dirty=true; });
   }
 }
-const ARP_ORDER=['piano4','popanti','ballad','whole','sync','sync16','shuffle','shuff2','stacc','rock8','eighth','offbeat','garp','strum','bossa','alberti'];
+const ARP_ORDER=['house','piano4','popanti','ballad','whole','sync','sync16','shuffle','shuff2','stacc','rock8','eighth','offbeat','garp','strum','bossa','alberti'];
 // 通常モードの「伴奏スタイル」：ドラムとコードパターンの組み合わせ
 const STYLES=[
   {name:'ポップス（定番）', drum:'pop', arp:'piano4'},
@@ -884,7 +884,7 @@ const STYLES=[
   {name:'どっしり', drum:'half', arp:'stacc'},
   {name:'スキップ風', drum:'shuffle', arp:'shuffle'},
   {name:'ファンキー', drum:'sixteen', arp:'offbeat'},
-  {name:'ダンス', drum:'dance', arp:'eighth'},
+  {name:'ダンス', drum:'dance', arp:'house'},
   {name:'ボサノバ', drum:'bossa', arp:'bossa'},
   {name:'レゲエ', drum:'reggae', arp:'offbeat'},
   {name:'クラシック風', drum:'none', arp:'alberti'},
@@ -1501,12 +1501,13 @@ palette.addEventListener('keydown',e=>{
 });
 
 // ---------- audio ----------
-let ctx=null, master, noiseBuf;
+let ctx=null, master, noiseBuf, compBus=null, OUT=null;
 function ensureAudio(noResume){
   if(!ctx){
     ctx=new (window.AudioContext||window.webkitAudioContext)();
     const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=4;
     master=ctx.createGain(); master.gain.value=.85; master.connect(comp); comp.connect(ctx.destination);
+    compBus=ctx.createGain(); compBus.connect(master);   // 伴奏（コード）だけを通す道。ダンスではキックに合わせて音量を沈める（サイドチェイン風）
     noiseBuf=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);
     const ch=noiseBuf.getChannelData(0); for(let i=0;i<ch.length;i++) ch[i]=Math.random()*2-1;
   }
@@ -1543,7 +1544,7 @@ function playZone(zones,m,t,dur,vel,rel,cutoff,loop){
   g.gain.setValueAtTime(vel,t+dur); g.gain.setTargetAtTime(0,t+dur,rel);
   if(cutoff){ const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=cutoff; lp.Q.value=.5; s.connect(lp); lp.connect(g); }
   else s.connect(g);
-  g.connect(master); s.start(t); s.stop(t+dur+rel*7);
+  g.connect(OUT||master); s.start(t); s.stop(t+dur+rel*7);
   return g;
 }
 const INST_FX={piano:{gain:3.6,rel:.2,hold:1.15},epiano:{gain:3.4,rel:.18,hold:1.1},nylon:{gain:3.6,rel:.2,hold:1.3},steel:{gain:3.2,rel:.2,hold:1.3},
@@ -1552,8 +1553,9 @@ const INST_FX={piano:{gain:3.6,rel:.2,hold:1.15},epiano:{gain:3.4,rel:.18,hold:1
 function keyTone(m,t,dur,v){
   v=Math.max(.05,Math.min(1,v));
   const fx=INST_FX[state.inst], set=LOADED[state.inst];
+  OUT=compBus;
   const g = fx&&set&&playZone(set,m,t,Math.max(dur*fx.hold,.08),.36*fx.gain*Math.pow(v,1.6),fx.rel,900+9000*v*v,fx.loop);
-  return g || synthTone(m,t,dur,.34*Math.pow(v,1.3));
+  const r = g || synthTone(m,t,dur,.34*Math.pow(v,1.3)); OUT=null; return r;
 }
 function bassTone(m,t,dur,vel=1){
   const g=!isSynthInst()&&LOADED.bass&&playZone(LOADED.bass,m,t,dur,.7*vel,.08,2200);
@@ -1580,7 +1582,7 @@ function env(g,t,peak,sus,dec,dur,rel,att=.005){
 }
 function synthTone(m,t,dur,vel){
   const f=mtof(m), g=ctx.createGain(), lp=ctx.createBiquadFilter(); lp.type='lowpass';
-  g.connect(lp); lp.connect(master); dur=Math.max(dur,.06);
+  g.connect(lp); lp.connect(OUT||master); dur=Math.max(dur,.06);
   const inst=SYNTH_INST[state.inst]||state.inst;
   if(inst==='piano'){
     lp.frequency.setValueAtTime(3200,t); lp.frequency.exponentialRampToValueAtTime(1100,t+.5);
@@ -1701,11 +1703,14 @@ function playBass(list,s,t,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,v
   bassTone(bt.bass+n,t,Math.min(len,room)*sd*.92,vel); }); }
 function scheduleStep(g,t){
   const L=slotSteps(), s=g%16, b=Math.floor(playedSteps/16);     // b = 再生を始めてから何小節目か（ドラム用）
-  const dr=DRUMS[state.drum], sd=stepDur(), tt=t+(dr.swing&&s%4===2?sd*.62:0);
+  const dr=DRUMS[state.drum], sd=stepDur(), tt=t+(dr.swing&&s%4===2?sd*.34:0);
   const fm = fillModeOf(b,dr), V = (fm && s>=(fm==='big'?8:12)) ? (fm==='big'?dr.F:dr.FS) : (b%2===1 && dr.VB ? dr.VB : dr.V);
   for(const n in V){ const v=V[n][s]; if(v) drum(+n,tt,v); }
+  // サイドチェイン風：キック（4分）のたびに伴奏の音量をぐっと沈めて、裏拍でふくらませる
+  if(dr.duck && compBus && s%4===0){ const gg=compBus.gain; gg.cancelScheduledValues(tt); gg.setValueAtTime(1,tt); gg.linearRampToValueAtTime(.18,tt+.008); gg.setTargetAtTime(1,tt+.03,sd*.9); }
+  else if(!dr.duck && compBus && s===0 && compBus.gain.value<.99){ compBus.gain.cancelScheduledValues(tt); compBus.gain.setValueAtTime(1,tt); }
   if(state.fill && dr.F && s===0 && b%4===0 && b>0) drum(49,tt,.6);
-  const pat=ARPS[state.arp], ct=t+((dr.swing||pat.swing)&&s%4===2?sd*.62:0);   // シャッフル系は裏拍を跳ねさせる
+  const pat=ARPS[state.arp], ct=t+((dr.swing||pat.swing)&&s%4===2?sd*.34:0);   // シャッフル系は裏拍を跳ねさせる
   const bassOf=bb=>bassList(dr);
   // いま鳴らすコード（マス i の中の何番目のコードか）
   const i=Math.floor(g/L), off=g%L, cells=cellsOf(i), ci=cells.findIndex(c=>off>=c.off&&off<c.off+c.len), cell=cells[ci], rel=off-cell.off;
@@ -1792,7 +1797,7 @@ async function play(){ ensureAudio(); pendingSound=null; if(starting) return; bg
   lastR=null; barTones=null; pushedKey=null; playing=true; playedSteps=0; gpos=0;
   if(TUT.on){ TUT.loopLen=state.bars*slotSteps(); TUT.stopping=false; clearTimeout(TUT.stopT); } visQ=[]; cur=null; nextTime=ctx.currentTime+.06; tick(); timer=setInterval(tick,25); if(tickWorker) tickWorker.postMessage(25);
   $('play').innerHTML=STOP_SVG; $('play').setAttribute('aria-label','停止'); }
-function stop(){ playing=false; clearInterval(timer); if(tickWorker) tickWorker.postMessage(0); bgStop(); visQ=[]; cur=null; dirty=true;
+function stop(){ if(compBus){ compBus.gain.cancelScheduledValues(0); compBus.gain.setValueAtTime(1,ctx.currentTime); } playing=false; clearInterval(timer); if(tickWorker) tickWorker.postMessage(0); bgStop(); visQ=[]; cur=null; dirty=true;
   $('play').innerHTML=PLAY_SVG; $('play').setAttribute('aria-label','再生'); $('play').classList.remove('beat');
   slotsEl.querySelectorAll('.slot').forEach(s=>s.classList.remove('now')); renderPages(); }
 $('play').onclick=()=>playing?stop():play();
