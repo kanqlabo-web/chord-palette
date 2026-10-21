@@ -409,6 +409,19 @@ body.tutlite .gstrip{visibility:hidden}
 @keyframes tfl{50%{transform:translateY(-6px)}}
 /* コーチマーク（メイン画面の上の吹き出し） */
 .coach{position:fixed;inset:0;z-index:55;pointer-events:none}
+/* 実践編のお題の帯：メイン画面のいちばん上（タイトルの行）に重ねる */
+.app>.moodbar{grid-column:1/-1}
+body.practice .app>.top{display:none}
+.moodbar{background:var(--ink);color:var(--bg);border-radius:14px;padding:8px 10px 8px 14px;display:flex;align-items:center;gap:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);animation:tin .35s ease}
+.moodbar p{margin:0;flex:1;min-width:0;font-size:.8rem;line-height:1.45}
+.moodbar p small{opacity:.75;font-size:.72rem}
+.moodbar{flex-wrap:wrap;row-gap:6px}
+.moodbar.stack p{flex:1 1 100%}
+.moodbar div{display:flex;gap:6px;flex:none;margin-left:auto}
+.moodbar button{border:0;border-radius:999px;padding:5px 12px;font:inherit;font-size:.74rem;font-weight:700;background:transparent;color:var(--bg);cursor:pointer;white-space:nowrap;border:1px solid color-mix(in srgb,var(--bg) 40%,transparent)}
+.moodbar button.main{background:var(--bg);color:var(--ink);border-color:var(--bg)}
+.moodbar button:disabled{opacity:.35}
 .coach .dim{position:fixed;inset:0;width:100%;height:100%}
 .coach .dim rect{transition:x .35s,y .35s,width .35s,height .35s}
 .coach .bubble{position:fixed;max-width:420px;margin:0;
@@ -427,6 +440,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
 </style>
 
 <div class="app" id="app">
+  <div class="moodbar" id="moodBar" hidden></div>
   <div class="top">
     <button class="iconbtn" id="menuBtn" aria-label="メニュー" style="position:relative"><span class="protag">PRO</span>
       <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
@@ -1486,7 +1500,7 @@ function end(e){
     if(selected!==null){
       const tc=e.target&&e.target.closest?e.target.closest('.cell'):null;
       setV(i, tc?+tc.dataset.h:0, selected); preview(selected); selected=null; }
-    else if(getV(i,th)!==null&&getV(i,th)!==undefined){ preview(getV(i,th)); if(!state.pro && !TUT.on) openVar(i,th); } }
+    else if(getV(i,th)!==null&&getV(i,th)!==undefined){ preview(getV(i,th)); if(!state.pro && (!TUT.on||TUT.practice)) openVar(i,th); } }
   renderTiles(); renderSlots();
 }
 // 通常モード：置いたコードをタップすると、同じ役割のバリエーションを選べる
@@ -2029,7 +2043,7 @@ const PRACTICE={
   bright:{name:'明るい・元気', icon:'☀', sub:'晴れた日の朝みたいに', drum:'pop', arp:'piano4', bpm:120,
     hint:'明るいコード（1・4・5）を多めに使って、1 から始めてみましょう。',
     check:q=>q.filter(d=>BRIGHT.has(d)).length>=3, ok:'明るいコードが多くて、元気でまっすぐな響きになっています。', ng:'暗いコードが多めです。1・4・5 を増やしてみましょう。'},
-  sad:{name:'切ない', icon:'☾', sub:'夕暮れの帰り道みたいに', drum:'medium', arp:'ballad', bpm:84,
+  sad:{name:'切ない', icon:'☾', sub:'夕暮れの帰り道みたいに', drum:'ballad', arp:'ballad', bpm:80,
     hint:'暗いコード（6m・3m・2m）を混ぜて、6m から始めるか、6m で終わってみましょう。',
     check:q=>q[0]===5||q[q.length-1]===5||q.filter(d=>DARK.has(d)).length>=2, ok:'暗いコードと始まり・終わりの選び方で、切ない雰囲気が出ています。', ng:'6m から始めるか 6m で終わるか、暗いコードをもう1つ混ぜてみましょう。'},
   strong:{name:'力強い', icon:'⚡', sub:'サビで盛り上がるように', drum:'eight', arp:'rock8', bpm:128,
@@ -2106,6 +2120,7 @@ function openTutorial(deck){
 }
 function closeCoach(){ $('coach').hidden=true; document.body.classList.remove('tutlite'); clearInterval(TUT.wait); }
 function endTutorial(restore){
+  $('moodBar').hidden=true; document.body.classList.remove('practice'); TUT.practice=false;
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio(); closeCoach();
   $('tut').hidden=true; TUT.on=false;
   if(restore && TUT.backup){ state=JSON.parse(TUT.backup); document.body.classList.toggle('pro',!!state.pro); }
@@ -2162,16 +2177,28 @@ function coach(target, text, btns, keepLite){
 function unionRect(a,b){ const r1=a.getBoundingClientRect(), r2=b.getBoundingClientRect(); const l=Math.min(r1.left,r2.left), t=Math.min(r1.top,r2.top), rr=Math.max(r1.right,r2.right), bt=Math.max(r1.bottom,r2.bottom); return {left:l,top:t,right:rr,bottom:bt,width:rr-l,height:bt-t}; }
 const wideLayout=()=>matchMedia('(min-width:820px) and (min-aspect-ratio:5/4)').matches;
 const nextBtn=()=>['つぎへ',()=>showSlide(TUT.i+1)], backBtn=()=>['もどる',()=>showSlide(TUT.i-1),true];
+const moodDone=()=>[0,1,2,3].every(k=>state.slots[k]!==null&&state.slots[k]!==undefined);
+function moodBar(){
+  const m=PRACTICE[TUT.mood||'sad'], bar=$('moodBar'); bar.hidden=false; document.body.classList.add('practice');
+  const r=TUT.moodResult;
+  const text = r==='play' ? `♪ 再生中……「${m.name}」になっているかな？`
+    : r==='good' ? `<b>いい感じです！</b> ${m.ok}` : r==='ng' ? `<b>おしいです！</b> ${m.ng}`
+    : `<b>お題：「${m.name}」</b>　<small>${m.hint}</small>`;
+  const btns = r==='good'||r==='ng' ? [['作り直す',()=>{ TUT.moodResult=null; moodBar(); }],['ほかのお題',()=>{ $('moodBar').hidden=true; document.body.classList.remove('practice'); TUT.practice=false; showSlide(TUT.i-1); }],['おわる',finishMood,true]]
+    : r==='play' ? [] : [['確かめる',checkMood,true,!moodDone()],['おわる',finishMood]];
+  bar.classList.toggle('stack', btns.length>2);
+  bar.innerHTML=`<p>${text}</p><div>${btns.map((b,k)=>`<button data-k="${k}" class="${b[2]?'main':''}"${b[3]?' disabled':''}>${b[0]}</button>`).join('')}</div>`;
+  bar.querySelectorAll('button').forEach(el=>el.onclick=btns[+el.dataset.k][1]);
+}
 function checkMood(){
-  const m=PRACTICE[TUT.mood||'sad'];
-  coach($('play'), '♪ 再生中……', [backBtn()]);
+  if(!moodDone()) return;
+  const m=PRACTICE[TUT.mood||'sad']; tutStopAudio(); TUT.moodResult='play'; moodBar();
   TUT.onLoopEnd=()=>{ const q=[0,1,2,3].map(k=>tokOf(state.slots[k])), good=q.every(t=>typeof t==='number') && m.check(q);
-    coach(slotsEl, good ? `<b>いい感じです！</b><br>${m.ok}` : `<b>おしいです！</b><br>${m.ng}`,
-      [['作り直す',()=>runCoach('mood'),true],['ほかのお題',()=>showSlide(TUT.i-1),true],['おわる',finishMood]]); };
+    TUT.moodResult=good?'good':'ng'; moodBar(); };
   play();
 }
 // 実践編を終えるときは、作った進行と伴奏をそのまま残す
-function finishMood(){ const keep={slots:[...state.slots],segs:state.segs,bars:state.bars,drum:state.drum,arp:state.arp,bpm:state.bpm};
+function finishMood(){ $('moodBar').hidden=true; document.body.classList.remove('practice'); TUT.practice=false; clearInterval(TUT.wait); const keep={slots:[...state.slots],segs:state.segs,bars:state.bars,drum:state.drum,arp:state.arp,bpm:state.bpm};
   endTutorial(true); Object.assign(state,keep); state.ant=Array(16).fill(null); page=0;
   $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save(); }
 function runCoach(kind){
@@ -2188,14 +2215,14 @@ function runCoach(kind){
       coach($('play'), '♪ 再生中……', [backBtn()]);
       TUT.onLoopEnd=()=>coach($('play'),'どうですか？<br>いい曲はできましたか？', [backBtn(),nextBtn()]); } },200);
   } else if(kind==='mood'){
-    // 実践編：お題の雰囲気で4マスを作って、再生して確かめる
-    tutStopAudio(); const m=PRACTICE[TUT.mood||'sad'];
-    if(!TUT.moodInit){ tutLoadEx({degs:[],drum:m.drum,arp:m.arp,bpm:m.bpm}); TUT.moodInit=true; }
-    const seq=()=>[0,1,2,3].map(k=>state.slots[k]), done=()=>seq().every(v=>v!==null&&v!==undefined);
-    const tgt=()=>wideLayout()?[palette,slotsEl]:unionRect(palette,slotsEl);
-    const show=()=>{ if(!done()) coach(tgt(), `お題：<b>「${m.name}」</b>な進行を作ってみましょう。<br><small>ヒント：${m.hint}</small>`, [backBtn(),['やめる',()=>endTutorial(true),true]]);
-      else coach(tgt(), `4つ並びました！<br>再生して、<b>「${m.name}」</b>になっているか確かめましょう。`, [backBtn(),['再生する',()=>{ clearInterval(TUT.wait); checkMood(); }]]); };
-    show(); let was=done(); TUT.wait=setInterval(()=>{ const d=done(); if(d!==was){ was=d; show(); } },300);
+    // 実践編：ふだんと同じメイン画面のまま、上の帯にお題を出して作ってもらう
+    tutStopAudio(); closeCoach(); document.body.classList.remove('tutlite'); TUT.practice=true;
+    const m=PRACTICE[TUT.mood||'sad'];
+    if(!TUT.moodInit){ const b=JSON.parse(TUT.backup);
+      Object.assign(state,{label:b.label,key:b.key,guide:b.guide,pro:b.pro,inst:b.inst,kit:b.kit}); document.body.classList.toggle('pro',!!state.pro);
+      tutLoadEx({degs:[],drum:m.drum,arp:m.arp,bpm:m.bpm}); TUT.moodInit=true; }
+    TUT.moodResult=null; moodBar();
+    let was=null; TUT.wait=setInterval(()=>{ const d=moodDone(); if(d!==was){ was=d; if(!TUT.moodResult) moodBar(); } },300);
   } else if(kind==='weird'){
     tutStopAudio(); tutLoad([6,3,2,1]);
     coach(slotsEl, 'では次は、こんなコードを<br>鳴らしてみます……', [backBtn()]);
