@@ -410,6 +410,7 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .listen.on{background:var(--ink);color:var(--bg)}
 .saverow{display:flex;gap:8px}
 .saverow input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.chip.danger{background:var(--d);border-color:var(--d);color:#fff}
 .chip.main{background:var(--ink);color:var(--bg);border-color:var(--ink);flex:none}
 .songlist{display:flex;flex-direction:column;gap:6px}
 .song{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:12px;padding:8px 8px 8px 12px;background:var(--surface)}
@@ -576,6 +577,9 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <div class="saverow"><input type="text" id="songName" placeholder="名前（例：サビの進行）" maxlength="30" autocomplete="off"><button class="chip main" id="songSave">保存</button></div>
     <button class="chip" id="shareNow">今の進行の共有リンクを作る</button>
     <div class="songlist" id="songList"></div></div>
+  <div class="sec"><h3>リセット</h3>
+    <div class="chips"><button class="chip" id="resetSlots">マスを空にする</button><button class="chip" id="resetAll">設定もすべて最初に戻す</button></div>
+    <p class="small" style="margin:0">保存した進行とマイパターンは消えません。</p></div>
   <div class="sec"><h3>有名な進行を入れてみる</h3><details class="acc" id="presetAcc"><summary><span>進行の一覧</span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><div class="presetfind"><input type="search" id="presetQ" placeholder="名前・雰囲気・数字で探す" autocomplete="off"><div class="tagrow" id="presetTags"></div></div><div class="acclist" id="presetList"></div></details></div>
   <div class="sec"><h3>色の意味</h3>
     <div class="legend">
@@ -1113,6 +1117,7 @@ function progLabel(){
 
 // ---------- state ----------
 let state={slots:[3,4,2,5,...Array(12).fill(null)], bars:4, key:'C', label:'num', inst:'spiano', kit:'synth', drum:'pop', arp:'piano4', bassPat:'auto', bassSnd:'bass', fill:false, bass:true, pro:false, guide:false, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:7};
+const DEFAULT_STATE=JSON.parse(JSON.stringify(state));   // リセット用の初期設定
 let FIRST_RUN=true;
 try{ const s=JSON.parse(localStorage.getItem('chord-palette-v3')); if(s) FIRST_RUN=false; if(s&&Array.isArray(s.slots)&&s.slots.length===16) state={...state,...s}; if(!s.ver||s.ver<6){ state.bass=true; } if(!s.ver||s.ver<7){ state.drum='pop'; state.fill=false; state.ver=7; } if(!s.ver||s.ver<4){ state.inst='spiano'; state.kit='synth'; } if(!INSTS[state.inst]) state.inst='spiano'; if(!KITS[state.kit]) state.kit='std'; }catch(e){}
 if(!Array.isArray(state.segs)) state.segs=Array.from({length:16},(_,i)=>state.split&&state.split[i]?[state.split[i]]:[]);
@@ -2549,6 +2554,15 @@ $('songSave').onclick=()=>{ const a=loadSongs(); const name=($('songName').value
   const ex=a.findIndex(x=>x.name===name), item={name,date:Date.now(),data:packSong()};
   if(ex>=0) a[ex]=item; else a.unshift(item); saveSongs(a); $('songName').value=''; renderSongs(); toast(ex>=0?`「${name}」を上書き保存しました`:`「${name}」を保存しました`); };
 $('shareNow').onclick=()=>shareSong(packSong());
+// リセット：押し間違いを防ぐため2回押しで実行
+function armed(btn,label,fn){ btn.onclick=()=>{ if(!btn.dataset.armed){ btn.dataset.armed=1; const o=btn.textContent; btn.textContent=label; btn.classList.add('danger');
+  clearTimeout(btn._t); btn._t=setTimeout(()=>{ delete btn.dataset.armed; btn.textContent=o; btn.classList.remove('danger'); },3000); return; }
+  clearTimeout(btn._t); delete btn.dataset.armed; btn.classList.remove('danger'); fn(); }; }
+armed($('resetSlots'),'もう一度押すと空にします',()=>{ if(playing) stop(); state.slots=Array(16).fill(null); state.segs=Array.from({length:16},()=>[]); state.ant=Array(16).fill(null); page=0; selected=null; renderAll(); save(); closeAll(); toast('マスを空にしました'); $('resetSlots').textContent='マスを空にする'; });
+armed($('resetAll'),'もう一度押すと全部戻します',()=>{ if(playing) stop(); const keep={myDrums:state.myDrums,myArps:state.myArps};
+  state={...JSON.parse(JSON.stringify(DEFAULT_STATE)),...keep, slots:Array(16).fill(null), segs:Array.from({length:16},()=>[]), ant:Array(16).fill(null), mix:{}};
+  rebuildMy(); document.body.classList.toggle('pro',!!state.pro); page=0; selected=null; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm;
+  renderAll(); save(); applyMix(); closeAll(); toast('最初の状態に戻しました'); $('resetAll').textContent='設定もすべて最初に戻す'; });
 $('menuBtn').addEventListener('click',renderSongs);
 // 共有リンクから開いたとき：その進行を読み込む（チュートリアルは自動では出さない）
 let OPENED_SHARE=false;
