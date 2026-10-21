@@ -918,8 +918,9 @@ function renderTiles(){
   });
 }
 // PROモード：1小節の中で拍ごとにコードを変える。state.segs[i] = [{beat:2〜4, v:コード}, …]
-const segsOf=i=>state.pro ? (state.segs[i]||[]).filter(x=>x&&x.v!==null&&x.v!==undefined).sort((a,b)=>a.beat-b.beat) : [];
-const slotSteps=()=>state.pro?16:(state.len||4)*4;           // 1マスの長さ（16分音符の数）
+// PROの拍切り替えは、1マスの長さ（4拍・2拍）の中だけで使う（1拍のマスは分けない）
+const segsOf=i=>state.pro ? (state.segs[i]||[]).filter(x=>x&&x.v!==null&&x.v!==undefined&&x.beat<=(state.len||4)).sort((a,b)=>a.beat-b.beat) : [];
+const slotSteps=()=>(state.len||4)*4;           // 1マスの長さ（16分音符の数）
 function cellsOf(i){
   const L=slotSteps(), out=[{h:0,off:0,v:state.slots[i]}];
   segsOf(i).forEach((x,k)=>out.push({h:k+1,off:(x.beat-1)*4,v:x.v,beat:x.beat}));
@@ -962,8 +963,9 @@ function renderSlots(){
   const m=PRESETS.find(p=>p.p.length===state.bars && p.p.every((d,i)=>d===used[i] && !segsOf(i).length));
   $('progName').textContent = m ? m.name : (MINOR ? `${noteName(9)}m中心（短調）` : '');
   $('hint').textContent = selected!==null ? `${chordText(selected)} を置くマスをタップ`
-    : !state.pro && state.len<4 ? `1マス＝${state.len}拍 ・ コードをマスへドラッグ`
-    : state.bars===4 ? (state.pro?'マスの右側に置くと3拍目から':'4小節 ・ コードをマスへドラッグ') : `${state.bars}小節中 ${page*4+1}〜${page*4+4}小節目を編集中`;
+    : state.pro && state.len>1 && state.bars===4 ? `${state.len<4?`1マス＝${state.len}拍 ・ `:''}マスの右側に置くと${state.len/2+1}拍目から`
+    : state.len<4 ? `1マス＝${state.len}拍 ・ ${state.bars>4?`${page*4+1}〜${page*4+4}マス目`:'コードをマスへドラッグ'}`
+    : state.bars===4 ? '4小節 ・ コードをマスへドラッグ' : `${state.bars}小節中 ${page*4+1}〜${page*4+4}小節目を編集中`;
   const gi = state.guide ? guideInfo() : {text:'',warn:new Set(),groups:[]};
   document.body.classList.toggle('guide', !!state.guide);
   if(state.guide && selected===null && gi.text) $('hint').textContent = gi.text;
@@ -1052,11 +1054,10 @@ function chips(el, items, cur, onPick){
 }
 function buildMenu(){
   chips($('keyChips'), KEYS.map(k=>[k.id,k.id]), state.key, v=>{ state.key=v; renderAll(); if(!playing) preview(0); });
-  const unit = !state.pro && state.len<4 ? 'マス' : '小節';
+  const unit = state.len<4 ? 'マス' : '小節';
   chips($('barChips'), [[4,'4'+unit],[8,'8'+unit],[16,'16'+unit]], state.bars, v=>{ state.bars=v; if(page*4>=v) page=0; renderAll(); });
   chips($('lenChips'), [[4,'4拍（1小節）'],[2,'2拍'],[1,'1拍']], state.len, v=>{ state.len=v; renderAll(); });
-  $('lenChips').style.opacity = state.pro ? .4 : ''; $('lenChips').style.pointerEvents = state.pro ? 'none' : '';
-  $('lenNote').textContent = state.pro ? 'PROモードでは1マス＝1小節です。コードを変える拍は、コードの編集画面で小節ごとに決めます。' : '2拍にすると、1マスが2拍になります（4マスで2小節）。';
+  $('lenNote').textContent = '2拍にすると、1マスが2拍になります（4マスで2小節）。' + (state.pro ? 'PROモードの拍ごとの切り替えは、1マスの中（2拍なら2拍目）で使えます。' : '');
   chips($('labelChips'), Object.entries(LABELS), state.label, v=>{ state.label=v; renderAll(); });
   chips($('instChips'), Object.entries(INSTS), state.inst, pickInst);
   chips($('kitChips'), Object.entries(KITS), state.kit, pickKit);
@@ -1119,14 +1120,15 @@ function renderEditor(full){
     cellsOf(k).forEach(c=>{
       const h=c.h, vk=c.v, ek=vk===null||vk===undefined, t=document.createElement('button');
       t.className='edtab'+(h?' sub':''); t.setAttribute('aria-pressed',k===edIndex&&h===edHalf);
-      t.innerHTML=`<small>${h?`${c.beat}拍目〜`:`${k+1}小節目`}</small><b>${ek?'空き':chordText(vk)}</b>`;
+      t.innerHTML=`<small>${h?`${c.beat}拍目〜`:`${k+1}${state.len<4?'マス目':'小節目'}`}</small><b>${ek?'空き':chordText(vk)}</b>`;
       t.onclick=()=>{ edIndex=k; edHalf=h; renderEditor(true); if(!ek) preview(vk); };
       tabs.appendChild(t);
     });
   }
   // コードを変える拍（複数選べる）
   const beatsNow=segsOf(edIndex).map(x=>x.beat), bt=$('edBeat'); bt.innerHTML='';
-  [[0,'変えない'],[2,'2拍目'],[3,'3拍目'],[4,'4拍目']].forEach(([b,label])=>{
+  bt.closest('.sheetsec').hidden = (state.len||4)<2;
+  [[0,'変えない'],[2,'2拍目'],[3,'3拍目'],[4,'4拍目']].filter(([b])=>b<=(state.len||4)).forEach(([b,label])=>{
     const c=document.createElement('button'); c.className='chip'; c.textContent=label;
     c.setAttribute('aria-pressed', b===0 ? beatsNow.length===0 : beatsNow.includes(b));
     c.onclick=()=>{
@@ -1140,7 +1142,7 @@ function renderEditor(full){
     bt.appendChild(c);
   });
   $('edAntSec').hidden = edHalf!==0;
-  chips($('edAnt'), ANT_CHOICES, state.ant&&state.ant[edIndex]||0, v=>{ if(!state.ant) state.ant=Array(16).fill(null); state.ant[edIndex]=v; save(); renderSlots(); renderEditor(false); });
+  chips($('edAnt'), ANT_CHOICES.map(([v,l])=>[v,v===0&&state.len<4?'マスの頭':l]), state.ant&&state.ant[edIndex]||0, v=>{ if(!state.ant) state.ant=Array(16).fill(null); state.ant[edIndex]=v; save(); renderSlots(); renderEditor(false); });
   $('edName').innerHTML=empty?'<span style="font-size:.6em;color:var(--muted)">空き（回すと入ります）</span>':chordHTML(v);
   $('edSub').textContent=empty?'':nameOf(v,'num',false);
   const offs=[...Array(12).keys()];
@@ -1255,7 +1257,7 @@ window.addEventListener('pointermove',e=>{
     if(cell && drag.source.type==='tile'){ drag.h=+cell.dataset.h; drag.cell=cell; cell.classList.add('over'); over.classList.remove('over','over-r'); }
     else {
       // PROモード：まだ分けていないマスの右側に落とすと3拍目からのコードになる
-      drag.right = state.pro && drag.source.type==='tile' && filled && !segsOf(i).length && (e.clientX-r.left) > r.width*.58;
+      drag.right = state.pro && state.len>1 && drag.source.type==='tile' && filled && !segsOf(i).length && (e.clientX-r.left) > r.width*.58;
       over.classList.toggle('over',!drag.right); over.classList.toggle('over-r',drag.right);
     }
   }
@@ -1267,7 +1269,7 @@ function end(e){
   if(d.ghost) d.ghost.remove(); if(d.over) d.over.classList.remove('over','over-r'); if(d.cell) d.cell.classList.remove('over');
   if(d.moving){
     const to=d.over?+d.over.dataset.abs:null;
-    if(d.source.type==='tile'){ if(to!==null){ if(d.right){ state.segs[to]=[{beat:3,v:d.source.deg}]; } else setV(to, d.h||0, d.source.deg); preview(d.source.deg); } }
+    if(d.source.type==='tile'){ if(to!==null){ if(d.right){ state.segs[to]=[{beat:state.len/2+1,v:d.source.deg}]; } else setV(to, d.h||0, d.source.deg); preview(d.source.deg); } }
     else { const f=d.source.index;
       if(to===null){ state.slots[f]=null; state.segs[f]=[]; }
       else if(to!==f){ [state.slots[to],state.slots[f]]=[state.slots[f],state.slots[to]]; [state.segs[to],state.segs[f]]=[state.segs[f],state.segs[to]]; } }
