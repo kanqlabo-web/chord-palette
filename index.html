@@ -477,7 +477,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="edhead"><span class="edname" id="edName"></span><span class="edsub" id="edSub"></span>
     <button class="chip" id="edPlay">試し弾き</button><button class="chip" id="edReset">元に戻す</button></div>
   <div class="sheetsec"><h3>コードを変える拍（いくつでも）</h3><div class="chips" id="edBeat"></div></div>
-  <div class="sheetsec" id="edAntSec"><h3>このコードに入るタイミング（食い）</h3><div class="chips" id="edAnt"></div></div>
+  <div class="sheetsec" id="edAntSec"><h3>このコードに入るタイミング（食い・後ろ倒し）</h3><div class="chips" id="edAnt"></div></div>
   <div class="edcols">
     <div class="edcol"><h3>ルート</h3><div class="wheel"><div class="edlist" id="edRoot"></div></div></div>
     <div class="edcol"><h3>種類</h3><div class="wheel"><div class="edlist" id="edQual"></div></div></div>
@@ -1008,7 +1008,7 @@ function renderSlots(){
   computeRoles();
   [...slotsEl.children].forEach((el,j)=>{
     const i=page*4+j; el.dataset.abs=i;
-    el.querySelector('.num').textContent = (i+1) + (state.slots[i]!=null && antOf(i)>0 ? ' ←食' : '');
+    el.querySelector('.num').textContent = (i+1) + (state.slots[i]!=null && antOf(i) ? ' '+shiftMark(antOf(i)) : '');
     el.querySelector('.x').setAttribute('aria-label',`${i+1}小節目を空にする`);
     el.classList.toggle('now', playing&&cur&&cur.b===i);
     const d=state.slots[i];
@@ -1021,7 +1021,7 @@ function renderSlots(){
       el.classList.add('filled');
       el.querySelector('.n').innerHTML=cells.map(c=>{ const e=c.v===null||c.v===undefined;
         const r=e?'':roleAt(i,c.h,c.v);
-        return `<span class="cell ${r}" data-h="${c.h}" style="flex:${c.len}"><b>${e?'空き':bigHTML(c.v)}</b><small>${e?'':smallHTML(c.v)}</small><i>${c.off/4+1}拍${r&&r!=='X'?`<b>${r}</b>`:''}</i></span>`; }).join('');
+        return `<span class="cell ${r}" data-h="${c.h}" style="flex:${c.len}"><b>${e?'空き':bigHTML(c.v)}</b><small>${e?'':smallHTML(c.v)}</small><i>${c.h&&shiftOf(i,c.h)>0?'←':''}${c.off/4+1}拍${c.h&&shiftOf(i,c.h)<0?'→':''}${r&&r!=='X'?`<b>${r}</b>`:''}</i></span>`; }).join('');
       el.querySelector('.dg').textContent='';
     } else if(d!==null && d!==undefined){
       const r=roleAt(i,0,d); el.classList.add('filled', r);
@@ -1213,8 +1213,11 @@ function renderEditor(full){
     };
     bt.appendChild(c);
   });
-  $('edAntSec').hidden = edHalf!==0;
-  chips($('edAnt'), ANT_CHOICES.map(([v,l])=>[v,v===0&&state.len<4?'マスの頭':l]), state.ant&&state.ant[edIndex]||0, v=>{ if(!state.ant) state.ant=Array(16).fill(null); state.ant[edIndex]=v; save(); renderSlots(); renderEditor(false); });
+  $('edAntSec').hidden = getV(edIndex,edHalf)==null;
+  chips($('edAnt'), ANT_CHOICES, shiftOf(edIndex,edHalf), v=>{
+    if(edHalf){ const sg=segsOf(edIndex)[edHalf-1]; if(sg) sg.ant=v; }
+    else { if(!state.ant) state.ant=Array(16).fill(null); state.ant[edIndex]=v; }
+    save(); renderSlots(); renderEditor(false); });
   $('edName').innerHTML=empty?'<span style="font-size:.6em;color:var(--muted)">空き（回すと入ります）</span>':chordHTML(v);
   $('edSub').textContent=empty?'':nameOf(v,'num',false);
   const offs=[...Array(12).keys()];
@@ -1528,9 +1531,12 @@ const isFillBar=b=>b%4===3;
 const fillModeOf=(b,dr)=> state.fill && dr.F && isFillBar(b) ? (b%8===7?'big':'small') : null;   // フィルは再生を始めてから4小節ごと（コードの切り替えやマスの数とは関係なし）
 let playing=false, timer=null, nextTime=0, visQ=[], cur=null;
 const stepDur=()=>60/state.bpm/4;
-const ANT_CHOICES=[[0,'小節の頭'],[2,'8分前（食い）'],[1,'16分前（食い）']];
+const ANT_CHOICES=[[2,'8分前（食い）'],[1,'16分前（食い）'],[0,'ちょうど'],[-1,'16分後ろ'],[-2,'8分後ろ']];
 let pushedKey=null;
-const antOf=i=>{ if(!state.pro) return 0; const a=state.ant?state.ant[i]:null; return a||0; };   // 食いはPROだけ
+const antOf=i=>{ if(!state.pro) return 0; const a=state.ant?state.ant[i]:null; return a||0; };   // 食い・後ろ倒しはPROだけ
+// マス i の h 番目のコードのタイミング（＋＝食い、－＝後ろ倒し）
+const shiftOf=(i,h)=>{ if(!state.pro) return 0; if(!h) return antOf(i); const sg=segsOf(i)[h-1]; return (sg&&sg.ant)||0; };
+const shiftMark=a=>a>0?'←食':a<0?'後→':'';
 function playEvents(evs,bt,ct,sd,pat){
   const tones=bt.tones;
   evs.forEach(([st0,ns0,len,vel,dir])=>{
@@ -1576,11 +1582,13 @@ function scheduleStep(g,t){
   const bassOf=bb=>dr.bass;
   // いま鳴らすコード（マス i の中の何番目のコードか）
   const i=Math.floor(g/L), off=g%L, cells=cellsOf(i), ci=cells.findIndex(c=>off>=c.off&&off<c.off+c.len), cell=cells[ci], rel=off-cell.off;
-  let nx, nxKey, an=0;
-  if(ci<cells.length-1){ nx=cells[ci+1]; nxKey=i+':'+nx.h; }
-  else { const ni=(i+1)%state.bars; nx=cellsOf(ni)[0]; nxKey=ni+':0'; an=antOf(ni); }
-  if(nx.v===null||nx.v===undefined) an=0;
-  an=Math.min(an,cell.len-1);
+  let nx, ni, nh;
+  if(ci<cells.length-1){ nx=cells[ci+1]; ni=i; nh=nx.h; } else { ni=(i+1)%state.bars; nx=cellsOf(ni)[0]; nh=0; }
+  const nxKey=ni+':'+nh, has=c=>c.v!==null&&c.v!==undefined;
+  // タイミング：＋＝食い（前に出す）、－＝後ろ倒し（遅らせる）。単位は16分音符
+  const an  = has(nx)   ? Math.min(Math.max(0, shiftOf(ni,nh)), cell.len-1) : 0;        // 次のコードがこのマスに食い込む長さ
+  const lag = has(cell) ? Math.min(Math.max(0,-shiftOf(i,cell.h)), cell.len-1) : 0;     // このコードの入りを遅らせる長さ
+  const nLag= has(nx)   ? Math.min(Math.max(0,-shiftOf(ni,nh)), nx.len-1) : 0;          // 次のコードが遅れる分、このコードを伸ばす
   if(an>0 && rel>=cell.len-an){
     // 次のコードを「食って」先に鳴らす（このコードの残りは鳴らさない）
     if(rel===cell.len-an){
@@ -1588,17 +1596,20 @@ function scheduleStep(g,t){
       playEvents(pat.at[0]||[], barTones, ct, sd, pat);
       if(state.bass){ chokeBass(ct); playBass(bassOf(b),0,ct,barTones,sd,an+nx.len); }
     }
-  } else if(cell.v!==null&&cell.v!==undefined){
+  } else if(has(cell) && lag>0 && rel<lag){
+    // 後ろ倒し：遅らせている間は、前のコードのままパターンを続ける
+    if(barTones){ const evs=pat.at[rel]; if(evs && rel>0) playEvents(evs, barTones, ct, sd, pat); }
+  } else if(has(cell)){
     // コードが変わった所から、パターンを頭から弾く（短いコードはパターンの前の部分だけ）
-    const key=i+':'+cell.h, pushed = rel===0 && pushedKey===key;
-    if((rel===0&&!pushed)||!barTones){ barTones=chordNotes(cell.v,lastR); lastR=barTones.R; }
+    const key=i+':'+cell.h, head=rel===lag, pushed = rel===0 && pushedKey===key;
+    if((head&&!pushed)||!barTones){ barTones=chordNotes(cell.v,lastR); lastR=barTones.R; }
     if(rel===0) pushedKey=null;
-    const evs = pushed ? null : pat.at[rel];
-    if(rel===0 && !pushed) choke(ct);
+    const evs = pushed ? null : head ? pat.at[0] : pat.at[rel];
+    if(head && !pushed) choke(ct);
     else if(evs && !pat.legato && evs.some(e=>e[1].length>1)) choke(ct);
     if(evs) playEvents(evs, barTones, ct, sd, pat);
-    if(state.bass && rel===0 && !pushed) chokeBass(tt);
-    if(state.bass && !pushed) playBass(bassOf(b),rel,tt,barTones,sd,cell.len-rel,nx.v);
+    if(state.bass && head && !pushed) chokeBass(tt);
+    if(state.bass && !pushed && (head || lag===0 || rel>=lag+2)) playBass(bassOf(b),head?0:rel,tt,barTones,sd,cell.len-rel+nLag,nx.v);   // 遅らせた直後はベースを詰め込まない
   }
   if(!document.hidden) visQ.push({t,b:i,s:off,L,beat:g%4===0,abs:playedSteps,g});
 }
