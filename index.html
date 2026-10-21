@@ -1025,8 +1025,8 @@ const BASSES={
 const BASS_ORDER=Object.keys(BASSES);
 const bassList=dr=>(state.pro&&state.bassPat&&state.bassPat!=='auto'&&BASSES[state.bassPat])?BASSES[state.bassPat].v:dr.bass;
 for(const k in ARPS){ const m={}; ARPS[k].ev.forEach(e=>{ (m[e[0]]=m[e[0]]||[]).push(e); }); ARPS[k].at=m; }
-const INSTS={spiano:'シンセピアノ',sepiano:'シンセエレピ',sorgan:'シンセオルガン',sguitar:'シンセギター',synth:'シンセ',
-  piano:'ピアノ',epiano:'エレピ',nylon:'ガットギター',steel:'アコギ',eguitar:'エレキギター',dist:'ひずみギター',organ:'オルガン',strings:'ストリングス',pad:'シンセパッド'};
+const INSTS={spiano:'シンセピアノ',synth:'シンセ',
+  piano:'ピアノ',nylon:'ガットギター',eguitar:'エレキギター',dist:'ひずみギター',organ:'オルガン',pad:'シンセパッド'};
 const SYNTH_INST={spiano:'piano',sepiano:'epiano',sorgan:'organ',sguitar:'nylon',synth:'synth'};
 const instShort=()=>INSTS[state.inst];
 const isSynthInst=()=>state.inst in SYNTH_INST;
@@ -1044,7 +1044,7 @@ function applyMix(){ if(!ctx||!drumBus) return;
 }
 const BASS_SNDS={bass:'エレキベース',ubass:'ウッドベース',sbass:'シンセベース'};
 const BASS_FX={bass:{gain:1,cut:2200},ubass:{gain:1.15,cut:1800},sbass:{gain:.75,cut:3200,loop:true}};
-const KITS={synth:'シンセドラム',std:'スタンダード',room:'ルーム',power:'パワー',brush:'ブラシ',elec:'エレクトロ',tr808:'TR-808'};
+const KITS={synth:'シンセドラム',std:'スタンダード',room:'ルーム',power:'パワー',brush:'ブラシ',tr808:'TR-808'};
 // 有名なコード進行の名前。数字＝ダイアトニック（0=Ⅰ 1=Ⅱm 2=Ⅲm 3=Ⅳ 4=Ⅴ 5=Ⅵm 6=Ⅶm-5）、文字＝それ以外のコード（CHROM）
 const CHROM={III7:{o:4,q:'maj',x:'7'}, bVII:{o:10,q:'maj',x:''}, bVI:{o:8,q:'maj',x:''}, IVm:{o:5,q:'m',x:''}, Vm:{o:7,q:'m',x:''}, II7:{o:2,q:'maj',x:'7'}, VI7:{o:9,q:'maj',x:'7'}};
 const PRESETS=[
