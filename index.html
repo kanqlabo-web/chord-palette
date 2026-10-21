@@ -34,7 +34,7 @@ body{color:var(--ink);font-family:var(--body);-webkit-tap-highlight-color:transp
   padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:6px 10px}
 button{font:inherit;color:inherit}
 .app{height:100%;max-width:520px;margin:0 auto;display:grid;gap:10px;
-  grid-template-rows:auto minmax(0,1fr) auto auto auto auto;grid-template-columns:minmax(0,1fr)}
+  grid-template-rows:auto minmax(0,1fr);grid-auto-rows:auto;grid-template-columns:minmax(0,1fr)}
 .app>*{min-width:0}
 
 /* top bar */
@@ -44,7 +44,8 @@ button{font:inherit;color:inherit}
 h1{font-family:var(--display);font-weight:900;font-size:1.05rem;margin:0;white-space:nowrap}
 .badges{margin-left:auto;display:flex;gap:6px;min-width:0;overflow:hidden}
 .badges .badge{min-width:0;overflow:hidden;text-overflow:ellipsis}
-h1{min-width:0;overflow:hidden;text-overflow:ellipsis}
+h1{flex:none}
+#keyBadge{flex:none}
 .badge{font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 9px;white-space:nowrap;background:var(--surface)}
 
 /* palette */
@@ -123,13 +124,13 @@ body.pro .proedit{display:flex;gap:8px;align-items:center}
 }
 /* PC など横長の画面：左にパレット、右にマス・パターン・再生 */
 @media (min-width:820px) and (min-aspect-ratio:5/4){
-  .app{max-width:1060px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto auto minmax(0,1fr);column-gap:32px}
+  .app{max-width:1060px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto auto auto auto minmax(0,1fr);column-gap:32px}
   .app>.top{grid-column:1/-1}
   .app>.palette{grid-column:1;grid-row:2/-1;grid-template-rows:repeat(3,minmax(0,min(24vh,150px,9.5vw)))}
   .app>.palette .tile{height:min(100%,24vh,150px,9.5vw)}
   .app>.slotwrap{grid-column:2;grid-row:2;align-self:end}
-  .app>#arpLane{grid-column:2;grid-row:3}.app>#drumLane{grid-column:2;grid-row:4}
-  .app>.transport{grid-column:2;grid-row:5}
+  .app>#arpLane{grid-column:2;grid-row:3}.app>#drumLane{grid-column:2;grid-row:4}.app>#bassLane{grid-column:2;grid-row:5}
+  .app>.transport{grid-column:2;grid-row:6}
   .slots .slot{height:min(18vh,130px)}
   .transport{margin-top:6px}
 }
@@ -191,6 +192,13 @@ body.pro .protag{display:inline-block}
 .lanehead b{color:var(--ink);font-weight:700}
 .lanehead svg{margin-left:-2px}
 .lane canvas{height:28px;flex:none;width:100%;display:block;border-radius:8px}
+/* 通常モード：コードとドラムを「伴奏スタイル」としてひとまとまりに見せる。PROモード：ドラム・コード・ベースを別々に */
+body:not(.pro) #drumLane .lanehead{display:none}
+body:not(.pro) #drumLane{margin-top:-6px}
+#bassLane{display:none}
+body.pro #bassLane{display:flex}
+.lane canvas#bassCv{height:22px}
+.opt canvas.half{height:17px!important}
 
 /* page strip (8/16 bars) */
 .pages{display:flex;gap:6px;height:30px;flex:none}
@@ -371,6 +379,11 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .exnote p::before{content:"";position:absolute;left:2px;top:.6em;width:6px;height:6px;border-radius:50%;background:var(--fn,var(--ink))}
 .listen{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:999px;padding:8px 16px;font:inherit;font-weight:700;cursor:pointer}
 .listen.on{background:var(--ink);color:var(--bg)}
+.moodpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.moodpick button{border:1.5px solid var(--line);background:var(--surface);border-radius:16px;padding:14px 10px;display:flex;flex-direction:column;gap:4px;align-items:center;cursor:pointer;font:inherit;color:var(--ink)}
+.moodpick button:active{transform:scale(.97)}
+.moodpick b{font-family:var(--display);font-size:1rem}
+.moodpick small{font-size:.72rem;color:var(--muted)}
 .ic{width:12px;height:12px;flex:none;display:inline-block;vertical-align:-1px}
 /* カデンツガイド（メイン画面）：マスの上に役割の流れを括弧で表示 */
 .gstrip{position:relative;height:20px;flex:none;display:none}
@@ -419,12 +432,16 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   </div>
 
   <button class="lane" id="arpLane" aria-label="コードパターンを選ぶ">
-    <span class="lanehead">コード <b id="arpName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+    <span class="lanehead"><span id="arpLabel">コード</span> <b id="arpName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
     <canvas id="arpCv"></canvas>
   </button>
   <button class="lane" id="drumLane" aria-label="ドラムパターンを選ぶ">
     <span class="lanehead">ドラム <b id="drumName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
     <canvas id="drumCv"></canvas>
+  </button>
+  <button class="lane" id="bassLane" aria-label="ベースパターンを選ぶ">
+    <span class="lanehead">ベース <b id="bassName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+    <canvas id="bassCv"></canvas>
   </button>
 
   <div class="transport">
@@ -843,6 +860,42 @@ function renderPatEditor(){
   }
 }
 const ARP_ORDER=['piano4','popanti','ballad','whole','sync','sync16','shuffle','shuff2','stacc','rock8','eighth','offbeat','garp','strum','bossa','alberti'];
+// 通常モードの「伴奏スタイル」：ドラムとコードパターンの組み合わせ
+const STYLES=[
+  {name:'ポップス（定番）', drum:'pop', arp:'piano4'},
+  {name:'ポップス（ノリノリ）', drum:'dpop', arp:'popanti'},
+  {name:'ロック', drum:'eight', arp:'rock8'},
+  {name:'ギターポップ', drum:'rride', arp:'strum'},
+  {name:'バラード', drum:'ballad', arp:'ballad'},
+  {name:'しっとり', drum:'xstick', arp:'garp'},
+  {name:'ゆったり', drum:'medium', arp:'whole'},
+  {name:'どっしり', drum:'half', arp:'stacc'},
+  {name:'スキップ風', drum:'shuffle', arp:'shuffle'},
+  {name:'ファンキー', drum:'sixteen', arp:'offbeat'},
+  {name:'ダンス', drum:'dance', arp:'eighth'},
+  {name:'ボサノバ', drum:'bossa', arp:'bossa'},
+  {name:'レゲエ', drum:'reggae', arp:'offbeat'},
+  {name:'クラシック風', drum:'none', arp:'alberti'},
+];
+const styleNow=()=>STYLES.find(x=>x.drum===state.drum&&x.arp===state.arp);
+// PROモードのベースパターン（0=ルート 12=オクターブ '3'/'5'/'6'=3度・5度・6度 'ap'=次のコードへつなぐ音）
+const ev8=(f)=>[0,2,4,6,8,10,12,14].map((st,k)=>f(st,k));
+const BASSES={
+  auto:  {name:'ドラムに合わせる', v:null},
+  whole: {name:'ルート白玉', v:[[0,0,16,.9]]},
+  half:  {name:'ルート2分', v:[[0,0,8,.95],[8,0,8,.8]]},
+  q:     {name:'ルート4分', v:[[0,0,3.6,1],[4,0,3.6,.8],[8,0,3.6,.9],[12,0,3.6,.8]]},
+  e8:    {name:'ルート8分', v:ev8((st,k)=>[st,0,1.8,k%2?.7:(k%4?.85:1)])},
+  r5:    {name:'ルート＆5度', v:[[0,0,6,1],[6,0,2,.7],[8,'5',6,.85],[14,'ap',2,.7]]},
+  oct:   {name:'オクターブ8分', v:ev8((st,k)=>[st,k%2?12:0,1.6,k%2?.75:.95])},
+  walk:  {name:'ウォーキング', v:[[0,0,3.8,1],[4,'3',3.8,.8],[8,'5',3.8,.85],[12,'ap',3.8,.8]]},
+  boogie:{name:'ブギ（1-3-5-6）', v:[[0,0,2,1],[2,'3',2,.7],[4,'5',2,.85],[6,'6',2,.7],[8,12,2,.9],[10,'6',2,.7],[12,'5',2,.85],[14,'3',2,.7]]},
+  sync:  {name:'シンコペ（3-3-2）', v:[[0,0,3,1],[3,0,3,.8],[6,0,2,.75],[8,0,3,.9],[11,0,3,.75],[14,'ap',2,.75]]},
+  push:  {name:'8分食い', v:[[0,0,6,1],[6,0,2,.75],[8,0,2,.85],[10,0,4,.8],[14,'ap',2,.8]]},
+  funk:  {name:'16分ファンク', v:[[0,0,2,1],[3,12,1,.7],[6,0,1,.7],[7,0,1,.5],[8,0,2,.9],[10,12,1,.7],[11,'5',1,.6],[13,0,1,.7],[14,'ap',2,.8]]},
+};
+const BASS_ORDER=Object.keys(BASSES);
+const bassList=dr=>(state.pro&&state.bassPat&&state.bassPat!=='auto'&&BASSES[state.bassPat])?BASSES[state.bassPat].v:dr.bass;
 for(const k in ARPS){ const m={}; ARPS[k].ev.forEach(e=>{ (m[e[0]]=m[e[0]]||[]).push(e); }); ARPS[k].at=m; }
 const INSTS={spiano:'シンセピアノ',sepiano:'シンセエレピ',sorgan:'シンセオルガン',sguitar:'シンセギター',synth:'シンセ',
   piano:'ピアノ',epiano:'エレピ',nylon:'ガットギター',steel:'アコギ',organ:'オルガン',strings:'ストリングス'};
@@ -907,7 +960,7 @@ function progLabel(){
 }
 
 // ---------- state ----------
-let state={slots:[3,4,2,5,...Array(12).fill(null)], bars:4, key:'C', label:'num', inst:'spiano', kit:'synth', drum:'pop', arp:'piano4', fill:false, bass:true, pro:false, guide:false, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:7};
+let state={slots:[3,4,2,5,...Array(12).fill(null)], bars:4, key:'C', label:'num', inst:'spiano', kit:'synth', drum:'pop', arp:'piano4', bassPat:'auto', fill:false, bass:true, pro:false, guide:false, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:7};
 let FIRST_RUN=true;
 try{ const s=JSON.parse(localStorage.getItem('chord-palette-v3')); if(s) FIRST_RUN=false; if(s&&Array.isArray(s.slots)&&s.slots.length===16) state={...state,...s}; if(!s.ver||s.ver<6){ state.bass=true; } if(!s.ver||s.ver<7){ state.drum='pop'; state.fill=false; state.ver=7; } if(!s.ver||s.ver<4){ state.inst='spiano'; state.kit='synth'; } if(!INSTS[state.inst]) state.inst='spiano'; if(!KITS[state.kit]) state.kit='std'; }catch(e){}
 if(!Array.isArray(state.segs)) state.segs=Array.from({length:16},(_,i)=>state.split&&state.split[i]?[state.split[i]]:[]);
@@ -915,7 +968,7 @@ delete state.split; if(![1,2,4].includes(state.len)) state.len=4;
 if(state.myDrum){ state.myDrums=[{name:'マイパターン1',...state.myDrum}]; if(state.drum==='my') state.drum='my0'; } delete state.myDrum;
 if(state.myArp){ state.myArps=[{name:'マイパターン1',...state.myArp}]; if(state.arp==='my') state.arp='my0'; } delete state.myArp;
 rebuildMy();
-if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4';
+if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4'; if(!BASSES[state.bassPat]) state.bassPat='auto';
 const save=()=>{ try{ localStorage.setItem('chord-palette-v3', JSON.stringify(state)); }catch(e){} };
 let selected=null, page=0;
 
@@ -1108,7 +1161,9 @@ function renderAll(){
   $('keyBadge').textContent='Key '+state.key;
   $('instBadge').textContent=instShort()+(loadingNow()?' 読込中…':'');
   $('drumName').textContent=patName(DRUMS[state.drum])+' ・ '+KITS[state.kit];
-  $('arpName').textContent=patName(ARPS[state.arp])+' ・ '+instShort();
+  if(state.pro){ $('arpLabel').textContent='コード'; $('arpName').textContent=patName(ARPS[state.arp])+' ・ '+instShort(); $('arpLane').setAttribute('aria-label','コードパターンを選ぶ'); }
+  else { const st=styleNow(); $('arpLabel').textContent='伴奏'; $('arpName').textContent=(st?st.name:`${patName(DRUMS[state.drum])}＋${patName(ARPS[state.arp])}`)+' ・ '+instShort(); $('arpLane').setAttribute('aria-label','伴奏スタイルを選ぶ'); }
+  $('bassName').textContent=state.bass?BASSES[state.bassPat||'auto'].name:'なし';
   buildMenu();
 }
 
@@ -1238,16 +1293,32 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeAll(); });
 // ---------- bottom sheet ----------
 let sheetKind=null;
 function openSheet(kind){
-  sheetKind=kind;
-  $('sheetTitle').textContent = kind==='drum' ? 'ドラム' : 'コードパターン';
+  if(!state.pro && (kind==='drum'||kind==='arp')) kind='style';   // 通常モードはドラムとコードをまとめて選ぶ
+  if(kind==='bass') return openBassSheet();
+  sheetKind=kind; document.querySelector('#sheet .proedit').style.display='';
+  $('sheetTitle').textContent = kind==='drum' ? 'ドラム' : kind==='style' ? '伴奏スタイル' : 'コードパターン';
   $('soundTitle').textContent = kind==='drum' ? 'ドラムの音' : '音色';
   const soundRow=()=>chips($('soundChips'), Object.entries(kind==='drum'?KITS:INSTS), kind==='drum'?state.kit:state.inst,
     v=>{ (kind==='drum'?pickKit:pickInst)(v); soundRow(); });
-  soundRow();
-  $('fillSec').hidden = kind!=='drum';
+  soundRow(); $('soundChips').parentElement.hidden=false;
+  $('fillSec').hidden = kind!=='drum' && kind!=='style';
+  $('fillChips').previousElementSibling.hidden = $('fillChips').hidden = kind==='style';
+  if(kind==='style'){ const opts=$('opts'); opts.innerHTML=''; const cur=styleNow();
+    STYLES.forEach((st,k)=>{ const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', st===cur);
+      b.innerHTML=`<canvas class="half"></canvas><canvas class="half"></canvas><span>${st.name}</span>`;
+      b.onclick=()=>{ state.drum=st.drum; state.arp=st.arp; renderAll(); closeAll(); };
+      opts.appendChild(b); });
+    const bassRow=()=>chips($('bassChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); renderAll(); bassRow(); });
+    bassRow();
+    sheet.classList.add('on'); scrim.classList.add('on');
+    requestAnimationFrame(()=>{ const col=colors();
+      [...opts.children].forEach((b,i)=>{ const [c1,c2]=b.querySelectorAll('canvas'), st=STYLES[i];
+        const g1=fit(c1); drawArpBar(g1,0,0,c1.width,c1.height,ARPS[st.arp],col.t,col);
+        const g2=fit(c2); drawDrumBar(g2,0,0,c2.width,c2.height,DRUMS[st.drum],col); }); });
+    return; }
   const fillRow=()=>chips($('fillChips'), [[true,'入れる'],[false,'入れない']], state.fill, v=>{ state.fill=v; save(); dirty=true; fillRow(); });
   fillRow();
-  const bassRow=()=>chips($('bassChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); bassRow(); });
+  const bassRow=()=>chips($('bassChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); renderAll(); bassRow(); });
   bassRow();
   $('patHint').textContent = /^my\d+$/.test(state[kind]) ? '選んでいるマイパターンを編集します' : '選んでいるパターンをコピーして編集します';
   const opts=$('opts'); opts.innerHTML='';
@@ -1279,6 +1350,24 @@ $('patDel').onclick=()=>{ const b=$('patDel');
   const list=listOf(patKind); list.splice(+state[patKind].slice(2),1); state[patKind]= patKind==='drum'?'pop':'piano4'; rebuildMy(); save(); renderAll(); closeAll(); };
 $('patClear').onclick=()=>{ if(patKind==='drum') curMy().v={}; else KEY_ROWS.forEach(([r])=>curMy().cells[r]=Array(16).fill(0)); rebuildMy(); save(); renderPatEditor(); dirty=true; };
 
+function openBassSheet(){
+  sheetKind='bass'; document.querySelector('#sheet .proedit').style.display='none';
+  $('sheetTitle').textContent='ベース';
+  $('soundChips').parentElement.hidden=true; $('fillSec').hidden=false;
+  $('fillChips').previousElementSibling.hidden = $('fillChips').hidden = true;
+  const bassRow=()=>chips($('bassChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); renderAll(); bassRow(); });
+  bassRow();
+  const opts=$('opts'); opts.innerHTML='';
+  BASS_ORDER.forEach(k=>{ const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', (state.bassPat||'auto')===k);
+    b.innerHTML=`<canvas></canvas><span>${BASSES[k].name}</span>`;
+    b.onclick=()=>{ state.bassPat=k; state.bass=true; renderAll(); closeAll(); dirty=true; };
+    opts.appendChild(b); });
+  sheet.classList.add('on'); scrim.classList.add('on');
+  requestAnimationFrame(()=>{ const col=colors();
+    [...opts.children].forEach((b,i)=>{ const cv=b.querySelector('canvas'), g=fit(cv), k=BASS_ORDER[i];
+      drawBassBar(g,0,0,cv.width,cv.height,BASSES[k].v||DRUMS[state.drum].bass||[],col.d,col); }); });
+}
+$('bassLane').onclick=()=>openSheet('bass');
 $('drumLane').onclick=()=>openSheet('drum');
 $('arpLane').onclick=()=>openSheet('arp');
 
@@ -1579,7 +1668,7 @@ function scheduleStep(g,t){
   for(const n in V){ const v=V[n][s]; if(v) drum(+n,tt,v); }
   if(state.fill && dr.F && s===0 && b%4===0 && b>0) drum(49,tt,.6);
   const pat=ARPS[state.arp], ct=t+((dr.swing||pat.swing)&&s%4===2?sd*.34:0);   // シャッフル系は裏拍を跳ねさせる
-  const bassOf=bb=>dr.bass;
+  const bassOf=bb=>bassList(dr);
   // いま鳴らすコード（マス i の中の何番目のコードか）
   const i=Math.floor(g/L), off=g%L, cells=cellsOf(i), ci=cells.findIndex(c=>off>=c.off&&off<c.off+c.len), cell=cells[ci], rel=off-cell.off;
   let nx, ni, nh;
@@ -1700,6 +1789,15 @@ function drawArpBar(g,x,y,w,h,a,c,col,n=16){
     rr(g,x+st*sw+r*.5,y+(8-ROW[ix])*rh+rh*.12,Math.max(l*sw-1*r,1.5*r),rh*.76,1.2*r); g.fill(); }); });
   g.globalAlpha=1;
 }
+// ベースの帯：横＝タイミング、縦＝音の高さ（下がルート、上がオクターブ）
+function drawBassBar(g,x,y,w,h,list,c,col,n=16){
+  const sw=w/n, r=devicePixelRatio||1, Y={0:0,'ap':.45,'3':.33,'5':.55,'6':.7,12:1,7:.55};
+  g.fillStyle=col.line; for(let i=4;i<n;i+=4) g.fillRect(x+i*sw,y+2*r,1*r,h-4*r);
+  g.fillStyle=c; const bh=Math.max(3*r,h*.2);
+  (list||[]).forEach(([st,iv,len,vel])=>{ if(st>=n) return; const l=Math.min(len,n-st), yy=y+(h-bh)*(1-(Y[iv]??.5));
+    g.globalAlpha=.35+.65*vel; rr(g,x+st*sw+r*.5,yy,Math.max(l*sw-1*r,1.5*r),bh,1.2*r); g.fill(); });
+  g.globalAlpha=1;
+}
 let dirty=true;
 function drawLane(cv,kind){
   const g=fit(cv), W=cv.width, H=cv.height, r=devicePixelRatio||1, col=colors(), gap=8*r, cw=(W-3*gap)/4;
@@ -1711,7 +1809,12 @@ function drawLane(cv,kind){
     const px=x+4*r, pw=cw-8*r, py=4*r, ph=H-8*r;
     const L=slotSteps(), start=b*L;
     // 帯は実際に鳴る小節に合わせる（再生中はいまのくり返しの位置、止まっている時は1回目）
-    if(kind==='drum'){ const dr=DRUMS[state.drum], base=(playing&&cur&&cur.abs!=null)?cur.abs-cur.g:0, db=Math.floor((base+start)/16);
+    if(kind==='bass'){
+      const cells=b<state.bars?cellsOf(b):[];
+      if(state.bass) cells.forEach(c=>{ if(c.v===null||c.v===undefined) return; const cx=px+c.off/L*pw, cwid=c.len/L*pw;
+        drawBassBar(g,cx,py,cwid,ph,(bassList(DRUMS[state.drum])||[]).filter(e=>e[0]<c.len),(r=>r==='X'?col.muted:col[r.toLowerCase()])(roleAt(b,c.h,c.v)),col,c.len);
+        if(c.off>0){ g.fillStyle=col.surface; g.fillRect(cx-r,0,2*r,H); } });
+    } else if(kind==='drum'){ const dr=DRUMS[state.drum], base=(playing&&cur&&cur.abs!=null)?cur.abs-cur.g:0, db=Math.floor((base+start)/16);
       drawDrumBar(g,px,py,pw,ph,(db%2===1&&dr.VB)?{...dr,V:dr.VB}:dr,col,b<state.bars?fillModeOf(db,dr):null,start%16,L); }
     else {
       const cells=b<state.bars?cellsOf(b):[{off:0,len:L,v:null}];
@@ -1735,7 +1838,7 @@ function frame(){
       if(TUT.on) document.querySelectorAll('.tut [data-ti]').forEach(e=>e.classList.toggle('now', +e.dataset.ti===n.b)); }
     dirty=true;
   }
-  if(dirty){ drawLane($('drumCv'),'drum'); drawLane($('arpCv'),'arp'); dirty=false; }
+  if(dirty){ drawLane($('drumCv'),'drum'); drawLane($('arpCv'),'arp'); if(state.pro) drawLane($('bassCv'),'bass'); dirty=false; }
   requestAnimationFrame(frame);
 }
 window.addEventListener('resize',()=>dirty=true);
@@ -1865,11 +1968,28 @@ const moodSlide=(no,title,h,key,notes)=>({html:()=>`<div class="eyebrow a">雰�
      ${exampleHTML(EX[key])}
      <div class="exnote">${notes.map((t,k)=>`<p class="a" style="--dl:${1+k*.3};--fn:var(--${['t','s','d'][k%3]})">${t}</p>`).join('')}</div>
      ${listenBtn(key)}`});
+// 実践編のお題：ヒントと、できた進行がその雰囲気になっているかの判定
+const BRIGHT=new Set([0,3,4]), DARK=new Set([1,2,5,6]);
+const pdist=(a,b)=>{ const d=Math.abs(a-b)%7; return Math.min(d,7-d); };   // 数字どうしの距離（1と5は3、1と2mは1）
+const PRACTICE={
+  bright:{name:'明るい・元気', icon:'☀', sub:'晴れた日の朝みたいに', drum:'pop', arp:'piano4', bpm:120,
+    hint:'明るいコード（1・4・5）を多めに使って、1 から始めてみましょう。',
+    check:q=>q.filter(d=>BRIGHT.has(d)).length>=3, ok:'明るいコードが多くて、元気でまっすぐな響きになっています。', ng:'暗いコードが多めです。1・4・5 を増やしてみましょう。'},
+  sad:{name:'切ない', icon:'☾', sub:'夕暮れの帰り道みたいに', drum:'medium', arp:'ballad', bpm:84,
+    hint:'暗いコード（6m・3m・2m）を混ぜて、6m から始めるか、6m で終わってみましょう。',
+    check:q=>q[0]===5||q[q.length-1]===5||q.filter(d=>DARK.has(d)).length>=2, ok:'暗いコードと始まり・終わりの選び方で、切ない雰囲気が出ています。', ng:'6m から始めるか 6m で終わるか、暗いコードをもう1つ混ぜてみましょう。'},
+  strong:{name:'力強い', icon:'⚡', sub:'サビで盛り上がるように', drum:'eight', arp:'rock8', bpm:128,
+    hint:'数字が離れたコードへ跳んでみましょう（1→4、6m→2m、5→1 など）。',
+    check:q=>q.filter((d,k)=>pdist(d,q[(k+1)%q.length])===3).length>=2, ok:'大きく跳ぶ動きが多くて、力強く進んでいます。', ng:'となり同士の動きが多めです。1→4、6m→2m のように跳んでみましょう。'},
+  calm:{name:'穏やか', icon:'☁', sub:'ゆっくり流れる雲みたいに', drum:'xstick', arp:'garp', bpm:76,
+    hint:'となりの数字へ進んでみましょう（1→2m、4→3m、6m→5 など）。',
+    check:q=>q.filter((d,k)=>pdist(d,q[(k+1)%q.length])===1).length>=2, ok:'となりへ進む動きが多くて、なめらかで穏やかです。', ng:'跳ぶ動きが多めです。1→2m、4→3m のように、となりへ進んでみましょう。'},
+};
 const MOOD=[
   {html:()=>`<div class="eyebrow a">雰囲気のつくり方</div>
      <div class="chips7">${[0,5,3,4].map((d,k)=>`<span class="floaty" style="animation-delay:${k*.4}s;display:inline-block">${tc(d,['bright','dark','bright','bright'][k],.2+k*.15)}</span>`).join('')}</div>
      <h2 class="a" style="--dl:.8">曲の雰囲気は<br>コード選びで決まります</h2>
-     <p class="a" style="--dl:1.2">明るい、切ない、おしゃれ…。<br>ねらった雰囲気に近づく4つのコツと、<br>そのまま使えるお手本を紹介します。</p>`},
+     <p class="a" style="--dl:1.2">明るい、切ない、おしゃれ…。<br>ねらった雰囲気に近づく4つのコツを覚えて、<br>最後は実際に作ってみましょう。</p>`},
   {html:()=>`<div class="eyebrow a">コツ①　明るいコードと暗いコードの割合</div>
      <h2 class="a" style="--dl:.1">明るいコードが多いと元気に<br>暗いコードが多いと切なく</h2>
      <div class="groups">
@@ -1898,12 +2018,6 @@ const MOOD=[
      ${exampleHTML(EX.calm)}
      <p class="a" style="--dl:1">パターンとBPMを変えるだけで、<br>しっとりにも、ノリノリにもなります。</p>
      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${listenBtn('calm').replace('聴いてみる','しっとり版')}${listenBtn('drive').replace('聴いてみる','ノリノリ版')}</div>`},
-  moodSlide('①','明るい・元気','明るいコードで<br>まっすぐ進む','bright',['明るいコード（1・4・5）だけで作ると、迷いのない元気な響きに。','テンポは速め（BPM 110〜130）がおすすめです。']),
-  moodSlide('②','切ない','暗いコードから<br>始めてみる','sad',['6m で始めると、出だしから切ない雰囲気に（小室進行）。','最後は 1 で明るく着地するので、切ないのに前向き。']),
-  moodSlide('③','エモい・泣ける','4 から始めて<br>6m に着地','emo',['4 → 5 と上がって盛り上げてから、暗い 6m に落とす（王道進行）。','J-POP のサビで定番の、胸が熱くなる流れです。']),
-  moodSlide('④','おしゃれ','コードに「7」を<br>足してみる','chic',['4つのコードすべてに 7 や M7 を足すと、ぐっと大人っぽい響きに。','PROモードの「コードを編集」で、テンションの 7・M7 を足せます。']),
-  moodSlide('⑤','壮大・ドラマチック','長い進行を<br>ゆったり鳴らす','epic',['8小節のカノン進行を、ゆっくりのテンポで。','コードを伸ばす（のばす）パターンにすると、広がりが出ます。']),
-  moodSlide('⑥','かっこいい・ロック','明るいのに<br>ちょっとワル','rock',['1 → ♭7 → 4 → 1。キーの外の ♭7 を混ぜると、ロックっぽい骨太な響きに。','♭7 は PROモードの「コードを編集」で、ルートを B♭ にすると作れます。']),
   {html:()=>`<div class="eyebrow a">まとめ</div>
      <h2 class="a" style="--dl:.1">雰囲気づくりの4つのコツ</h2>
      <div class="roles">
@@ -1912,7 +2026,13 @@ const MOOD=[
        <section class="D a" style="--dl:1.1"><span class="L">③</span><div><h3>コードどうしの距離</h3><p>跳ぶと力強く、となりへ進むと穏やか。</p></div></section>
        <section class="T a" style="--dl:1.4"><span class="L">④</span><div><h3>リズムとテンポ</h3><p>パターンとBPMで印象が変わる。</p></div></section>
      </div>
-     <p class="a" style="--dl:1.9">お手本をもとに、1つずつコードを入れ替えて<br>自分だけの雰囲気を探してみましょう！</p>`, last:true, finish:()=>endTutorial(true)},
+     <p class="a" style="--dl:1.9">では、このコツを使って<br>実際に作ってみましょう！</p>`},
+  {html:()=>`<div class="eyebrow a">実践編</div>
+     <h2 class="a" style="--dl:.1">どんな雰囲気の進行を<br>作ってみますか？</h2>
+     <div class="moodpick">${Object.entries(PRACTICE).map(([k,m],j)=>`<button class="a" style="--dl:${.5+j*.15}" data-mood="${k}"><b>${m.name}</b><small>${m.sub}</small></button>`).join('')}</div>
+     <p class="sub a" style="--dl:1.3">選ぶと、メイン画面で作り始めます</p>`,
+   enter:()=>document.querySelectorAll('.moodpick button').forEach(b=>b.onclick=()=>{ TUT.mood=b.dataset.mood; TUT.moodInit=false; showSlide(TUT.i+1); })},
+  {coach:'mood'},
 ];
 let DECK=SLIDES;
 function tutDots(){ $('tutDots').innerHTML=DECK.map((_,k)=>`<i class="${k===TUT.i?'on':''}"></i>`).join(''); }
@@ -1984,6 +2104,18 @@ function coach(target, text, btns, keepLite){
 function unionRect(a,b){ const r1=a.getBoundingClientRect(), r2=b.getBoundingClientRect(); const l=Math.min(r1.left,r2.left), t=Math.min(r1.top,r2.top), rr=Math.max(r1.right,r2.right), bt=Math.max(r1.bottom,r2.bottom); return {left:l,top:t,right:rr,bottom:bt,width:rr-l,height:bt-t}; }
 const wideLayout=()=>matchMedia('(min-width:820px) and (min-aspect-ratio:5/4)').matches;
 const nextBtn=()=>['つぎへ',()=>showSlide(TUT.i+1)], backBtn=()=>['もどる',()=>showSlide(TUT.i-1),true];
+function checkMood(){
+  const m=PRACTICE[TUT.mood||'sad'];
+  coach($('play'), '♪ 再生中……', [backBtn()]);
+  TUT.onLoopEnd=()=>{ const q=[0,1,2,3].map(k=>tokOf(state.slots[k])), good=q.every(t=>typeof t==='number') && m.check(q);
+    coach(slotsEl, good ? `<b>いい感じです！</b><br>${m.ok}` : `<b>おしいです！</b><br>${m.ng}`,
+      [['作り直す',()=>runCoach('mood'),true],['ほかのお題',()=>showSlide(TUT.i-1),true],['おわる',finishMood]]); };
+  play();
+}
+// 実践編を終えるときは、作った進行と伴奏をそのまま残す
+function finishMood(){ const keep={slots:[...state.slots],segs:state.segs,bars:state.bars,drum:state.drum,arp:state.arp,bpm:state.bpm};
+  endTutorial(true); Object.assign(state,keep); state.ant=Array(16).fill(null); page=0;
+  $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save(); }
 function runCoach(kind){
   document.body.classList.add('tutlite');
   if(kind==='place'){
@@ -1997,6 +2129,15 @@ function runCoach(kind){
     TUT.wait=setInterval(()=>{ if(playing){ clearInterval(TUT.wait);
       coach($('play'), '♪ 再生中……', [backBtn()]);
       TUT.onLoopEnd=()=>coach($('play'),'どうですか？<br>いい曲はできましたか？', [backBtn(),nextBtn()]); } },200);
+  } else if(kind==='mood'){
+    // 実践編：お題の雰囲気で4マスを作って、再生して確かめる
+    tutStopAudio(); const m=PRACTICE[TUT.mood||'sad'];
+    if(!TUT.moodInit){ tutLoadEx({degs:[],drum:m.drum,arp:m.arp,bpm:m.bpm}); TUT.moodInit=true; }
+    const seq=()=>[0,1,2,3].map(k=>state.slots[k]), done=()=>seq().every(v=>v!==null&&v!==undefined);
+    const tgt=()=>wideLayout()?[palette,slotsEl]:unionRect(palette,slotsEl);
+    const show=()=>{ if(!done()) coach(tgt(), `お題：<b>「${m.name}」</b>な進行を作ってみましょう。<br><small>ヒント：${m.hint}</small>`, [backBtn(),['やめる',()=>endTutorial(true),true]]);
+      else coach(tgt(), `4つ並びました！<br>再生して、<b>「${m.name}」</b>になっているか確かめましょう。`, [backBtn(),['再生する',()=>{ clearInterval(TUT.wait); checkMood(); }]]); };
+    show(); let was=done(); TUT.wait=setInterval(()=>{ const d=done(); if(d!==was){ was=d; show(); } },300);
   } else if(kind==='weird'){
     tutStopAudio(); tutLoad([6,3,2,1]);
     coach(slotsEl, 'では次は、こんなコードを<br>鳴らしてみます……', [backBtn()]);
