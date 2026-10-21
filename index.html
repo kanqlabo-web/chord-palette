@@ -1678,7 +1678,7 @@ function loadSet(name){
   }
   return SETS[name];
 }
-function neededSets(){ const n=[]; if(state.kit!=='synth') n.push('kit-'+state.kit); if(!isSynthInst()) n.push(state.inst); const b=state.bassSnd||'bass'; if(!isSynthInst()||b!=='bass') n.push(b); return n; }
+function neededSets(){ const n=[]; if(state.kit!=='synth') n.push('kit-'+state.kit); if(!isSynthInst()) n.push(state.inst); const b=state.bassSnd||'bass'; if(b!=='sbass' && (!isSynthInst()||b!=='bass')) n.push(b); return n; }
 function loadingNow(){ return neededSets().some(n=>!LOADED[n]&&!FAILED[n]); }
 function ensureSounds(){ const p=Promise.all(neededSets().map(loadSet)); renderBadge(); return p; }
 function renderBadge(){ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中…':''); }
@@ -1709,6 +1709,7 @@ function keyTone(m,t,dur,v){
 }
 function bassTone(m,t,dur,vel=1){
   const nm=state.bassSnd||'bass', fx=BASS_FX[nm]||BASS_FX.bass;   // シンセ系の音色で「エレキベース」のときは軽いシンセベースを使う
+  if(nm==='sbass'){ const a=analogBass(m+12,t,dur,vel); bassHeld.push(a); return a; }   // 1オクターブ上げてスマホのスピーカーでも聞こえるように
   const g=(!isSynthInst()||nm!=='bass')&&LOADED[nm]&&playZone(LOADED[nm],m,t,dur,.7*vel*fx.gain,.08,fx.cut,fx.loop);
   const gg=g||synthBass(m,t,dur,vel); bassHeld.push(gg); return gg;
 }
@@ -1759,6 +1760,16 @@ function synthTone(m,t,dur,vel){
     osc('sawtooth',f,t,end,g,-8); osc('sawtooth',f,t,end,g,8);
     g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.55,t+.03); g.gain.setValueAtTime(vel*.5,t+dur); g.gain.setTargetAtTime(.0001,t+dur,.15);
   }
+  return g;
+}
+// シンセベース：ノコギリ波＋1オクターブ下の矩形波を、フィルターを開いて閉じる「ブリッ」とした音に
+function analogBass(m,t,dur,vel=1){
+  const g=ctx.createGain(), lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=6; lp.connect(g); g.connect(master);
+  const f=mtof(m), end=t+dur+.4;
+  osc('sawtooth',f,t,end,lp,-6); osc('sawtooth',f,t,end,lp,6);
+  const g2=ctx.createGain(); g2.gain.value=.5; g2.connect(lp); osc('square',f/2,t,end,g2);
+  lp.frequency.setValueAtTime(180,t); lp.frequency.linearRampToValueAtTime(1400+900*vel,t+.012); lp.frequency.setTargetAtTime(420,t+.015,.12);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.2*vel,t+.006); g.gain.setTargetAtTime(.15*vel,t+.02,.25); g.gain.setTargetAtTime(.0001,t+dur,.04);
   return g;
 }
 function synthBass(m,t,dur,vel=1){
