@@ -1112,10 +1112,13 @@ const tokSpec=t=>typeof t==='number'?t:{...CHROM[t],b:null};
 function tokOf(v){
   if(v===null||v===undefined) return null;
   if(isNum(v)) return v;
-  const vg=varGroupOf(v); if(vg!==null) return vg;   // バリエーションは元のコードとして扱う
-  const sp=specOf(v); if(sp.b!==null&&sp.b!==undefined&&sp.b!==sp.o) return `${sp.o}:${sp.q}/${sp.b}`;
-  const d=STEPS.findIndex((o,k)=>o===sp.o && (DEG[k].q===''?'maj':DEG[k].q)===sp.q);
-  return d>=0?d:`${sp.o}:${sp.q}`;
+  const sp=specOf(v), slash=sp.b!==null&&sp.b!==undefined&&sp.b!==sp.o;
+  // 明るい・暗いの和音（7 などのテンションは無視）は、根音と種類で判定。キーの外のコード（E7 など）は別のコードとして扱う
+  if(!slash && (sp.q==='maj'||sp.q==='m')){ const d=STEPS.findIndex((o,k)=>o===sp.o && (DEG[k].q===''?'maj':DEG[k].q)===sp.q); return d>=0?d:`${sp.o}:${sp.q}`; }
+  // sus や分数コードのバリエーション（1add9/3・4/5 など）は、元のコードとして扱う
+  const vg=varGroupOf(v); if(vg!==null) return vg;
+  if(slash) return `${sp.o}:${sp.q}/${sp.b}`;
+  return `${sp.o}:${sp.q}`;
 }
 const tokKey=t=>typeof t==='number'?t:(CHROM[t]?`${CHROM[t].o}:${CHROM[t].q}`:t);
 // 進行の名前：ぴったり＞くり返し＞途中から＞近い（1つ違い。8小節は2つ違いまで）＞前半
