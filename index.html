@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>body{margin:0}[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -29,6 +29,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:var(--bg)}
+html{touch-action:pan-x pan-y}   /* ピンチズーム・ダブルタップズームを止める */
 body{color:var(--ink);font-family:var(--body);-webkit-tap-highlight-color:transparent;
   padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:6px 10px}
 button{font:inherit;color:inherit}
@@ -1934,6 +1935,10 @@ $('tutSkip').onclick=()=>endTutorial(true);
 $('tutOpen').onclick=openTutorial;
 window.addEventListener('resize',()=>{ if(TUT.on && !$('coach').hidden && SLIDES[TUT.i].coach) runCoach(SLIDES[TUT.i].coach); });
 
+// ピンチズームを禁止（iPhone の Safari は viewport の指定を無視するので、ジェスチャー自体を止める）
+['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
+document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});
+document.addEventListener('wheel',e=>{ if(e.ctrlKey) e.preventDefault(); },{passive:false});   // PCのトラックパッドのピンチ
 document.body.classList.toggle('pro',!!state.pro);
 renderAll(); frame(); ensureSounds();
 if(FIRST_RUN) openTutorial();
