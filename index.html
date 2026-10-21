@@ -408,6 +408,19 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .exnote p::before{content:"";position:absolute;left:2px;top:.6em;width:6px;height:6px;border-radius:50%;background:var(--fn,var(--ink))}
 .listen{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:999px;padding:8px 16px;font:inherit;font-weight:700;cursor:pointer}
 .listen.on{background:var(--ink);color:var(--bg)}
+.saverow{display:flex;gap:8px}
+.saverow input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.chip.main{background:var(--ink);color:var(--bg);border-color:var(--ink);flex:none}
+.songlist{display:flex;flex-direction:column;gap:6px}
+.song{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:12px;padding:8px 8px 8px 12px;background:var(--surface)}
+.song div{flex:1;min-width:0}
+.song b{display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song small{display:block;font-size:.7rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--display);font-weight:700}
+.song button{flex:none;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:5px 10px;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer}
+.song button.del{color:var(--muted)}
+.toast{position:fixed;z-index:70;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:999px;padding:10px 18px;font-size:.84rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:tin .3s ease;max-width:calc(100% - 32px);text-align:center}
+.sharebox{display:flex;flex-direction:column;gap:6px}
+.sharebox input{font:inherit;font-size:16px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
 .okcard{width:100%;border-radius:16px;padding:14px 12px;background:color-mix(in srgb,var(--warn) 18%,var(--surface));border:2px solid var(--warn);display:flex;flex-direction:column;gap:6px}
 .okcard b{font-family:var(--display);font-weight:900;font-size:1.15rem;line-height:1.45}
 .okcard small{font-size:.78rem;color:var(--muted);line-height:1.6}
@@ -546,6 +559,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <p>明るい・切ない・力強い…。<br>ねらった雰囲気のコード進行を作るコツを、<br>実例と実践で覚えましょう。</p>
   <div class="popbtns"><button class="alt" id="moodPopLater">あとで</button><button id="moodPopGo">見てみる</button></div>
 </div></div>
+<div class="toast" id="toast" hidden></div>
 <div class="coach" id="coach" hidden><svg class="dim" aria-hidden="true"><defs><mask id="coachMask"><rect width="100%" height="100%" fill="#fff"/><g id="coachHoles"></g></mask></defs><rect width="100%" height="100%" fill="rgba(8,12,20,.55)" mask="url(#coachMask)"/></svg><div class="bubble" id="coachBubble"><p id="coachText"></p><div class="bbtns" id="coachBtns"></div></div></div>
 
 <aside class="drawer" id="drawer" aria-label="設定">
@@ -558,6 +572,10 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>音色</h3><div class="chips" id="instChips"></div></div>
   <div class="sec"><h3>ドラムの音</h3><div class="chips" id="kitChips"></div></div>
   <div class="sec"><h3>ベース</h3><div class="chips" id="bassMenuChips"></div></div>
+  <div class="sec"><h3>保存・共有</h3>
+    <div class="saverow"><input type="text" id="songName" placeholder="名前（例：サビの進行）" maxlength="30" autocomplete="off"><button class="chip main" id="songSave">保存</button></div>
+    <button class="chip" id="shareNow">今の進行の共有リンクを作る</button>
+    <div class="songlist" id="songList"></div></div>
   <div class="sec"><h3>有名な進行を入れてみる</h3><details class="acc" id="presetAcc"><summary><span>進行の一覧</span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><div class="presetfind"><input type="search" id="presetQ" placeholder="名前・雰囲気・数字で探す" autocomplete="off"><div class="tagrow" id="presetTags"></div></div><div class="acclist" id="presetList"></div></details></div>
   <div class="sec"><h3>色の意味</h3>
     <div class="legend">
@@ -2481,7 +2499,63 @@ document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefau
 document.addEventListener('wheel',e=>{ if(e.ctrlKey) e.preventDefault(); },{passive:false});   // PCのトラックパッドのピンチ
 document.body.classList.toggle('pro',!!state.pro);
 renderAll(); frame(); ensureSounds();
-if(FIRST_RUN) openTutorial();
+// ---------- 保存・共有 ----------
+// 共有リンク：進行と音の設定を URL の「#s=…」に詰める（サーバー不要。開いた人のブラウザで復元）
+const SHARE_KEYS=['slots','segs','ant','bars','len','key','bpm','drum','arp','inst','kit','bass','bassSnd','bassPat','fill','pro','mix'];
+function packSong(){ const o={v:1}; SHARE_KEYS.forEach(k=>o[k]=state[k]);
+  // リンクを短くするため、使っている小節だけ・空の情報は省く
+  o.slots=state.slots.slice(0,state.bars);
+  const sg=(state.segs||[]).slice(0,state.bars).map(a=>(a||[]).filter(x=>x&&x.v!=null)); if(sg.some(a=>a.length)) o.segs=sg; else delete o.segs;
+  const an=(state.ant||[]).slice(0,state.bars); if(an.some(x=>x)) o.ant=an; else delete o.ant;
+  if(!state.pro){ delete o.mix; delete o.bassPat; }
+  if(/^my\d+$/.test(state.drum)) o.myDrum=listOf('drum')[+state.drum.slice(2)];
+  if(/^my\d+$/.test(state.arp)) o.myArp=listOf('arp')[+state.arp.slice(2)];
+  return o; }
+function unpackSong(o){ if(!o||!Array.isArray(o.slots)) return false;
+  SHARE_KEYS.forEach(k=>{ if(o[k]!==undefined) state[k]=o[k]; });
+  if(o.myDrum){ listOf('drum').push({...o.myDrum,name:(o.myDrum.name||'共有パターン')}); state.drum='my'+(listOf('drum').length-1); }
+  if(o.myArp){ listOf('arp').push({...o.myArp,name:(o.myArp.name||'共有パターン')}); state.arp='my'+(listOf('arp').length-1); }
+  rebuildMy(); if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4';
+  if(!INSTS[state.inst]) state.inst='spiano'; if(!KITS[state.kit]) state.kit='std';
+  state.slots=Array.from({length:16},(_,i)=>state.slots[i]??null); state.segs=Array.from({length:16},(_,i)=>(state.segs||[])[i]||[]); state.ant=Array.from({length:16},(_,i)=>(state.ant||[])[i]??null);
+  document.body.classList.toggle('pro',!!state.pro); page=0; selected=null;
+  $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save(); ensureSounds(); return true; }
+const b64e=str=>{ const u=new TextEncoder().encode(str); let b=''; u.forEach(c=>b+=String.fromCharCode(c)); return btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); };
+const b64d=t=>{ const b=atob(t.replace(/-/g,'+').replace(/_/g,'/')); return new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0))); };
+const shareUrl=o=>location.origin+location.pathname+'#s='+b64e(JSON.stringify(o));
+function toast(t){ const el=$('toast'); el.textContent=t; el.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>el.hidden=true,2600); }
+async function shareSong(o,name){
+  const url=shareUrl(o), title=(name||$('progName').textContent||'コード進行')+'｜コード進行パレット';
+  try{ if(navigator.share){ await navigator.share({title,url}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+  try{ await navigator.clipboard.writeText(url); toast('共有リンクをコピーしました'); return; }catch(e){}
+  // コピーもできない環境：リンクを表示して手でコピーしてもらう
+  const box=$('songList'); const d=document.createElement('div'); d.className='sharebox'; d.innerHTML='<small>このリンクをコピーして送ってください</small><input readonly>'; d.querySelector('input').value=url; box.prepend(d); d.querySelector('input').select(); }
+const SONGS_KEY='chord-palette-songs';
+const loadSongs=()=>{ try{ return JSON.parse(localStorage.getItem(SONGS_KEY))||[]; }catch(e){ return []; } };
+const saveSongs=a=>{ try{ localStorage.setItem(SONGS_KEY,JSON.stringify(a)); }catch(e){ toast('保存できませんでした（ブラウザの容量がいっぱいかもしれません）'); } };
+function songDegs(o){ return (o.slots||[]).slice(0,o.bars||4).map(v=>v==null?'－':nameOf(v,'num',false)).join(' - '); }
+function renderSongs(){
+  const list=loadSongs(), box=$('songList'); box.innerHTML='';
+  if(!list.length){ box.innerHTML='<p class="small" style="margin:0">保存した進行はまだありません。</p>'; return; }
+  list.forEach((sg,i)=>{ const d=document.createElement('div'); d.className='song';
+    d.innerHTML=`<div><b></b><small>${songDegs(sg.data)}</small></div><button data-a="open">開く</button><button data-a="share">共有</button><button data-a="del" class="del">削除</button>`;
+    d.querySelector('b').textContent=sg.name;
+    d.querySelector('[data-a="open"]').onclick=()=>{ if(playing) stop(); unpackSong(JSON.parse(JSON.stringify(sg.data))); closeAll(); toast(`「${sg.name}」を開きました`); };
+    d.querySelector('[data-a="share"]').onclick=()=>shareSong(sg.data,sg.name);
+    const del=d.querySelector('[data-a="del"]'); del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='本当に消す'; return; } const a=loadSongs(); a.splice(i,1); saveSongs(a); renderSongs(); };
+    box.appendChild(d); });
+}
+$('songSave').onclick=()=>{ const a=loadSongs(); const name=($('songName').value.trim()||$('progName').textContent||`マイ進行 ${a.length+1}`);
+  const ex=a.findIndex(x=>x.name===name), item={name,date:Date.now(),data:packSong()};
+  if(ex>=0) a[ex]=item; else a.unshift(item); saveSongs(a); $('songName').value=''; renderSongs(); toast(ex>=0?`「${name}」を上書き保存しました`:`「${name}」を保存しました`); };
+$('shareNow').onclick=()=>shareSong(packSong());
+$('menuBtn').addEventListener('click',renderSongs);
+// 共有リンクから開いたとき：その進行を読み込む（チュートリアルは自動では出さない）
+let OPENED_SHARE=false;
+(()=>{ const m=location.hash.match(/^#s=([A-Za-z0-9_-]+)/); if(!m) return;
+  try{ const o=JSON.parse(b64d(m[1])); if(unpackSong(o)){ OPENED_SHARE=true; setTimeout(()=>toast('共有された進行を読み込みました'),400); } }catch(e){ setTimeout(()=>toast('リンクを読み込めませんでした'),400); }
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} })();
+if(FIRST_RUN && !OPENED_SHARE) openTutorial();
 </script>
 
 </body>
