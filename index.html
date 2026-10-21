@@ -409,8 +409,9 @@ body.tutlite .gstrip{visibility:hidden}
 .gstrip span.ol{border-left:0;border-top-left-radius:0}.gstrip span.or{border-right:0;border-top-right-radius:0}
 .gstrip span.bad{color:var(--warnText)}
 #hint.guide.warn{color:var(--warnText)}
-.floaty{animation:tfl 3s ease-in-out infinite}
-@keyframes tfl{50%{transform:translateY(-6px)}}
+/* ふわふわ浮かぶ動き。iPhone で小刻みにガタつかないよう、GPU で動かして文字の再描画を避ける */
+.floaty{animation:tfl 3s ease-in-out infinite;will-change:transform;backface-visibility:hidden;transform:translate3d(0,0,0)}
+@keyframes tfl{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-6px,0)}}
 /* コーチマーク（メイン画面の上の吹き出し） */
 .coach{position:fixed;inset:0;z-index:55;pointer-events:none}
 /* 最初のチュートリアルのあとに出す案内のポップアップ */
