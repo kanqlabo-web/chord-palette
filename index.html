@@ -1166,6 +1166,11 @@ const BASSES={
   sub:   {name:'サブベース（オクターブ下）', v:[[0,'-12',8,1],[8,'-12',6,.9],[14,'-5',2,.75]]},
   funk:  {name:'16分ファンク', v:[[0,0,2,1],[3,12,1,.7],[6,0,1,.7],[7,0,1,.5],[8,0,2,.9],[10,12,1,.7],[11,'5',1,.6],[13,0,1,.7],[14,'ap',2,.8]]},
 };
+// 「ドラムに合わせる」で使う各ドラムのベースフレーズも、ベースパターンとして選べるようにする（同じものがあれば入れない）
+(()=>{ const NAME={dpop:'4つ打ちポップ（オクターブ）', xstick:'クロススティック（しっとり）', ballad:'バラード（白玉）', dance:'4つ打ち（クラブ・裏打ち）', neosoul:'ネオソウル（スライド）', none:'ルート＆5度（のびやか）'};
+  const have=new Set(Object.values(BASSES).filter(b=>b.v).map(b=>JSON.stringify(b.v)));
+  DRUM_ORDER.forEach(k=>{ const v=DRUMS[k].bass; if(!v||have.has(JSON.stringify(v))) return; have.add(JSON.stringify(v));
+    BASSES['d_'+k]={name:NAME[k]||DRUMS[k].pro||DRUMS[k].name, v}; }); })();
 const bassList=dr=>(state.pro&&state.bassPat&&state.bassPat!=='auto'&&BASSES[state.bassPat])?BASSES[state.bassPat].v:dr.bass;
 for(const k in ARPS){ const m={}; ARPS[k].ev.forEach(e=>{ (m[e[0]]=m[e[0]]||[]).push(e); }); ARPS[k].at=m; }
 const INSTS={spiano:'シンセピアノ',synth:'シンセ',
