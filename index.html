@@ -379,6 +379,11 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .exnote p::before{content:"";position:absolute;left:2px;top:.6em;width:6px;height:6px;border-radius:50%;background:var(--fn,var(--ink))}
 .listen{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:999px;padding:8px 16px;font:inherit;font-weight:700;cursor:pointer}
 .listen.on{background:var(--ink);color:var(--bg)}
+.varopts{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;max-width:520px;margin:0 auto 12px}
+.varopts button{border:1.5px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font:inherit;color:var(--ink)}
+.varopts button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.varopts b{font-family:var(--display);font-weight:900;font-size:1.05rem;white-space:nowrap}
+.varopts small{font-size:.7rem;color:var(--muted);white-space:nowrap}
 .moodpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
 .moodpick button{border:1.5px solid var(--line);background:var(--surface);border-radius:16px;padding:14px 10px;display:flex;flex-direction:column;gap:4px;align-items:center;cursor:pointer;font:inherit;color:var(--ink)}
 .moodpick button:active{transform:scale(.97)}
@@ -488,6 +493,11 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <p class="small">ドラムとコードの帯をタップすると、パターンと音色を選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
 </aside>
 
+<div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
+  <h2><span id="varTitle">バリエーション</span><button class="iconbtn" id="closeVar" aria-label="閉じる"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></h2>
+  <div class="varopts" id="varOpts"></div>
+  <p class="pnote">同じ役割のまま、響きだけを変えられます。タップすると試し弾きします。</p>
+</div>
 <div class="sheet" id="edSheet" role="dialog" aria-label="コードを編集">
   <h2><span id="edTitle"></span><button class="iconbtn" id="closeEd" aria-label="閉じる"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></h2>
   <div class="edtabs" id="edTabs"></div>
@@ -551,9 +561,9 @@ const keyObj=()=>KEYS.find(k=>k.id===state.key)||KEYS[0];
 const QUAL={maj:[0,4,7],m:[0,3,7],sus2:[0,2,7],sus4:[0,5,7],'5':[0,7],'m-5':[0,3,6],aug:[0,4,8]};
 const QUAL_LABEL={maj:'なし',m:'m',sus2:'sus2',sus4:'sus4','5':'5','m-5':'m-5',aug:'aug'};
 const QUAL_ORDER=['maj','m','sus2','sus4','5','m-5','aug'];
-const EXT={'':[], '6':[9], '7':[10], 'M7':[11], 'add9':[14], '9':[10,14]};
-const EXT_LABEL={'':'なし','6':'6','7':'7','M7':'M7','add9':'add9','9':'9'};
-const EXT_ORDER=['','6','7','M7','add9','9'];
+const EXT={'':[], '6':[9], '7':[10], 'M7':[11], 'add9':[14], 'add11':[17], '69':[9,14], '9':[10,14], 'M9':[11,14], '7add11':[10,17], '11':[10,14,17], '13':[10,14,21], 'M13':[11,14,21], '7b9':[10,13], '7s9':[10,15], '7b13':[10,20]};
+const EXT_LABEL={'':'なし','6':'6','7':'7','M7':'M7','add9':'add9','add11':'add11','69':'6(9)','9':'7(9)','M9':'M7(9)','7add11':'7add11','11':'7(9,11)','13':'7(9,13)','M13':'M7(9,13)','7b9':'7(♭9)','7s9':'7(♯9)','7b13':'7(♭13)'};
+const EXT_ORDER=['','6','7','M7','add9','add11','69','9','M9','7add11','11','13','M13','7b9','7s9','7b13'];
 const NUM_OF=['1','♭2','2','♭3','3','4','♯4','5','♭6','6','♭7','7'];
 const ROM_OF=['Ⅰ','♭Ⅱ','Ⅱ','♭Ⅲ','Ⅲ','Ⅳ','♯Ⅳ','Ⅴ','♭Ⅵ','Ⅵ','♭Ⅶ','Ⅶ'];
 const FLAT_NAMES=['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
@@ -589,6 +599,7 @@ function ctxRole(v,prev,next,minor){
   }
   const nO=next!=null?specOf(next).o:null, pO=prev!=null?specOf(prev).o:null;
   if((o===2||o===5) && sp.b===7) return 'D';             // Ⅱm/Ⅴ（Dm7/G）・Ⅳ/Ⅴ（F/G）はドミナント（Ⅴの音の上にのったsus系の響き）
+  if(o===0 && sp.b===5) return 'S';                       // Ⅰ/Ⅳ（C/F）はベースのⅣが効いてサブドミナント
   switch(o){
     case 0: return 'T';
     case 5: return 'S';
@@ -625,7 +636,7 @@ function suffix(sp,html,kind){
   let t='';
   if(sp.q==='m'||sp.q==='m-5') t+='m';
   if(sp.q==='5') return t+(kind==='alpha'?'5':'(5)');
-  if(sp.x) t+= kind==='alpha' ? sp.x : html ? `<sup>${sp.x}</sup>` : `(${sp.x})`;
+  if(sp.x){ const x=EXT_LABEL[sp.x]||sp.x; t+= kind==='alpha'||x.includes('(') ? x : html ? `<sup>${x}</sup>` : `(${x})`; }
   if(sp.q==='m-5') t+= html?'<sup>-5</sup>':'-5';
   if(sp.q==='sus2'||sp.q==='sus4') t+=sp.q;
   if(sp.q==='aug') t+='aug';
@@ -695,7 +706,7 @@ const FILLS={
          small:{k:'............X...', s:'............x.xx', t3:'...............X'}},
   soft: {big:  {k:'........X.......', s:'............o.x.', t2:'.............o..', t3:'...............x', h:'........g...g...'},
          small:{s:'..............ox', t3:'...............o'}},
-  shuf: {big:  {k:'........X.......', s:'........x..x.xxX'},
+  shuf: {big:  {k:'........X.......', s:'........x.x.x.xX'},
          small:{s:'............x.xX', k:'............X...'}},
   // drum_.mid（Vintage Rock）から：小フィルはスネア→4拍目にフロアタム1発、大フィルはキックとスネアの掛け合いからフロアタム
   rock: {big:  {k:'........x.o.x...', s:'..........x.X.gx', t3:'........X.......'},
@@ -721,19 +732,20 @@ const DRUMS = {
            vB:{k:'x......o..x.....', s:'.g..X..g.g..X..g', r:'o.o.x.o.o.o.x.o.', h:'g...g...g...g...'}, fill:'rock',
            bass:[[0,0,3,1],[3,0,1,.6],[4,0,2,.8],[6,'5',2,.7],[8,0,3,.9],[11,0,1,.6],[12,'5',2,.75],[14,'ap',2,.75]]},
   // ↓ drum_.mid のイントロ：サイドスティックと裏のハイハットだけ
-  xstick: {name:'しっとり', pro:'クロススティック8ビート', v:{k:'x.......x.....x.', x:'....x.......x...', h:'..x...x...x...x.'}, fill:'rock',
+  xstick: {name:'しっとり', pro:'クロススティック8ビート', v:{k:'x.......x.......', x:'....x.......x...', h:'o.g.o.g.o.g.o.g.'},
+           vB:{k:'x.......x.x.....', x:'....x.......x...', h:'o.g.o.g.o.g.o.g.'}, fill:'soft',
            bass:[[0,0,6,1],[6,'5',2,.7],[8,0,4,.85],[12,'5',2,.7],[14,'ap',2,.7]]},
-  medium: {name:'ゆったり', pro:'ミディアム8ビート', v:{k:'x.............o.', s:'....X.......X...', h:'o.g.x.g.o.g.x.g.'},
-           vB:{k:'x.............o.', s:'....X.......X...', h:'o.g.x.g.o.g.x.g.'}, fill:'kime',
+  medium: {name:'ゆったり', pro:'ミディアム8ビート', v:{k:'x.......x.x.....', s:'....X.......X...', h:'o.g.o.g.o.g.o.g.'},
+           vB:{k:'x.......x.x.....', s:'....X.......X..g', h:'o.g.o.g.o.g.o.o.'}, fill:'tom',
            bass:[[0,0,3,1],[4,0,2,.8],[6,'3',2,.7],[8,'5',3,.85],[12,0,2,.8],[14,'ap',2,.75]]},
   half:   {name:'どっしり', pro:'ハーフタイム', v:{k:'x.......x.......', s:'..g.....X.......', h:'o...o...o...o...'},
            vB:{k:'x.......x.......', s:'..g.....X.....o.', h:'g.......g...o...'}, fill:'snare',
            bass:[[0,0,6,1],[6,0,2,.6],[8,'5',4,.85],[12,12,2,.75],[14,'ap',2,.7]]},
   ballad: {name:'バラード', v:{k:'X.......X.......', x:'....X.......X...', h:'g...g...g...g...'}, fill:'soft',
            bass:[[0,0,7,.85],[8,'5',5,.7],[14,'ap',2,.6]]},
-  shuffle:{name:'スキップ風', pro:'シャッフル（ライド）', v:{k:'x.....o.......g.', s:'.g..Xg.g.g..Xg.g', r:'o...o...o...o...', h:'..g...g...g...g.'}, swing:true, fill:'shuf',
+  shuffle:{name:'スキップ風', pro:'シャッフル（ライド）', v:{k:'x.....o.x.......', s:'....X.g.....X.g.', r:'o.o.o.o.o.o.o.o.', h:'....g.......g...'}, swing:true, fill:'shuf',
            bass:[[0,0,2,1],[2,'3',2,.7],[4,'5',2,.85],[6,'6',2,.7],[8,12,2,.9],[10,'6',2,.7],[12,'5',2,.85],[14,'3',2,.7]]},
-  sixteen:{name:'ファンキー（16ビート）', pro:'16ビート', v:{k:'X..x....X.X..x..', s:'....X..g.g..X..g', h:'o.g.o.g.o.g.o.g.'}, fill:'kime',
+  sixteen:{name:'ファンキー（16ビート）', pro:'16ビート', v:{k:'X..x....X.X..x..', s:'....X..g.g..X..g', h:'xgogxgogxgogxgog'}, fill:'kime',
            bass:[[0,0,2,1],[3,12,1,.7],[6,0,1,.7],[7,0,1,.5],[8,0,2,.9],[10,12,1,.7],[11,'5',1,.6],[13,0,1,.7],[14,'ap',2,.8]]},
   dance:  {name:'ダンス（クラブ）', pro:'4つ打ち（クラブ）', v:{k:'X...X...X...X...', s:'....X.......X...', h:'..o...o...o...o.'}, fill:'dance',
            bass:[[2,0,1.5,.9],[6,12,1.5,.8],[10,0,1.5,.9],[14,12,1.5,.8]]},
@@ -760,10 +772,10 @@ const ARPS = {
   // C-F-G-Am.mid / F-E-Am-C.mid の右手・左手をそのまま写したもの（長さ・強さもMIDIの値）
   popanti:{name:'ピアノ（前のめり）', pro:'3拍目食い（16分）', legato:true, ev:[[0,ALL,4,.8],[4,[0],3,.78],[5,RH,2,.6],[7,ALL,5,.8],[10,RH,6,.75],[12,[0],4,.85],[14,[3],2,.68]]},
   ballad: {name:'ポロロン（バラード）', pro:'アルペジオ（バラード）', legato:true, ev:twice([[0,[0],8,.78],[0,[3],8,.66],[3,[4],5,.56],[4,[5],4,.58],[6,[1,2],2.5,.52]])},
-  sync:   {name:'リズミカル', pro:'シンコペ（付点8分）', ev:[[0,ALL,3,.8],[3,RH,.7,.72],[6,ALL,2,.78],[10,RH,2,.72],[14,ALL,2,.86]]},
-  sync16: {name:'リズミカル（細かめ）', pro:'16分シンコペ', ev:[[0,ALL,1,.82],[3,RH,.6,.6],[6,RH,1,.72],[8,[0],2,.65],[10,RH,.6,.68],[11,RH,2.5,.78],[14,RH,.6,.62]]},
+  sync:   {name:'リズミカル', pro:'シンコペ（3-3-2）', ev:[[0,ALL,5.5,.82],[6,ALL,5.5,.76],[12,ALL,3.5,.8]]},
+  sync16: {name:'リズミカル（細かめ）', pro:'16分カッティング', ev:[[0,ALL,1.5,.8],[3,RH,1,.62],[6,RH,1.5,.74],[8,[0],1.5,.7],[10,RH,1,.6],[12,RH,1.5,.74],[14,RH,1,.62]]},
   shuffle:{name:'スキップ風（ピアノ）', pro:'シャッフル（ピアノ）', swing:true, ev:[[0,ALL,1.5,.8],[2,RH,1,.52],[4,[0],1.5,.68],[6,RH,1,.6],[8,ALL,1.5,.76],[10,RH,1,.52],[12,[0],1.5,.68],[14,RH,1,.62]]},
-  shuff2: {name:'スキップ風（刻む）', pro:'シャッフル（刻み）', swing:true, ev:[[0,ALL,1.3,.8],[4,ALL,1.3,.72],[6,RH,1,.6],[8,ALL,3.5,.78],[12,[0],1.3,.66],[14,RH,1.5,.7]]},
+  shuff2: {name:'スキップ風（刻む）', pro:'シャッフル（2・4拍）', swing:true, ev:[[0,[0],1.5,.75],[4,RH,1.5,.72],[6,RH,1,.55],[8,[0],1.5,.75],[12,RH,1.5,.74],[14,RH,1,.55]]},
   stacc:  {name:'ポンポン短く', pro:'スタッカート4分', ev:each([0,4,8,12],ALL,1.1,(s,i)=>i%2?.7:.8)},
   rock8:  {name:'ロック（ジャーン系）', pro:'オープンボイシング8分', legato:true, ev:[[0,WIDE,4,.82],[4,WIDE,4,.72],[8,[0,4,5],4,.75],[10,[6,7,8],6,.8],[12,[0,4,5],4,.68],[14,WIDE,3,.82]]},
   eighth: {name:'タタタタ刻む', pro:'8分刻み', ev:each([0,2,4,6,8,10,12,14],RH,1.6,st=>st%4===0?.75:.5)},
@@ -929,11 +941,25 @@ const PRESETS=[
   {name:'カノン進行', p:[0,4,5,2,3,0,3,4]},
   {name:'王道進行（8小節）', p:[3,4,2,5,1,4,0,0]},
 ];
+// 通常モードでも使えるコードのバリエーション（パレットの7つそれぞれ）
+const VSP=(o,q,x,b)=>({o,q,x:x||'',b:b??null});
+const VARS=[
+  [0, VSP(0,'maj','M7'), VSP(0,'maj','add9')],
+  [1, VSP(2,'m','7'), VSP(2,'m','11')],
+  [2, VSP(4,'m','7'), VSP(0,'maj','add9',4), VSP(4,'maj','7')],
+  [3, VSP(5,'sus2'), VSP(5,'maj','M7'), VSP(0,'maj','',5)],
+  [4, VSP(7,'sus4'), VSP(7,'maj','add9'), VSP(5,'maj','',7)],
+  [5, VSP(9,'m','7'), VSP(9,'m','add9'), VSP(9,'sus4'), VSP(9,'m','7add11')],
+  [6, VSP(11,'m-5','7')],
+];
+const sameSpec=(a,b)=>{ const x=specOf(a), y=specOf(b); return x.o===y.o&&x.q===y.q&&(x.x||'')===(y.x||'')&&(x.b??null)===(y.b??null); };
+const varGroupOf=v=>{ if(v===null||v===undefined) return null; if(isNum(v)) return v; const k=VARS.findIndex(g=>g.some(x=>!isNum(x)&&sameSpec(x,v))); return k>=0?k:null; };
 const tokSpec=t=>typeof t==='number'?t:{...CHROM[t],b:null};
 // マスのコードを比べやすい形に：ダイアトニック（7などのテンションは無視）なら数字、それ以外は「根音:種類」
 function tokOf(v){
   if(v===null||v===undefined) return null;
   if(isNum(v)) return v;
+  const vg=varGroupOf(v); if(vg!==null) return vg;   // バリエーションは元のコードとして扱う
   const sp=specOf(v); if(sp.b!==null&&sp.b!==undefined&&sp.b!==sp.o) return `${sp.o}:${sp.q}/${sp.b}`;
   const d=STEPS.findIndex((o,k)=>o===sp.o && (DEG[k].q===''?'maj':DEG[k].q)===sp.q);
   return d>=0?d:`${sp.o}:${sp.q}`;
@@ -1087,7 +1113,7 @@ function renderSlots(){
   $('hint').textContent = selected!==null ? `${chordText(selected)} を置くマスをタップ`
     : state.pro && state.len>1 && state.bars===4 ? `${state.len<4?`1マス＝${state.len}拍 ・ `:''}マスの右側に置くと${state.len/2+1}拍目から`
     : state.len<4 ? `1マス＝${state.len}拍 ・ ${state.bars>4?`${page*4+1}〜${page*4+4}マス目`:'コードをマスへドラッグ'}`
-    : state.bars===4 ? '4小節 ・ コードをマスへドラッグ' : `${state.bars}小節中 ${page*4+1}〜${page*4+4}小節目を編集中`;
+    : state.bars===4 ? (!state.pro && state.slots.slice(0,4).every(v=>v!=null) ? '置いたコードをタップすると響きを変えられます' : '4小節 ・ コードをマスへドラッグ') : `${state.bars}小節中 ${page*4+1}〜${page*4+4}小節目を編集中`;
   const gi = state.guide ? guideInfo() : {text:'',warn:new Set(),groups:[]};
   document.body.classList.toggle('guide', !!state.guide);
   if(state.guide && selected===null && gi.text) $('hint').textContent = gi.text;
@@ -1197,7 +1223,7 @@ function buildMenu(){
   });
 }
 const scrim=$('scrim'), drawer=$('drawer'), sheet=$('sheet');
-function closeAll(){ drawer.classList.remove('on'); sheet.classList.remove('on'); $('edSheet').classList.remove('on'); $('patSheet').classList.remove('on'); scrim.classList.remove('on'); }
+function closeAll(){ $('varSheet').classList.remove('on'); drawer.classList.remove('on'); sheet.classList.remove('on'); $('edSheet').classList.remove('on'); $('patSheet').classList.remove('on'); scrim.classList.remove('on'); }
 
 // ---------- PROモード：コード編集 ----------
 let edIndex=null, edHalf=0, edOrig={};
@@ -1449,9 +1475,21 @@ function end(e){
     if(selected!==null){
       const tc=e.target&&e.target.closest?e.target.closest('.cell'):null;
       setV(i, tc?+tc.dataset.h:0, selected); preview(selected); selected=null; }
-    else if(state.slots[i]!==null) preview(state.slots[i]); }
+    else if(getV(i,th)!==null&&getV(i,th)!==undefined){ preview(getV(i,th)); if(!state.pro && !TUT.on) openVar(i,th); } }
   renderTiles(); renderSlots();
 }
+// 通常モード：置いたコードをタップすると、同じ役割のバリエーションを選べる
+function openVar(i,h){
+  const v=getV(i,h), g=varGroupOf(v); if(g===null) return;
+  $('varTitle').textContent=`${i+1}${state.len<4?'マス目':'小節目'}のコードを変える`;
+  const box=$('varOpts'); box.innerHTML='';
+  VARS[g].forEach(x=>{ const b=document.createElement('button'); b.setAttribute('aria-pressed', isNum(x)?v===x:(!isNum(v)&&sameSpec(x,v)));
+    b.innerHTML=`<b>${nameOf(x,state.label,true)}</b><small>${nameOf(x,state.label==='alpha'?'num':'alpha',false)}</small>`;
+    b.onclick=()=>{ setV(i,h,x); preview(x); renderSlots(); openVar(i,h); };
+    box.appendChild(b); });
+  $('varSheet').classList.add('on'); scrim.classList.add('on');
+}
+$('closeVar').onclick=closeAll;
 window.addEventListener('pointerup',end); window.addEventListener('pointercancel',end);
 slotsEl.addEventListener('click',e=>{ const x=e.target.closest('.x'); if(!x) return; const i=+x.closest('.slot').dataset.abs;
   const sg=segsOf(i); if(sg.length){ const last=sg[sg.length-1]; state.segs[i]=state.segs[i].filter(x=>x!==last); }   // 分けたマスは最後のコードから消す
@@ -1663,11 +1701,11 @@ function playBass(list,s,t,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,v
   bassTone(bt.bass+n,t,Math.min(len,room)*sd*.92,vel); }); }
 function scheduleStep(g,t){
   const L=slotSteps(), s=g%16, b=Math.floor(playedSteps/16);     // b = 再生を始めてから何小節目か（ドラム用）
-  const dr=DRUMS[state.drum], sd=stepDur(), tt=t+(dr.swing&&s%4===2?sd*.34:0);
+  const dr=DRUMS[state.drum], sd=stepDur(), tt=t+(dr.swing&&s%4===2?sd*.62:0);
   const fm = fillModeOf(b,dr), V = (fm && s>=(fm==='big'?8:12)) ? (fm==='big'?dr.F:dr.FS) : (b%2===1 && dr.VB ? dr.VB : dr.V);
   for(const n in V){ const v=V[n][s]; if(v) drum(+n,tt,v); }
   if(state.fill && dr.F && s===0 && b%4===0 && b>0) drum(49,tt,.6);
-  const pat=ARPS[state.arp], ct=t+((dr.swing||pat.swing)&&s%4===2?sd*.34:0);   // シャッフル系は裏拍を跳ねさせる
+  const pat=ARPS[state.arp], ct=t+((dr.swing||pat.swing)&&s%4===2?sd*.62:0);   // シャッフル系は裏拍を跳ねさせる
   const bassOf=bb=>bassList(dr);
   // いま鳴らすコード（マス i の中の何番目のコードか）
   const i=Math.floor(g/L), off=g%L, cells=cellsOf(i), ci=cells.findIndex(c=>off>=c.off&&off<c.off+c.len), cell=cells[ci], rel=off-cell.off;
@@ -1954,7 +1992,7 @@ Object.assign(EX,{
   bright:{degs:[0,3,4,0], roles:['T','S','D','T'], groups:[], drum:'pop', arp:'piano4', bpm:120},
   sad:   {degs:[5,3,4,0], roles:['T','S','D','T'], groups:[], drum:'medium', arp:'ballad', bpm:88},
   emo:   {degs:[3,4,2,5], roles:['S','D','D','T'], groups:[], drum:'pop', arp:'whole', bpm:84},
-  chic:  {degs:[SP(2,'m','7'),SP(7,'maj','7'),SP(0,'maj','M7'),SP(9,'m','7')], roles:['S','D','T','T'], groups:[], drum:'bossa', arp:'bossa', bpm:104},
+  chic:  {degs:[SP(2,'m','7'),{o:5,q:'maj',x:'',b:7},SP(0,'maj','M7'),SP(9,'m','7')], roles:['S','D','T','T'], groups:[], drum:'bossa', arp:'bossa', bpm:104},
   epic:  {degs:[0,4,5,2,3,0,3,4], roles:['T','D','T','T','S','T','S','D'], groups:[], drum:'half', arp:'whole', bpm:76},
   rock:  {degs:[0,SP(10,'maj'),3,0], roles:['T','S','S','T'], groups:[], drum:'eight', arp:'rock8', bpm:132},
 });
@@ -1989,7 +2027,7 @@ const MOOD=[
   {html:()=>`<div class="eyebrow a">雰囲気のつくり方</div>
      <div class="chips7">${[0,5,3,4].map((d,k)=>`<span class="floaty" style="animation-delay:${k*.4}s;display:inline-block">${tc(d,['bright','dark','bright','bright'][k],.2+k*.15)}</span>`).join('')}</div>
      <h2 class="a" style="--dl:.8">曲の雰囲気は<br>コード選びで決まります</h2>
-     <p class="a" style="--dl:1.2">明るい、切ない、おしゃれ…。<br>ねらった雰囲気に近づく4つのコツを覚えて、<br>最後は実際に作ってみましょう。</p>`},
+     <p class="a" style="--dl:1.2">明るい、切ない、おしゃれ…。<br>ねらった雰囲気に近づく4つのコツと実例を見て、<br>最後は実際に作ってみましょう。</p>`},
   {html:()=>`<div class="eyebrow a">コツ①　明るいコードと暗いコードの割合</div>
      <h2 class="a" style="--dl:.1">明るいコードが多いと元気に<br>暗いコードが多いと切なく</h2>
      <div class="groups">
@@ -2018,6 +2056,10 @@ const MOOD=[
      ${exampleHTML(EX.calm)}
      <p class="a" style="--dl:1">パターンとBPMを変えるだけで、<br>しっとりにも、ノリノリにもなります。</p>
      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${listenBtn('calm').replace('聴いてみる','しっとり版')}${listenBtn('drive').replace('聴いてみる','ノリノリ版')}</div>`},
+  moodSlide('①','明るい・元気','明るいコードで<br>まっすぐ進む','bright',['明るいコード（1・4・5）だけ。迷いのない元気な響きに。','テンポは速め（BPM 110〜130）がおすすめ。']),
+  moodSlide('②','切ない','暗いコードから<br>始めてみる','sad',['6m で始めると、出だしから切ない雰囲気に（小室進行）。','最後は 1 で明るく着地。切ないのに前向き。']),
+  moodSlide('③','エモい・泣ける','4 から始めて<br>6m に着地','emo',['4 → 5 と上がって盛り上げてから、暗い 6m に落とす（王道進行）。','5 → 3m → 6m と、となりへ下りる動きでしっとり着地。']),
+  moodSlide('④','おしゃれ','コードの響きを<br>少し変えてみる','chic',['2m7・1M7 のように 7 や M7 を足すと、大人っぽい響きに。','置いたコードをタップすると、こうしたバリエーションを選べます。']),
   {html:()=>`<div class="eyebrow a">まとめ</div>
      <h2 class="a" style="--dl:.1">雰囲気づくりの4つのコツ</h2>
      <div class="roles">
