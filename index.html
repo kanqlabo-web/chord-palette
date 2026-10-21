@@ -1808,6 +1808,12 @@ function scheduleStep(g,t){
   if(!document.hidden) visQ.push({t,b:i,s:off,L,beat:g%4===0,abs:playedSteps,g});
 }
 function tick(){
+  // 最初のチュートリアルのあと、はじめて1周聴き終わったら止めて「雰囲気のつくり方」の案内を出す
+  if(!TUT.on && MOODPOP.pending && playedSteps>=state.bars*slotSteps()){
+    if(!MOODPOP.stopping){ MOODPOP.stopping=true; const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+400;
+      setTimeout(()=>{ MOODPOP.stopping=false; MOODPOP.pending=false; if(playing) stop(); showMoodPop(); },ms); }
+    return;
+  }
   // チュートリアル中は、進行を1周したら止める
   if(TUT.on && playedSteps>=TUT.loopLen){
     if(!TUT.stopping){ TUT.stopping=true; const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+500;
@@ -1823,6 +1829,10 @@ function tick(){
     scheduleStep(gpos,nextTime); nextTime+=stepDur(); gpos=(gpos+1)%T; playedSteps++;
   }
 }
+const MOODPOP={pending:false,stopping:false};
+function showMoodPop(){ $('moodTip').hidden=true;
+  $('moodPopChips').innerHTML=[['明るい','--t'],['切ない','--s'],['力強い','--d'],['穏やか','--warn']].map(([t,c])=>`<span style="--fn:var(${c})">${t}</span>`).join('');
+  $('moodPop').hidden=false; }
 let starting=false;
 // ---------- バックグラウンド再生 ----------
 // ・Worker のタイマーで刻む（画面を閉じてもメインのタイマーほど間引かれない）
@@ -2149,6 +2159,7 @@ function tutStopAudio(){ TUT.onLoopEnd=null; clearTimeout(TUT.stopT); TUT.stoppi
 function tutLoad(degs){ state.slots=Array.from({length:16},(_,j)=>degs[j]??null); state.segs=Array.from({length:16},()=>[]); state.bars=degs.length<=4?4:8; state.len=4; state.ant=Array(16).fill(null); page=0; renderAll(); }
 function openTutorial(deck){
   if(TUT.on) return;
+  MOODPOP.pending=false; $('moodTip').hidden=true;
   DECK=Array.isArray(deck)?deck:SLIDES;
   TUT.on=true; TUT.backup=JSON.stringify(state); TUT.i=0;
   closeAll(); tutStopAudio();
@@ -2165,7 +2176,7 @@ function endTutorial(restore){
   if(restore && TUT.backup){ state=JSON.parse(TUT.backup); document.body.classList.toggle('pro',!!state.pro); }
   else { const b=JSON.parse(TUT.backup); state={...b, slots:Array(16).fill(null), segs:Array.from({length:16},()=>[]), bars:4, len:4, label:'num', guide:true}; document.body.classList.toggle('pro',!!state.pro); }
   page=0; selected=null; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save();
-  if(showTip){ $('moodPopChips').innerHTML=[['明るい','--t'],['切ない','--s'],['力強い','--d'],['穏やか','--warn']].map(([t,c])=>`<span style="--fn:var(${c})">${t}</span>`).join(''); $('moodPop').hidden=false; }
+  if(showTip){ $('moodTip').hidden=false; clearTimeout(TUT.tipT); MOODPOP.pending=true; }
 }
 function showSlide(i){
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio();
@@ -2218,10 +2229,8 @@ const wideLayout=()=>matchMedia('(min-width:820px) and (min-aspect-ratio:5/4)').
 const nextBtn=()=>['つぎへ',()=>showSlide(TUT.i+1)], backBtn=()=>['もどる',()=>showSlide(TUT.i-1),true];
 function moodResult(){
   const m=PRACTICE[TUT.mood||'sad'], q=[0,1,2,3].map(k=>tokOf(state.slots[k])), good=q.every(t=>typeof t==='number') && m.check(q);
-  $('resultEyebrow').textContent=`お題「${m.name}」`;
-  $('resultTitle').textContent=good?'いい感じです！':'おしいです！';
-  $('resultText').textContent=good?m.ok:m.ng;
-  $('resultPop').hidden=false;
+  coach(slotsEl, good ? `<b>いい感じです！</b><br>${m.ok}` : `<b>おしいです！</b><br>${m.ng}`,
+    [['作り直す',()=>runCoach('mood'),true],['ほかのお題',()=>{ TUT.practice=false; showSlide(TUT.i-1); },true],['おわる',finishMood]]);
 }
 const moodDone=()=>[0,1,2,3].every(k=>state.slots[k]!==null&&state.slots[k]!==undefined);
 function moodBar(){
@@ -2274,7 +2283,7 @@ function runCoach(kind){
       else coach([slotsEl,$('play')], `4つ並びました！<br>再生して、<b>「${m.name}」</b>になっているか聴いてみましょう。`, [backBtn(),quit]); };
     show(); let was='';
     TUT.wait=setInterval(()=>{ const k=(playing?'p':'')+(moodDone()?'d':''); if(k===was) return; was=k;
-      if(playing) TUT.onLoopEnd=()=>{ clearInterval(TUT.wait); closeCoach(); moodResult(); };
+      if(playing) TUT.onLoopEnd=()=>{ clearInterval(TUT.wait); moodResult(); };
       show(); },250);
   } else if(kind==='weird'){
     tutStopAudio(); tutLoad([6,3,2,1]);
@@ -2321,13 +2330,13 @@ $('tutBack').onclick=()=>{ const sl=DECK[TUT.i];
   showSlide(TUT.i-1); };
 $('tutSkip').onclick=()=>endTutorial(true);
 $('tutOpen').onclick=()=>openTutorial(SLIDES);
-$('moodOpen').onclick=()=>{ $('moodTip').hidden=true; openTutorial(MOOD); };
+$('moodOpen').onclick=()=>{ $('moodTip').hidden=true; MOODPOP.pending=false; openTutorial(MOOD); };
 $('resultRetry').onclick=()=>{ $('resultPop').hidden=true; runCoach('mood'); };
 $('resultOther').onclick=()=>{ $('resultPop').hidden=true; TUT.practice=false; showSlide(TUT.i-1); };
 $('resultEnd').onclick=()=>{ $('resultPop').hidden=true; finishMood(); };
 $('moodPopGo').onclick=()=>{ $('moodPop').hidden=true; openTutorial(MOOD); };
 $('moodPopLater').onclick=()=>{ $('moodPop').hidden=true; $('moodTip').hidden=false; clearTimeout(TUT.tipT); TUT.tipT=setTimeout(()=>$('moodTip').hidden=true,180000); };
-$('moodTip').onclick=e=>{ $('moodTip').hidden=true; if(e.target.id!=='moodTipX') openTutorial(MOOD); };
+$('moodTip').onclick=e=>{ $('moodTip').hidden=true; MOODPOP.pending=false; if(e.target.id!=='moodTipX') openTutorial(MOOD); };
 window.addEventListener('resize',()=>{ if(TUT.on && !$('coach').hidden && DECK[TUT.i].coach) runCoach(DECK[TUT.i].coach); });
 
 // ピンチズームを禁止（iPhone の Safari は viewport の指定を無視するので、ジェスチャー自体を止める）
