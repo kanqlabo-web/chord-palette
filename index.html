@@ -81,7 +81,8 @@ h1{font-family:var(--display);font-weight:900;font-size:1.05rem;margin:0;white-s
 #hint.guide{color:var(--ink);font-weight:700;font-family:var(--display)}
 .slot.warn{box-shadow:0 0 0 2px var(--bg),0 0 0 4px #D9534F}
 #hint{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#progName{white-space:nowrap}
+#progName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw}
+.slothead .right{min-width:0;flex-shrink:1}
 .edall{white-space:nowrap}
 .edall{display:none;border:1.5px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:5px 12px;font-size:.78rem;font-weight:700;cursor:pointer;line-height:1.2}
 body.pro .edall{display:inline-block}
@@ -829,15 +830,61 @@ const SYNTH_INST={spiano:'piano',sepiano:'epiano',sorgan:'organ',sguitar:'nylon'
 const instShort=()=>INSTS[state.inst];
 const isSynthInst=()=>state.inst in SYNTH_INST;
 const KITS={synth:'シンセドラム',std:'スタンダード',room:'ルーム',power:'パワー',brush:'ブラシ',elec:'エレクトロ',tr808:'TR-808'};
+// 有名なコード進行の名前。数字＝ダイアトニック（0=Ⅰ 1=Ⅱm 2=Ⅲm 3=Ⅳ 4=Ⅴ 5=Ⅵm 6=Ⅶm-5）、文字＝それ以外のコード（CHROM）
+const CHROM={III7:{o:4,q:'maj',x:'7'}, bVII:{o:10,q:'maj',x:''}, bVI:{o:8,q:'maj',x:''}, IVm:{o:5,q:'m',x:''}, Vm:{o:7,q:'m',x:''}, II7:{o:2,q:'maj',x:'7'}, VI7:{o:9,q:'maj',x:'7'}};
 const PRESETS=[
   {name:'王道進行', p:[3,4,2,5]},
+  {name:'王道進行（3m→3）', p:[3,4,'III7',5]},
   {name:'小室進行', p:[5,3,4,0]},
-  {name:'カノン風', p:[0,4,5,2]},
-  {name:'ポップスの定番', p:[0,4,5,3]},
+  {name:'カノン進行（前半）', p:[0,4,5,2]},
+  {name:'アクシス進行', p:[0,4,5,3]},
+  {name:'アクシス進行（6m始まり）', p:[5,3,0,4]},
+  {name:'アクシス進行（4始まり）', p:[3,0,4,5]},
   {name:'50年代進行', p:[0,5,3,4]},
+  {name:'循環コード（1-6m-2m-5）', p:[0,5,1,4]},
+  {name:'逆循環（2m-5-1-6m）', p:[1,4,0,5]},
+  {name:'3m-6m-2m-5', p:[2,5,1,4]},
   {name:'ツーファイブワン', p:[1,4,0,0]},
-  {name:'カノン進行（8小節）', p:[0,4,5,2,3,0,3,4]},
+  {name:'スリーコード（1-4-5-1）', p:[0,3,4,0]},
+  {name:'スリーコード（1-4-1-5）', p:[0,3,0,4]},
+  {name:'下降進行（4-3m-2m-1）', p:[3,2,1,0]},
+  {name:'アンダルシア進行', p:[5,4,3,'III7']},
+  {name:'丸サ進行', p:[3,'III7',5,'Vm']},
+  {name:'Creep進行', p:[0,'III7',3,'IVm']},
+  {name:'サブドミナントマイナー', p:[0,3,'IVm',0]},
+  {name:'ロック進行（1-♭7-4-1）', p:[0,'bVII',3,0]},
+  {name:'カノン進行', p:[0,4,5,2,3,0,3,4]},
+  {name:'王道進行（8小節）', p:[3,4,2,5,1,4,0,0]},
 ];
+const tokSpec=t=>typeof t==='number'?t:{...CHROM[t],b:null};
+// マスのコードを比べやすい形に：ダイアトニック（7などのテンションは無視）なら数字、それ以外は「根音:種類」
+function tokOf(v){
+  if(v===null||v===undefined) return null;
+  if(isNum(v)) return v;
+  const sp=specOf(v); if(sp.b!==null&&sp.b!==undefined&&sp.b!==sp.o) return `${sp.o}:${sp.q}/${sp.b}`;
+  const d=STEPS.findIndex((o,k)=>o===sp.o && (DEG[k].q===''?'maj':DEG[k].q)===sp.q);
+  return d>=0?d:`${sp.o}:${sp.q}`;
+}
+const tokKey=t=>typeof t==='number'?t:(CHROM[t]?`${CHROM[t].o}:${CHROM[t].q}`:t);
+// 進行の名前：ぴったり＞くり返し＞途中から＞近い（1つ違い。8小節は2つ違いまで）＞前半
+function progLabel(){
+  const n=state.bars, seq=Array.from({length:n},(_,i)=>tokOf(state.slots[i]));
+  if(seq.some(t=>t===null)) return '';
+  const eq=(p,q)=>p.length===q.length&&p.every((t,i)=>tokKey(t)===q[i]);
+  const short=p=>p.short||p.name;
+  let hit=PRESETS.find(p=>eq(p.p,seq)); if(hit) return hit.name;
+  for(const L of [4,8]) if(n>L && n%L===0){ const blk=seq.slice(0,L);
+    if(seq.every((t,i)=>t===blk[i%L])){ const h=PRESETS.find(p=>eq(p.p,blk)); if(h) return `${short(h)}×${n/L}`; } }
+  for(const p of PRESETS){ if(p.p.length!==n) continue;
+    for(let k=1;k<n;k++){ const rot=[...p.p.slice(k),...p.p.slice(0,k)]; if(eq(rot,seq)) return `${short(p)}の途中から`; } }
+  let best=null, bd=99;
+  for(const p of PRESETS){ if(p.p.length!==n) continue; const d=p.p.filter((t,i)=>tokKey(t)!==seq[i]).length; if(d<bd){ bd=d; best=p; } }
+  if(best && bd<=(n>=8?2:1)) return `${short(best)}に近い`;
+  if(n>4){ const h=PRESETS.find(p=>eq(p.p,seq.slice(0,4))); if(h) return `前半が${short(h)}`;
+    let b2=null,d2=99; for(const p of PRESETS){ if(p.p.length!==4) continue; const d=p.p.filter((t,i)=>tokKey(t)!==seq[i]).length; if(d<d2){d2=d;b2=p;} }
+    if(b2&&d2<=1) return `前半が${short(b2)}に近い`; }
+  return '';
+}
 
 // ---------- state ----------
 let state={slots:[3,4,2,5,...Array(12).fill(null)], bars:4, key:'C', label:'num', inst:'spiano', kit:'synth', drum:'pop', arp:'piano4', fill:false, bass:true, pro:false, guide:false, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:7};
@@ -962,9 +1009,8 @@ function renderSlots(){
       el.querySelector('.rl').textContent = r==='X'?'':r;
     } else { el.querySelector('.n').innerHTML='<span class="empty">空き</span>'; el.querySelector('.dg').textContent=''; }
   });
-  const used=state.slots.slice(0,state.bars);
-  const m=PRESETS.find(p=>p.p.length===state.bars && p.p.every((d,i)=>d===used[i] && !segsOf(i).length));
-  $('progName').textContent = m ? m.name : (MINOR ? `${noteName(9)}m中心（短調）` : '');
+  const pl=progLabel();
+  $('progName').textContent = pl || (MINOR ? `${noteName(9)}m中心（短調）` : '');
   $('hint').textContent = selected!==null ? `${chordText(selected)} を置くマスをタップ`
     : state.pro && state.len>1 && state.bars===4 ? `${state.len<4?`1マス＝${state.len}拍 ・ `:''}マスの右側に置くと${state.len/2+1}拍目から`
     : state.len<4 ? `1マス＝${state.len}拍 ・ ${state.bars>4?`${page*4+1}〜${page*4+4}マス目`:'コードをマスへドラッグ'}`
@@ -1069,7 +1115,7 @@ function buildMenu(){
   chips($('bassMenuChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); buildMenu(); });
   chips($('presetChips'), PRESETS.map((p,i)=>[i,p.name]), -1, i=>{
     const p=PRESETS[i].p; state.bars=p.length;
-    state.slots=Array.from({length:16},(_,j)=>p[j]??null); selected=null; page=0; renderAll(); closeAll();
+    state.slots=Array.from({length:16},(_,j)=>p[j]!==undefined?tokSpec(p[j]):null); state.segs=Array.from({length:16},()=>[]); state.ant=Array(16).fill(null); selected=null; page=0; renderAll(); closeAll();
   });
 }
 const scrim=$('scrim'), drawer=$('drawer'), sheet=$('sheet');
