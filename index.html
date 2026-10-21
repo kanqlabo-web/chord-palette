@@ -599,7 +599,7 @@ function labelOf(v,kind){
   return size<1 ? `<span style="font-size:${size}em">${t}</span>` : t;
 }
 const bigHTML=v=>labelOf(v,state.label);
-const smallHTML=v=>labelOf(v,state.label==='alpha'?'num':'alpha');
+const smallHTML=v=>labelOf(v,state.label==='alpha'?'roman':'alpha');
 const plainLabel=v=>nameOf(v,state.label,false).replace('-5','⁻⁵');
 const LABELS={num:'数字',roman:'ローマ数字',alpha:'アルファベット'};
 // ボイシング：左手はルート（分数コードならその音）、右手は前の和音から近い形を選ぶ（なめらかなボイスリーディング）
@@ -826,9 +826,9 @@ const PRESETS=[
 ];
 
 // ---------- state ----------
-let state={slots:[3,4,2,5,...Array(12).fill(null)], bars:4, key:'C', label:'num', inst:'spiano', kit:'synth', drum:'pop', arp:'piano4', fill:true, bass:true, pro:false, guide:false, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:6};
+let state={slots:[3,4,2,5,...Array(12).fill(null)], bars:4, key:'C', label:'num', inst:'spiano', kit:'synth', drum:'pop', arp:'piano4', fill:false, bass:true, pro:false, guide:false, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:7};
 let FIRST_RUN=true;
-try{ const s=JSON.parse(localStorage.getItem('chord-palette-v3')); if(s) FIRST_RUN=false; if(s&&Array.isArray(s.slots)&&s.slots.length===16) state={...state,...s}; if(!s.ver||s.ver<6){ state.bass=true; } if(!s.ver||s.ver<4){ state.inst='spiano'; state.kit='synth'; } if(!INSTS[state.inst]) state.inst='spiano'; if(!KITS[state.kit]) state.kit='std'; }catch(e){}
+try{ const s=JSON.parse(localStorage.getItem('chord-palette-v3')); if(s) FIRST_RUN=false; if(s&&Array.isArray(s.slots)&&s.slots.length===16) state={...state,...s}; if(!s.ver||s.ver<6){ state.bass=true; } if(!s.ver||s.ver<7){ state.drum='pop'; state.fill=false; state.ver=7; } if(!s.ver||s.ver<4){ state.inst='spiano'; state.kit='synth'; } if(!INSTS[state.inst]) state.inst='spiano'; if(!KITS[state.kit]) state.kit='std'; }catch(e){}
 if(!Array.isArray(state.segs)) state.segs=Array.from({length:16},(_,i)=>state.split&&state.split[i]?[state.split[i]]:[]);
 delete state.split; if(![1,2,4].includes(state.len)) state.len=4;
 if(state.myDrum){ state.myDrums=[{name:'マイパターン1',...state.myDrum}]; if(state.drum==='my') state.drum='my0'; } delete state.myDrum;
