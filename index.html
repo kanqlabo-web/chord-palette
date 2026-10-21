@@ -255,6 +255,15 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .acclist button+button{border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
 .acclist button:active{background:var(--lane)}
 .acclist b{font-size:.9rem;font-weight:700}
+.presetfind{padding:10px 12px 4px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.presetfind input{width:100%;font:inherit;font-size:.86rem;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.tagrow{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.tagrow::-webkit-scrollbar{display:none}
+.tagrow button{flex:none;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 10px;font:inherit;font-size:.74rem;cursor:pointer}
+.tagrow button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.acclist .ptags{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.acclist .ptags i{font-style:normal;font-size:.64rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 6px}
+.acclist .none{padding:12px 14px;font-size:.8rem;color:var(--muted)}
 .acclist small{font-size:.74rem;color:var(--muted);font-family:var(--display);font-weight:700}
 .chip{border:1.5px solid var(--line);background:var(--surface);font-weight:500;font-size:.84rem;padding:7px 12px;border-radius:999px;cursor:pointer}
 .keys .chip{padding:8px 0;border-radius:10px;font-family:var(--display);font-weight:700}
@@ -537,7 +546,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>音色</h3><div class="chips" id="instChips"></div></div>
   <div class="sec"><h3>ドラムの音</h3><div class="chips" id="kitChips"></div></div>
   <div class="sec"><h3>ベース</h3><div class="chips" id="bassMenuChips"></div></div>
-  <div class="sec"><h3>有名な進行を入れてみる</h3><details class="acc" id="presetAcc"><summary><span>進行の一覧</span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><div class="acclist" id="presetList"></div></details></div>
+  <div class="sec"><h3>有名な進行を入れてみる</h3><details class="acc" id="presetAcc"><summary><span>進行の一覧</span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><div class="presetfind"><input type="search" id="presetQ" placeholder="名前・雰囲気・数字で探す" autocomplete="off"><div class="tagrow" id="presetTags"></div></div><div class="acclist" id="presetList"></div></details></div>
   <div class="sec"><h3>色の意味</h3>
     <div class="legend">
       <span class="T"><b>T</b>トニック：落ち着く・帰ってくる場所</span>
@@ -982,28 +991,28 @@ const KITS={synth:'シンセドラム',std:'スタンダード',room:'ルーム'
 // 有名なコード進行の名前。数字＝ダイアトニック（0=Ⅰ 1=Ⅱm 2=Ⅲm 3=Ⅳ 4=Ⅴ 5=Ⅵm 6=Ⅶm-5）、文字＝それ以外のコード（CHROM）
 const CHROM={III7:{o:4,q:'maj',x:'7'}, bVII:{o:10,q:'maj',x:''}, bVI:{o:8,q:'maj',x:''}, IVm:{o:5,q:'m',x:''}, Vm:{o:7,q:'m',x:''}, II7:{o:2,q:'maj',x:'7'}, VI7:{o:9,q:'maj',x:'7'}};
 const PRESETS=[
-  {name:'王道進行', p:[3,4,2,5]},
-  {name:'王道進行（3m→3）', p:[3,4,'III7',5]},
-  {name:'小室進行', p:[5,3,4,0]},
-  {name:'カノン進行（前半）', p:[0,4,5,2]},
-  {name:'アクシス進行', p:[0,4,5,3]},
-  {name:'アクシス進行（6m始まり）', p:[5,3,0,4]},
-  {name:'アクシス進行（4始まり）', p:[3,0,4,5]},
-  {name:'50年代進行', p:[0,5,3,4]},
-  {name:'循環コード', p:[0,5,1,4]},
-  {name:'逆循環', p:[1,4,0,5]},
-  {name:'サンロクニーゴー', p:[2,5,1,4]},
-  {name:'ツーファイブワン', p:[1,4,0,0]},
-  {name:'スリーコード', p:[0,3,4,0]},
-  {name:'スリーコード（5で終わる）', p:[0,3,0,4]},
-  {name:'下降進行', p:[3,2,1,0]},
-  {name:'アンダルシア進行', p:[5,4,3,'III7']},
-  {name:'丸サ進行', p:[3,'III7',5,'Vm']},
-  {name:'Creep進行', p:[0,'III7',3,'IVm']},
-  {name:'サブドミナントマイナー', p:[0,3,'IVm',0]},
-  {name:'ロック進行', p:[0,'bVII',3,0]},
-  {name:'カノン進行', p:[0,4,5,2,3,0,3,4]},
-  {name:'王道進行（8小節）', p:[3,4,2,5,1,4,0,0]},
+  {tags:['エモい','切ない','定番'], name:'王道進行', p:[3,4,2,5]},
+  {tags:['エモい','ドラマチック'], name:'王道進行（3m→3）', p:[3,4,'III7',5]},
+  {tags:['切ない','ドラマチック'], name:'小室進行', p:[5,3,4,0]},
+  {tags:['穏やか','明るい'], name:'カノン進行（前半）', p:[0,4,5,2]},
+  {tags:['明るい','定番'], name:'アクシス進行', p:[0,4,5,3]},
+  {tags:['切ない','エモい'], name:'アクシス進行（6m始まり）', p:[5,3,0,4]},
+  {tags:['爽やか','明るい'], name:'アクシス進行（4始まり）', p:[3,0,4,5]},
+  {tags:['レトロ','穏やか','明るい'], name:'50年代進行', p:[0,5,3,4]},
+  {tags:['おしゃれ','レトロ'], name:'循環コード', p:[0,5,1,4]},
+  {tags:['おしゃれ'], name:'逆循環', p:[1,4,0,5]},
+  {tags:['おしゃれ','穏やか'], name:'サンロクニーゴー', p:[2,5,1,4]},
+  {tags:['おしゃれ'], name:'ツーファイブワン', p:[1,4,0,0]},
+  {tags:['明るい','力強い'], name:'スリーコード', p:[0,3,4,0]},
+  {tags:['明るい','力強い'], name:'スリーコード（5で終わる）', p:[0,3,0,4]},
+  {tags:['穏やか','切ない'], name:'下降進行', p:[3,2,1,0]},
+  {tags:['情熱的','切ない','力強い'], name:'アンダルシア進行', p:[5,4,3,'III7']},
+  {tags:['おしゃれ','エモい'], name:'丸サ進行', p:[3,'III7',5,'Vm']},
+  {tags:['切ない','不思議'], name:'Creep進行', p:[0,'III7',3,'IVm']},
+  {tags:['切ない','穏やか'], name:'サブドミナントマイナー', p:[0,3,'IVm',0]},
+  {tags:['力強い','ロック'], name:'ロック進行', p:[0,'bVII',3,0]},
+  {tags:['壮大','穏やか'], name:'カノン進行', p:[0,4,5,2,3,0,3,4]},
+  {tags:['エモい','壮大'], name:'王道進行（8小節）', p:[3,4,2,5,1,4,0,0]},
 ];
 // 通常モードでも使えるコードのバリエーション（パレットの7つそれぞれ）
 const VSP=(o,q,x,b)=>({o,q,x:x||'',b:b??null});
@@ -1280,8 +1289,23 @@ function buildMenu(){
   chips($('proChips'), [[true,'オン'],[false,'オフ']], state.pro, v=>{ state.pro=v; document.body.classList.toggle('pro',v); renderAll(); });
   chips($('bassMenuChips'), [[true,'入れる'],[false,'入れない']], state.bass, v=>{ state.bass=v; save(); buildMenu(); });
   const deg=t=>typeof t==='number'?DEG[t].num:({III7:'3(7)',bVII:'♭7',bVI:'♭6',IVm:'4m',Vm:'5m',II7:'2(7)',VI7:'6(7)'})[t]||t;
+  renderPresetList();
+}
+// 有名な進行の一覧：名前・雰囲気のタグ・数字で絞り込める
+let presetTag=null;
+const PDEG=t=>typeof t==='number'?DEG[t].num:({III7:'3(7)',bVII:'♭7',bVI:'♭6',IVm:'4m',Vm:'5m',II7:'2(7)',VI7:'6(7)'})[t]||t;
+const ALL_TAGS=[...new Set(PRESETS.flatMap(p=>p.tags||[]))];
+function renderPresetList(){
+  const tr=$('presetTags');
+  if(!tr.children.length) tr.innerHTML=['すべて',...ALL_TAGS].map(t=>`<button data-t="${t}">${t}</button>`).join('');
+  tr.querySelectorAll('button').forEach(b=>{ b.setAttribute('aria-pressed', (presetTag||'すべて')===b.dataset.t); b.onclick=()=>{ presetTag=b.dataset.t==='すべて'?null:b.dataset.t; renderPresetList(); }; });
+  const q=($('presetQ').value||'').trim().toLowerCase().replace(/\s+/g,'');
+  const hit=p=>{ if(presetTag && !(p.tags||[]).includes(presetTag)) return false; if(!q) return true;
+    const degs=p.p.map(PDEG).join('-'); return (p.name+(p.tags||[]).join('')+degs+degs.replace(/-/g,'')).toLowerCase().includes(q); };
   const pl=$('presetList');
-  pl.innerHTML=[4,8].map(L=>`<h4>${L}小節</h4>`+PRESETS.map((p,i)=>p.p.length===L?`<button data-i="${i}"><b>${p.name}</b><small>${p.p.map(deg).join(' - ')}</small></button>`:'').join('')).join('');
+  const html=[4,8].map(L=>{ const rows=PRESETS.map((p,i)=>p.p.length===L&&hit(p)?`<button data-i="${i}"><b>${p.name}</b><small>${p.p.map(PDEG).join(' - ')}</small><span class="ptags">${(p.tags||[]).map(t=>`<i>${t}</i>`).join('')}</span></button>`:'').join('');
+    return rows?`<h4>${L}小節</h4>`+rows:''; }).join('');
+  pl.innerHTML = html || '<p class="none">見つかりませんでした。ほかの言葉やタグで探してみてください。</p>';
   pl.querySelectorAll('button').forEach(b=>b.onclick=()=>{
     const p=PRESETS[+b.dataset.i].p; state.bars=p.length;
     state.slots=Array.from({length:16},(_,j)=>p[j]!==undefined?tokSpec(p[j]):null); state.segs=Array.from({length:16},()=>[]); state.ant=Array(16).fill(null); selected=null; page=0; renderAll(); closeAll();
@@ -2350,6 +2374,7 @@ $('tutBack').onclick=()=>{ const sl=DECK[TUT.i];
   showSlide(TUT.i-1); };
 $('tutSkip').onclick=()=>endTutorial(true);
 $('tutOpen').onclick=()=>openTutorial(SLIDES);
+$('presetQ').oninput=renderPresetList;
 $('moodOpen').onclick=()=>{ $('moodTip').hidden=true; MOODPOP.pending=false; openTutorial(MOOD); };
 $('resultRetry').onclick=()=>{ $('resultPop').hidden=true; runCoach('mood'); };
 $('resultOther').onclick=()=>{ $('resultPop').hidden=true; TUT.practice=false; showSlide(TUT.i-1); };
