@@ -384,6 +384,8 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .varopts button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .varopts b{font-family:var(--display);font-weight:900;font-size:1.05rem;white-space:nowrap}
 .varopts small{font-size:.7rem;color:var(--muted);white-space:nowrap}
+.varopts button{position:relative;--fn:var(--muted)}.varopts button.T{--fn:var(--t)}.varopts button.S{--fn:var(--s)}.varopts button.D{--fn:var(--d)}
+.varopts i{position:absolute;top:5px;right:8px;font-style:normal;font-family:var(--display);font-weight:900;font-size:.66rem;color:var(--fn)}
 .moodpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
 .moodpick button{border:1.5px solid var(--line);background:var(--surface);border-radius:16px;padding:14px 10px;display:flex;flex-direction:column;gap:4px;align-items:center;cursor:pointer;font:inherit;color:var(--ink)}
 .moodpick button:active{transform:scale(.97)}
@@ -496,7 +498,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
   <h2><span id="varTitle">バリエーション</span><button class="iconbtn" id="closeVar" aria-label="閉じる"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></h2>
   <div class="varopts" id="varOpts"></div>
-  <p class="pnote">同じ役割のまま、響きだけを変えられます。タップすると試し弾きします。</p>
+  <p class="pnote">コードの響きを変えられます。タップすると試し弾きします。右上の文字は役割（T・S・D）です。</p>
 </div>
 <div class="sheet" id="edSheet" role="dialog" aria-label="コードを編集">
   <h2><span id="edTitle"></span><button class="iconbtn" id="closeEd" aria-label="閉じる"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></h2>
@@ -609,7 +611,8 @@ function ctxRole(v,prev,next,minor){
     case 2: return (q==='maj'||q==='aug') ? 'D' : 'S';    // Ⅱ7 はⅤへのドミナント
     case 4: if(q==='maj'||q==='aug') return 'D';          // Ⅲ（メジャー）はⅥmへのドミナント
             return nO===9 ? 'D' : 'T';                     // Ⅲm→Ⅵm は解決するようなD、それ以外はTの代理
-    case 9: if(pO===7) return 'T';                         // Ⅴ→Ⅵm（偽終止）はT
+    case 9: if(q==='maj'||q==='aug') return 'D';             // Ⅵ7（A7）は2mへのドミナント
+            if(pO===7) return 'T';                         // Ⅴ→Ⅵm（偽終止）はT
             if(pO===4 && ['maj','aug'].includes(specOf(prev).q)) return 'T';   // Ⅲ(7)→Ⅵm：短調（Amキー）のⅤ→Ⅰmに解決したのでT
             return (nO===7||nO===11) ? 'S' : 'T';          // Ⅴの前に置くとSとして働く
     case 11: return (nO===4) ? 'S' : 'D';                  // Ⅶm-5→Ⅲ はⅥmへのツーファイブの「2」
@@ -946,12 +949,12 @@ const PRESETS=[
 // 通常モードでも使えるコードのバリエーション（パレットの7つそれぞれ）
 const VSP=(o,q,x,b)=>({o,q,x:x||'',b:b??null});
 const VARS=[
-  [0, VSP(0,'maj','M7'), VSP(0,'maj','add9')],
-  [1, VSP(2,'m','7'), VSP(2,'m','11')],
+  [0, VSP(0,'maj','M7'), VSP(0,'maj','add9'), VSP(0,'maj','',4)],
+  [1, VSP(2,'m','7'), VSP(2,'m','11'), VSP(2,'maj','7')],
   [2, VSP(4,'m','7'), VSP(0,'maj','add9',4), VSP(4,'maj','7')],
-  [3, VSP(5,'sus2'), VSP(5,'maj','M7'), VSP(0,'maj','',5)],
-  [4, VSP(7,'sus4'), VSP(7,'maj','add9'), VSP(5,'maj','',7)],
-  [5, VSP(9,'m','7'), VSP(9,'m','add9'), VSP(9,'sus4'), VSP(9,'m','7add11')],
+  [3, VSP(5,'maj','M7'), VSP(5,'sus2'), VSP(0,'maj','',5), VSP(5,'m')],
+  [4, VSP(7,'maj','7'), VSP(7,'sus4'), VSP(7,'maj','add9'), VSP(5,'maj','',7), VSP(7,'maj','',11)],
+  [5, VSP(9,'m','7'), VSP(9,'m','add9'), VSP(9,'sus4'), VSP(9,'m','7add11'), VSP(9,'maj','7')],
   [6, VSP(11,'m-5','7')],
 ];
 const sameSpec=(a,b)=>{ const x=specOf(a), y=specOf(b); return x.o===y.o&&x.q===y.q&&(x.x||'')===(y.x||'')&&(x.b??null)===(y.b??null); };
@@ -1486,7 +1489,7 @@ function openVar(i,h){
   $('varTitle').textContent=`${i+1}${state.len<4?'マス目':'小節目'}のコードを変える`;
   const box=$('varOpts'); box.innerHTML='';
   VARS[g].forEach(x=>{ const b=document.createElement('button'); b.setAttribute('aria-pressed', isNum(x)?v===x:(!isNum(v)&&sameSpec(x,v)));
-    b.innerHTML=`<b>${nameOf(x,state.label,true)}</b><small>${nameOf(x,state.label==='alpha'?'num':'alpha',false)}</small>`;
+    const rl=ctxRole(x,null,null,false); b.className=rl; b.innerHTML=`<i>${rl}</i><b>${nameOf(x,state.label,true)}</b><small>${nameOf(x,state.label==='alpha'?'num':'alpha',false)}</small>`;
     b.onclick=()=>{ setV(i,h,x); preview(x); renderSlots(); openVar(i,h); };
     box.appendChild(b); });
   $('varSheet').classList.add('on'); scrim.classList.add('on');
