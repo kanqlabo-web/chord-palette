@@ -413,6 +413,19 @@ body.tutlite .gstrip{visibility:hidden}
 @keyframes tfl{50%{transform:translateY(-6px)}}
 /* コーチマーク（メイン画面の上の吹き出し） */
 .coach{position:fixed;inset:0;z-index:55;pointer-events:none}
+/* 最初のチュートリアルのあとに出す案内のポップアップ */
+.pop{position:fixed;inset:0;z-index:58;background:rgba(8,12,20,.45);display:flex;align-items:center;justify-content:center;padding:20px;animation:popfade .25s ease}
+@keyframes popfade{from{opacity:0}}
+.popcard{width:min(100%,380px);background:var(--surface);color:var(--ink);border-radius:22px;padding:22px 20px 18px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3);
+  display:flex;flex-direction:column;gap:10px;align-items:center;animation:tpop .45s cubic-bezier(.3,1.5,.5,1) both}
+.popcard h2{margin:0;font-family:var(--display);font-weight:900;font-size:1.3rem}
+.popcard p{margin:0;font-size:.86rem;line-height:1.7;color:var(--muted)}
+.popeyebrow{font-size:.68rem;letter-spacing:.16em;color:var(--warnText);font-weight:700}
+.popchips{display:flex;gap:6px;justify-content:center}
+.popchips span{border-radius:999px;padding:4px 10px;font-size:.74rem;font-weight:700;background:color-mix(in srgb,var(--fn) 14%,var(--surface));border:1.5px solid color-mix(in srgb,var(--fn) 45%,var(--line));color:var(--ink)}
+.popbtns{display:flex;gap:8px;width:100%;margin-top:6px}
+.popbtns button{flex:1;border:0;border-radius:12px;padding:12px;font:inherit;font-weight:700;cursor:pointer;background:var(--ink);color:var(--bg)}
+.popbtns button.alt{flex:.6;background:transparent;color:var(--muted);border:1.5px solid var(--line)}
 /* 最初のチュートリアルのあとに、マスの上の行の右に小さく出す案内 */
 .moodtip{display:inline-flex;align-items:center;gap:4px;border:1.5px solid var(--warn);background:color-mix(in srgb,var(--warn) 16%,var(--surface));color:var(--ink);
   border-radius:999px;padding:3px 4px 3px 10px;font-size:.7rem;font-weight:700;white-space:nowrap;cursor:pointer;line-height:1.2;animation:tin .4s ease}
@@ -495,6 +508,13 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="tutstage" id="tutStage"></div>
   <div class="tutnav"><button class="tutbtn alt" id="tutBack">もどる</button><button class="tutbtn" id="tutNext">つぎへ</button></div>
 </div>
+<div class="pop" id="moodPop" hidden><div class="popcard" role="dialog" aria-label="雰囲気のつくり方の案内">
+  <div class="popchips" id="moodPopChips"></div>
+  <div class="popeyebrow">NEXT</div>
+  <h2>次は「雰囲気のつくり方」</h2>
+  <p>明るい・切ない・力強い…。<br>ねらった雰囲気のコード進行を作るコツを、<br>実例と実践で覚えましょう。</p>
+  <div class="popbtns"><button class="alt" id="moodPopLater">あとで</button><button id="moodPopGo">見てみる</button></div>
+</div></div>
 <div class="coach" id="coach" hidden><svg class="dim" aria-hidden="true"><defs><mask id="coachMask"><rect width="100%" height="100%" fill="#fff"/><g id="coachHoles"></g></mask></defs><rect width="100%" height="100%" fill="rgba(8,12,20,.55)" mask="url(#coachMask)"/></svg><div class="bubble" id="coachBubble"><p id="coachText"></p><div class="bbtns" id="coachBtns"></div></div></div>
 
 <aside class="drawer" id="drawer" aria-label="設定">
@@ -2136,7 +2156,7 @@ function endTutorial(restore){
   if(restore && TUT.backup){ state=JSON.parse(TUT.backup); document.body.classList.toggle('pro',!!state.pro); }
   else { const b=JSON.parse(TUT.backup); state={...b, slots:Array(16).fill(null), segs:Array.from({length:16},()=>[]), bars:4, len:4, label:'num', guide:true}; document.body.classList.toggle('pro',!!state.pro); }
   page=0; selected=null; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save();
-  if(showTip){ $('moodTip').hidden=false; clearTimeout(TUT.tipT); TUT.tipT=setTimeout(()=>$('moodTip').hidden=true,180000); }
+  if(showTip){ $('moodPopChips').innerHTML=[['明るい','--t'],['切ない','--s'],['力強い','--d'],['穏やか','--warn']].map(([t,c])=>`<span style="--fn:var(${c})">${t}</span>`).join(''); $('moodPop').hidden=false; }
 }
 function showSlide(i){
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio();
@@ -2279,6 +2299,8 @@ $('tutBack').onclick=()=>{ const sl=DECK[TUT.i];
 $('tutSkip').onclick=()=>endTutorial(true);
 $('tutOpen').onclick=()=>openTutorial(SLIDES);
 $('moodOpen').onclick=()=>{ $('moodTip').hidden=true; openTutorial(MOOD); };
+$('moodPopGo').onclick=()=>{ $('moodPop').hidden=true; openTutorial(MOOD); };
+$('moodPopLater').onclick=()=>{ $('moodPop').hidden=true; $('moodTip').hidden=false; clearTimeout(TUT.tipT); TUT.tipT=setTimeout(()=>$('moodTip').hidden=true,180000); };
 $('moodTip').onclick=e=>{ $('moodTip').hidden=true; if(e.target.id!=='moodTipX') openTutorial(MOOD); };
 window.addEventListener('resize',()=>{ if(TUT.on && !$('coach').hidden && DECK[TUT.i].coach) runCoach(DECK[TUT.i].coach); });
 
