@@ -691,7 +691,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.152（2026-10-23）</p>
+    <p class="appver">ver 1.153（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -758,7 +758,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.152（2026-10-23）</p>
+  <p class="appver">ver 1.153（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1653,11 +1653,11 @@ for(const k in ARPS){ const A=ARPS[k]; if(A.sit){ for(const kd in A.sit) A.sit[k
   ARPS[k].at=atMap(ARPS[k].ev); }
 
 // 音色の名前は、楽器にくわしくない人にもわかる言い方で
-const INSTS={piano:'ピアノ',epiano:'電子ピアノ',clav:'クラビネットA',clav2:'クラビネットB',clav3:'クラビネットC',lofi:'レトロな電子ピアノ',spiano:'電子音のピアノ',organ:'オルガン',
+const INSTS={piano:'ピアノ',epiano:'電子ピアノ',epcity:'歪んだ電子ピアノ（シティポップ）',clav:'クラビネットA',clav2:'クラビネットB',clav3:'クラビネットC',lofi:'レトロな電子ピアノ',spiano:'電子音のピアノ',organ:'オルガン',
   steel:'アコースティックギター',nylon:'クラシックギター',eguitar:'エレキギター',dist:'ロックギター（歪み）',
   strings3:'バイオリンなど（弦楽器）',brass3:'ラッパ隊（ブラス）',trumpet:'トランペット',trombone:'トロンボーン',sax:'サックス',horn:'ホルン',glock:'鉄琴（キラキラ）',synth:'電子音（シンセ）',pad:'ふんわり電子音',koto:'琴',shami:'三味線'};
 // 音源ファイルの名前（ひずみギターはエレキを、ローファイはエレピを加工して使う）
-const SETOF=i=>({dist:'eguitar',lofi:'epiano'})[i]||i;
+const SETOF=i=>({dist:'eguitar',lofi:'epiano',epcity:'epiano'})[i]||i;
 // 聴き比べて決めた音（ストリングス＝JCLive、ブラス＝JCLive）。前の候補を選んでいた保存データ・リンクはこちらに置きかえる
 const INST_ALIAS={strings:'strings3',strings2:'strings3',brass:'brass3',brass2:'brass3'};
 const fixInst=v=>INST_ALIAS[v]||v;
@@ -1675,7 +1675,7 @@ const ensureArp2=()=>{ if(/^acc_/.test(state.arp2||'')) accOnly(state.arp2.slice
 const SYNTH_INST={spiano:'piano',synth:'synth'};
 const instShort=()=>INSTS[state.inst]+(!state.pro&&state.arp2&&ARPS[state.arp2]?'＋'+INSTS[state.inst2||'epiano']:'');
 // 音色・ドラムの音のジャンル分け（選ぶ画面で見出しをつけて並べる）
-const INST_GROUPS=[['ピアノ',['piano','epiano','clav','clav2','clav3','lofi','spiano','organ']],['ギター',['steel','nylon','eguitar','dist']],
+const INST_GROUPS=[['ピアノ',['piano','epiano','epcity','clav','clav2','clav3','lofi','spiano','organ']],['ギター',['steel','nylon','eguitar','dist']],
   ['オーケストラ',['strings3','horn','glock']],['管楽器',['brass3','trumpet','trombone','sax']],['電子音',['synth','pad']],['和楽器',['koto','shami']]];
 const KIT_GROUPS=[['バンド',['std','room','power','brush']],['シティポップ',['city','cityD']],['電子',['elec','tr808','synth']],['そのほか',['orch','lofi']]];
 // 場所を取らないよう、まずジャンルを選び、その中の音色だけを並べる（いま選んでいる音色のジャンルに印）
@@ -2516,7 +2516,7 @@ palette.addEventListener('keydown',e=>{
 
 // ---------- audio ----------
 let PAN=null, PAN_NEXT=null, BOWBAR=0;
-const PIANOISH=new Set(['piano','spiano','epiano','lofi','organ','clav','clav2','clav3']);   // 次に鳴らす音の左右の位置（-1=左〜1=右、null=まん中）
+const PIANOISH=new Set(['piano','spiano','epiano','epcity','lofi','organ','clav','clav2','clav3']);   // 次に鳴らす音の左右の位置（-1=左〜1=右、null=まん中）
 let ctx=null, master, masterOut=null, noiseBuf, compBus=null, compVol=null, compBus2=null, compVol2=null, drumBus=null, bassBus=null, OUT=null, PART2=false;
 function ensureAudio(noResume){
   if(ctx && ctx.state==='closed') ctx=null;
@@ -2632,10 +2632,26 @@ function lofiDrum(dest){ if(!(LOFI&&LOFI.ctx===ctx)) lofiBase(); let n=LOFI.drum
   const inp=ctx.createGain(); const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3200;
   const sh=ctx.createWaveShaper(); const k=2.5, N=1024, c=new Float32Array(N); for(let i=0;i<N;i++){ const x=i/(N-1)*2-1; c[i]=Math.tanh(k*x)/Math.tanh(k); } sh.curve=c;
   const g=ctx.createGain(); g.gain.value=.8; inp.connect(lp); lp.connect(sh); sh.connect(g); g.connect(dest); LOFI.drum.set(dest,inp); return inp; }
+let EPD=null;
+function epDrive(dest){ dest=dest||compBus; if(!EPD||EPD.ctx!==ctx) EPD={ctx,m:new Map()}; if(EPD.m.get(dest)) return EPD.m.get(dest);
+  const inp=ctx.createGain(); inp.gain.value=2.4;
+  const sh=ctx.createWaveShaper(); const N=2048, c=new Float32Array(N); for(let i=0;i<N;i++){ const x=i/(N-1)*2-1; c[i]=(Math.tanh(3*(x+.08))-Math.tanh(3*.08))/Math.tanh(3); } sh.curve=c; sh.oversample='2x';   // 少し非対称にして真空管アンプ風
+  const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=90;
+  const mid=ctx.createBiquadFilter(); mid.type='peaking'; mid.frequency.value=1300; mid.Q.value=.9; mid.gain.value=4;
+  const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=7000; lp.Q.value=.6;
+  const out=ctx.createGain(); out.gain.value=.42;
+  inp.connect(sh); sh.connect(hp); hp.connect(mid); mid.connect(lp); lp.connect(out); out.connect(dest);
+  EPD.m.set(dest,inp); return inp; }
 function keyTone(m,t,dur,v,inst){
   v=Math.max(.05,Math.min(1,v)); if(CAPTURE){ CAPTURE.push({k:PART2?'key2':'key',n:m,t,d:dur,v}); return null; }
   const BUS=PART2?compBus2:compBus;
   const I=inst||state.inst;
+  if(I==='epcity' && LOADED.epiano){
+    // 歪んだ電子ピアノ（シティポップ）：強く弾いたときの「ガツッ」としたアタックを足し、アンプで軽く歪ませて中域（鼻にかかった所）を前に
+    OUT=epDrive(BUS); const fx=INST_FX.epiano, lv=.36*fx.gain*Math.pow(v,1.3)*1.1, dd=Math.max(dur*fx.hold,.08);
+    const g=playZone(LOADED.epiano,m,t,dd,lv,.22,2500+7000*v,false); OUT=null;
+    if(g){ try{ const G=g.gain; G.cancelScheduledValues(t); G.setValueAtTime(0,t); G.linearRampToValueAtTime(lv*1.7,t+.003); G.setTargetAtTime(lv,t+.008,.05); G.setValueAtTime(lv,t+dd); G.setTargetAtTime(0,t+dd,.22); }catch(e){} }
+    return g; }
   if(I==='lofi' && LOADED.epiano){
     // ローファイ：エレピを、こもらせて少し揺らす（古いテープ・レコードの感じ）
     OUT=lofiChain(BUS); const fx=INST_FX.epiano;
@@ -4082,7 +4098,7 @@ function captureSong(){ const C=[]; const sbSv=LHCTX.satb; LHCTX.satb=null; rese
   try{ for(let n=0;n<T;n++){ scheduleStep(n,t); t+=sd; playedSteps++; } endHit(t); }
   finally{ CAPTURE=null; [LHCTX.prev,LHCTX.prevB]=lhSv; LHCTX.satb=sbSv; ({playedSteps,gpos,LOOPN,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice}=sv); if(!playing) visQ=[]; }
   return {ev:C, end:t+sd*16}; }
-const GM_PROG={clav:7,clav2:7,clav3:7,piano:0,spiano:0,epiano:4,lofi:4,organ:16,steel:25,nylon:24,eguitar:27,dist:30,pad:89,synth:81,strings:48,strings2:48,strings3:48,trumpet:56,trombone:57,sax:65,brass:61,brass2:61,brass3:61,horn:60,glock:9,koto:107,shami:106};
+const GM_PROG={epcity:4,clav:7,clav2:7,clav3:7,piano:0,spiano:0,epiano:4,lofi:4,organ:16,steel:25,nylon:24,eguitar:27,dist:30,pad:89,synth:81,strings:48,strings2:48,strings3:48,trumpet:56,trombone:57,sax:65,brass:61,brass2:61,brass3:61,horn:60,glock:9,koto:107,shami:106};
 const GM_BASS={bass:33,ubass:32,slap3:36,sbass:38,ebass:34};
 function midiFile(){ const {ev}=captureSong(), PPQ=480, tk=sec=>Math.max(0,Math.round(sec*state.bpm/60*PPQ));
   const vlq=n=>{ const b=[n&127]; while(n>>=7) b.unshift((n&127)|128); return b; };
