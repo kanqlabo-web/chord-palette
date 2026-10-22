@@ -2386,18 +2386,27 @@ function scheduleStep(g,t){
     }
   } else if(has(cell) && lag>0 && rel<lag){
     // 後ろ倒し：遅らせている間は、前のコードのままパターンを続ける
-    if(barTones){ const evs=pat.at[rel]; if(evs && rel>0) playEvents(evs, barTones, ct, sd, pat); }
+    if(barTones){ const evs=pat.at[cell.off>0?off%16:rel]; if(evs && rel>0) playEvents(evs, barTones, ct, sd, pat); }
   } else if(has(cell)){
     // コードが変わった所から、パターンを頭から弾く（短いコードはパターンの前の部分だけ）
     const key=i+':'+cell.h, head=rel===lag, pushed = rel===0 && pushedKey===key;
     if((head&&!pushed)||!barTones){ barTones=chordNotes(cell.v,lastR); lastR=barTones.R; }
     if(rel===0) pushedKey=null;
-    const evs = pushed ? null : head ? pat.at[0] : pat.at[rel];
+    // 小節の途中（3拍目など）で変わるコードは、パターンを頭から弾き直さず、小節の中の位置のまま続けてコードだけ変える
+    //（その瞬間に伸ばしている音は、新しいコードで弾き直す）。8分のくり返しのパターンは、これまでと同じ鳴り方になる
+    const mid = cell.off>0, pi = mid ? off%16 : rel;
+    let evs = pushed ? null : (head && !mid) ? pat.at[0] : pat.at[pi];
+    if(head && mid && !pushed){ const now=evs||[], have=new Set(now.flatMap(e=>e[1]));
+      const hold=(pat.ev||[]).filter(e=>e[0]<pi && e[0]+e[2]>pi).map(e=>[pi,e[1].filter(x=>!have.has(x)),e[0]+e[2]-pi,e[3]*.9,e[4]]).filter(e=>e[1].length);
+      evs = now.length||hold.length ? [...now,...hold] : pat.at[0]; }
     if(head && !pushed) choke(ct);
     else if(evs && !pat.legato && evs.some(e=>e[1].length>1)) choke(ct);
     if(evs) playEvents(evs, barTones, ct, sd, pat);
-    if(state.bass && head && !pushed){ const bl=bassOf(b), e0=bl.find(e=>e[0]===(head?0:rel)); chokeBass(tt, e0&&e0[4]&&lastBassVoice?lastBassVoice.g:null); }
-    if(state.bass && !pushed && (head || lag===0 || rel>=lag+2)) playBass(bassOf(b),head?0:rel,tt,barTones,sd,cell.len-rel+nLag,nx.v);   // 遅らせた直後はベースを詰め込まない
+    let bl=state.bass?bassOf(b):null, bi=mid?off%16:(head?0:rel);
+    if(bl && head && mid && !pushed && !bl.some(e=>e[0]===bi)){ const h=bl.find(e=>e[0]<bi && e[0]+e[2]>bi);
+      bl = h ? [[bi,h[1]==='ap'?0:h[1],h[0]+h[2]-bi,h[3]*.9]] : bl; if(!h) bi=0; }
+    if(state.bass && head && !pushed){ const e0=bl.find(e=>e[0]===bi); chokeBass(tt, e0&&e0[4]&&lastBassVoice?lastBassVoice.g:null); }
+    if(state.bass && !pushed && (head || lag===0 || rel>=lag+2)) playBass(bl,bi,tt,barTones,sd,cell.len-rel+nLag,nx.v);   // 遅らせた直後はベースを詰め込まない
   }
   if(!document.hidden) visQ.push({t,b:i,s:off,L,beat:g%4===0,abs:playedSteps,g});
 }
