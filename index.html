@@ -662,7 +662,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.107（2026-10-23）</p>
+    <p class="appver">ver 1.108（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -719,7 +719,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.107（2026-10-23）</p>
+  <p class="appver">ver 1.108（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -974,7 +974,7 @@ function chordNotes(v,prev){
   const slash = sp.b!==null&&sp.b!==undefined, bpc = slash ? (k.pc+sp.b)%12 : rpc;
   // 左手：E2〜E♭3（PROモードでは音域スライダーでずらせる）
   const lhOff=state.pro?(state.lhOff||0):0, rhOff=state.pro?(state.rhOff||0):0;
-  const L=40+lhOff+((bpc-4+12)%12);
+  const lo=40+lhOff, L=lo+(((bpc-lo)%12)+12)%12;   // 音域スライダーは「範囲」をずらす（音の名前は変えない）
   // 左手のオクターブも弾くパターンでは、右手のいちばん下の音を左手オクターブより短3度以上上にして、音がぶつからないようにする
   const pat=ARPS[state.arp], R=voiceFor(pcs,prev, (pat&&pat.rhAbove ? Math.max(56,L+12+3) : 56)+rhOff);   // 右手：A♭3から上
   const r=[R[0],R[1]??R[0]+12,R[2]??(R[1]??R[0])+12];               // 2音（パワーコード）でも3つの役割を埋める
