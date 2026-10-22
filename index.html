@@ -962,12 +962,14 @@ function chordNotes(v,prev){
   // 5度はそのコードの本当の5度（m-5なら減5度、augなら増5度）。左手やベースが和音とぶつからないように
   const fifth = ivs.includes(7)?7 : ivs.includes(6)?6 : ivs.includes(8)?8 : 12;
   const third = ivs.includes(4)?4 : ivs.includes(3)?3 : ivs.includes(5)?5 : ivs.includes(2)?2 : 12;
+  // 7度：コードに7度があればその音（7・M7・dim7）。なければキーの音階にある方（4 なら長7度、5 なら短7度）
+  const seventh = ivs.includes(10)?10 : ivs.includes(11)?11 : (ivs.includes(9)&&sp.q==='dim')?9 : [0,2,4,5,7,9,11].includes((sp.o+11)%12)?11 : 10;
   const bass=28+((bpc-4+12)%12);
   // ギターの音色：実際のギターで押さえる形（ローコード、なければバレーコード）で鳴らす
   if(GUITARS.has(state.inst)){ const gs=guitarShape(ivs.map(i=>(rpc+i)%12), bpc, (rpc+fifth)%12);
     if(gs){ const n=gs.length, top=gs.slice(n-3), mid=gs.slice(1,n-3);
-      return {tones:[gs[0],...top, mid[0]??null, mid[1]??null, ...top.map(x=>x+12), null, null], R:top, strings:gs, bass, slash, fifth, third}; } }
-  return {tones:[L,...r, slash?L+12:L+fifth, L+12, ...r.map(x=>x+12), R[3]??null, R[3]!=null?R[3]+12:null], R, bass, slash, fifth, third};   // ベースはE1〜E♭2（実際のベースの音域）
+      return {tones:[gs[0],...top, mid[0]??null, mid[1]??null, ...top.map(x=>x+12), null, null], R:top, strings:gs, bass, slash, fifth, third, seventh}; } }
+  return {tones:[L,...r, slash?L+12:L+fifth, L+12, ...r.map(x=>x+12), R[3]??null, R[3]!=null?R[3]+12:null], R, bass, slash, fifth, third, seventh};   // ベースはE1〜E♭2（実際のベースの音域）
 }
 
 // ---- drum patterns: 16 steps per voice. X=強 x=中 o=弱 g=ゴースト .=休み
@@ -1098,7 +1100,7 @@ const ARPS = {
 };
 // ---- PROモード：マイパターン（ドラムとコードを自分で打ち込む）
 const DRUM_ROWS=[['c','クラッシュ'],['r','ライド'],['o','オープンHH'],['h','ハイハット'],['t1','タム高'],['t2','タム中'],['t3','フロア'],['s','スネア'],['x','リム'],['k','キック']];
-const BASS_ROWS=[['12','オクターブ上'],['6','6度'],['5','5度'],['3','3度'],['ap','つなぎ'],['0','ルート'],['-5','5度下'],['-12','オクターブ下']];
+const BASS_ROWS=[['12','オクターブ上'],['7','7度'],['6','6度'],['5','5度'],['3','3度'],['ap','つなぎ'],['0','ルート'],['-5','5度下'],['-12','オクターブ下']];
 const SK=kind=>kind==='bass'?'bassPat':kind;   // そのパターンが入っている設定の名前
 const KEY_ROWS=[[3,'右手 上'],[2,'右手 中'],[1,'右手 下'],[5,'左手 8度'],[4,'左手 5度'],[0,'左手 根音']];
 const LV=[0,.5,.75,1], CH=['.','o','x','X'];
@@ -1179,7 +1181,7 @@ function previewRow(r,vel){
   whenRunning(()=>{ const t=ctx.currentTime+.02;
     if(patKind==='drum') drum(+VOICE[r],t,vel);
     else { const v=state.slots[page*4]??0, bt=chordNotes(v,null);
-      if(patKind==='bass'){ const n={'0':0,'12':12,'5':bt.fifth,'3':bt.third,'6':sixthOf(bt),'ap':bt.fifth,'-5':bt.fifth-12,'-12':-12}[r]; bassTone(bt.bass+n,t,.4,vel); }
+      if(patKind==='bass'){ const n={'0':0,'12':12,'5':bt.fifth,'3':bt.third,'6':sixthOf(bt),'7':bt.seventh,'ap':bt.fifth,'-5':bt.fifth-12,'-12':-12}[r]; bassTone(bt.bass+n,t,.4,vel); }
       else if(bt.tones[+r]!=null) keyTone(bt.tones[+r],t,.5,COMP_LEVEL*vel); } });
 }
 // ---- ピアノロール：タップで追加・削除／右端をドラッグで長さ／ドラッグで移動／長押ししてから上下でベロシティ
@@ -2350,7 +2352,7 @@ function playBass(list,s,t,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,v
       n=best; }
   } else if(iv==='-12'){ n=-12; }
   else if(iv==='-5'){ n = bt.slash ? -12 : bt.fifth-12; }
-  else if(typeof iv==='string'){ n = bt.slash ? 12 : iv==='3'?bt.third : iv==='5'?bt.fifth : iv==='6'?sixthOf(bt) : 0; }
+  else if(typeof iv==='string'){ n = bt.slash ? 12 : iv==='3'?bt.third : iv==='5'?bt.fifth : iv==='6'?sixthOf(bt) : iv==='7'?bt.seventh : 0; }
   else n = iv===7 ? (bt.slash?12:bt.fifth) : iv;
   const m=bt.bass+n;
   if(slide && lastBassM!=null) GLIDE={ratio:mtof(lastBassM)/mtof(m), time:list.glide||.08};
@@ -2555,10 +2557,10 @@ function drawArpBar(g,x,y,w,h,a,c,col,n=16){
 }
 // ベースの帯：横＝タイミング、縦＝音の高さ（下がルート、上がオクターブ）
 function drawBassBar(g,x,y,w,h,list,c,col,n=16){
-  const low=bassLow(list), sw=w/n, r=devicePixelRatio||1, Y=low?{'-12':0,'-5':.14,0:.3,'ap':.62,'3':.53,'5':.69,'6':.79,12:1,7:.69}:{0:0,'ap':.45,'3':.33,'5':.55,'6':.7,12:1,7:.55};
+  const low=bassLow(list), sw=w/n, r=devicePixelRatio||1, Y=low?{'-12':0,'-5':.14,0:.3,'ap':.62,'3':.53,'5':.69,'6':.79,'7':.9,12:1}:{0:0,'ap':.45,'3':.33,'5':.55,'6':.7,'7':.85,12:1};
   g.fillStyle=col.line; for(let i=4;i<n;i+=4) g.fillRect(x+i*sw,y+2*r,1*r,h-4*r);
   g.fillStyle=c; const bh=Math.max(3*r,h*.2);
-  (list||[]).forEach(([st,iv,len,vel])=>{ if(st>=n) return; const l=Math.min(len,n-st), yy=y+(h-bh)*(1-(Y[iv]??.5));
+  (list||[]).forEach(([st,iv,len,vel])=>{ if(st>=n) return; const l=Math.min(len,n-st), yy=y+(h-bh)*(1-(Y[iv===7?'5':iv]??.5));
     g.globalAlpha=.35+.65*vel; rr(g,x+st*sw+r*.5,yy,Math.max(l*sw-1*r,1.5*r),bh,1.2*r); g.fill(); });
   g.globalAlpha=1;
 }
