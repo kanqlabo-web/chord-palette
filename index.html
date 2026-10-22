@@ -541,8 +541,8 @@ body.tutlite .lvbig{visibility:hidden}
 .song button{flex:none;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:5px 10px;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer}
 .song button.del{color:var(--muted)}
 .lib{position:fixed;inset:0;z-index:58;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
-.libin{max-width:680px;margin:0 auto;padding:max(14px,env(safe-area-inset-top,0px)) 16px 40px}
-.libhead{display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px}.libhead h2{font-family:var(--display);font-weight:900;font-size:1.25rem;margin:0}
+.libin{max-width:680px;margin:0 auto;padding:0 16px 40px}
+.libhead{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:3;background:var(--bg);margin:0 -16px 8px;padding:max(14px,env(safe-area-inset-top,0px)) 16px 10px}.libhead h2{font-family:var(--display);font-weight:900;font-size:1.25rem;margin:0}
 #libQ{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:10px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
 .libcats,.libtags{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}.libcats::-webkit-scrollbar,.libtags::-webkit-scrollbar{display:none}
 .libcats button,.libtags button{flex:none;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 13px;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap}
@@ -679,7 +679,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.119（2026-10-23）</p>
+    <p class="appver">ver 1.120（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -746,7 +746,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.119（2026-10-23）</p>
+  <p class="appver">ver 1.120（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1675,7 +1675,8 @@ function renderTiles(){
 }
 // PROモード：1小節の中で拍ごとにコードを変える。state.segs[i] = [{beat:2〜4, v:コード}, …]
 // PROの拍切り替えは、1マスの長さ（4拍・2拍）の中だけで使う（1拍のマスは分けない）
-const splitOK=()=>state.pro || ULx()>=9;
+let LIB_PREVIEW=false;   // コード一覧の試し聴き中は、レベルに関係なく1小節の途中の切り替えも鳴らす
+const splitOK=()=>state.pro || ULx()>=9 || LIB_PREVIEW;
 const segsOf=i=>splitOK() ? (state.segs[i]||[]).filter(x=>x&&x.v!==null&&x.v!==undefined&&x.beat<=(state.len||4)).sort((a,b)=>a.beat-b.beat) : [];
 const slotSteps=()=>(state.len||4)*4;           // 1マスの長さ（16分音符の数）
 function cellsOf(i){
@@ -1884,7 +1885,7 @@ const libName=t=>nameOf(tokSpec(t), state.label==='alpha'?'alpha':numK(), false)
 // 試し聴き：いまの伴奏（ドラム・コード・ベース）でその進行を1周演奏して、最初のコードで締める。
 // マスの中身は一時的に入れ替えるだけで、止めたら元に戻す（保存もしない）
 function libStop(){ LIB.timers.forEach(clearTimeout); LIB.timers=[]; LIB.playing=null; clearTimeout(LIB.endT);
-  const bk=LIB.bk; LIB.bk=null; LIB.stopping=false;
+  const bk=LIB.bk; LIB.bk=null; LIB.stopping=false; LIB_PREVIEW=false;
   if(bk){ if(playing) stop(); Object.assign(state,bk); renderPages(); }
   document.querySelectorAll('.libplay.on').forEach(b=>{ b.classList.remove('on'); b.innerHTML=ico('play'); }); }
 function libPlay(i,btn){ const was=LIB.playing; libStop(); if(was===i) return; if(playing) stop();
@@ -1893,7 +1894,7 @@ function libPlay(i,btn){ const was=LIB.playing; libStop(); if(was===i) return; i
   state.slots=Array.from({length:16},(_,j)=>e.p[j]!==undefined?tokSpec(e.p[j]):null);
   state.segs=Array.from({length:16},(_,j)=>((e.segs||{})[j]||[]).map(g=>({beat:g.beat,v:tokSpec(g.v)})));
   state.ant=Array(16).fill(null);
-  LIB.playing=i; btn.classList.add('on'); btn.innerHTML=ico('stop'); play(); }
+  LIB_PREVIEW=true; LIB.playing=i; btn.classList.add('on'); btn.innerHTML=ico('stop'); play(); }
 function libUse(i){ const e=PRESETS[i]; libStop(); if(playing) stop();
   state.bars=e.p.length; state.len=4;
   state.slots=Array.from({length:16},(_,j)=>e.p[j]!==undefined?tokSpec(e.p[j]):null);
