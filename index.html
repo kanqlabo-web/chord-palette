@@ -2297,8 +2297,11 @@ function preview(d){
   whenRunning(()=>{ if(!playing) previewNow(d); });
 }
 function previewNow(d){
-  const t=ctx.currentTime+.02, {tones,bass,strings}=chordNotes(d,null);
-  (strings||[...tones.slice(0,4),tones[9]]).filter(m=>m!=null).forEach((m,i,a)=>keyTone(m,t+i*.02,.9,i===a.length-1?.62:.5)); if(state.bass) bassTone(bass,t,.9);
+  // チュートリアルの中でタップして鳴らすコードは、いつもピアノ＋ベース
+  const sv=TUT.on?{inst:state.inst,bass:state.bass,bassSnd:state.bassSnd}:null; if(sv) Object.assign(state,{inst:'piano',bass:true,bassSnd:'bass'});
+  try{ const t=ctx.currentTime+.02, {tones,bass,strings}=chordNotes(d,null);
+    (strings||[...tones.slice(0,4),tones[9]]).filter(m=>m!=null).forEach((m,i,a)=>keyTone(m,t+i*.02,.9,i===a.length-1?.62:.5)); if(state.bass) bassTone(bass,t,.9); }
+  finally{ if(sv) Object.assign(state,sv); }
 }
 
 // ---------- scheduler ----------
@@ -2770,8 +2773,8 @@ Object.assign(EX,{
 const styleBy=name=>STYLES.find(x=>x.name===name);
 function setStyle(st){ state.drum=st.drum; state.arp=st.arp; state.bassPat='auto'; state.bassSnd=st.bassSnd||'bass'; state.bass=st.bass!==false; state.kit=st.kit; state.inst=st.inst; }
 function tutLoadEx(ex){ const b=TUT.backup?JSON.parse(TUT.backup):state, st=ex.style&&styleBy(ex.style);
-  if(st) setStyle(st); else Object.assign(state,{drum:b.drum,arp:b.arp,inst:b.inst,kit:b.kit,bass:b.bass,bassSnd:b.bassSnd,bassPat:b.bassPat});
-  Object.assign(state,{inst:'piano',bass:true,bassSnd:'bass'});   // チュートリアルの音は、いつもピアノ＋ベース（伴奏のリズムはお手本どおり）
+  // 伴奏スタイルが決まっているお手本は、そのスタイルの楽器で。決まっていないもの（作業中の楽器で鳴っていたもの）はピアノ＋ベースで
+  if(st) setStyle(st); else Object.assign(state,{drum:b.drum,arp:b.arp,kit:b.kit,bassPat:b.bassPat,inst:'piano',bass:true,bassSnd:'bass'});
   state.bpm=ex.bpm||b.bpm; state.fill=false; state.key=ex.key||'C';
   $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; tutLoad(ex.degs,ex.segs,ex.ant); ensureSounds(); }
 const moodSlide=(no,title,h,key,notes)=>({html:()=>`<div class="eyebrow a">雰囲気${no}　${title}</div>
@@ -2870,7 +2873,7 @@ function kbdShow(d,anim){ const k=$('kbd'); if(!k) return; k.querySelectorAll('.
   [[d,'on',0],[d+1,'skip',1],[d+2,'on',2],[d+3,'skip',3],[d+4,'on',4]].forEach(([i,c,n])=>{ const w=k.querySelector(`.wk[data-i="${i}"]`); if(!w) return; if(anim) w.style.transitionDelay=(n*.35)+'s'; w.classList.add(c); });
   // 光る鍵盤に合わせて「ドー・ミー・ソー」と1音ずつ鳴らしてから、和音で「ジャーン」
   clearTimeout(kbdShow.t); const W=[0,2,4,5,7,9,11], mOf=i=>60+W[i%7]+12*Math.floor(i/7);
-  if(anim && !playing){ ensureSounds(); whenRunning(()=>{ if(playing) return; const t0=ctx.currentTime+.05; [d,d+2,d+4].forEach((i,n)=>keyTone(mOf(i),t0+n*.7,.62,.7)); }); }
+  if(anim && !playing){ ensureSounds(); whenRunning(()=>{ if(playing) return; const t0=ctx.currentTime+.05, sv=state.inst; state.inst='piano'; [d,d+2,d+4].forEach((i,n)=>keyTone(mOf(i),t0+n*.7,.62,.7)); state.inst=sv; }); }
   kbdShow.t=setTimeout(()=>preview(d), anim?2100:0); }
 const bindKbd=()=>document.querySelectorAll('.tut [data-kd]').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tut [data-kd]').forEach(x=>x.classList.toggle('now',x===b)); kbdShow(+b.dataset.kd,true); });
 const SPX=o=>JSON.stringify({b:null,...o}).replace(/"/g,'&quot;');
