@@ -513,9 +513,9 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .lvbig span{font-size:clamp(.55rem,2.6vw,.7rem);line-height:1.3;opacity:.85;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .lvbig.fresh{animation:lvglow 1.6s ease 3}
 @keyframes lvglow{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--t) 0%,transparent)}50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--t) 40%,transparent)}}
-.leg .lvonly{display:none}
-body.haslv .leg .lvonly{display:flex}
-body.haslv .legR{display:none}
+/* 色の意味（T・S・D）は、どのモードでも左側に4行でまとめる */
+.leg .lvonly{display:flex}
+.legR{display:none}
 body.tutlite .lvbig{visibility:hidden}
 .lvclr{display:inline-block;margin-bottom:4px;font-family:var(--display);font-weight:900;color:var(--t);letter-spacing:.04em}
 @media (min-width:820px) and (min-aspect-ratio:5/4){ .app>.palette .lvbig{height:min(100%,24vh,150px,9.5vw)} }
