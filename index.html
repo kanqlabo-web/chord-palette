@@ -422,6 +422,89 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 @keyframes tgrow{to{transform:none}}
 .brk.u span{top:auto;bottom:0;border-top:0;border-bottom:2px solid var(--fn,var(--ink));border-radius:0 0 8px 8px;align-items:flex-end;padding:0 0 3px}
 .exrow.sm{gap:3px}.exrow.sm .tc{min-width:0;padding:6px 0;border-radius:10px}.exrow.sm .tc b{font-size:.95rem}
+.modepick{position:fixed;inset:0;z-index:65;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow-y:auto}
+.modepick[hidden]{display:none}
+.mpin{width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;text-align:center;animation:tin .4s ease}
+.mpeye{margin:0;font-family:var(--display);font-weight:900;font-size:.8rem;letter-spacing:.08em;color:var(--muted)}
+.mpin h2{margin:0 0 6px;font-family:var(--display);font-weight:900;font-size:1.7rem;line-height:1.3}
+.mpcard{display:flex;align-items:center;gap:14px;text-align:left;width:100%;border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:20px;padding:16px;font:inherit;cursor:pointer;transition:transform .1s}
+.mpcard:active{transform:scale(.98)}
+.mpcard.step{--fn:var(--t);border-color:var(--t)}.mpcard.free{--fn:var(--d)}
+.mpic{flex:none;width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:color-mix(in srgb,var(--fn) 16%,transparent);color:var(--fn)}
+.mptx{display:flex;flex-direction:column;gap:3px}
+.mptx small{font-size:.7rem;font-weight:700;color:var(--fn)}
+.mptx b{font-family:var(--display);font-weight:900;font-size:1.2rem}
+.mptx span{font-size:.8rem;line-height:1.5;color:var(--muted)}
+.mpnote{margin:4px 0 0;font-size:.72rem;color:var(--muted)}
+.jumprow{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;font-size:.74rem;color:var(--muted)}
+.jumprow select{font:inherit;font-size:16px;padding:4px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.lvnext{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;border:2px solid var(--ink);background:var(--bg);border-radius:14px;padding:10px 14px;font:inherit;color:var(--ink);cursor:pointer}
+.lvnext i{font-style:normal;font-family:var(--display);font-weight:900;font-size:.66rem;letter-spacing:.08em;color:var(--muted)}
+.lvnext b{font-size:.95rem}
+.lvnext small{font-size:.72rem;color:var(--muted)}
+.acclist button.lock{opacity:.45;cursor:default}
+.acclist .lvtag{font-family:var(--display);font-weight:900;font-size:.62rem;letter-spacing:.06em;color:var(--muted)}
+.chapdone{color:var(--t);font-weight:700;margin-left:6px;font-size:.8rem}
+.bpm.locked{opacity:.45}
+.tc.hear{cursor:pointer;border:none;font:inherit}
+.chordbig .tn{color:var(--d);background:color-mix(in srgb,var(--d) 18%,transparent)}
+.kbd{position:relative;display:grid;grid-template-columns:repeat(11,1fr);gap:2px;width:100%;height:110px;margin-bottom:18px}
+.wk{position:relative;border-radius:0 0 8px 8px;background:var(--surface);border:1.5px solid var(--line);display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:6px;gap:1px;transition:background .3s,border-color .3s,transform .3s}
+.wk b{font-family:var(--display);font-weight:900;font-size:clamp(.55rem,2.6vw,.8rem);white-space:nowrap}
+.wk small{font-size:.55rem;color:var(--muted);white-space:nowrap}
+.wk.on{background:color-mix(in srgb,var(--t) 30%,var(--surface));border-color:var(--t);transform:translateY(2px)}
+.wk.on b{color:var(--t)}
+.wk.skip::after{content:'とばす';position:absolute;bottom:-17px;white-space:nowrap;font-size:.48rem;font-weight:700;color:var(--muted);opacity:0;transition:opacity .3s;transition-delay:inherit}
+.wk.skip::after{opacity:1}
+.bk{position:absolute;top:0;width:6%;height:55%;background:var(--ink);border-radius:0 0 4px 4px;pointer-events:none;opacity:.85}
+.kbtns .tc{min-width:44px;padding:6px 8px}.kbtns .tc b{font-size:1.05rem}
+.count4{display:flex;align-items:center;justify-content:center;gap:4px;width:100%}
+.count4>div{display:flex;flex-direction:column;align-items:center;gap:4px}
+.count4 .tc{min-width:0;padding:6px 10px}.count4 .tc b{font-size:1.1rem}
+.count4 small{font-size:.66rem;color:var(--muted);font-weight:700}
+.count4 .to small{color:var(--t)}.count4 .from small{color:var(--d)}
+.count4 i{font-style:normal;color:var(--muted);font-weight:700;margin-bottom:18px}
+.pairs{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.tut [data-hear]{cursor:pointer}
+.tut [data-hear].tapped{box-shadow:0 0 0 3px color-mix(in srgb,var(--fn,var(--t)) 45%,transparent)}
+.pairbtn{display:flex;align-items:center;gap:6px;border:0;background:transparent;font:inherit;color:var(--ink);cursor:pointer;padding:0}
+.pairbtn .tc{min-width:52px}
+.keytable{display:flex;flex-direction:column;gap:6px;width:100%}
+.keyrow{display:grid;grid-template-columns:64px repeat(6,1fr);gap:4px;align-items:center}
+.keyrow>b{font-family:var(--display);font-weight:900;font-size:.8rem;text-align:left}
+.keyrow span{display:flex;flex-direction:column;align-items:center;border-radius:10px;padding:4px 0;background:var(--surface);border:1px solid var(--line);font-family:var(--display);font-weight:900;font-size:.95rem}
+.keyrow span i{font-style:normal;font-size:.62rem;color:var(--muted)}
+.pairs>div{display:flex;align-items:center;gap:6px}
+.pairs span{color:var(--muted);font-weight:700}
+.varcols{display:grid;grid-template-columns:1.3fr 1fr;gap:8px;max-width:520px;margin:0 auto 12px}
+.varnow{max-width:520px;margin:0 auto 10px;display:flex;align-items:baseline;gap:10px}
+.varnow b{font-family:var(--display);font-weight:900;font-size:2rem;line-height:1}
+.varnow b sup{font-size:.5em;vertical-align:.8em}
+.varnow small{font-size:.8rem;color:var(--muted);font-weight:700}
+.varnow i{font-style:normal;font-family:var(--display);font-weight:900;font-size:.8rem;color:var(--fn);margin-left:auto}
+.varnow.T{--fn:var(--t)}.varnow.S{--fn:var(--s)}.varnow.D{--fn:var(--d)}
+.flipgrid{display:flex;flex-direction:column;gap:10px;width:100%}
+.halfbox{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.halfbox .tc{min-width:0;padding:8px 0}
+.halfbox .tc b{font-size:clamp(.75rem,3.6vw,1.1rem);white-space:nowrap}
+.lvtitle .unl{margin-top:6px;font-size:.78rem;color:var(--muted)}
+.opsl{display:flex;flex-direction:column;gap:8px;width:100%;text-align:left}
+.opsl div{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);font-size:.82rem}
+.opsl b{font-family:var(--display);font-weight:900}
+.lvbig{grid-column:3;grid-row:3;align-self:center;justify-self:center;height:min(100%,24vw,130px);aspect-ratio:1/.82;min-width:0;overflow:hidden;border:0;border-radius:18px;
+  background:var(--ink);color:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px;font:inherit;cursor:pointer;text-align:center;transition:transform .1s}
+.lvbig:active{transform:scale(.97)}
+.lvbig small{font-size:.6rem;font-weight:700;letter-spacing:.12em;opacity:.7}
+.lvbig b{font-family:var(--display);font-weight:900;font-size:clamp(.9rem,4.6vw,1.35rem);line-height:1.1;white-space:nowrap}
+.lvbig span{font-size:clamp(.55rem,2.6vw,.7rem);line-height:1.3;opacity:.85;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.lvbig.fresh{animation:lvglow 1.6s ease 3}
+@keyframes lvglow{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--t) 0%,transparent)}50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--t) 40%,transparent)}}
+.leg .lvonly{display:none}
+body.haslv .leg .lvonly{display:flex}
+body.haslv .legR{display:none}
+body.tutlite .lvbig{visibility:hidden}
+.lvclr{display:inline-block;margin-bottom:4px;font-family:var(--display);font-weight:900;color:var(--t);letter-spacing:.04em}
+@media (min-width:820px) and (min-aspect-ratio:5/4){ .app>.palette .lvbig{height:min(100%,24vh,150px,9.5vw)} }
 .exnote{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%}
 .exnote p{font-size:.84rem;line-height:1.6;padding-left:14px;position:relative}
 .exnote p::before{content:"";position:absolute;left:2px;top:.6em;width:6px;height:6px;border-radius:50%;background:var(--fn,var(--ink))}
@@ -457,7 +540,7 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .moodpick b{font-family:var(--display);font-size:1rem}
 .moodpick small{font-size:.72rem;color:var(--muted)}
 .ic{width:12px;height:12px;flex:none;display:inline-block;vertical-align:-1px}
-/* カデンツガイド（メイン画面）：マスの上に役割の流れを括弧で表示 */
+/* 進行ガイド（メイン画面）：マスの上に役割の流れを括弧で表示 */
 .gstrip{position:relative;height:20px;flex:none;display:none}
 body.guide .gstrip{display:block}
 body.tutlite .gstrip{visibility:hidden}
@@ -493,7 +576,7 @@ body.tutlite .gstrip{visibility:hidden}
 .coach .bubble{position:fixed;max-width:420px;margin:0;
   background:var(--surface);color:var(--ink);border-radius:16px;padding:14px 16px;box-shadow:0 12px 30px rgba(0,0,0,.25);pointer-events:auto;transition:top .35s,left .35s}
 .coach .bubble p{margin:0 0 10px;font-size:.92rem;line-height:1.6;font-weight:500}
-.coach .bbtns{display:flex;gap:8px;justify-content:flex-end}
+.coach .bbtns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .coach .bbtns button{border:0;border-radius:10px;padding:9px 16px;font:inherit;font-weight:700;background:var(--ink);color:var(--bg);cursor:pointer}
 .coach .bbtns button.alt{background:transparent;color:var(--muted)}
 /* チュートリアル中は役割（T・S・D）の文字と色を出さない */
@@ -517,7 +600,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="palette" id="palette"></div>
 
   <div class="slotwrap">
-    <div class="slothead"><span id="hint">コードをマスへドラッグ</span><span class="right"><button class="moodtip" id="moodTip" hidden>次は「雰囲気のつくり方」 ›<i id="moodTipX" aria-label="閉じる">×</i></button><b id="progName"></b><button class="edall" id="edAll">コードを編集</button></span></div>
+    <div class="slothead"><span id="hint">コードをマスへドラッグ</span><span class="right"><button class="moodtip" id="moodTip" hidden><span id="moodTipT">次のレベルへ</span> ›<i id="moodTipX" aria-label="閉じる">×</i></button><b id="progName"></b><button class="edall" id="edAll">コードを編集</button></span></div>
     <div class="pages" id="pages"></div>
     <div class="gstrip" id="gstrip" aria-hidden="true"></div>
     <div class="slots" id="slots"></div>
@@ -546,24 +629,35 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   </div>
 </div>
 
+<div class="modepick" id="modePick" hidden role="dialog" aria-label="あそび方を選ぶ">
+  <div class="mpin">
+    <p class="mpeye">コード進行パレット</p>
+    <h2>あそび方を<br>選んでください</h2>
+    <button class="mpcard step" data-m="step"><span class="mpic"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M4 28h8v-7h7v-7h7V7h4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="mptx"><small>はじめての人におすすめ</small><b>ステップモード</b><span>レベルを1つずつクリアしながら覚えていきます。クリアするたびに、使える機能が増えていきます。</span></span></button>
+    <button class="mpcard free" data-m="free"><span class="mpic"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 4l2.8 8.2L28 15l-8.2 2.8L17 26l-2.8-8.2L6 15l8.2-2.8z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><circle cx="27" cy="27" r="2.2" fill="currentColor"/><circle cx="7" cy="6" r="1.8" fill="currentColor"/></svg></span><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使えます。各レベルの解説は、いつでも好きな順に見られます。</span></span></button>
+    <div class="jumprow"><label for="mpJump">途中のレベルから始める</label><select id="mpJump"></select></div>
+    <p class="mpnote">あとから設定メニューの「モード」で変更できます</p>
+  </div>
+</div>
 <div class="scrim" id="scrim"></div>
 <div class="tut" id="tut" hidden>
   <div class="tutbar"><div class="tutdots" id="tutDots"></div><button class="tutskip" id="tutSkip">スキップ</button></div>
   <div class="tutstage" id="tutStage"></div>
   <div class="tutnav"><button class="tutbtn alt" id="tutBack">もどる</button><button class="tutbtn" id="tutNext">つぎへ</button></div>
 </div>
-<div class="modalpop" id="moodPop" hidden><div class="popcard" role="dialog" aria-label="雰囲気のつくり方の案内">
+<div class="modalpop" id="moodPop" hidden><div class="popcard" role="dialog" aria-label="次のレベルの案内">
   <div class="popchips" id="moodPopChips"></div>
-  <div class="popeyebrow">NEXT</div>
-  <h2>次は「雰囲気のつくり方」</h2>
-  <p>明るい・切ない・力強い…。<br>ねらった雰囲気のコード進行を作るコツを、<br>実例と実践で覚えましょう。</p>
-  <div class="popbtns"><button class="alt" id="moodPopLater">あとで</button><button id="moodPopGo">見てみる</button></div>
+  <div class="popeyebrow" id="moodPopEye">NEXT</div>
+  <h2 id="moodPopTitle"></h2>
+  <p id="moodPopText"></p>
+  <div class="popbtns"><button class="alt" id="moodPopLater">あとで</button><button id="moodPopGo">はじめる</button></div>
 </div></div>
 <div class="toast" id="toast" hidden></div>
 <div class="coach" id="coach" hidden><svg class="dim" aria-hidden="true"><defs><mask id="coachMask"><rect width="100%" height="100%" fill="#fff"/><g id="coachHoles"></g></mask></defs><rect width="100%" height="100%" fill="rgba(8,12,20,.55)" mask="url(#coachMask)"/></svg><div class="bubble" id="coachBubble"><p id="coachText"></p><div class="bbtns" id="coachBtns"></div></div></div>
 
 <aside class="drawer" id="drawer" aria-label="設定">
   <h2>設定 <button class="iconbtn" id="closeDrawer" aria-label="閉じる"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></h2>
+  <div class="sec"><h3>モード</h3><div class="chips" id="modeChips"></div><p class="small" id="modeNote" style="margin:6px 0 0"></p></div>
   <div class="sec"><h3>キー</h3><div class="keys" id="keyChips"></div></div>
   <div class="sec"><h3>小節数</h3><div class="chips" id="barChips"></div></div>
   <div class="sec" id="lenSec"><h3>コードの切り替え（1マスの長さ）</h3><div class="chips" id="lenChips"></div>
@@ -584,10 +678,12 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
       <span class="D"><b>D</b>ドミナント：緊張してTに戻りたくなる</span>
     </div>
   </div>
-  <div class="sec"><h3>カデンツガイド</h3><div class="chips" id="guideChips"></div>
-    <p class="small">マスの上に、役割の流れ（T・S・D）と、お手本の流れに当てはまっているかを表示します。</p></div>
-  <div class="sec"><h3>チュートリアル</h3><div class="chips"><button class="chip" id="tutOpen">はじめから見る</button><button class="chip" id="moodOpen">雰囲気のつくり方</button></div>
-    <details class="acc" id="chapAcc" style="margin-top:10px"><summary><span>チャプターから選んで見返す</span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><div class="acclist" id="chapList"></div></details></div>
+  <div class="sec"><h3>進行ガイド</h3><div class="chips" id="guideChips"></div>
+    <p class="small">マスの上に、役割の流れ（T・S・D）と、お手本の流れに当てはまっているかを表示します。m を外したコード（3(7) など）が、4つ目のコードへ進んでいるかも確認します。</p></div>
+  <div class="sec"><h3>レベル <small id="lvCount" style="color:var(--muted);font-weight:400"></small></h3>
+    <button class="lvnext" id="lvNext"></button>
+    <details class="acc" id="lvAcc" style="margin-top:8px"><summary><span>レベル一覧（クリアしたレベルは見返せます）</span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><div class="acclist" id="levelList"></div></details>
+    <div class="jumprow"><label for="lvJump">途中のレベルから始める</label><select id="lvJump"></select></div></div>
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
@@ -596,6 +692,9 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
   <h2><span id="varTitle">バリエーション</span><button class="iconbtn" id="closeVar" aria-label="閉じる"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></h2>
   <div class="varopts" id="varOpts"></div>
+  <div id="varWheels" hidden><div class="varnow" id="varNow"></div>
+    <div class="varcols"><div class="edcol"><h3>響き</h3><div class="wheel"><div class="edlist" id="varKind"></div></div></div>
+      <div class="edcol"><h3>ベース（いちばん低い音）</h3><div class="wheel"><div class="edlist" id="varBassW"></div></div></div></div></div>
   <p class="pnote">コードの響きを変えられます。タップすると試し弾きします。右上の文字は役割（T・S・D）です。</p>
 </div>
 <div class="sheet" id="edSheet" role="dialog" aria-label="コードを編集">
@@ -719,7 +818,9 @@ function ctxRole(v,prev,next,minor){
     default: return 'X';
   }
 }
-let ROLES={}, MINOR=false, FLOW=[];
+let ROLES={}, MINOR=false, FLOW=[], SECW=new Map();
+// m を外した 2・3・6・7、または 7 をつけた 1（2(7)・3(7)・6(7)・1(7) など）
+const isSecDom=v=>{ if(v==null||isNum(v)) return false; const sp=specOf(v); return ['maj','aug'].includes(sp.q) && ([2,4,9,11].includes(sp.o) || (sp.o===0&&sp.x==='7')); };
 function computeRoles(){
   ROLES={}; const flat=[];
   for(let i=0;i<state.bars;i++) cellsOf(i).forEach(c=>{ if(c.v!==null&&c.v!==undefined) flat.push({k:i+':'+c.h,v:c.v}); });
@@ -732,7 +833,11 @@ function computeRoles(){
   MINOR = score>=2;
   flat.forEach((c,n)=>{ const prev=flat.length>1?flat[(n-1+flat.length)%flat.length].v:null, next=flat.length>1?flat[(n+1)%flat.length].v:null;
     ROLES[c.k]=ctxRole(c.v,prev,next,MINOR); });
-  FLOW=flat.map(c=>({k:c.k,r:ROLES[c.k]}));
+  FLOW=flat.map(c=>({k:c.k,r:ROLES[c.k],v:c.v}));
+  // 明るくした 2・3・6・7（キーの外のメジャー）は、自分から数えて4つ目（完全4度上）のコードへ進むのが自然
+  SECW=new Map();
+  if(flat.length>1) flat.forEach((c,n)=>{ if(!isSecDom(c.v)) return;
+    const to=(specOf(c.v).o+5)%12, nx=flat[(n+1)%flat.length]; if(specOf(nx.v).o!==to) SECW.set(c.k,{v:c.v,to}); });
 }
 const roleAt=(i,h,v)=>ROLES[i+':'+h]||fnOf(v);
 function fnOf(v){ return isNum(v) ? DEG[v].fn : (FN_OF[v.o]||'X'); }
@@ -1225,11 +1330,17 @@ const VARS=[
   [0, VSP(0,'maj','M7'), VSP(0,'maj','add9'), VSP(0,'maj','',4)],
   [1, VSP(2,'m','7'), VSP(2,'m','11'), VSP(2,'maj','7')],
   [2, VSP(4,'m','7'), VSP(0,'maj','add9',4), VSP(4,'maj','7')],
-  [3, VSP(5,'maj','M7'), VSP(5,'sus2'), VSP(0,'maj','',5), VSP(5,'m')],
-  [4, VSP(7,'maj','7'), VSP(7,'sus4'), VSP(7,'maj','add9'), VSP(5,'maj','',7), VSP(7,'maj','',11)],
-  [5, VSP(9,'m','7'), VSP(9,'m','add9'), VSP(9,'sus4'), VSP(9,'m','7add11'), VSP(9,'maj','7')],
+  [3, VSP(5,'maj','M7'), VSP(5,'maj','M9'), VSP(5,'sus2'), VSP(0,'maj','',5), VSP(5,'m')],
+  [4, VSP(7,'maj','7'), VSP(7,'maj','9'), VSP(7,'sus4'), VSP(7,'maj','add9'), VSP(5,'maj','',7), VSP(7,'maj','',11)],
+  [5, VSP(9,'m','7'), VSP(9,'m','9'), VSP(9,'m','add9'), VSP(9,'sus4'), VSP(9,'m','7add11'), VSP(9,'maj','7')],
   [6, VSP(11,'m-5','7')],
 ];
+// バリエーションの種類ごとに、使えるようになるレベル：数字（テンション）5、分数コード 6、明るい⇄暗い 7、キーの外から借りる 9
+function varLv(g,x){ if(isNum(x)) return 0; const sp=specOf(x);
+  if(sp.b!==null&&sp.b!==undefined) return 7;           // 分数コード
+  if(!STEPS.includes(sp.o)) return 99;                   // キーの外から借りる（いまは使わない）
+  const dq=DEG[g].q===''?'maj':DEG[g].q; if(sp.o===STEPS[g] && (sp.q===dq || /^sus|^5$/.test(sp.q))) return 6;   // テンション
+  return 8; }                                            // 明るい⇄暗い
 const sameSpec=(a,b)=>{ const x=specOf(a), y=specOf(b); return x.o===y.o&&x.q===y.q&&(x.x||'')===(y.x||'')&&(x.b??null)===(y.b??null); };
 const varGroupOf=v=>{ if(v===null||v===undefined) return null; if(isNum(v)) return v; const k=VARS.findIndex(g=>g.some(x=>!isNum(x)&&sameSpec(x,v))); return k>=0?k:null; };
 const tokSpec=t=>typeof t==='number'?t:{...CHROM[t],b:null};
@@ -1277,6 +1388,14 @@ if(state.myDrum){ state.myDrums=[{name:'マイパターン1',...state.myDrum}]; 
 if(state.myArp){ state.myArps=[{name:'マイパターン1',...state.myArp}]; if(state.arp==='my') state.arp='my0'; } delete state.myArp;
 rebuildMy();
 if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4'; if(!BASSES[state.bassPat]) state.bassPat='auto'; if(!BASS_SNDS[state.bassSnd]) state.bassSnd='bass';
+// ---- レベル（ステップモード）：クリアしたレベルの数。前から使っている人は全部クリア扱い
+const LV_KEY='chord-palette-level', MODE_KEY='chord-palette-mode', LV_MAX=9;
+let LVL=(()=>{ try{ const v=localStorage.getItem(LV_KEY); if(v!==null) return +v||0; }catch(e){} return FIRST_RUN?0:LV_MAX; })();
+// モード：'step'＝ステップモード（レベルをクリアするたびに機能が増える）／'free'＝フリーモード（最初から全部）
+let MODE=(()=>{ try{ const v=localStorage.getItem(MODE_KEY); if(v) return v; }catch(e){} return FIRST_RUN?'step':'free'; })();
+const UL=()=>MODE==='free'?LV_MAX:LVL;                                                     // いま使える範囲
+const ULx=()=>Math.max(UL(), (typeof TUT!=='undefined'&&TUT.on&&TUT.lvNow)||0);             // レベルの解説中は、そのレベルの機能も使える
+const saveLv=()=>{ try{ localStorage.setItem(LV_KEY,LVL); localStorage.setItem(MODE_KEY,MODE); }catch(e){} };
 const save=()=>{ try{ localStorage.setItem('chord-palette-v3', JSON.stringify(state)); }catch(e){} clearTimeout(HIST.t); HIST.t=setTimeout(histCommit,350); };
 // ---- 元に戻す／やり直す：変更が落ち着いたところ（0.35秒）で、そのときの状態を記録する。チュートリアル中は記録しない
 const HIST={undo:[],redo:[],cur:null,t:null};
@@ -1312,7 +1431,8 @@ for(let d=0;d<7;d++){
   palette.appendChild(el);
 }
 palette.insertAdjacentHTML('beforeend',
-  '<div class="leg legL" aria-hidden="true"><span class="T"><b>T</b>安定する</span><span class="S"><b>S</b>広がる</span></div>'+
+  '<div class="leg legL" aria-hidden="true"><span class="T"><b>T</b>安定する</span><span class="S"><b>S</b>広がる</span><span class="D lvonly"><b>D</b>緊張する</span><span class="D lvonly"><b>→</b>Tへ戻りたい</span></div>'+
+  '<button class="lvbig" id="lvBig" hidden><small>NEXT</small><b id="lvBigT">LEVEL 2</b><span id="lvBigN"></span></button>'+
   '<div class="leg legR" aria-hidden="true"><span class="D"><b>D</b>緊張する</span><span class="D"><b>→</b>Tへ戻りたい</span></div>');
 
 for(let i=0;i<4;i++){
@@ -1369,7 +1489,8 @@ function renderTiles(){
 }
 // PROモード：1小節の中で拍ごとにコードを変える。state.segs[i] = [{beat:2〜4, v:コード}, …]
 // PROの拍切り替えは、1マスの長さ（4拍・2拍）の中だけで使う（1拍のマスは分けない）
-const segsOf=i=>state.pro ? (state.segs[i]||[]).filter(x=>x&&x.v!==null&&x.v!==undefined&&x.beat<=(state.len||4)).sort((a,b)=>a.beat-b.beat) : [];
+const splitOK=()=>state.pro || ULx()>=9;
+const segsOf=i=>splitOK() ? (state.segs[i]||[]).filter(x=>x&&x.v!==null&&x.v!==undefined&&x.beat<=(state.len||4)).sort((a,b)=>a.beat-b.beat) : [];
 const slotSteps=()=>(state.len||4)*4;           // 1マスの長さ（16分音符の数）
 function cellsOf(i){
   const L=slotSteps(), out=[{h:0,off:0,v:state.slots[i]}];
@@ -1412,26 +1533,28 @@ function renderSlots(){
   const pl=progLabel();
   $('progName').textContent = pl || (MINOR ? `${noteName(9)}m中心（短調）` : '');
   $('hint').textContent = selected!==null ? `${chordText(selected)} を置くマスをタップ`
-    : state.pro && state.len>1 && state.bars===4 ? `${state.len<4?`1マス＝${state.len}拍 ・ `:''}マスの右側に置くと${state.len/2+1}拍目から`
+    : splitOK() && state.len>1 && state.bars===4 && (state.pro || state.slots.slice(0,4).every(v=>v!=null)) ? `${state.len<4?`1マス＝${state.len}拍 ・ `:''}マスの右側に置くと${state.len/2+1}拍目から`
     : state.len<4 ? `1マス＝${state.len}拍 ・ ${state.bars>4?`${page*4+1}〜${page*4+4}マス目`:'コードをマスへドラッグ'}`
-    : state.bars===4 ? (!state.pro && state.slots.slice(0,4).every(v=>v!=null) ? '置いたコードをタップすると響きを変えられます' : '4小節 ・ コードをマスへドラッグ') : `${state.bars}小節中 ${page*4+1}〜${page*4+4}小節目を編集中`;
-  const gi = state.guide ? guideInfo() : {text:'',warn:new Set(),groups:[]};
-  document.body.classList.toggle('guide', !!state.guide);
-  if(state.guide && selected===null && gi.text) $('hint').textContent = gi.text;
-  $('hint').classList.toggle('guide', !!(state.guide && gi.text));
-  $('hint').classList.toggle('warn', !!(state.guide && selected===null && gi.text && gi.text.startsWith('！')));
+    : state.bars===4 ? (!state.pro && ULx()>=6 && state.slots.slice(0,4).every(v=>v!=null) ? '置いたコードをタップすると響きを変えられます' : '4小節 ・ コードをマスへドラッグ') : `${state.bars}小節中 ${page*4+1}〜${page*4+4}小節目を編集中`;
+  const gOn = state.guide && ULx()>=2;
+  const gi = gOn ? guideInfo() : {text:'',warn:new Set(),groups:[]};
+  document.body.classList.toggle('guide', gOn);
+  if(gOn && selected===null && gi.text) $('hint').textContent = gi.text;
+  $('hint').classList.toggle('guide', !!(gOn && gi.text));
+  $('hint').classList.toggle('warn', !!(gOn && selected===null && gi.text && gi.text.startsWith('！')));
   [...slotsEl.children].forEach(el=>{ const i=+el.dataset.abs; el.classList.toggle('warn', [...gi.warn].some(k=>k.startsWith(i+':'))); });
   LAST_GI=gi; requestAnimationFrame(()=>drawGuide(LAST_GI));
   renderPages(); save(); dirty=true;
 }
-// カデンツガイド：役割の流れと、T→D→T / T→S→T / T→S→D→T に当てはまるかを表示
+// 進行ガイド：役割の流れと、T→D→T / T→S→T / T→S→D→T に当てはまるかを表示
 const FLOW_NAME={TDT:'①T→D→T',TST:'②T→S→T',TSDT:'③T→S→D→T'};
 // 役割の流れを、T から次の T までのまとまり（流れ）に分ける。同じ役割が続くのはまとめて判定
 function flowGroups(){
   const idx=FLOW.map((f,n)=>n).filter(n=>FLOW[n].r!=='X'), L=idx.length;
   if(L<2) return {groups:[],noT:false,warn:new Set()};
   const warn=new Set();
-  idx.forEach((n,j)=>{ const nx=idx[(j+1)%L]; if(FLOW[n].r==='D'&&FLOW[nx].r==='S') warn.add(FLOW[nx].k); });
+  idx.forEach((n,j)=>{ const nx=idx[(j+1)%L]; if(FLOW[n].r==='D'&&FLOW[nx].r==='S' && !(isSecDom(FLOW[n].v)&&!SECW.has(FLOW[n].k))) warn.add(FLOW[nx].k); });   // 4つ目へ正しく進んだときは D→S でもOK
+  SECW.forEach((_,k)=>warn.add(k));
   const tpos=idx.map((n,j)=>FLOW[n].r==='T'?j:-1).filter(j=>j>=0);
   if(!tpos.length) return {groups:[],noT:true,warn};
   const groups=tpos.map((a,g)=>{ const b=tpos[(g+1)%tpos.length]; const len=((b-a+L)%L)||L;
@@ -1445,13 +1568,14 @@ function flowGroups(){
 function guideInfo(){
   const g=flowGroups();
   if(!g.groups.length && !g.noT) return {text:'',warn:g.warn,groups:[]};
-  const text = g.noT ? '！ T を入れると落ち着きます' : g.warn.size ? '！ D の次は T へ進むと安定' : g.groups.every(x=>x.name) ? '◎ お手本どおりの流れ' : '！ お手本にない流れがあります';
+  const sw=[...SECW.values()][0], toName=sw?(STEPS.includes(sw.to)?nameOf(STEPS.indexOf(sw.to),state.label,false):noteName(sw.to)):'';
+  const text = g.noT ? '！ T を入れると落ち着きます' : sw ? `！ ${nameOf(sw.v,state.label,false)} は、4つ目の ${toName} へ進むと自然` : g.warn.size ? '！ D の次は T へ進むと安定' : g.groups.every(x=>x.name) ? '◎ お手本どおりの流れ' : '！ お手本にない流れがあります';
   return {text,warn:g.warn,groups:g.groups};
 }
 const FLOW_COL={'①':'var(--d)','②':'var(--s)','③':'var(--ink)'};
 function drawGuide(gi){
   const gs=$('gstrip'); if(!gs) return; gs.innerHTML='';
-  if(!state.guide || !gi.groups || !gi.groups.length) return;
+  if(!state.guide || ULx()<2 || !gi.groups || !gi.groups.length) return;
   const base=gs.getBoundingClientRect(); if(!base.width) return;
   const elOf=n=>{ const [i,h]=FLOW[n].k.split(':').map(Number); if(Math.floor(i/4)!==page) return null;
     const sl=slotsEl.children[i%4]; return sl.classList.contains('split') ? sl.querySelector(`.cell[data-h="${h}"]`) : sl; };
@@ -1475,7 +1599,7 @@ function drawGuide(gi){
       const no=g.name?g.name[0]:'';
       sp.style.cssText=`left:${x0}px;width:${w}px;--fn:${g.bad?'var(--warn)':g.name?(FLOW_COL[no]||'var(--t)'):'var(--muted)'}`;
       if(openL) sp.classList.add('ol'); if(openR) sp.classList.add('or'); if(g.bad) sp.classList.add('bad');
-      const full=g.bad?'D→S':g.name?g.name:'？', short=g.bad?'!':g.name?(FLOW_COL[no]?no:'T続く'):'？';
+      const sec=g.ns.some(n=>SECW.has(FLOW[n].k)), full=g.bad?(sec?'4つ目へ':'D→S'):g.name?g.name:'？', short=g.bad?'!':g.name?(FLOW_COL[no]?no:'T続く'):'？';
       sp.dataset.full=full; sp.dataset.short=short; sp.dataset.w=w;
       gs.appendChild(sp); made.push(sp); });
     // 1つの流れにつき、いちばん長い部分にだけ名前を書く
@@ -1492,6 +1616,12 @@ function renderAll(){
   if(state.pro){ $('arpLabel').textContent='コード'; $('arpName').textContent=patName(ARPS[state.arp])+' ・ '+instShort(); $('arpLane').setAttribute('aria-label','コードパターンを選ぶ'); }
   else { const st=styleNow(); $('arpLabel').textContent='伴奏'; $('arpName').textContent=(st?st.name:`${patName(DRUMS[state.drum])}＋${patName(ARPS[state.arp])}`)+' ・ '+instShort(); $('arpLane').setAttribute('aria-label','伴奏スタイルを選ぶ'); }
   $('bassName').textContent=state.bass?BASSES[state.bassPat||'auto'].name:'なし';
+  const lb=$('lvBig'), showLv=MODE==='step' && LVL<LV_MAX && !TUT.on;
+  lb.hidden=!showLv; document.body.classList.toggle('haslv',showLv);
+  if(showLv){ const t=`LEVEL ${LVL+1}`; $('lvBigN').textContent=LEVELS[LVL].name;
+    if($('lvBigT').textContent!==t){ $('lvBigT').textContent=t; lb.classList.remove('fresh'); void lb.offsetWidth; lb.classList.add('fresh'); }
+    lb.setAttribute('aria-label',`次のレベル：レベル${LVL+1}「${LEVELS[LVL].name}」をはじめる`); }
+  const bl=ULx()<3; $('bpm').disabled=bl; $('bpm').closest('.bpm').classList.toggle('locked',bl);
   buildMenu(); applyMix();
 }
 
@@ -1505,14 +1635,22 @@ function chips(el, items, cur, onPick){
   });
 }
 function buildMenu(){
-  chips($('keyChips'), KEYS.map(k=>[k.id,k.id]), state.key, v=>{ state.key=v; renderAll(); if(!playing) preview(0); });
+  if(UL()<4) $('keyChips').innerHTML=lockHTML(4);
+  else chips($('keyChips'), KEYS.map(k=>[k.id,k.id]), state.key, v=>{ state.key=v; renderAll(); if(!playing) preview(0); });
   const unit = state.len<4 ? 'マス' : '小節';
-  chips($('barChips'), [[4,'4'+unit],[8,'8'+unit],[16,'16'+unit]], state.bars, v=>{ state.bars=v; if(page*4>=v) page=0; renderAll(); });
+  if(UL()<5) $('barChips').innerHTML=lockHTML(5); else chips($('barChips'), [[4,'4'+unit],[8,'8'+unit],[16,'16'+unit]], state.bars, v=>{ state.bars=v; if(page*4>=v) page=0; renderAll(); });
   chips($('lenChips'), [[4,'4拍（1小節）'],[2,'2拍'],[1,'1拍']], state.len, v=>{ state.len=v; renderAll(); });
   $('lenNote').textContent = '2拍にすると、1マスが2拍になります（4マスで2小節）。' + (state.pro ? 'PROモードの拍ごとの切り替えは、1マスの中（2拍なら2拍目）で使えます。' : '');
   chips($('labelChips'), Object.entries(LABELS), state.label, v=>{ state.label=v; renderAll(); });
-  chips($('guideChips'), [[true,'表示する'],[false,'表示しない']], state.guide, v=>{ state.guide=v; renderAll(); });
-  chips($('proChips'), [[true,'オン'],[false,'オフ']], state.pro, v=>{ state.pro=v; document.body.classList.toggle('pro',v); renderAll(); });
+  if(UL()<2) $('guideChips').innerHTML=lockHTML(2); else chips($('guideChips'), [[true,'表示する'],[false,'表示しない']], state.guide, v=>{ state.guide=v; renderAll(); });
+  if(UL()<LV_MAX && !state.pro) $('proChips').innerHTML=`<span class="small" style="margin:0">🔒 全レベル（${LV_MAX}）をクリアすると使えます</span>`;
+  else chips($('proChips'), [[true,'オン'],[false,'オフ']], state.pro, v=>{ state.pro=v; document.body.classList.toggle('pro',v); renderAll(); });
+  renderLevels();
+  chips($('modeChips'), [['step','ステップモード'],['free','フリーモード']], MODE, v=>{ MODE=v; saveLv();
+    if(v==='free'){ MOODPOP.pending=false; $('moodTip').hidden=true; }
+    renderAll(); toast(v==='free'?'フリーモード：すべての機能を使えます':'ステップモード：レベルをクリアすると機能が増えます'); });
+  $('modeNote').textContent = MODE==='free' ? '最初からすべての機能を使えます。各レベルの解説は、いつでも好きな順に見られます。'
+    : `レベルをクリアするたびに、使える機能が増えていきます（レベル${LVL}までクリア）。`;
   renderPresetList();
 }
 // 有名な進行の一覧：名前・雰囲気のタグ・数字で絞り込める
@@ -1602,7 +1740,7 @@ function wheel(el,items,cur,field){
       const i=Math.max(0,Math.min(items.length-1,Math.round(el.scrollTop/ih)));
       [...el.children].forEach((b,k)=>b.classList.toggle('on',k===i));
       clearTimeout(el._t);
-      el._t=setTimeout(()=>{ const v=el._items[i][0]; if(v!==el._cur){ el._cur=v; pickField(el._field,v); } },140);
+      el._t=setTimeout(()=>{ const v=el._items[i][0]; if(v!==el._cur){ el._cur=v; if(typeof el._field==='function') el._field(v); else pickField(el._field,v); } },140);
     };
     el.tabIndex=0;
     el.onkeydown=e=>{ if(e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault(); el.scrollBy({top:e.key==='ArrowDown'?ih:-ih,behavior:'smooth'}); } };
@@ -1666,6 +1804,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeAll(); });
 // ---------- bottom sheet ----------
 let sheetKind=null;
 function openSheet(kind){
+  if(!state.pro && ULx()<3){ lockToast(3); return; }
   if(!state.pro && (kind==='drum'||kind==='arp')) kind='style';   // 通常モードはドラムとコードをまとめて選ぶ
   if(kind==='bass') return openBassSheet();
   sheetKind=kind; document.querySelector('#sheet .proedit').style.display='';
@@ -1756,6 +1895,7 @@ function pickKit(v){ state.kit=v; renderAll(); ensureSounds().then(()=>{ if(!pla
 
 // ---------- BPM / play ----------
 const bpmIn=$('bpm'); bpmIn.value=state.bpm; $('bpmOut').textContent=state.bpm;
+bpmIn.closest('.bpm').addEventListener('pointerdown',()=>{ if(bpmIn.disabled) lockToast(3); });
 bpmIn.oninput=()=>{ state.bpm=+bpmIn.value; $('bpmOut').textContent=state.bpm; save(); };
 const PLAY_SVG='<svg width="26" height="26" viewBox="0 0 30 30" aria-hidden="true"><path d="M9 5.5v19a1 1 0 0 0 1.5.9l15-9.5a1 1 0 0 0 0-1.7l-15-9.5A1 1 0 0 0 9 5.5z" fill="currentColor"/></svg>';
 const STOP_SVG='<svg width="22" height="22" viewBox="0 0 26 26" aria-hidden="true"><rect x="4" y="4" width="18" height="18" rx="3" fill="currentColor"/></svg>';
@@ -1801,7 +1941,7 @@ window.addEventListener('pointermove',e=>{
     if(cell && drag.source.type==='tile'){ drag.h=+cell.dataset.h; drag.cell=cell; cell.classList.add('over'); over.classList.remove('over','over-r'); }
     else {
       // PROモード：まだ分けていないマスの右側に落とすと3拍目からのコードになる
-      drag.right = state.pro && state.len>1 && drag.source.type==='tile' && filled && !segsOf(i).length && (e.clientX-r.left) > r.width*.58;
+      drag.right = splitOK() && state.len>1 && drag.source.type==='tile' && filled && !segsOf(i).length && (e.clientX-r.left) > r.width*.58;
       over.classList.toggle('over',!drag.right); over.classList.toggle('over-r',drag.right);
     }
   }
@@ -1829,18 +1969,38 @@ function end(e){
     if(selected!==null){
       const tc=e.target&&e.target.closest?e.target.closest('.cell'):null;
       setV(i, tc?+tc.dataset.h:0, selected); preview(selected); selected=null; }
-    else if(getV(i,th)!==null&&getV(i,th)!==undefined){ preview(getV(i,th)); if(!state.pro && (!TUT.on||TUT.practice)) openVar(i,th); } }
+    else if(getV(i,th)!==null&&getV(i,th)!==undefined){ preview(getV(i,th)); if(!state.pro && (!TUT.on||TUT.practice)){ if(ULx()>=6) openVar(i,th); else if(!TUT.on) lockToast(6); } } }
   renderTiles(); renderSlots();
 }
 // 通常モード：置いたコードをタップすると、同じ役割のバリエーションを選べる
 function openVar(i,h){
-  const v=getV(i,h), g=varGroupOf(v); if(g===null) return;
+  const v=getV(i,h); let g=varGroupOf(v);
+  if(g===null && v!=null && !isNum(v)){ const sp=specOf(v); g=varGroupOf({...sp,b:null}); if(g===null){ const d=STEPS.indexOf(sp.o); g=d>=0?d:null; } }
+  if(g===null) return;
   $('varTitle').textContent=`${i+1}${state.len<4?'マス目':'小節目'}のコードを変える`;
-  const box=$('varOpts'); box.innerHTML='';
-  VARS[g].forEach(x=>{ const b=document.createElement('button'); b.setAttribute('aria-pressed', isNum(x)?v===x:(!isNum(v)&&sameSpec(x,v)));
-    const rl=ctxRole(x,null,null,false); b.className=rl; b.innerHTML=`<i>${rl}</i><b>${nameOf(x,state.label,true)}</b><small>${nameOf(x,state.label==='alpha'?'num':'alpha',false)}</small>`;
-    b.onclick=()=>{ setV(i,h,x); preview(x); renderSlots(); openVar(i,h); };
-    box.appendChild(b); });
+  const box=$('varOpts'), wh=$('varWheels'), useWheel=ULx()>=7;
+  const opts=VARS[g].filter(x=>varLv(g,x)<=ULx() || (!isNum(x)&&!isNum(v)&&sameSpec(x,v)));
+  box.hidden=useWheel; wh.hidden=!useWheel;
+  if(!useWheel){ box.innerHTML='';
+    opts.forEach(x=>{ const b=document.createElement('button'); b.setAttribute('aria-pressed', isNum(x)?v===x:(!isNum(v)&&sameSpec(x,v)));
+      const rl=ctxRole(x,null,null,false); b.className=rl; b.innerHTML=`<i>${rl}</i><b>${nameOf(x,state.label,true)}</b><small>${nameOf(x,state.label==='alpha'?'num':'alpha',false)}</small>`;
+      b.onclick=()=>{ setV(i,h,x); preview(x); renderSlots(); openVar(i,h); };
+      box.appendChild(b); }); }
+  else {
+    // スロット：左＝響き（バリエーション）、右＝ベース（そのコードの構成音から選ぶ）
+    const plain=x=>{ const t=specOf(x); return {o:t.o,q:t.q,x:t.x||'',b:null}; };
+    const kinds=[]; opts.forEach(x=>{ if(!isNum(x) && specOf(x).b!=null) return; if(!kinds.some(k=>sameSpec(plain(k),plain(x)))) kinds.push(x); });
+    const sp=specOf(v), cur=plain(v); let ki=kinds.findIndex(k=>sameSpec(plain(k),cur)); if(ki<0){ kinds.push(cur); ki=kinds.length-1; }
+    const apply=(kx,b)=>{ const t=plain(kx), tones=(QUAL[t.q]||[0,4,7]).map(iv=>(t.o+iv)%12);
+      if(b==null || !tones.includes(b) || b===t.o) b=null;
+      const di=STEPS.indexOf(t.o), isPlain=b===null && t.x==='' && di>=0 && (DEG[di].q===''?'maj':DEG[di].q)===t.q;
+      const nv=isPlain?di:{...t,b}; setV(i,h,nv); preview(nv); renderSlots(); openVar(i,h); };
+    const rl=ctxRole(v,null,null,false), nowB=(sp.b==null||sp.b===sp.o)?null:sp.b;
+    $('varNow').className='varnow '+rl; $('varNow').innerHTML=`<b>${nameOf(v,state.label,true)}</b><small>${nameOf(v,state.label==='alpha'?'num':'alpha',false)}</small><i>${rl}</i>`;
+    wheel($('varKind'), kinds.map((x,k)=>[k, nameOf(x,state.label,false)]), ki, k=>apply(kinds[k], nowB));
+    const tones=[...new Set(QUAL[sp.q]||[0,4,7])];
+    wheel($('varBassW'), tones.map(iv=>{ const b=iv?(sp.o+iv)%12:null; return [b, `${NUM_OF[(iv?b:sp.o)%12]}${iv?'':'（そのまま）'}`]; }), nowB, b=>apply(kinds[ki], b));
+  }
   $('varSheet').classList.add('on'); scrim.classList.add('on');
 }
 $('closeVar').onclick=closeAll;
@@ -2219,9 +2379,15 @@ function tick(){
     scheduleStep(gpos,nextTime); nextTime+=stepDur(); gpos=(gpos+1)%T; playedSteps++;
   }
 }
-const MOODPOP={pending:false,stopping:false};
-function showMoodPop(){ $('moodTip').hidden=true;
-  $('moodPopChips').innerHTML=[['明るい','--t'],['切ない','--s'],['力強い','--d'],['穏やか','--warn']].map(([t,c])=>`<span style="--fn:var(${c})">${t}</span>`).join('');
+const MOODPOP={pending:false,stopping:false,level:2,all:false};
+function showMoodPop(all){ $('moodTip').hidden=true; MOODPOP.all=!!all;
+  if(all){ $('moodPopChips').innerHTML='<span style="--fn:var(--d)">PRO</span>'; $('moodPopEye').textContent='ALL CLEAR';
+    $('moodPopTitle').textContent='全レベルクリア！'; $('moodPopText').innerHTML='PROモードが使えるようになりました。<br>設定メニューからオンにできます。';
+    $('moodPopLater').hidden=true; $('moodPopGo').textContent='OK'; }
+  else { const l=LEVELS[MOODPOP.level-1];
+    $('moodPopChips').innerHTML=(l.chips||[]).map(([t,c])=>`<span style="--fn:var(${c})">${t}</span>`).join('');
+    $('moodPopEye').textContent=`LEVEL ${MOODPOP.level}`; $('moodPopTitle').textContent=`次は「${l.name}」`;
+    $('moodPopText').innerHTML=`${l.goal}${l.unlock?`<br><small>クリアすると：${l.unlock}</small>`:''}`; $('moodPopLater').hidden=false; $('moodPopGo').textContent='はじめる'; }
   $('moodPop').hidden=false; }
 let starting=false;
 // ---------- バックグラウンド再生 ----------
@@ -2349,7 +2515,7 @@ function frame(){
     if(n){ const changed=!cur||n.b!==cur.b; cur=n;
       if(changed){ slotsEl.querySelectorAll('.slot').forEach(el=>el.classList.toggle('now',+el.dataset.abs===n.b)); renderPages(); }
       $('play').classList.toggle('beat',!!n.beat);
-      if(TUT.on) document.querySelectorAll('.tut [data-ti]').forEach(e=>e.classList.toggle('now', +e.dataset.ti===n.b)); }
+      if(TUT.on) document.querySelectorAll(TUT.playingEx?`.tut [data-ex="${TUT.playingEx}"] [data-ti]`:'.tut [data-ti]').forEach(e=>e.classList.toggle('now', +e.dataset.ti===n.b)); }
     dirty=true;
   }
   if(dirty){ drawLane($('drumCv'),'drum'); drawLane($('arpCv'),'arp'); if(state.pro) drawLane($('bassCv'),'bass'); dirty=false; }
@@ -2363,14 +2529,15 @@ if(document.fonts) document.fonts.ready.then(()=>dirty=true);
 // ================= チュートリアル =================
 const TUT={on:false, i:0, backup:null, wait:null, timer:null, loopLen:Infinity, stopping:false, stopT:null, onLoopEnd:null};
 const nm=d=>isNum(d)?DEG[d].num.replace('m-5','m♭5'):nameOf(d,'num',false).replace('-5','♭5'), al=d=>chordText(d);
-const tc=(d,cls,delay,ti)=>`<span class="tc ${cls||''} pop" style="--dl:${delay||0}"${ti!=null?` data-ti="${ti}"`:''}><b>${nm(d)}</b><small>${al(d)}</small></span>`;
+const HEAR=d=>JSON.stringify(isNum(d)?d:{b:null,...d}).replace(/"/g,'&quot;');   // タップで鳴らすためのコードの情報
+const tc=(d,cls,delay,ti)=>`<span class="tc ${cls||''} pop" style="--dl:${delay||0}" data-hear="${HEAR(d)}"${ti!=null?` data-ti="${ti}"`:''}><b>${nm(d)}</b><small>${al(d)}</small></span>`;
 function exampleHTML(ex){
   const n=ex.degs.length, cols=`repeat(${n},minmax(0,1fr))`;
   const brk=(row,u)=>`<div class="brk${u?' u':''}">${row.map((g,k)=>`<span style="--fn:var(--${g.c});left:calc(${g.a}/${n}*100% + 2px);width:calc(${g.b-g.a+1}/${n}*100% - 4px);--dl:${1+k*.5+(g.row||0)*.25}">${g.t}</span>`).join('')}</div>`;
   const top=ex.groups.filter(g=>!g.row), bot=ex.groups.filter(g=>g.row);
-  return `<div class="ex">
+  return `<div class="ex" data-ex="${Object.keys(EX).find(k=>EX[k]===ex)||''}">
     ${top.length?brk(top):''}
-    <div class="exrow${n>4?' sm':''}" style="grid-template-columns:${cols}">${ex.degs.map((d,k)=>`<span class="tc ${ex.roles[k]} pop" style="--dl:${.15+k*.12}" data-ti="${k}"><b>${nm(d)}</b><small>${ex.roles[k]}</small></span>`).join('')}</div>
+    <div class="exrow${n>4?' sm':''}" style="grid-template-columns:${cols}">${ex.degs.map((d,k)=>`<span class="tc ${ex.roles[k]} pop" style="--dl:${.15+k*.12}" data-ti="${k}" data-hear="${HEAR(d)}"${ex.key&&ex.key!=='C'?` data-key="${ex.key}"`:''}><b>${nm(d)}</b><small>${ex.roles[k]}</small></span>`).join('')}</div>
     ${bot.length?brk(bot,true):''}
   </div>`;
 }
@@ -2383,10 +2550,10 @@ const IC_PLAY='<svg class="ic" viewBox="0 0 12 12" aria-hidden="true"><path d="M
 const IC_STOP='<svg class="ic" viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="2" width="8" height="8" rx="1.5" fill="currentColor"/></svg>';
 function listenBtn(key){ return `<button class="listen a" style="--dl:1.6" data-ex="${key}">${IC_PLAY}<span>聴いてみる</span></button>`; }
 const SLIDES=[
-  {html:()=>`<div class="eyebrow a">TUTORIAL</div>
+  {html:()=>`<div class="eyebrow a">LEVEL 1</div>
      <div class="chips7">${[0,3,4,5].map((d,k)=>`<span class="floaty" style="animation-delay:${k*.4}s;display:inline-block">${tc(d,'',.2+k*.15)}</span>`).join('')}</div>
      <h2 class="a" style="--dl:.8">こんにちは！</h2>
-     <p class="a" style="--dl:1.1">このアプリは『コード進行』が<br>（たぶん）作れるアプリです。</p>`},
+     <p class="a" style="--dl:1.1">このアプリは『コード進行』が<br>（たぶん）作れるようになるアプリです。</p>`},
   // 1枚の画面のまま「つぎへ」で説明を足していく（steps＝追加で見せる段階の数）
   {steps:2, html:()=>`<div class="eyebrow a"><span data-upto="0">コード進行とは？</span><span data-st="1">コードの見方</span></div>
      <h2 class="a" style="--dl:.2" data-upto="0">コードを、順番に<br>つなげたものです</h2>
@@ -2455,7 +2622,7 @@ const SLIDES=[
   {html:()=>`<div class="eyebrow a">さあ、作ってみよう</div>
      <h2 class="a" style="--dl:.1">では、実際に<br>作ってみましょう！</h2>
      <div class="flows"><div class="flow a" style="--dl:.6">${['T','S','D','T'].map((r,j)=>`${j?`<span class="arr" style="--dl:${.9+j*.15}"></span>`:''}<span class="tc ${r} pop" style="--dl:${.7+j*.15}"><b>${r}</b></span>`).join('')}</div></div>
-     <p class="a" style="--dl:1.5">マスの上には、カデンツを線で表す<br>「カデンツガイド」を出しておきます。</p>
+     <p class="a" style="--dl:1.5">マスの上には、カデンツを線で表す<br>「進行ガイド」を出しておきます。</p>
      <div class="okcard a" style="--dl:2.1"><b>お手本どおりじゃなくても、<br>聴いてカッコよければOK！</b><small>黄色い線は「お手本と違うよ」の目印。<br>しっくりこないときのヒントにしてください。</small></div>`, last:true},
 ];
 // ================= 雰囲気のつくり方（2つめのチュートリアル） =================
@@ -2475,8 +2642,8 @@ const styleBy=name=>STYLES.find(x=>x.name===name);
 function setStyle(st){ state.drum=st.drum; state.arp=st.arp; state.bassPat='auto'; state.bassSnd=st.bassSnd||'bass'; state.bass=st.bass!==false; state.kit=st.kit; state.inst=st.inst; }
 function tutLoadEx(ex){ const b=TUT.backup?JSON.parse(TUT.backup):state, st=ex.style&&styleBy(ex.style);
   if(st) setStyle(st); else Object.assign(state,{drum:b.drum,arp:b.arp,inst:b.inst,kit:b.kit,bass:b.bass,bassSnd:b.bassSnd,bassPat:b.bassPat});
-  state.bpm=ex.bpm||b.bpm; state.fill=false;
-  $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; tutLoad(ex.degs); ensureSounds(); }
+  state.bpm=ex.bpm||b.bpm; state.fill=false; state.key=ex.key||'C';
+  $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; tutLoad(ex.degs,ex.segs,ex.ant); ensureSounds(); }
 const moodSlide=(no,title,h,key,notes)=>({html:()=>`<div class="eyebrow a">雰囲気${no}　${title}</div>
      <h2 class="a" style="--dl:.1">${h}</h2>
      ${exampleHTML(EX[key])}
@@ -2535,7 +2702,7 @@ const MOOD=[
   moodSlide('①','明るい・元気','明るいコードで<br>まっすぐ進む','bright',['明るいコード（1・4・5）だけ。迷いのない元気な響きに。','テンポは速め（BPM 110〜130）がおすすめ。']),
   moodSlide('②','切ない','暗いコードから<br>始めてみる','sad',['6m で始めると、出だしから切ない雰囲気に（小室進行）。','最後は 1 で明るく着地。切ないのに前向き。']),
   moodSlide('③','エモい・泣ける','4 から始めて<br>6m に着地','emo',['4 → 5 と上がって盛り上げてから、暗い 6m に落とす（王道進行）。','5 → 3m → 6m と、となりへ下りる動きでしっとり着地。']),
-  moodSlide('④','おしゃれ','コードの響きを<br>少し変えてみる','chic',['2m7・1M7 のように 7 や M7 を足すと、大人っぽい響きに。','置いたコードをタップすると、こうしたバリエーションを選べます。']),
+  moodSlide('④','おしゃれ','コードの響きを<br>少し変えてみる','chic',['2m7・1M7 のように 7 や M7 を足すと、大人っぽい響きに。','レベル5以降で、自分でもこうした響きに変えられるようになります。']),
   {html:()=>`<div class="eyebrow a">まとめ</div>
      <h2 class="a" style="--dl:.1">雰囲気づくりの4つのコツ</h2>
      <div class="roles">
@@ -2552,47 +2719,268 @@ const MOOD=[
    enter:()=>document.querySelectorAll('.moodpick button').forEach(b=>b.onclick=()=>{ TUT.mood=b.dataset.mood; TUT.moodInit=false; showSlide(TUT.i+1); })},
   {coach:'mood'},
 ];
-let DECK=SLIDES;
-// チャプター：学んだことを1つずつ見返す。見終わったら、元の画面（置いていたコードや設定）に戻る
-const CHAPTERS=[
-  {group:'コード進行の基本', items:[
-    {t:'コードとは', sub:'コードの見方', deck:SLIDES, a:1, b:1},
-    {t:'数字で書くコード', sub:'ドレミと 1〜7', deck:SLIDES, a:2, b:2},
-    {t:'明るいコード・暗いコード', sub:'7つのコードとつなげ方', deck:SLIDES, a:3, b:4},
-    {t:'置いて鳴らしてみる', sub:'マスへの置き方と再生', deck:SLIDES, a:5, b:7},
-    {t:'コードの役割', sub:'トニック・サブドミナント・ドミナント', deck:SLIDES, a:8, b:9},
-    {t:'カデンツ', sub:'役割の流れ（お手本の3つ）', deck:SLIDES, a:10, b:10},
-    {t:'実例', sub:'小室進行・王道進行・カノン進行', deck:SLIDES, a:11, b:13},
-    {t:'カデンツガイドの見方', sub:'カッコよければOK！', deck:SLIDES, a:14, b:14}]},
-  {group:'雰囲気のつくり方', items:[
-    {t:'コツ① 明るい・暗いの割合', sub:'元気に・切なく', deck:MOOD, a:1, b:1},
-    {t:'コツ② 始まりと終わり', sub:'1・6m・4・5 の印象', deck:MOOD, a:2, b:2},
-    {t:'コツ③ コードどうしの距離', sub:'跳ぶと力強く、となりは穏やか', deck:MOOD, a:3, b:3},
-    {t:'コツ④ リズムとテンポ', sub:'伴奏スタイルとBPM', deck:MOOD, a:4, b:4},
-    {t:'雰囲気の実例', sub:'明るい・切ない・エモい・おしゃれ', deck:MOOD, a:5, b:8},
-    {t:'まとめ', sub:'4つのコツ', deck:MOOD, a:9, b:9},
-    {t:'実践編', sub:'お題に合わせて作ってみる', deck:MOOD, a:10, b:11}]},
+// ================= レベル（全12） =================
+Object.assign(EX,{
+  long8: {degs:[3,4,2,5,3,4,0,0], roles:['S','D','D','T','S','D','T','T'], groups:[{a:0,b:3,t:'1回目：6m で終わる',c:'s'},{a:4,b:7,t:'2回目：1 で終わる',c:'t',row:1}], style:'ポップス（定番）', bpm:96},
+  lv0:  {degs:[3,4,2,5], roles:['S','D','D','T'], groups:[], style:'ロック', bpm:120},
+  lv7:  {degs:[SP(5,'maj','M7'),SP(7,'maj','7'),SP(4,'m','7'),SP(9,'m','7')], roles:['S','D','D','T'], groups:[], style:'ポップス（定番）', bpm:96},
+  lv9:  {degs:[SP(5,'maj','M9'),SP(7,'maj','9'),SP(4,'m','7'),SP(9,'m','9')], roles:['S','D','D','T'], groups:[], style:'ジャジー', bpm:84},
+  push: {degs:[3,4,SP(4,'maj','7'),5], roles:['S','D','D','T'], groups:[{a:2,b:3,t:'3(7) → 6m へ強く進む',c:'d'}], style:'ポップス（定番）', bpm:92},
+  sad4: {degs:[0,3,SP(5,'m'),0], roles:['T','S','S','T'], groups:[{a:1,b:2,t:'4 → 4m で切なく',c:'s'}], style:'バラード', bpm:76},
+  walk: {degs:[0,VSP(7,'maj','',11),5,4,3,VSP(0,'maj','',4),1,4], roles:['T','D','T','D','S','T','S','D'], groups:[{a:0,b:6,t:'ベースが 1 → 7 → 6 → 5 → 4 → 3 → 2 と下りていく',c:'ink'}], style:'バラード', bpm:84},
+  half: {degs:[3,4,2,1], segs:{2:[{beat:3,v:5}],3:[{beat:3,v:4}]}, roles:['S','D','D','S'], groups:[], style:'ポップス（定番）', bpm:96},
+  jump: {degs:[0,4,5,3], roles:['T','D','T','S'], groups:[{a:0,b:3,t:'ベース：1 → 5 → 6 → 4（大きく跳ぶ）',c:'d'}], style:'バラード', bpm:80},
+  smooth:{degs:[0,VSP(7,'maj','',11),5,3], roles:['T','D','T','S'], groups:[{a:0,b:3,t:'ベース：1 → 7 → 6 → 4（なめらか）',c:'t'}], style:'バラード', bpm:80},
+});
+// 鍵盤（白鍵 1〜7、1〜4）。コードの構成音を「1つ飛ばし」で光らせる
+const KN=['ド','レ','ミ','ファ','ソ','ラ','シ'];
+const kbdHTML=()=>`<div class="kbd a" id="kbd" style="--dl:.3">${Array.from({length:11},(_,i)=>`<div class="wk" data-i="${i}"><b>${KN[i%7]}</b><small>${'CDEFGAB'[i%7]}</small></div>`).join('')}${[0,1,3,4,5,7,8].map(i=>`<i class="bk" style="left:calc(${(i+1)/11*100}% - 3%)"></i>`).join('')}</div>`;
+function kbdShow(d,anim){ const k=$('kbd'); if(!k) return; k.querySelectorAll('.wk').forEach(w=>{ w.classList.remove('on','skip'); w.style.transitionDelay=''; });
+  if(d==null) return;
+  [[d,'on',0],[d+1,'skip',1],[d+2,'on',2],[d+3,'skip',3],[d+4,'on',4]].forEach(([i,c,n])=>{ const w=k.querySelector(`.wk[data-i="${i}"]`); if(!w) return; if(anim) w.style.transitionDelay=(n*.35)+'s'; w.classList.add(c); });
+  setTimeout(()=>preview(d), anim?1700:0); }
+const bindKbd=()=>document.querySelectorAll('.tut [data-kd]').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tut [data-kd]').forEach(x=>x.classList.toggle('now',x===b)); kbdShow(+b.dataset.kd,true); });
+const SPX=o=>JSON.stringify({b:null,...o}).replace(/"/g,'&quot;');
+const hearChip=(d,dl)=>`<button class="tc hear pop" style="--dl:${dl}" data-hear="${SPX(d)}"><b>${al(d)}</b><small>${nm(d)}</small></button>`;
+const PAIR=(a,b)=>JSON.stringify([a,b].map(x=>isNum(x)?x:{b:null,...x})).replace(/"/g,'&quot;');
+// キーを指定したコードは、そのキーで鳴らす（いまのキーは変えない）
+function hearIn(d,key){ if(!key||key===state.key) return preview(d); if(playing) return; whenRunning(()=>{ if(playing) return; const k0=state.key; state.key=key; previewNow(d); state.key=k0; }); }
+const bindHear=()=>{ document.querySelectorAll('.tut [data-hear]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); hearIn(JSON.parse(b.dataset.hear), b.dataset.key);
+    b.classList.add('tapped'); setTimeout(()=>b.classList.remove('tapped'),350); });
+  // 2つ続けて鳴らす（m を外したコード → 4つ目のコード）。鳴っている方を光らせる
+  document.querySelectorAll('.tut [data-pair]').forEach(b=>b.onclick=()=>{ const [x,y]=JSON.parse(b.dataset.pair), cs=b.querySelectorAll('.tc'), a=cs[0], z=cs[cs.length-1];
+    clearTimeout(b._t); clearTimeout(b._t2); a.classList.add('now'); z.classList.remove('now'); preview(x);
+    b._t=setTimeout(()=>{ a.classList.remove('now'); z.classList.add('now'); preview(y); },750); b._t2=setTimeout(()=>z.classList.remove('now'),1700); }); };
+const bassRel=v=>v==null?null:(bassPcOf(v)-keyObj().pc+12)%12;
+// ベースの動きの大きさ（となりのコードとのベースの距離の合計。1周つながる）
+const bassLeap=(arr)=>{ const vs=(arr||[0,1,2,3].map(k=>state.slots[k])).filter(v=>v!=null).map(v=>bassRel(v)); let t=0;
+  vs.forEach((b,k)=>{ const n=vs[(k+1)%vs.length], d=Math.abs(b-n)%12; t+=Math.min(d,12-d); }); return t; };
+const slotsSpec=()=>[0,1,2,3].map(k=>state.slots[k]).filter(v=>v!=null&&!isNum(v)).map(specOf);
+// 練習：メイン画面で、吹き出しのお題をこなす
+const TASKS={
+  cadence:{load:[], style:'ポップス（定番）', bpm:96, guide:true,
+    text:'進行ガイドを見ながら、<b>お手本の流れ</b>になるように4つ並べてみましょう。', hint:'マスの上に「◎ お手本どおりの流れ」と出たら成功です',
+    check:()=>[0,1,2,3].every(k=>state.slots[k]!=null) && guideInfo().text.startsWith('◎'),
+    ok:'お手本どおりの流れです。役割をつなぐと、自然なコード進行になります。', ng:'黄色い線の所を、T・S・D の流れになるように入れ替えてみましょう。'},
+  long:{load:[3,4,2,5,3,4,2,5], style:'ポップス（定番）', bpm:96,
+    text:'同じ4つが2回並んでいます。<b>8つ目のコードを 1 に</b>変えて、区切りをつけてみましょう。', hint:'マスの上の小さな四角をタップすると、5〜8つ目に切り替わります',
+    check:()=>state.slots[7]!=null && tokOf(state.slots[7])===0,
+    ok:'2回目の終わりが 1 になって、ひと区切りついた感じになりました。', ng:'8つ目のコードを 1 にしてみましょう。'},
+  tension:{load:[3,4,2,5], style:'ポップス（定番）', bpm:92,
+    text:'置いたコードをタップして、<b>数字のついたコード</b>に入れ替えてみましょう。', hint:'2つ以上入れ替えたら、再生して聴いてみましょう',
+    check:()=>slotsSpec().filter(sp=>/\d/.test(sp.x||'')).length>=2,
+    ok:'響きが一気に洗練されました。', ng:'数字のついたコードを、もう少し増やしてみましょう。'},
+  secdom:{load:[0,5,1,4], style:'ポップス（定番）', bpm:96,
+    text:'「1 → 6m → 2m → 5」の <b>6m をタップして、明るい 6(7)</b> に変えてみましょう。', hint:'6(7) から数えて4つ目は 2m。次の 2m へ強く進みます',
+    check:()=>{ const v=state.slots[1]; return v!=null&&!isNum(v)&&specOf(v).o===9&&specOf(v).q==='maj'; },
+    ok:'6(7) から 2m へ、引き寄せられるように進みました。', ng:'2つ目の 6m をタップして、6(7) を選んでみましょう。'},
+  minor4:{load:[0,3,3,0], style:'バラード', bpm:76,
+    text:'2つ並んだ 4 の<b>うしろの方を 4m</b> にして、「4 → 4m → 1」を作ってみましょう。', hint:'3つ目の 4 をタップして、4m を選びます',
+    check:()=>{ const v=state.slots[2]; return tokOf(state.slots[1])===3 && v!=null&&!isNum(v)&&specOf(v).o===5&&specOf(v).q==='m'; },
+    ok:'明るい 4 から暗い 4m へ。切なさが一瞬だけ差し込みました。', ng:'3つ目の 4 をタップして、4m を選んでみましょう。'},
+  key:{load:[0,5,1,4], style:'ポップス（定番）', bpm:96, keys:['C','G','D','A','E','F'],
+    text:'下のボタンで<b>キーを変えて</b>、再生してみましょう。マスの数字はそのまま、アルファベットだけが変わります。', hint:'どのキーが好みか聴き比べてみましょう',
+    check:()=>state.key!=='C',
+    ok:'同じ進行のまま、高さだけが変わりました。', ng:'下のボタンで、C 以外のキーを選んでみましょう。'},
+  smooth:{load:[3,0,4,5], style:'ポップス（定番）', bpm:92,
+    text:'「4 → 1 → 5 → 6m」は、ベースが大きく跳んでいます。コードをタップして<b>ベースの音を変え</b>、なめらかにしてみましょう。', hint:'どのコードのベースを変えると、となりのベースに近づくか考えてみましょう',
+    check:()=>[0,1,2,3].some(k=>{ const v=state.slots[k]; return v!=null&&!isNum(v)&&specOf(v).b!=null; }) && bassLeap()<bassLeap([3,0,4,5]),
+    ok:'ベースの動きが小さくなって、つながりがなめらかになりました。', ng:'ベースが前後のコードのベースに近くなるように、ベースの音を選び直してみましょう。'},
+  split:{load:[0,5,3,4], style:'ポップス（定番）', bpm:96,
+    text:'置いてあるコードの<b>右側</b>にコードをドラッグして、1小節に2つのコードを入れてみましょう。', hint:'例：4 のマスの右側に 5 を置く',
+    check:()=>[0,1,2,3].some(k=>segsOf(k).length>0),
+    ok:'コードの切り替わりが細かくなって、流れに勢いが出ました。', ng:'置いてあるコードの右半分にドラッグしてみましょう。'},
+};
+const lvTitle=(n)=>({html:()=>{ const l=LEVELS[n-1]; return `<div class="eyebrow a">LEVEL ${n}</div>
+     <h2 class="a" style="--dl:.2">${l.name}</h2>
+     <p class="a" style="--dl:.6">${l.goal}</p>
+     ${l.unlock?`<div class="okcard a lvtitle" style="--dl:1"><b>クリアすると</b><small>${l.unlock}</small></div>`:''}`; }});
+const lvClear=(n)=>({html:()=>{ const l=LEVELS[n-1]; return `<div class="eyebrow a">LEVEL ${n} CLEAR</div>
+     <h2 class="a" style="--dl:.1">レベル${n}クリア！</h2>
+     ${l.unlock?`<div class="okcard a" style="--dl:.5"><b>使えるようになりました</b><small>${l.unlock}</small></div>`:''}
+     <p class="a" style="--dl:.9">${n<LV_MAX?'少し自由に作ってみてから、次のレベルへ進みましょう。':'これで全レベルクリアです。'}</p>`; }, last:true});
+const L_SLIDES={
+  long:[
+    {html:()=>`<div class="eyebrow a">進行を長くする</div>
+     <h2 class="a" style="--dl:.1">4つを2回くり返し<br>最後だけ変える</h2>
+     ${exampleHTML(EX.long8)}
+     <div class="exnote"><p class="a" style="--dl:1.6;--fn:var(--s)">同じ4つをくり返すだけでも、曲らしいまとまりが出ます。</p><p class="a" style="--dl:1.9;--fn:var(--t)">2回目の最後を 1 にすると、ひと区切りついた感じになります。</p><p class="a" style="--dl:2.2;--fn:var(--ink)">小節数は、設定メニューの「小節数」で 8・16 に変えられます。</p></div>
+     ${listenBtn('long8')}`},
+    {coach:'task', task:'long'}],
+  tension:[
+    {steps:2, enter:bindHear, html:()=>`<div class="eyebrow a">テンションコード</div>
+     <div class="chordbig pop" style="--dl:.2"><span>Am</span><span class="tn">7</span></div>
+     <p class="a" style="--dl:.7" data-upto="0">このように、コードには<br>後ろに数字がつくことがあります。</p>
+     <h2 data-st="1" data-dl=".2">この数字は、ざっくり言うと<br>『オシャレレベル』です</h2>
+     <p class="sub" data-st="1" data-dl=".8">（正確には『テンション』と呼びます）</p>
+     <p data-st="2" data-dl=".2">数字が大きいほど、また数が多いほど、<br><b>オシャレな響き</b>になります。</p>
+     <div class="chips7" data-st="2" data-dl=".5">${[SP(9,'m'),SP(9,'m','7'),SP(9,'m','9'),SP(9,'m','11')].map((d,k)=>hearChip(d,.6+k*.15)).join('')}</div>
+     <p class="sub" data-st="2" data-dl="1.3">タップすると鳴らせます</p>`},
+    {html:()=>`<div class="eyebrow a">曲調とオシャレレベル</div>
+     <h2 class="a" style="--dl:.1">曲調によって、よく使う<br>オシャレレベルが変わります</h2>
+     <div class="roles">
+       <section class="D a" style="--dl:.5"><span class="L" style="font-size:1rem">なし</span><div><h3>ロック</h3><p>数字なしで、シンプルに力強く。</p></div>${listenBtn('lv0').replace('聴いてみる','聴く')}</section>
+       <section class="S a" style="--dl:.8"><span class="L">7</span><div><h3>J-POP</h3><p>7 や M7 で、ほどよく洗練された響きに。</p></div>${listenBtn('lv7').replace('聴いてみる','聴く')}</section>
+       <section class="T a" style="--dl:1.1"><span class="L" style="font-size:1.1rem">9〜</span><div><h3>ジャズ・シティポップ</h3><p>9 や 11 まで使って、都会的な響きに。</p></div>${listenBtn('lv9').replace('聴いてみる','聴く')}</section>
+     </div>
+     <p class="sub a" style="--dl:1.6">どれも同じ「4 → 5 → 3m → 6m」です</p>`},
+    {coach:'task', task:'tension'}],
+  flip:[
+    {enter:bindHear, html:()=>`<div class="eyebrow a">明るいコードと暗いコードを入れ替える</div>
+     <h2 class="a" style="--dl:.1">m を外したり<br>m をつけたりできます</h2>
+     <p class="a" style="--dl:.5">2m や 3m は、m を外して使うことがあります。<br>逆に、4 に m をつけることもできます。</p>
+     <div class="flipgrid">${[[SP(2,'m'),SP(2,'maj','7')],[SP(4,'m'),SP(4,'maj','7')],[SP(5,'maj'),SP(5,'m')]].map(([a,b],k)=>`<div class="a" style="--dl:${.9+k*.3};display:flex;align-items:center;gap:8px;justify-content:center">${hearChip(a,1+k*.3)}<span style="color:var(--muted);font-weight:700">→</span>${hearChip(b,1.2+k*.3)}</div>`).join('')}</div>
+     <p class="sub a" style="--dl:2">タップすると鳴らせます</p>`},
+    {html:()=>`<div class="eyebrow a">m を外すと</div>
+     <h2 class="a" style="--dl:.1">次のコードへ進む力が<br>強くなる</h2>
+     ${exampleHTML(EX.push)}
+     <div class="exnote"><p class="a" style="--dl:1.4;--fn:var(--d)">本来は暗いコードを明るくすると、<b>次のコードへ引き寄せられるように</b>進みたくなります。</p><p class="a" style="--dl:1.7;--fn:var(--ink)">では、どのコードへ進みたくなるのでしょうか？</p></div>
+     ${listenBtn('push')}`},
+    {enter:bindHear, html:()=>`<div class="eyebrow a">m を外したコードの行き先</div>
+     <h2 class="a" style="--dl:.1">自分から数えて<br>4つ目のコードへ進む</h2>
+     <div class="count4 a pairbtn" style="--dl:.4" data-pair="${PAIR(SP(4,'maj','7'),5)}">${[[SP(4,'maj','7'),'1つ目'],[3,'2つ目'],[4,'3つ目'],[5,'4つ目']].map(([d,t],k)=>`<div class="${k===0?'from':k===3?'to':''}"><span class="tc ${k===0?'D':k===3?'T':''}"><b>${nm(d)}</b></span><small>${t}</small></div>`).join('<i>›</i>')}</div>
+     <p class="a" style="--dl:1">3(7) から 4・5 と数えて、<b>4つ目の 6m</b> へ進むと、ぴったり落ち着きます。</p>
+     <div class="pairs">${[[SP(2,'maj','7'),4],[SP(9,'maj','7'),1],[SP(0,'maj','7'),3]].map(([a,b],k)=>`<button class="pairbtn a" style="--dl:${1.4+k*.25}" data-pair="${PAIR(a,b)}"><span class="tc"><b>${al(a)}</b><small>${nm(a)}</small></span><span>→</span><span class="tc"><b>${al(b)}</b><small>${nm(b)}</small></span></button>`).join('')}</div>
+     <p class="sub a" style="--dl:2">タップすると、行き先のコードまで続けて鳴らします</p>
+     <p class="sub a" style="--dl:2.2">2(7) → 5、6(7) → 2m、1(7) → 4 も同じ「4つ目」。<br>進行ガイドは、4つ目へ進んでいないと黄色で知らせます。</p>`},
+    {coach:'task', task:'secdom'},
+    {html:()=>`<div class="eyebrow a">m をつけると</div>
+     <h2 class="a" style="--dl:.1">4m は<br>とても切ない響き</h2>
+     ${exampleHTML(EX.sad4)}
+     <div class="exnote"><p class="a" style="--dl:1.4;--fn:var(--s)">4m は、本来は明るい 4 を暗くしているので、とても切ない響きになります。</p><p class="a" style="--dl:1.7;--fn:var(--s)">4 → 4m → 1 の順で使うのが定番です。</p></div>
+     ${listenBtn('sad4')}`},
+    {coach:'task', task:'minor4'}],
+  slash:[
+    {steps:2, enter:bindKbd, onStep:k=>{ if(k===1) kbdShow(0,true); if(k===0) kbdShow(null); }, html:()=>`<div class="eyebrow a">コードの構成音</div>
+     <h2 class="a" style="--dl:.1" data-upto="0">鍵盤の白いところは<br>ドレミファソラシ</h2>
+     <h2 data-st="1" data-upto="1" data-dl=".1">1つ飛ばしで<br>3つの音を選ぶと……</h2>
+     <h2 data-st="2" data-dl=".1">どの音から始めても<br>作り方は同じです</h2>
+     ${kbdHTML()}
+     <p class="a" style="--dl:.6" data-upto="0">アルファベットでは C・D・E・F・G・A・B と書きます。</p>
+     <p data-st="1" data-upto="1" data-dl="2">ド（C）から、レを飛ばしてミ（E）、ファを飛ばしてソ（G）。<br>この3つを同時に鳴らすと「C」のコードになります。</p>
+     <div class="chips7 kbtns" data-st="2" data-dl=".3">${[0,1,2,3,4,5,6].map(d=>`<button class="tc hear" data-kd="${d}"><b>${al(d)}</b></button>`).join('')}</div>
+     <p data-st="2" data-dl=".6">コードをタップすると、鍵盤に表示して鳴らします。<br>こうして選んだ3つの音を<b>構成音</b>と呼びます。</p>`},
+    {enter:bindHear, html:()=>`<div class="eyebrow a">分数コード</div>
+     <h2 class="a" style="--dl:.1">構成音のどれを<br>いちばん下にするか</h2>
+     <div class="chips7">${hearChip(SP(0,'maj'),.5)}${hearChip(VSP(0,'maj','',4),.7)}${hearChip(VSP(0,'maj','',7),.9)}</div>
+     <p class="a" style="--dl:1.1">ふつうは、コード名の数字の音（1 なら 1）がいちばん低い音（ベース）です。</p>
+     <p class="a" style="--dl:1.4">構成音のほかの音をベースにすると、<b>「1/3」</b>のように「/」のうしろにベースの音を書きます。これを<b>分数コード</b>と呼びます。</p>
+     <p class="sub a" style="--dl:1.7">タップすると鳴らせます</p>`},
+    {html:()=>`<div class="eyebrow a">分数コード</div>
+     <h2 class="a" style="--dl:.1">ベースが跳ぶ所を<br>なめらかにする</h2>
+     ${exampleHTML(EX.jump)}
+     ${exampleHTML(EX.smooth)}
+     <div class="exnote"><p class="a" style="--dl:2;--fn:var(--d)">ベースが大きく跳ぶと、つながりがゴツゴツして聞こえます。</p><p class="a" style="--dl:2.3;--fn:var(--t)">5 を「5/7」にすると、ベースが 1 → 7 → 6 と1段ずつ下りて、なめらかにつながります。</p></div>
+     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${listenBtn('jump').replace('聴いてみる','そのまま')}${listenBtn('smooth').replace('聴いてみる','分数コードあり')}</div>`},
+    {coach:'task', task:'smooth'}],
+  split:[
+    {html:()=>`<div class="eyebrow a">1小節に2つのコード</div>
+     <h2 class="a" style="--dl:.1">1小節の前半と後半で<br>コードを変える</h2>
+     ${segExHTML('half',.4)}
+     <div class="exnote"><p class="a" style="--dl:1.2;--fn:var(--d)">コードの切り替わりが細かくなると、進行に勢いが出ます。</p><p class="a" style="--dl:1.5;--fn:var(--ink)">あいだに入る、つなぎ役のコードを「経過和音（けいかわおん）」と呼びます。</p><p class="a" style="--dl:1.8;--fn:var(--t)">置いてあるコードの<b>右側</b>にドラッグすると、3拍目からのコードを入れられます。</p></div>
+     ${listenBtn('half')}`},
+    {html:()=>`<div class="eyebrow a">組み合わせる</div>
+     <h2 class="a" style="--dl:.1">分数コードや<br>入れ替えたコードと相性抜群</h2>
+     ${segExHTML('halfSlash',.4)}
+     <p class="sub a" style="--dl:.9">分数コードで、ベースを ド→シ→ラ→ソ→ファ→ミ→レ と1歩ずつ下ろす</p>
+     ${segExHTML('halfFlip',1.2)}
+     <p class="sub a" style="--dl:1.7">後半に m を外したコードを置き、次の小節の頭（4つ目のコード）へ進む</p>
+     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${listenBtn('halfSlash').replace('聴いてみる','分数コード')}${listenBtn('halfFlip').replace('聴いてみる','入れ替えたコード')}</div>`},
+    {coach:'task', task:'split'}],
+};
+Object.assign(EX,{
+  halfSlash:{degs:[0,5,3,1], segs:{0:[{beat:3,v:VSP(7,'maj','',11)}],1:[{beat:3,v:VSP(0,'maj','',7)}],2:[{beat:3,v:VSP(0,'maj','',4)}],3:[{beat:3,v:4}]}, roles:['T','T','S','S'], roles2:['D','T','T','D'], groups:[], style:'バラード', bpm:76},
+  halfFlip:{degs:[0,1,0,3], segs:{0:[{beat:3,v:SP(9,'maj','7')}],1:[{beat:3,v:4}],2:[{beat:3,v:SP(0,'maj','7')}],3:[{beat:3,v:SP(5,'m')}]}, roles:['T','S','T','S'], roles2:['D','D','D','S'], groups:[], style:'ポップス（定番）', bpm:96},
+});
+EX.half.roles2=['D','D','T','D'];
+// 1小節に2つのコードが入るお手本（マスを前半・後半に分けて表示）。各コードはタップで鳴らせる
+function segExHTML(key,dl){ const ex=EX[key];
+  return `<div class="exrow a" data-ex="${key}" style="--dl:${dl};grid-template-columns:repeat(4,minmax(0,1fr))">${ex.degs.map((d,k)=>{ const sg=(ex.segs[k]||[])[0];
+    return sg ? `<span class="halfbox" data-ti="${k}"><span class="tc ${ex.roles[k]}" data-hear="${HEAR(d)}"><b>${nm(d)}</b></span><span class="tc ${(ex.roles2||[])[k]||''}" data-hear="${HEAR(sg.v)}"><b>${nm(sg.v)}</b></span></span>`
+      : `<span class="tc ${ex.roles[k]}" data-ti="${k}" data-hear="${HEAR(d)}"><b>${nm(d)}</b><small>${ex.roles[k]}</small></span>`; }).join('')}</div>`; }
+Object.assign(EX,{
+  keyC:{degs:[0,4,5,3], roles:['T','D','T','S'], groups:[], style:'ポップス（定番）', bpm:96, key:'C'},
+  keyG:{degs:[0,4,5,3], roles:['T','D','T','S'], groups:[], style:'ポップス（定番）', bpm:96, key:'G'},
+  keyRock:{degs:[0,3,4,0], roles:['T','S','D','T'], groups:[], style:'ロック', bpm:132, key:'E'},
+  keyJazz:{degs:[SP(2,'m','7'),SP(7,'maj','7'),SP(0,'maj','M7'),SP(9,'m','7')], roles:['S','D','T','T'], groups:[], style:'ジャジー', bpm:84, key:'B♭'},
+  keyPiano:{degs:[0,3,4,0], roles:['T','S','D','T'], groups:[], style:'クラシック風', bpm:100, key:'G'},
+});
+const keyRow=(key,degs)=>{ const k=KEYS.find(x=>x.id===key), nmK=d=>k.sc[d]+(DEG[d].q==='m'?'m':'');
+  return `<div class="keyrow"><b>Key ${key}</b>${degs.map(d=>`<span data-hear="${HEAR(d)}" data-key="${key}"><i>${nm(d)}</i>${nmK(d)}</span>`).join('')}</div>`; };
+const L_KEY=[
+  {html:()=>`<div class="eyebrow a">キーとは</div>
+     <h2 class="a" style="--dl:.1">「1」をどの音にするか<br>それが<b>キー</b>です</h2>
+     <div class="keytable a" style="--dl:.5">${keyRow('C',[0,1,2,3,4,5])}${keyRow('G',[0,1,2,3,4,5])}</div>
+     <p class="a" style="--dl:1">これまでは、ド（C）を 1 にしていました。これを <b>Key C</b> と言います。</p>
+     <p class="a" style="--dl:1.3">ソ（G）を 1 にすると <b>Key G</b>。すべてのコードが、同じだけ高さをずらします。</p>`},
+  {html:()=>`<div class="eyebrow a">移調（いちょう）</div>
+     <h2 class="a" style="--dl:.1">数字は同じまま<br>アルファベットだけが変わる</h2>
+     ${exampleHTML(EX.keyC)}
+     <div class="keytable a" style="--dl:.9">${keyRow('C',[0,4,5,3])}${keyRow('G',[0,4,5,3])}</div>
+     <div class="exnote"><p class="a" style="--dl:1.3;--fn:var(--t)">キーを変えることを<b>移調</b>と言います。</p><p class="a" style="--dl:1.6;--fn:var(--s)">数字で書いておけば、キーを変えても書き直しは要りません。このアプリが数字を使うのはそのためです。</p></div>
+     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${listenBtn('keyC').replace('聴いてみる','Key C')}${listenBtn('keyG').replace('聴いてみる','Key G')}</div>`},
+  {html:()=>`<div class="eyebrow a">ジャンルとキー</div>
+     <h2 class="a" style="--dl:.1">ジャンルによって<br>よく使われるキーがあります</h2>
+     <div class="roles">
+       <section class="D a" style="--dl:.5"><span class="L" style="font-size:.85rem">E・A<br>D</span><div><h3>ロック・ギター中心の曲</h3><p>ギターの開放弦がよく響くキー。</p></div>${listenBtn('keyRock').replace('聴いてみる','Key E')}</section>
+       <section class="S a" style="--dl:.8"><span class="L" style="font-size:.85rem">F・B♭<br>E♭</span><div><h3>ジャズ・吹奏楽</h3><p>トランペットやサックスが吹きやすいキー。</p></div>${listenBtn('keyJazz').replace('聴いてみる','Key B♭')}</section>
+       <section class="T a" style="--dl:1.1"><span class="L" style="font-size:.85rem">C・G<br>F</span><div><h3>ピアノ曲・童謡</h3><p>白鍵が多く、弾きやすいキー。</p></div>${listenBtn('keyPiano').replace('聴いてみる','Key G')}</section>
+     </div>
+     <p class="a" style="--dl:1.5">歌の曲では、<b>歌う人の声の高さ</b>に合わせてキーを決めるのが基本です。</p>`},
+  {coach:'task', task:'key'},
 ];
-function openChapter(c){
-  const d=c.deck.slice(c.a,c.b+1).map(x=>({...x}));
-  const last=d[d.length-1]; if(!last.coach){ last.last=true; last.finish=()=>endTutorial(true); }
-  d.onEnd=()=>endTutorial(true);
-  openTutorial(d);
+const LEVELS=[
+  {name:'コードを置いて鳴らす', goal:'コードとは何かを知り、パレットのコードを並べて鳴らしてみましょう。', unlock:'', deck:()=>SLIDES.slice(0,7), noClear:true},
+  {name:'役割で流れを作る', goal:'コードの役割（T・S・D）と、自然に聞こえる流れの作り方を覚えましょう。', unlock:'進行ガイド（役割の流れの表示）', chips:[['T','--t'],['S','--s'],['D','--d']], deck:()=>[SLIDES[7],...SLIDES.slice(8,15)], noClear:true},
+  {name:'雰囲気をつくる', goal:'明るい・切ない・力強い……。ねらった雰囲気にするコツを、実例と実践で覚えましょう。', unlock:'伴奏スタイルとテンポ（BPM）の変更', chips:[['明るい','--t'],['切ない','--s'],['力強い','--d'],['穏やか','--warn']], deck:()=>MOOD.filter((_,k)=>k!==8), noClear:true},
+  {name:'キーを変える（移調）', goal:'同じ進行を、別の高さ（キー）で鳴らしてみましょう。ジャンルによって、よく使われるキーも違います。', unlock:'キーの変更（設定メニュー）', chips:[['Key C','--t'],['Key G','--s'],['Key E','--d']], deck:()=>L_KEY},
+  {name:'進行を長くする', goal:'4つの進行をもとに、8小節の進行を作ってみましょう。', unlock:'8小節・16小節', chips:[['8小節','--t'],['16小節','--s']], deck:()=>L_SLIDES.long},
+  {name:'テンションコード', goal:'コードに数字をつけて、洗練された響きにしてみましょう。', unlock:'置いたコードをタップして、7・M7・9 などに変える', chips:[['Am7','--t'],['FM7','--s'],['G9','--d']], deck:()=>L_SLIDES.tension},
+  {name:'分数コード', goal:'コードの構成音を知り、ベースの音を変えてつながりをなめらかにしましょう。', unlock:'すべてのコードで、構成音をベースにした分数コードを使う', chips:[['C/E','--t'],['G/B','--d']], deck:()=>L_SLIDES.slash},
+  {name:'明るいコードと暗いコードを入れ替える', goal:'m を外したり、m をつけたりして、進行にメリハリをつけましょう。', unlock:'タップして 2(7)・3(7)・4m などに変える', chips:[['E7','--d'],['D7','--d'],['Fm','--s']], deck:()=>L_SLIDES.flip},
+  {name:'1小節に2つのコード', goal:'1小節の中でコードを切り替えて、進行に勢いをつけましょう。分数コードや入れ替えたコードとも組み合わせます。', unlock:'1小節を前半・後半に分ける（全レベルクリアで PROモードも）', chips:[['3m｜6m','--t'],['2m｜5','--d']], deck:()=>L_SLIDES.split},
+];
+// レベルの解説を組み立てる（タイトル → 本編 → クリア）。review=true は見返し用（クリア扱いにしない）
+function levelDeck(n,review){
+  const l=LEVELS[n-1], body=l.deck().map(x=>({...x})); body.forEach(x=>{ delete x.last; delete x.finish; });
+  const d = n===1 ? body : [lvTitle(n), ...body];
+  if(!l.noClear){ const c={...lvClear(n)}; c.finish=()=>{ endTutorial(n!==1); if(n===1){ state.guide=false; renderAll(); } if(!review) levelClear(n); }; if(review){ c.html=()=>`<div class="eyebrow a">LEVEL ${n}</div><h2 class="a" style="--dl:.1">見返し終わりました</h2>`; c.finish=()=>endTutorial(true); } d.push(c); }
+  d.lv=n; d.review=!!review; d.onEnd=()=>endTutorial(true);
+  if(n===1 && !review) d.onEnd=()=>{ levelClear(1); DECK=levelDeck(2); TUT.lvNow=2; showSlide(0); };   // そのままレベル2へ
+  if(n===2){ d.shift();   // レベル2のタイトルは出さない（レベル1からそのまま続く）
+    if(review){ const last=d[d.length-1]; last.last=true; last.btn='とじる'; last.finish=()=>endTutorial(true); }
+    else d.push({last:true, btn:'はじめる', html:()=>`<div class="eyebrow a">LEVEL 1・2 CLEAR</div>
+     <h2 class="a" style="--dl:.1">＼ レベル1・2 クリア！ ／</h2>
+     <div class="okcard a" style="--dl:.5"><b>使えるようになりました</b><small>進行ガイド（マスの上に、役割の流れを表示）</small></div>
+     <p class="a" style="--dl:.9">では、自由にコード進行を作ってみましょう！</p>`, finish:()=>{ endTutorial(false); levelClear(2); }}); }
+  return d;
 }
-function renderChapters(){
-  const el=$('chapList'); if(el.children.length) return;
-  let n=0;
-  el.innerHTML=CHAPTERS.map(g=>`<h4>${g.group}</h4>`+g.items.map(c=>`<button data-c="${n++}"><b>${c.t}</b><small>${c.sub}</small></button>`).join('')).join('');
-  const all=CHAPTERS.flatMap(g=>g.items);
-  el.querySelectorAll('button').forEach(b=>b.onclick=()=>{ $('moodTip').hidden=true; MOODPOP.pending=false; openChapter(all[+b.dataset.c]); });
+function startLevel(n,review){ $('moodTip').hidden=true; MOODPOP.pending=false; openTutorial(levelDeck(n,review)); }
+const lockHTML=n=>`<span class="small" style="margin:0">🔒 レベル${n}「${LEVELS[n-1].name}」をクリアすると使えます</span>`;
+const lockToast=n=>toast(`🔒 レベル${n}「${LEVELS[n-1].name}」をクリアすると使えます`);
+function levelClear(n){ if(LVL>=n) return; LVL=n; saveLv();
+  if(MODE!=='free'){ if(n===2){ MOODPOP.level=3; MOODPOP.pending=true; } else if(n>=LV_MAX) showMoodPop(true); }
+  renderAll(); }
+function renderLevels(){ const el=$('levelList'); if(!el) return;
+  const nx=Math.min(LVL+1,LV_MAX), all=LVL>=LV_MAX;
+  $('lvCount').textContent=`${LVL} / ${LV_MAX} クリア`;
+  $('lvNext').innerHTML = all ? '<i>ALL CLEAR</i><b>全レベルクリア</b><small>一覧から好きなレベルを見返せます</small>' : `<i>${LVL?'つづきから':'はじめから'} ・ LEVEL ${nx}</i><b>${LEVELS[nx-1].name}</b><small>${LEVELS[nx-1].unlock?'クリアすると：'+LEVELS[nx-1].unlock:LEVELS[nx-1].goal}</small>`;
+  $('lvNext').onclick=()=>{ if(!all) startLevel(nx); else $('lvAcc').open=true; };
+  el.innerHTML=LEVELS.map((l,k)=>{ const n=k+1, done=LVL>=n, open=UL()>=n-1;
+    return `<button data-l="${n}"${open?'':' class="lock"'}><span class="lvtag">LEVEL ${n}</span><b>${l.name}${done?'<span class="chapdone" aria-label="クリア">✓</span>':open?'':' 🔒'}</b>${l.unlock?`<small>${l.unlock}</small>`:''}</button>`; }).join('');
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const n=+b.dataset.l; if(UL()<n-1){ toast(`🔒 レベル${n-1}をクリアすると挑戦できます`); return; } startLevel(n, LVL>=n); });
+  [$('lvJump'),$('mpJump')].forEach(sel=>{ if(!sel||sel.options.length) return;
+    sel.innerHTML='<option value="">選ぶ</option>'+LEVELS.map((l,k)=>`<option value="${k+1}">レベル${k+1}：${l.name}</option>`).join('');
+    sel.onchange=()=>{ const n=+sel.value; if(!n) return; sel.value=''; MODE='step'; LVL=n-1; saveLv(); $('modePick').hidden=true; closeAll(); renderAll(); startLevel(n); }; });
 }
+let DECK=SLIDES;
 function tutDots(){ $('tutDots').innerHTML=DECK.map((_,k)=>`<i class="${k===TUT.i?'on':''}"></i>`).join(''); }
-function tutStopAudio(){ TUT.onLoopEnd=null; clearTimeout(TUT.stopT); TUT.stopping=false; if(playing) stop(); document.querySelectorAll('.listen.on').forEach(b=>b.classList.remove('on')); }
-function tutLoad(degs){ state.slots=Array.from({length:16},(_,j)=>degs[j]??null); state.segs=Array.from({length:16},()=>[]); state.bars=degs.length<=4?4:8; state.len=4; state.ant=Array(16).fill(null); page=0; renderAll(); }
+function tutStopAudio(){ TUT.onLoopEnd=null; TUT.playingEx=null; document.querySelectorAll('.tut [data-ti].now').forEach(e=>e.classList.remove('now')); clearTimeout(TUT.stopT); TUT.stopping=false; if(playing) stop(); document.querySelectorAll('.listen.on').forEach(b=>b.classList.remove('on')); }
+function tutLoad(degs,segs,ant){ state.slots=Array.from({length:16},(_,j)=>degs[j]??null); state.segs=Array.from({length:16},(_,j)=>segs&&segs[j]?JSON.parse(JSON.stringify(segs[j])):[]); state.bars=degs.length<=4?4:8; state.len=4; state.ant=Array.from({length:16},(_,j)=>ant&&ant[j]||null); page=0; renderAll(); }
 function openTutorial(deck){
   if(TUT.on) return;
   MOODPOP.pending=false; $('moodTip').hidden=true;
-  DECK=Array.isArray(deck)?deck:SLIDES;
+  DECK=Array.isArray(deck)?deck:SLIDES; TUT.lvNow=DECK.lv||0;
   TUT.on=true; TUT.backup=JSON.stringify(state); TUT.i=0; clearTimeout(HIST.t); histBtns();
   closeAll(); tutStopAudio();
   state.pro=false; document.body.classList.remove('pro'); state.label='num'; state.key='C'; state.guide=false;
@@ -2600,18 +2988,17 @@ function openTutorial(deck){
 }
 function closeCoach(){ $('coach').hidden=true; document.body.classList.remove('tutlite'); clearInterval(TUT.wait); }
 function endTutorial(restore){
-  const showTip = !restore && DECK===SLIDES;
-  TUT.practice=false;
+  TUT.practice=false; TUT.lvNow=0;
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio(); closeCoach();
   $('tut').hidden=true; TUT.on=false;
   if(restore && TUT.backup){ state=JSON.parse(TUT.backup); document.body.classList.toggle('pro',!!state.pro); }
   else { const b=JSON.parse(TUT.backup); state={...b, slots:Array(16).fill(null), segs:Array.from({length:16},()=>[]), bars:4, len:4, label:'num', guide:true}; document.body.classList.toggle('pro',!!state.pro); }
   page=0; selected=null; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save();
-  if(showTip){ $('moodTip').hidden=false; clearTimeout(TUT.tipT); MOODPOP.pending=true; }
   histReset();
 }
 function showSlide(i){
   if(i>=DECK.length && DECK.onEnd){ DECK.onEnd(); return; }   // チャプターの最後（吹き出しの「つぎへ」）で閉じる
+  if(TUT.practice && !(DECK[i]&&DECK[i].coach)) TUT.practice=false;
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio();
   TUT.i=Math.max(0,Math.min(DECK.length-1,i));
   const sl=DECK[TUT.i];
@@ -2621,11 +3008,12 @@ function showSlide(i){
   $('tutBack').disabled=TUT.i===0 && !DECK[0].steps;
   st.querySelectorAll('.listen').forEach(b=>b.onclick=()=>{
     if(b.classList.contains('on')){ tutStopAudio(); return; }
-    tutStopAudio(); tutLoadEx(EX[b.dataset.ex]); b.classList.add('on'); b.innerHTML=IC_STOP+'<span>止める</span>';
+    tutStopAudio(); tutLoadEx(EX[b.dataset.ex]); TUT.playingEx=b.dataset.ex; b.classList.add('on'); b.innerHTML=IC_STOP+'<span>止める</span>';
     TUT.onLoopEnd=()=>{ b.classList.remove('on'); b.dataset.again=1; b.innerHTML=IC_PLAY+'<span>もう一度聴く</span>'; }; play();
     const fix=()=>{ if(!b.classList.contains('on')) b.innerHTML=IC_PLAY+`<span>${b.dataset.again?'もう一度聴く':'聴いてみる'}</span>`; }; const iv=setInterval(()=>{ if(!b.isConnected||!b.classList.contains('on')){ clearInterval(iv); fix(); } },300);
   });
   if(sl.enter) sl.enter();
+  bindHear();
 }
 // メイン画面の上で、場所を示しながら吹き出しを出す
 // target：要素・矩形、またはその配列（複数の場所をまとめて明るく抜く）
@@ -2667,9 +3055,9 @@ function moodResult(){
 }
 const moodDone=()=>[0,1,2,3].every(k=>state.slots[k]!==null&&state.slots[k]!==undefined);
 // 実践編を終えるときは、作った進行と伴奏をそのまま残す
-function finishMood(){ TUT.practice=false; clearInterval(TUT.wait); const keep={slots:[...state.slots],segs:state.segs,bars:state.bars,drum:state.drum,arp:state.arp,inst:state.inst,kit:state.kit,bass:state.bass,bassSnd:state.bassSnd,bassPat:state.bassPat,bpm:state.bpm};
+function finishMood(){ const lv=DECK.review?0:DECK.lv; TUT.practice=false; clearInterval(TUT.wait); const keep={slots:[...state.slots],segs:state.segs,bars:state.bars,drum:state.drum,arp:state.arp,inst:state.inst,kit:state.kit,bass:state.bass,bassSnd:state.bassSnd,bassPat:state.bassPat,bpm:state.bpm};
   endTutorial(true); Object.assign(state,keep); state.ant=Array(16).fill(null); page=0;
-  $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save(); }
+  $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save(); if(lv) levelClear(lv); }
 function runCoach(kind){
   document.body.classList.add('tutlite');
   if(kind==='place'){
@@ -2699,6 +3087,21 @@ function runCoach(kind){
     TUT.wait=setInterval(()=>{ const k=(playing?'p':'')+(moodDone()?'d':''); if(k===was) return; was=k;
       if(playing) TUT.onLoopEnd=()=>{ clearInterval(TUT.wait); moodResult(); };
       show(); },250);
+  } else if(kind==='task'){
+    const tk=TASKS[DECK[TUT.i].task]; tutStopAudio(); document.body.classList.remove('tutlite'); TUT.practice=true;
+    tutLoadEx({degs:tk.load, style:tk.style, bpm:tk.bpm}); if(tk.guide){ state.guide=true; renderAll(); }
+    const next=()=>{ TUT.practice=false; closeAll(); showSlide(TUT.i+1); };
+    const show=()=>{
+      if($('varSheet').classList.contains('on')){ $('coach').hidden=true; return; }
+      if(playing) coach([slotsEl,$('play')], '♪ 再生中……', []);
+      else { const kb=(tk.keys||[]).map(k=>[k,()=>{ state.key=k; renderAll(); preview(0); },state.key!==k]);
+        if(!tk.check()) coach(state.bars>4?[slotsEl,$('pages')]:slotsEl, `${tk.text}<br><small>${tk.hint}</small>`, [...kb,backBtn(),['とばす',next,true]]);
+        else coach([slotsEl,$('play')], `いいですね！（Key ${state.key}）<br>再生して聴いてみましょう。`, [...kb,backBtn()]); } };
+    show(); let was='';
+    TUT.wait=setInterval(()=>{ const k=(playing?'p':'')+(tk.check()?'d':'')+($('varSheet').classList.contains('on')?'v':'')+page+state.key; if(k===was) return; was=k;
+      if(playing) TUT.onLoopEnd=()=>{ clearInterval(TUT.wait); const ok=tk.check();
+        coach(slotsEl, ok?`<b>${tk.ok}</b>`:`<b>おしいです！</b><br>${tk.ng}`, ok?[['もう一度',()=>runCoach('task'),true],['つぎへ',next]]:[['作り直す',()=>runCoach('task'),true],['つぎへ',next]]); };
+      show(); },250);
   } else if(kind==='weird'){
     tutStopAudio(); tutLoad([6,3,2,1]);
     coach(slotsEl, 'では次は、こんなコードを<br>鳴らしてみます……', [backBtn()]);
@@ -2723,7 +3126,7 @@ function setBusy(){
   else clearBusy();
 }
 function clearBusy(){ const nb=$('tutNext'), sl=DECK[TUT.i]; nb.classList.remove('busy');
-  nb.textContent = (sl && sl.last && !(sl.steps && TUT.step<sl.steps)) ? (sl.finish?'とじる':'はじめる') : 'つぎへ'; }
+  nb.textContent = (sl && sl.last && !(sl.steps && TUT.step<sl.steps)) ? (sl.btn||(sl.finish?'とじる':'はじめる')) : 'つぎへ'; }
 function applyStep(){
   const st=$('tutStage'), k=TUT.step;
   // data-st＝この段階から表示、data-upto＝この段階まで表示（両方あれば、その間だけ表示）
@@ -2743,13 +3146,11 @@ $('tutBack').onclick=()=>{ const sl=DECK[TUT.i];
   if(sl.steps && TUT.step>0){ TUT.step--; applyStep(); return; }
   showSlide(TUT.i-1); };
 $('tutSkip').onclick=()=>endTutorial(true);
-$('tutOpen').onclick=()=>openTutorial(SLIDES);
-renderChapters();
 $('presetQ').oninput=renderPresetList;
-$('moodOpen').onclick=()=>{ $('moodTip').hidden=true; MOODPOP.pending=false; openTutorial(MOOD); };
-$('moodPopGo').onclick=()=>{ $('moodPop').hidden=true; openTutorial(MOOD); };
-$('moodPopLater').onclick=()=>{ $('moodPop').hidden=true; $('moodTip').hidden=false; clearTimeout(TUT.tipT); TUT.tipT=setTimeout(()=>$('moodTip').hidden=true,180000); };
-$('moodTip').onclick=e=>{ $('moodTip').hidden=true; MOODPOP.pending=false; if(e.target.id!=='moodTipX') openTutorial(MOOD); };
+$('moodPopGo').onclick=()=>{ $('moodPop').hidden=true; if(!MOODPOP.all) startLevel(MOODPOP.level); };
+$('moodPopLater').onclick=()=>{ $('moodPop').hidden=true; toast('パレット右下の「NEXT」から、いつでも次のレベルに進めます'); };
+$('lvBig').onclick=()=>{ if(LVL<LV_MAX) startLevel(LVL+1); };
+$('moodTip').onclick=e=>{ $('moodTip').hidden=true; MOODPOP.pending=false; if(e.target.id!=='moodTipX') startLevel(MOODPOP.level); };
 window.addEventListener('resize',()=>{ if(TUT.on && !$('coach').hidden && DECK[TUT.i].coach) runCoach(DECK[TUT.i].coach); });
 
 // ピンチズームを禁止（iPhone の Safari は viewport の指定を無視するので、ジェスチャー自体を止める）
@@ -2826,7 +3227,10 @@ let OPENED_SHARE=false;
   try{ const o=JSON.parse(b64d(m[1])); if(unpackSong(o)){ OPENED_SHARE=true; setTimeout(()=>toast('共有された進行を読み込みました'),400); } }catch(e){ setTimeout(()=>toast('リンクを読み込めませんでした'),400); }
   try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} })();
 histReset();
-if(FIRST_RUN && !OPENED_SHARE) openTutorial();
+function showModePick(){ const el=$('modePick'); el.hidden=false; renderLevels();
+  el.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ MODE=b.dataset.m; saveLv(); el.hidden=true; renderAll();
+    if(MODE==='step') startLevel(1); else toast('各レベルの解説は、設定メニューからいつでも見られます'); }); }
+if(FIRST_RUN && !OPENED_SHARE) showModePick();
 </script>
 
 </body>
