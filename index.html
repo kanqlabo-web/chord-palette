@@ -3404,12 +3404,14 @@ armed($('resetAll'),'もう一度押すと全部戻します',()=>{ if(playing) 
 $('menuBtn').addEventListener('click',renderSongs);
 // 共有リンクから開いたとき：その進行を読み込む（チュートリアルは自動では出さない）
 let OPENED_SHARE=false;
-(()=>{ const m=location.hash.match(/^#s=([A-Za-z0-9_-]+)/); if(!m) return;
+(()=>{ let h=location.hash; try{ h=decodeURIComponent(h); }catch(e){}
+  const m=h.match(/[#&]s=([A-Za-z0-9_+\/-]+)/) || location.search.match(/[?&]s=([A-Za-z0-9_+\/-]+)/); if(!m) return;
+  OPENED_SHARE=true;   // 共有リンクから来たら、読み込めなくてもタイトル画面は出さない
   try{ const o=JSON.parse(b64d(m[1]));
     // 開く前に自分の作りかけの曲があれば「保存した進行」に残しておく
     if(state.slots.some(v=>v!=null)){ const a=loadSongs(); a.unshift({name:'共有リンクを開く前の曲（'+new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+'）',date:Date.now(),data:packSong()}); saveSongs(a); }
-    if(unpackSong(o)){ OPENED_SHARE=true; SHARE_VIEW=true; renderAll(); setTimeout(()=>toast('共有された曲を開きました（すべての機能を使えます）'),400); } }catch(e){ setTimeout(()=>toast('リンクを読み込めませんでした'),400); }
-  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} })();
+    if(unpackSong(o)){ OPENED_SHARE=true; SHARE_VIEW=true; renderAll(); setTimeout(()=>toast('共有された曲を開きました（すべての機能を使えます）'),400); } }catch(e){ setTimeout(()=>toast('リンクを読み込めませんでした（リンクが途中で切れているかもしれません）'),400); }
+  try{ history.replaceState(null,'',location.pathname+location.search.replace(/[?&]s=[^&]*/,'')); }catch(e){} })();
 histReset();
 function showModePick(){ const el=$('modePick'); el.hidden=false; $('tsLevels').hidden=true;
   const close=()=>{ el.hidden=true; renderAll(); };
