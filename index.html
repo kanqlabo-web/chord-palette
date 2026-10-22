@@ -687,7 +687,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.134（2026-10-23）</p>
+    <p class="appver">ver 1.135（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -754,7 +754,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.134（2026-10-23）</p>
+  <p class="appver">ver 1.135（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1137,8 +1137,8 @@ const FILLS={
   // drum1.mid（Halftime Pulse）から：リムショットで3・4拍をつなぐ
   // オーケストラ：大太鼓をだんだん強く連打して（クレッシェンド）次の小節へ
   // マーチ：スネアの16分を弱→強に盛り上げ、大太鼓とティンパニで締める
-  march:{big:  {s:'........ooxxxXXX', k:'........x...x..X', t3:'...............X'},
-         small:{s:'............oxXX', k:'...............X'}},
+  march:{big:  {k:'........ggooxxXX', t3:'........ggooxxXX', s:'........XgoXgoXX'},   // 大太鼓をだんだん強く連打（クレッシェンド）
+         small:{k:'..............xx', t3:'..............xx', s:'............XgXX'}},
   orch: {big:  {k:'........ggooxxXX', t3:'........ggooxxXX'},
          small:{k:'............ooxX', t3:'............ooxX'}},
   halfp:{big:  {k:'........x.x....X', s:'............x...', x:'....X...........', o:'..........o.....'},
@@ -1202,11 +1202,11 @@ const DRUMS = {
            vB:{k:'x.....x..x....x.', s:'....X.......X...', h:'o.go.go.o.go.o..'}, fill:'soft',
            bass:[[0,0,6,.9],[6,0,2,.55],[8,'5',4,.75],[12,0,2,.6],[14,'ap',2,.65]]},
   // 壮大：キックとフロアタムで「ドン・ドドン」、スネアは3拍目だけ。2小節目の終わりはタムを連打して盛り上げる
-  // 壮大：オーケストラのマーチングドラム（オーケストラ・キット：コンサートスネア・大太鼓・ティンパニ・シンバル）。
-  // スネアは16分を止めずに、アクセントとゴーストで「タカタカ」と行進させる。大太鼓は「ドーン……ッドーン」、ティンパニは頭だけ
-  epic:   {name:'壮大', pro:'マーチングドラム（オーケストラ）',
-           v:{s:'XggxgoXgxgXgogXg', k:'X.......X.....x.', t3:'X...............', c:'X...............'},
-           vB:{s:'XggxgoXgxgXgXgxX', k:'X.......X.x.X...', t3:'........X.......'}, fill:'march',
+  // 壮大：オーケストラのマーチングドラム（オーケストラ・キット）。okesutora.mid（テンポ132として）の大太鼓・和太鼓をそのまま：
+  // 1小節目は頭と4拍目の裏、2小節目は頭だけ。スネアはアクセントをはっきり、間はごく弱いゴースト（dyn で強弱の差を広げる）
+  epic:   {name:'壮大', pro:'マーチングドラム（オーケストラ）', dyn:1.8,
+           v:{s:'XggoXgogXgoXgoXg', k:'X.............x.', t3:'X.............x.'},
+           vB:{s:'ggogXgoxXgoXgXXX', k:'X...............', t3:'X...............'}, fill:'march',
            bass:[[0,0,15.8,.95]]},   // チューバ・コントラバスのように全音符でのばす
   // 和風：和太鼓のように低いタムで「ドン・ドドン」、リムで鉦（かね）のような合いの手
   wa:     {name:'和風', pro:'和太鼓風（タム）', v:{k:'X.......X.......', t3:'X.....x.X...x.x.', x:'....x.......x...'},
@@ -1368,7 +1368,7 @@ function rebuildMy(){
   (state.myDrums||[]).forEach((m,i)=>{ migrateMy(m,'drum');
     const V={}; m.notes.forEach(n=>{ const a=V[VOICE[n.r]]=V[VOICE[n.r]]||Array(16).fill(0); a[n.st]=n.vel; });
     let VB=null; const nb=(m.sitNotes||{}).B||[]; if(nb.length){ VB={}; nb.forEach(n=>{ const a=VB[VOICE[n.r]]=VB[VOICE[n.r]]||Array(16).fill(0); a[n.st]=n.vel; }); }
-    const d=DRUMS['my'+i]={name:m.name||`マイパターン${i+1}`, fill:m.fill||null, bass:m.bass||DRUMS.pop.bass, V, VB, swing:m.swing==='swing', swing16:m.swing==='swing16', duck:!!m.duck};
+    const d=DRUMS['my'+i]={name:m.name||`マイパターン${i+1}`, fill:m.fill||null, bass:m.bass||DRUMS.pop.bass, V, VB, swing:m.swing==='swing', swing16:m.swing==='swing16', duck:!!m.duck, dyn:m.dyn||0};
     if(d.fill){ d.F=parseVoices(FILLS[d.fill].big); d.FS=parseVoices(FILLS[d.fill].small); } else { d.F=null; d.FS=null; }
   });
   (state.myArps||[]).forEach((m,i)=>{ migrateMy(m,'arp');
@@ -1408,7 +1408,7 @@ function newMy(kind,from){        // from: もとにするパターンのキー�
   else if(from){
     if(kind==='drum'){ const d=DRUMS[from]; if(d){ fill=d.fill||null; const cv=src=>{ const o=[]; DRUM_ROWS.forEach(([k])=>{ if(src[k]) [...src[k]].forEach((c,st)=>{ const vel=VEL[c]||0; if(vel) o.push({r:k,st,len:1,vel}); }); }); return o; };
       notes=cv(d.v); if(d.vB) sit={B:cv(d.vB)};
-      extra={swing:d.swing?'swing':d.swing16?'swing16':'', duck:!!d.duck, bass:d.bass}; } }
+      extra={swing:d.swing?'swing':d.swing16?'swing16':'', duck:!!d.duck, bass:d.bass, dyn:d.dyn||0}; } }
     else if(kind==='bass'){ const src=from==='auto'||!BASSES[from] ? DRUMS[state.drum].bass : BASSES[from].v;
       (src||[]).forEach(([st,iv,len,vel])=>{ const r=String(iv===7?'5':iv); if(BASS_ROWS.some(([k])=>k===r)&&st<16) notes.push({r,st,len:Math.max(1,Math.min(Math.round(len*2)/2,16-st)),vel}); }); }
     else { const a=ARPS[from]; const conv=(evs,N)=>{ const out=[]; evs.forEach(e=>{ const [st0,ns,len,vel]=e; const st=Math.round(st0); ns.forEach(r=>{ const rr=r; if(KEY_ROWS.some(([k])=>k===rr)&&st<N){ const n={r:String(rr),st,len:Math.max(.5,Math.min(len,N-st)),vel}; if(e[5]==='fall') n.fall=true; out.push(n); } }); }); return tidyNotes(out); };
@@ -1490,6 +1490,7 @@ function renderPatEditor(){
   }
   if(isDrum){
     optRow('ハネ',[['','なし'],['swing','8分でハネる'],['swing16','16分でハネる']],curMy().swing||'',v=>curMy().swing=v);
+    optRow('強弱のメリハリ',[[0,'ふつう'],[1.8,'はっきり（ゴーストをごく弱く）']],curMy().dyn||0,v=>curMy().dyn=v);
     optRow('サイドチェイン',[[false,'なし'],[true,'キックのたびに伴奏を沈める（ダンス系）']],!!curMy().duck,v=>curMy().duck=v);
   }
   if(isArpK(patKind)){
@@ -2906,7 +2907,7 @@ function scheduleStep(g,t){
   // シャッフルのフィルは3連符：拍の中の 0・1・2 番目を 1/3 ずつ並べる
   const tt = dr.swing&&inFill ? t+[0,1/3,2/3,0][s%4]*sd : t+(dr.swing&&s%4===2?sd*.34:0)+(dr.swing16&&s%2===1?sd*.3:0);
   const V = inFill ? (fm==='big'?dr.F:dr.FS) : (b%2===1 && dr.VB ? dr.VB : dr.V);
-  for(const n in V){ const v=V[n][s]; if(v) drum(+n,tt,v); }
+  for(const n in V){ const v=V[n][s]; if(v) drum(+n,tt,dr.dyn?Math.pow(v,dr.dyn):v); }   // dyn：強弱のメリハリ（ゴーストをより小さく）
   // サイドチェイン風：キック（4分）のたびに伴奏の音量をぐっと沈めて、裏拍でふくらませる
   if(dr.duck && compBus && !CAPTURE && s%4===0){ const gg=compBus.gain; gg.cancelScheduledValues(tt); gg.setValueAtTime(1,tt); gg.linearRampToValueAtTime(.18,tt+.008); gg.setTargetAtTime(1,tt+.03,sd*.9); }
   else if(!dr.duck && compBus && !CAPTURE && s===0 && compBus.gain.value<.99){ compBus.gain.cancelScheduledValues(tt); compBus.gain.setValueAtTime(1,tt); }
