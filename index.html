@@ -688,7 +688,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.140（2026-10-23）</p>
+    <p class="appver">ver 1.141（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -755,7 +755,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.140（2026-10-23）</p>
+  <p class="appver">ver 1.141（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1335,7 +1335,7 @@ const ARPS = {
            sit:{bar:[[[0,[1,2,3,6],3.4,.78,null,'fall'],
                        [6,[2],1,.66],[7,[3],1,.68],[8,[3,6],.5,.74],[9,[3,6],.5,.68],[10,[2,3],.5,.66],[11,[3,6],.5,.74]],
                       [[2,[1,2,3,6],.6,.74],[6,[1],.5,.6],[7,[2],.5,.62],[8,[3],.5,.66],[9,[3],.5,.62],[10,[2],.5,.6],[11,[2],.5,.58],[12,[3],.5,.66],[13,[3],.5,.62]]],
-                halfA:[[[0,[1,2,3,6],3.4,.78,null,'fall'],[6,[2],1,.66],[7,[3],1,.68]]],
+                halfA:[[[0,[1,2,3,6],2,.78],[2,[1,2,3,6],.6,.74],[6,[2],1,.66],[7,[3],1,.68]]],   // 前半2拍：「チャー・チャッ」（食って入ったときは頭を弾き直さず、1拍目の裏の「チャッ」から）
                 halfB:[[[0,[1,2,3,6],2,.76]]],   // 3拍目から：8分で「チャッ」
                 beat:[[[0,[1,2,3,6],2,.74]]],
                 push:[[[0,[1,2,3,6],3,.82,null,'fall']],[[0,[1,2,3,6],2,.8]]]}},   // 1小節目へ食う時は「チャーッ↘」（フォール）、2小節目へ食う時は「チャッ」と短く切って2拍目裏の「チャッ」へ
