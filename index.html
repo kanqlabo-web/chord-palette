@@ -2467,7 +2467,7 @@ const MOODPOP={pending:false,stopping:false,level:2,all:false};
 function showClearPop(n){ const l=LEVELS[n-1]; $('moodTip').hidden=true; MOODPOP.all=true;
   $('moodPopChips').innerHTML=(l.chips||[]).map(([t,c])=>`<span style="--fn:var(${c})">${t}</span>`).join('');
   $('moodPopEye').textContent=`LEVEL ${n} CLEAR`; $('moodPopTitle').textContent=`レベル${n}クリア！`;
-  $('moodPopText').innerHTML=`クリア報酬：<b>${l.unlock}</b><br><small>${l.where}</small>`;
+  $('moodPopText').innerHTML=`クリア報酬：<b>${l.unlock}</b>`; MOODPOP.whereN=n;
   $('moodPopLater').hidden=true; $('moodPopGo').textContent='OK'; $('moodPop').hidden=false; }
 function showMoodPop(all){ $('moodTip').hidden=true; MOODPOP.all=!!all;
   if(all){ $('moodPopChips').innerHTML='<span style="--fn:var(--d)">PRO</span>'; $('moodPopEye').textContent='ALL CLEAR';
@@ -2889,7 +2889,7 @@ const lvTitle=(n)=>({html:()=>{ const l=LEVELS[n-1]; return `<div class="eyebrow
      ${l.unlock?`<div class="okcard a lvtitle" style="--dl:1"><b>クリアすると</b><small>${l.unlock}</small></div>`:''}`; }});
 const lvClear=(n)=>({html:()=>{ const l=LEVELS[n-1]; return `<div class="eyebrow a">LEVEL ${n} CLEAR</div>
      <h2 class="a" style="--dl:.1">レベル${n}クリア！</h2>
-     ${l.unlock?`<div class="okcard a" style="--dl:.5"><b>クリア報酬：${l.unlock}</b>${l.where?`<small>${l.where}</small>`:''}</div>`:''}
+     ${l.unlock?`<div class="okcard a" style="--dl:.5"><b>クリア報酬：${l.unlock}</b></div>`:''}
      <p class="a" style="--dl:.9">${n<LV_MAX?'少し自由に作ってみてから、次のレベルへ進みましょう。':'これで全レベルクリアです。'}</p>`; }, last:true});
 const L_SLIDES={
   long:[
@@ -3049,20 +3049,20 @@ const LEVELS=[
 function levelDeck(n,review){
   const l=LEVELS[n-1], body=l.deck().map(x=>({...x})); body.forEach(x=>{ delete x.last; delete x.finish; });
   const d = n===1 ? body : [lvTitle(n), ...body];
-  if(!l.noClear){ const c={...lvClear(n)}; c.finish=()=>{ endTutorial(n!==1); if(n===1){ state.guide=false; renderAll(); } if(!review) levelClear(n); }; if(review){ c.html=()=>`<div class="eyebrow a">LEVEL ${n}</div><h2 class="a" style="--dl:.1">見返し終わりました</h2>`; c.finish=()=>endTutorial(true); } d.push(c); }
+  if(!l.noClear){ const c={...lvClear(n)}; c.finish=()=>{ endTutorial(n!==1); if(n===1){ state.guide=false; renderAll(); } if(!review){ levelClear(n); showWhere(n); } }; if(review){ c.html=()=>`<div class="eyebrow a">LEVEL ${n}</div><h2 class="a" style="--dl:.1">見返し終わりました</h2>`; c.finish=()=>endTutorial(true); } d.push(c); }
   d.lv=n; d.review=!!review; d.onEnd=()=>endTutorial(true);
   if(n===1 && !review) d.onEnd=()=>{ levelClear(1); DECK=levelDeck(2); TUT.lvNow=2; showSlide(0); };   // そのままレベル2へ
   if(n===2){ d.shift();   // レベル2のタイトルは出さない（レベル1からそのまま続く）
     if(review){ const last=d[d.length-1]; last.last=true; last.btn='とじる'; last.finish=()=>endTutorial(true); }
     else d.push({last:true, btn:'はじめる', html:()=>`<div class="eyebrow a">LEVEL 1・2 CLEAR</div>
      <h2 class="a" style="--dl:.1">＼ レベル1・2 クリア！ ／</h2>
-     <div class="okcard a" style="--dl:.5"><b>クリア報酬：進行ガイド</b><small>${LEVELS[1].where}</small></div>
-     <p class="a" style="--dl:.9">では、自由にコード進行を作ってみましょう！</p>`, finish:()=>{ endTutorial(false); levelClear(2); }}); }
+     <div class="okcard a" style="--dl:.5"><b>クリア報酬：進行ガイド</b></div>
+     <p class="a" style="--dl:.9">では、自由にコード進行を作ってみましょう！</p>`, finish:()=>{ endTutorial(false); levelClear(2); showWhere(2); }}); }
   return d;
 }
 function startLevel(n,review){ $('moodTip').hidden=true; MOODPOP.pending=false; openTutorial(levelDeck(n,review)); }
 function levelClear(n){ if(LVL>=n) return; LVL=n; saveLv();
-  if(MODE!=='free'){ if(n===2){ MOODPOP.level=3; MOODPOP.pending=true; } else if(n>=LV_MAX) showMoodPop(true); }
+  if(MODE!=='free'){ if(n===2){ MOODPOP.level=3; MOODPOP.pending=true; } }   // 全レベルクリアの案内は showWhere(9) の中で
   renderAll(); }
 function renderLevels(){ const el=$('levelList'); if(!el) return;
   const nx=Math.min(LVL+1,LV_MAX), all=LVL>=LV_MAX;
@@ -3086,6 +3086,29 @@ function openTutorial(deck){
   state.pro=false; document.body.classList.remove('pro'); state.label='num'; state.key='C'; state.guide=false;
   renderAll(); showSlide(0);
 }
+// クリアしたあと：実際の画面で、新しく使えるようになった所を光らせて説明する
+const shown=el=>{ if(!el||el.hidden) return null; const r=el.getBoundingClientRect(); return r.width>4&&r.height>4?el:null; };
+const firstSlot=()=>shown([...slotsEl.querySelectorAll('.slot.filled')][0])||slotsEl;
+const tapSlot=what=>({t:()=>firstSlot(), x:`置いたコードを<b>タップ</b>すると、${what}`});
+const WHERE={
+  2:[{t:()=>document.querySelector('.slotwrap'), x:'<b>進行ガイド</b>は、マスのすぐ上に出ます。<br>役割の流れや、お手本どおりかを教えてくれます。'},
+     {t:()=>$('menuBtn'), x:'表示・非表示は、設定メニュー（≡）の<b>「進行ガイド」</b>で切り替えられます。'}],
+  3:[{t:()=>[shown($('arpLane')),shown($('drumLane'))].filter(Boolean), x:'<b>伴奏</b>の帯をタップすると、伴奏スタイルを選べます。'},
+     {t:()=>$('bpm').closest('.bpm'), x:'<b>テンポ</b>は、BPM のスライダーで変えられます。'}],
+  4:[{t:()=>$('menuBtn'), x:'<b>キー</b>は、設定メニュー（≡）の「キー」で変えられます。'},
+     {t:()=>$('keyBadge'), x:'いまのキーは、ここに表示されます。'}],
+  5:[{t:()=>$('menuBtn'), x:'設定メニュー（≡）の<b>「小節数」</b>で 8・16 を選べます。'},
+     {t:()=>document.querySelector('.slotwrap'), x:'8小節以上にすると、マスの上に小さな四角が出ます。<br>タップすると、表示する小節を切り替えられます。'}],
+  6:[tapSlot('7・M7・9 などの<b>テンションコード</b>を選べます。')],
+  7:[tapSlot('スロットで「響き」と「ベース」を選んで、<b>分数コード</b>にできます。')],
+  8:[tapSlot('2(7)・3(7)・4m など、<b>明るい・暗いを入れ替えたコード</b>も選べます。')],
+  9:[{t:()=>slotsEl, x:'置いてあるコードの<b>右側</b>にコードをドラッグすると、<br>3拍目からのコードを入れられます。'},
+     {t:()=>$('menuBtn'), x:'<b>全レベルクリア！</b><br>設定メニュー（≡）の「PROモード」もオンにできます。'}],
+};
+function showWhere(n){ const steps=WHERE[n]; if(!steps) return; let k=0;
+  const go=()=>{ const st=steps[k]; let t=st.t(); if(Array.isArray(t)&&!t.length) t=slotsEl; const last=k===steps.length-1;
+    coach(t, `<small style="color:var(--muted)">クリア報酬：${LEVELS[n-1].unlock}</small><br>${st.x}`, last?[['OK',closeCoach]]:[['つぎへ',()=>{ k++; go(); }]]); };
+  setTimeout(go,350); }
 function closeCoach(){ $('coach').hidden=true; document.body.classList.remove('tutlite'); clearInterval(TUT.wait); }
 function endTutorial(restore){
   TUT.practice=false; TUT.lvNow=0;
@@ -3264,7 +3287,7 @@ $('tutBack').onclick=()=>{ const sl=DECK[TUT.i];
   showSlide(TUT.i-1); };
 $('tutSkip').onclick=()=>endTutorial(true);
 $('presetQ').oninput=renderPresetList;
-$('moodPopGo').onclick=()=>{ $('moodPop').hidden=true; if(!MOODPOP.all) startLevel(MOODPOP.level); };
+$('moodPopGo').onclick=()=>{ $('moodPop').hidden=true; const w=MOODPOP.whereN; MOODPOP.whereN=0; if(w){ showWhere(w); return; } if(!MOODPOP.all) startLevel(MOODPOP.level); };
 $('moodPopLater').onclick=()=>{ $('moodPop').hidden=true; toast('パレット右下の「NEXT」から、いつでも次のレベルに進めます'); };
 $('toTitle').onclick=()=>{ closeAll(); if(playing) stop(); showModePick(); };
 $('lvBig').onclick=()=>{ if(LVL<LV_MAX) startLevel(LVL+1); };
