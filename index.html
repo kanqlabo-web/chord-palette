@@ -427,6 +427,20 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .mpin{width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;text-align:center;animation:tin .4s ease}
 .mpeye{margin:0;font-family:var(--display);font-weight:900;font-size:.8rem;letter-spacing:.08em;color:var(--muted)}
 .mpin h2{margin:0 0 6px;font-family:var(--display);font-weight:900;font-size:1.7rem;line-height:1.3}
+.modepick{align-items:flex-start!important}
+.mpin{margin:auto 0}
+.mptitle{font-size:2rem!important;margin:0!important}
+.mpsub{margin:0 0 8px;font-size:.84rem;color:var(--muted);line-height:1.6}
+.mpcard i{font-style:normal;margin-left:auto;font-size:1.4rem;color:var(--muted);font-weight:700}
+.mpcard.cont{--fn:var(--ink);border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.mpcard.cont .mptx span,.mpcard.cont i{color:color-mix(in srgb,var(--bg) 75%,transparent)}
+.mpcard.cont small{display:none}
+.mpcard.mid{--fn:var(--s)}
+.mpcard.armed{border-color:var(--d)!important}
+.tslevels{display:flex;flex-direction:column;gap:6px;text-align:left}
+.tslevels button{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:14px;padding:10px 14px;font:inherit;cursor:pointer;text-align:left}
+.tslevels button i{font-style:normal;font-family:var(--display);font-weight:900;font-size:.66rem;letter-spacing:.06em;color:var(--muted);white-space:nowrap}
+.tslevels button b{font-size:.88rem}
 .mpcard{display:flex;align-items:center;gap:14px;text-align:left;width:100%;border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:20px;padding:16px;font:inherit;cursor:pointer;transition:transform .1s}
 .mpcard:active{transform:scale(.98)}
 .mpcard.step{--fn:var(--t);border-color:var(--t)}.mpcard.free{--fn:var(--d)}
@@ -629,14 +643,16 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   </div>
 </div>
 
-<div class="modepick" id="modePick" hidden role="dialog" aria-label="あそび方を選ぶ">
+<div class="modepick" id="modePick" hidden role="dialog" aria-label="タイトル">
   <div class="mpin">
-    <p class="mpeye">コード進行パレット</p>
-    <h2>あそび方を<br>選んでください</h2>
-    <button class="mpcard step" data-m="step"><span class="mpic"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M4 28h8v-7h7v-7h7V7h4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="mptx"><small>はじめての人におすすめ</small><b>ステップモード</b><span>レベルを1つずつクリアしながら覚えていきます。クリアするたびに、使える機能が増えていきます。</span></span></button>
-    <button class="mpcard free" data-m="free"><span class="mpic"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 4l2.8 8.2L28 15l-8.2 2.8L17 26l-2.8-8.2L6 15l8.2-2.8z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><circle cx="27" cy="27" r="2.2" fill="currentColor"/><circle cx="7" cy="6" r="1.8" fill="currentColor"/></svg></span><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使えます。各レベルの解説は、いつでも好きな順に見られます。</span></span></button>
-    <div class="jumprow"><label for="mpJump">途中のレベルから始める</label><select id="mpJump"></select></div>
-    <p class="mpnote">あとから設定メニューの「モード」で変更できます</p>
+    <p class="mpeye">CHORD PALETTE</p>
+    <h2 class="mptitle">コード進行パレット</h2>
+    <p class="mpsub">音楽に触れたことがなくても、<br>コード進行が作れるようになる</p>
+    <button class="mpcard cont" id="tsCont"><span class="mptx"><small>つづきから</small><b>つづきから</b><span id="tsContSub"></span></span><i>›</i></button>
+    <button class="mpcard step" id="tsNew"><span class="mptx"><small>はじめての人におすすめ</small><b>はじめから</b><span id="tsNewSub">レベル1から、1つずつ覚えていきます。</span></span><i>›</i></button>
+    <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
+    <div class="tslevels" id="tsLevels" hidden></div>
+    <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -657,19 +673,18 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
 
 <aside class="drawer" id="drawer" aria-label="設定">
   <h2>設定 <button class="iconbtn" id="closeDrawer" aria-label="閉じる"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></h2>
-  <div class="sec"><h3>モード</h3><div class="chips" id="modeChips"></div><p class="small" id="modeNote" style="margin:6px 0 0"></p></div>
+  <div class="sec"><h3>セーブ・共有</h3>
+    <div class="saverow"><input type="text" id="songName" placeholder="セーブの名前（例：サビの進行）" maxlength="30" autocomplete="off"><button class="chip main" id="songSave">セーブ</button></div>
+    <button class="chip" id="shareNow">この進行を共有する（リンクを作る）</button>
+    <div class="songlist" id="songList"></div></div>
   <div class="sec"><h3>キー</h3><div class="keys" id="keyChips"></div></div>
   <div class="sec"><h3>小節数</h3><div class="chips" id="barChips"></div></div>
   <div class="sec" id="lenSec"><h3>コードの切り替え（1マスの長さ）</h3><div class="chips" id="lenChips"></div>
     <p class="small" id="lenNote"></p></div>
   <div class="sec"><h3>コードの表示</h3><div class="chips" id="labelChips"></div></div>
-  <div class="sec"><h3>保存・共有</h3>
-    <div class="saverow"><input type="text" id="songName" placeholder="名前（例：サビの進行）" maxlength="30" autocomplete="off"><button class="chip main" id="songSave">保存</button></div>
-    <button class="chip" id="shareNow">今の進行の共有リンクを作る</button>
-    <div class="songlist" id="songList"></div></div>
   <div class="sec"><h3>リセット</h3>
     <div class="chips"><button class="chip" id="resetSlots">マスを空にする</button><button class="chip" id="resetAll">設定もすべて最初に戻す</button></div>
-    <p class="small" style="margin:0">保存した進行とマイパターンは消えません。</p></div>
+    <p class="small" style="margin:0">セーブデータとマイパターンは消えません。</p></div>
   <div class="sec"><h3>有名な進行を入れてみる</h3><details class="acc" id="presetAcc"><summary><span>進行の一覧</span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><div class="presetfind"><input type="search" id="presetQ" placeholder="名前・雰囲気・数字で探す" autocomplete="off"><div class="tagrow" id="presetTags"></div></div><div class="acclist" id="presetList"></div></details></div>
   <div class="sec"><h3>色の意味</h3>
     <div class="legend">
@@ -683,10 +698,10 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>レベル <small id="lvCount" style="color:var(--muted);font-weight:400"></small></h3>
     <button class="lvnext" id="lvNext"></button>
     <details class="acc" id="lvAcc" style="margin-top:8px"><summary><span>レベル一覧（クリアしたレベルは見返せます）</span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><div class="acclist" id="levelList"></div></details>
-    <div class="jumprow"><label for="lvJump">途中のレベルから始める</label><select id="lvJump"></select></div></div>
+    <button class="chip" id="toTitle" style="align-self:flex-start">タイトル画面へ</button></div>
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
-  <p class="small">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
+  <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1621,7 +1636,7 @@ function renderAll(){
   if(showLv){ const t=`LEVEL ${LVL+1}`; $('lvBigN').textContent=LEVELS[LVL].name;
     if($('lvBigT').textContent!==t){ $('lvBigT').textContent=t; lb.classList.remove('fresh'); void lb.offsetWidth; lb.classList.add('fresh'); }
     lb.setAttribute('aria-label',`次のレベル：レベル${LVL+1}「${LEVELS[LVL].name}」をはじめる`); }
-  const bl=ULx()<3; $('bpm').disabled=bl; $('bpm').closest('.bpm').classList.toggle('locked',bl);
+  const hideAcc=ULx()<3; $('arpLane').hidden=$('drumLane').hidden=hideAcc; $('bpm').closest('.bpm').hidden=hideAcc;   // レベル3（雰囲気）までは伴奏とBPMを出さない
   buildMenu(); applyMix();
 }
 
@@ -1635,22 +1650,20 @@ function chips(el, items, cur, onPick){
   });
 }
 function buildMenu(){
-  if(UL()<4) $('keyChips').innerHTML=lockHTML(4);
-  else chips($('keyChips'), KEYS.map(k=>[k.id,k.id]), state.key, v=>{ state.key=v; renderAll(); if(!playing) preview(0); });
+  $('keyChips').closest('.sec').hidden=UL()<4;
+  if(UL()>=4) chips($('keyChips'), KEYS.map(k=>[k.id,k.id]), state.key, v=>{ state.key=v; renderAll(); if(!playing) preview(0); });
   const unit = state.len<4 ? 'マス' : '小節';
-  if(UL()<5) $('barChips').innerHTML=lockHTML(5); else chips($('barChips'), [[4,'4'+unit],[8,'8'+unit],[16,'16'+unit]], state.bars, v=>{ state.bars=v; if(page*4>=v) page=0; renderAll(); });
+  $('barChips').closest('.sec').hidden=UL()<5;
+  if(UL()>=5) chips($('barChips'), [[4,'4'+unit],[8,'8'+unit],[16,'16'+unit]], state.bars, v=>{ state.bars=v; if(page*4>=v) page=0; renderAll(); });
   chips($('lenChips'), [[4,'4拍（1小節）'],[2,'2拍'],[1,'1拍']], state.len, v=>{ state.len=v; renderAll(); });
   $('lenNote').textContent = '2拍にすると、1マスが2拍になります（4マスで2小節）。' + (state.pro ? 'PROモードの拍ごとの切り替えは、1マスの中（2拍なら2拍目）で使えます。' : '');
   chips($('labelChips'), Object.entries(LABELS), state.label, v=>{ state.label=v; renderAll(); });
-  if(UL()<2) $('guideChips').innerHTML=lockHTML(2); else chips($('guideChips'), [[true,'表示する'],[false,'表示しない']], state.guide, v=>{ state.guide=v; renderAll(); });
-  if(UL()<LV_MAX && !state.pro) $('proChips').innerHTML=`<span class="small" style="margin:0">🔒 全レベル（${LV_MAX}）をクリアすると使えます</span>`;
-  else chips($('proChips'), [[true,'オン'],[false,'オフ']], state.pro, v=>{ state.pro=v; document.body.classList.toggle('pro',v); renderAll(); });
+  $('guideChips').closest('.sec').hidden=UL()<2;
+  if(UL()>=2) chips($('guideChips'), [[true,'表示する'],[false,'表示しない']], state.guide, v=>{ state.guide=v; renderAll(); });
+  $('proChips').closest('.sec').hidden=UL()<LV_MAX && !state.pro;
+  $('accNote').hidden=UL()<3;
+  if(!(UL()<LV_MAX && !state.pro)) chips($('proChips'), [[true,'オン'],[false,'オフ']], state.pro, v=>{ state.pro=v; document.body.classList.toggle('pro',v); renderAll(); });
   renderLevels();
-  chips($('modeChips'), [['step','ステップモード'],['free','フリーモード']], MODE, v=>{ MODE=v; saveLv();
-    if(v==='free'){ MOODPOP.pending=false; $('moodTip').hidden=true; }
-    renderAll(); toast(v==='free'?'フリーモード：すべての機能を使えます':'ステップモード：レベルをクリアすると機能が増えます'); });
-  $('modeNote').textContent = MODE==='free' ? '最初からすべての機能を使えます。各レベルの解説は、いつでも好きな順に見られます。'
-    : `レベルをクリアするたびに、使える機能が増えていきます（レベル${LVL}までクリア）。`;
   renderPresetList();
 }
 // 有名な進行の一覧：名前・雰囲気のタグ・数字で絞り込める
@@ -1804,7 +1817,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeAll(); });
 // ---------- bottom sheet ----------
 let sheetKind=null;
 function openSheet(kind){
-  if(!state.pro && ULx()<3){ lockToast(3); return; }
+  if(!state.pro && ULx()<3) return;
   if(!state.pro && (kind==='drum'||kind==='arp')) kind='style';   // 通常モードはドラムとコードをまとめて選ぶ
   if(kind==='bass') return openBassSheet();
   sheetKind=kind; document.querySelector('#sheet .proedit').style.display='';
@@ -1895,7 +1908,6 @@ function pickKit(v){ state.kit=v; renderAll(); ensureSounds().then(()=>{ if(!pla
 
 // ---------- BPM / play ----------
 const bpmIn=$('bpm'); bpmIn.value=state.bpm; $('bpmOut').textContent=state.bpm;
-bpmIn.closest('.bpm').addEventListener('pointerdown',()=>{ if(bpmIn.disabled) lockToast(3); });
 bpmIn.oninput=()=>{ state.bpm=+bpmIn.value; $('bpmOut').textContent=state.bpm; save(); };
 const PLAY_SVG='<svg width="26" height="26" viewBox="0 0 30 30" aria-hidden="true"><path d="M9 5.5v19a1 1 0 0 0 1.5.9l15-9.5a1 1 0 0 0 0-1.7l-15-9.5A1 1 0 0 0 9 5.5z" fill="currentColor"/></svg>';
 const STOP_SVG='<svg width="22" height="22" viewBox="0 0 26 26" aria-hidden="true"><rect x="4" y="4" width="18" height="18" rx="3" fill="currentColor"/></svg>';
@@ -1969,7 +1981,7 @@ function end(e){
     if(selected!==null){
       const tc=e.target&&e.target.closest?e.target.closest('.cell'):null;
       setV(i, tc?+tc.dataset.h:0, selected); preview(selected); selected=null; }
-    else if(getV(i,th)!==null&&getV(i,th)!==undefined){ preview(getV(i,th)); if(!state.pro && (!TUT.on||TUT.practice)){ if(ULx()>=6) openVar(i,th); else if(!TUT.on) lockToast(6); } } }
+    else if(getV(i,th)!==null&&getV(i,th)!==undefined){ preview(getV(i,th)); if(!state.pro && (!TUT.on||TUT.practice)){ if(ULx()>=6) openVar(i,th); } } }
   renderTiles(); renderSlots();
 }
 // 通常モード：置いたコードをタップすると、同じ役割のバリエーションを選べる
@@ -2380,6 +2392,11 @@ function tick(){
   }
 }
 const MOODPOP={pending:false,stopping:false,level:2,all:false};
+function showClearPop(n){ const l=LEVELS[n-1]; $('moodTip').hidden=true; MOODPOP.all=true;
+  $('moodPopChips').innerHTML=(l.chips||[]).map(([t,c])=>`<span style="--fn:var(${c})">${t}</span>`).join('');
+  $('moodPopEye').textContent=`LEVEL ${n} CLEAR`; $('moodPopTitle').textContent=`レベル${n}クリア！`;
+  $('moodPopText').innerHTML=`使えるようになりました：<b>${l.unlock}</b><br><small>${l.where}</small>`;
+  $('moodPopLater').hidden=true; $('moodPopGo').textContent='OK'; $('moodPop').hidden=false; }
 function showMoodPop(all){ $('moodTip').hidden=true; MOODPOP.all=!!all;
   if(all){ $('moodPopChips').innerHTML='<span style="--fn:var(--d)">PRO</span>'; $('moodPopEye').textContent='ALL CLEAR';
     $('moodPopTitle').textContent='全レベルクリア！'; $('moodPopText').innerHTML='PROモードが使えるようになりました。<br>設定メニューからオンにできます。';
@@ -2515,7 +2532,7 @@ function frame(){
     if(n){ const changed=!cur||n.b!==cur.b; cur=n;
       if(changed){ slotsEl.querySelectorAll('.slot').forEach(el=>el.classList.toggle('now',+el.dataset.abs===n.b)); renderPages(); }
       $('play').classList.toggle('beat',!!n.beat);
-      if(TUT.on) document.querySelectorAll(TUT.playingEx?`.tut [data-ex="${TUT.playingEx}"] [data-ti]`:'.tut [data-ti]').forEach(e=>e.classList.toggle('now', +e.dataset.ti===n.b)); }
+      if(TUT.on) document.querySelectorAll(TUT.playingEx&&document.querySelector(`.tut :not(.listen)[data-ex="${TUT.playingEx}"]`)?`.tut :not(.listen)[data-ex="${TUT.playingEx}"] [data-ti]`:'.tut [data-ti]').forEach(e=>e.classList.toggle('now', +e.dataset.ti===n.b)); }
     dirty=true;
   }
   if(dirty){ drawLane($('drumCv'),'drum'); drawLane($('arpCv'),'arp'); if(state.pro) drawLane($('bassCv'),'bass'); dirty=false; }
@@ -2797,7 +2814,7 @@ const lvTitle=(n)=>({html:()=>{ const l=LEVELS[n-1]; return `<div class="eyebrow
      ${l.unlock?`<div class="okcard a lvtitle" style="--dl:1"><b>クリアすると</b><small>${l.unlock}</small></div>`:''}`; }});
 const lvClear=(n)=>({html:()=>{ const l=LEVELS[n-1]; return `<div class="eyebrow a">LEVEL ${n} CLEAR</div>
      <h2 class="a" style="--dl:.1">レベル${n}クリア！</h2>
-     ${l.unlock?`<div class="okcard a" style="--dl:.5"><b>使えるようになりました</b><small>${l.unlock}</small></div>`:''}
+     ${l.unlock?`<div class="okcard a" style="--dl:.5"><b>使えるようになりました：${l.unlock}</b>${l.where?`<small>${l.where}</small>`:''}</div>`:''}
      <p class="a" style="--dl:.9">${n<LV_MAX?'少し自由に作ってみてから、次のレベルへ進みましょう。':'これで全レベルクリアです。'}</p>`; }, last:true});
 const L_SLIDES={
   long:[
@@ -2930,15 +2947,15 @@ const L_KEY=[
   {coach:'task', task:'key'},
 ];
 const LEVELS=[
-  {name:'コードを置いて鳴らす', goal:'コードとは何かを知り、パレットのコードを並べて鳴らしてみましょう。', unlock:'', deck:()=>SLIDES.slice(0,7), noClear:true},
-  {name:'役割で流れを作る', goal:'コードの役割（T・S・D）と、自然に聞こえる流れの作り方を覚えましょう。', unlock:'進行ガイド（役割の流れの表示）', chips:[['T','--t'],['S','--s'],['D','--d']], deck:()=>[SLIDES[7],...SLIDES.slice(8,15)], noClear:true},
-  {name:'雰囲気をつくる', goal:'明るい・切ない・力強い……。ねらった雰囲気にするコツを、実例と実践で覚えましょう。', unlock:'伴奏スタイルとテンポ（BPM）の変更', chips:[['明るい','--t'],['切ない','--s'],['力強い','--d'],['穏やか','--warn']], deck:()=>MOOD.filter((_,k)=>k!==8), noClear:true},
-  {name:'キーを変える（移調）', goal:'同じ進行を、別の高さ（キー）で鳴らしてみましょう。ジャンルによって、よく使われるキーも違います。', unlock:'キーの変更（設定メニュー）', chips:[['Key C','--t'],['Key G','--s'],['Key E','--d']], deck:()=>L_KEY},
-  {name:'進行を長くする', goal:'4つの進行をもとに、8小節の進行を作ってみましょう。', unlock:'8小節・16小節', chips:[['8小節','--t'],['16小節','--s']], deck:()=>L_SLIDES.long},
-  {name:'テンションコード', goal:'コードに数字をつけて、洗練された響きにしてみましょう。', unlock:'置いたコードをタップして、7・M7・9 などに変える', chips:[['Am7','--t'],['FM7','--s'],['G9','--d']], deck:()=>L_SLIDES.tension},
-  {name:'分数コード', goal:'コードの構成音を知り、ベースの音を変えてつながりをなめらかにしましょう。', unlock:'すべてのコードで、構成音をベースにした分数コードを使う', chips:[['C/E','--t'],['G/B','--d']], deck:()=>L_SLIDES.slash},
-  {name:'明るいコードと暗いコードを入れ替える', goal:'m を外したり、m をつけたりして、進行にメリハリをつけましょう。', unlock:'タップして 2(7)・3(7)・4m などに変える', chips:[['E7','--d'],['D7','--d'],['Fm','--s']], deck:()=>L_SLIDES.flip},
-  {name:'1小節に2つのコード', goal:'1小節の中でコードを切り替えて、進行に勢いをつけましょう。分数コードや入れ替えたコードとも組み合わせます。', unlock:'1小節を前半・後半に分ける（全レベルクリアで PROモードも）', chips:[['3m｜6m','--t'],['2m｜5','--d']], deck:()=>L_SLIDES.split},
+  {name:'コードを置いて鳴らす', where:'', goal:'コードとは何かを知り、パレットのコードを並べて鳴らしてみましょう。', unlock:'', deck:()=>SLIDES.slice(0,7), noClear:true},
+  {name:'役割で流れを作る', where:'マスのすぐ上に表示されます。表示・非表示は、設定メニュー（左上の ≡）の「進行ガイド」で切り替えられます。', goal:'コードの役割（T・S・D）と、自然に聞こえる流れの作り方を覚えましょう。', unlock:'進行ガイド（役割の流れの表示）', chips:[['T','--t'],['S','--s'],['D','--d']], deck:()=>[SLIDES[7],...SLIDES.slice(8,15)], noClear:true},
+  {name:'雰囲気をつくる', where:'伴奏スタイルは、マスの下の「伴奏」の帯をタップすると選べます。テンポは、いちばん下の BPM のスライダーで変えられます。', goal:'明るい・切ない・力強い……。ねらった雰囲気にするコツを、実例と実践で覚えましょう。', unlock:'伴奏スタイルとテンポ（BPM）の変更', chips:[['明るい','--t'],['切ない','--s'],['力強い','--d'],['穏やか','--warn']], deck:()=>MOOD.filter((_,k)=>k!==8), noClear:true},
+  {name:'キーを変える（移調）', where:'設定メニュー（左上の ≡）の「キー」で変えられます。', goal:'同じ進行を、別の高さ（キー）で鳴らしてみましょう。ジャンルによって、よく使われるキーも違います。', unlock:'キーの変更（設定メニュー）', chips:[['Key C','--t'],['Key G','--s'],['Key E','--d']], deck:()=>L_KEY},
+  {name:'進行を長くする', where:'設定メニュー（左上の ≡）の「小節数」で 8・16 を選べます。マスの上の小さな四角をタップすると、表示する小節を切り替えられます。', goal:'4つの進行をもとに、8小節の進行を作ってみましょう。', unlock:'8小節・16小節', chips:[['8小節','--t'],['16小節','--s']], deck:()=>L_SLIDES.long},
+  {name:'テンションコード', where:'置いたコードをタップすると、響きを選ぶ画面が開きます。', goal:'コードに数字をつけて、洗練された響きにしてみましょう。', unlock:'置いたコードをタップして、7・M7・9 などに変える', chips:[['Am7','--t'],['FM7','--s'],['G9','--d']], deck:()=>L_SLIDES.tension},
+  {name:'分数コード', where:'置いたコードをタップすると、スロットで「響き」と「ベース」を選べます。', goal:'コードの構成音を知り、ベースの音を変えてつながりをなめらかにしましょう。', unlock:'すべてのコードで、構成音をベースにした分数コードを使う', chips:[['C/E','--t'],['G/B','--d']], deck:()=>L_SLIDES.slash},
+  {name:'明るいコードと暗いコードを入れ替える', where:'置いたコードをタップすると、2(7)・3(7)・4m なども選べます。', goal:'m を外したり、m をつけたりして、進行にメリハリをつけましょう。', unlock:'タップして 2(7)・3(7)・4m などに変える', chips:[['E7','--d'],['D7','--d'],['Fm','--s']], deck:()=>L_SLIDES.flip},
+  {name:'1小節に2つのコード', where:'置いてあるコードの右側にコードをドラッグすると、3拍目からのコードを入れられます。全レベルクリアで、設定メニューの「PROモード」も使えます。', goal:'1小節の中でコードを切り替えて、進行に勢いをつけましょう。分数コードや入れ替えたコードとも組み合わせます。', unlock:'1小節を前半・後半に分ける（全レベルクリアで PROモードも）', chips:[['3m｜6m','--t'],['2m｜5','--d']], deck:()=>L_SLIDES.split},
 ];
 // レベルの解説を組み立てる（タイトル → 本編 → クリア）。review=true は見返し用（クリア扱いにしない）
 function levelDeck(n,review){
@@ -2951,13 +2968,11 @@ function levelDeck(n,review){
     if(review){ const last=d[d.length-1]; last.last=true; last.btn='とじる'; last.finish=()=>endTutorial(true); }
     else d.push({last:true, btn:'はじめる', html:()=>`<div class="eyebrow a">LEVEL 1・2 CLEAR</div>
      <h2 class="a" style="--dl:.1">＼ レベル1・2 クリア！ ／</h2>
-     <div class="okcard a" style="--dl:.5"><b>使えるようになりました</b><small>進行ガイド（マスの上に、役割の流れを表示）</small></div>
+     <div class="okcard a" style="--dl:.5"><b>使えるようになりました：進行ガイド</b><small>${LEVELS[1].where}</small></div>
      <p class="a" style="--dl:.9">では、自由にコード進行を作ってみましょう！</p>`, finish:()=>{ endTutorial(false); levelClear(2); }}); }
   return d;
 }
 function startLevel(n,review){ $('moodTip').hidden=true; MOODPOP.pending=false; openTutorial(levelDeck(n,review)); }
-const lockHTML=n=>`<span class="small" style="margin:0">🔒 レベル${n}「${LEVELS[n-1].name}」をクリアすると使えます</span>`;
-const lockToast=n=>toast(`🔒 レベル${n}「${LEVELS[n-1].name}」をクリアすると使えます`);
 function levelClear(n){ if(LVL>=n) return; LVL=n; saveLv();
   if(MODE!=='free'){ if(n===2){ MOODPOP.level=3; MOODPOP.pending=true; } else if(n>=LV_MAX) showMoodPop(true); }
   renderAll(); }
@@ -2969,9 +2984,6 @@ function renderLevels(){ const el=$('levelList'); if(!el) return;
   el.innerHTML=LEVELS.map((l,k)=>{ const n=k+1, done=LVL>=n, open=UL()>=n-1;
     return `<button data-l="${n}"${open?'':' class="lock"'}><span class="lvtag">LEVEL ${n}</span><b>${l.name}${done?'<span class="chapdone" aria-label="クリア">✓</span>':open?'':' 🔒'}</b>${l.unlock?`<small>${l.unlock}</small>`:''}</button>`; }).join('');
   el.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const n=+b.dataset.l; if(UL()<n-1){ toast(`🔒 レベル${n-1}をクリアすると挑戦できます`); return; } startLevel(n, LVL>=n); });
-  [$('lvJump'),$('mpJump')].forEach(sel=>{ if(!sel||sel.options.length) return;
-    sel.innerHTML='<option value="">選ぶ</option>'+LEVELS.map((l,k)=>`<option value="${k+1}">レベル${k+1}：${l.name}</option>`).join('');
-    sel.onchange=()=>{ const n=+sel.value; if(!n) return; sel.value=''; MODE='step'; LVL=n-1; saveLv(); $('modePick').hidden=true; closeAll(); renderAll(); startLevel(n); }; });
 }
 let DECK=SLIDES;
 function tutDots(){ $('tutDots').innerHTML=DECK.map((_,k)=>`<i class="${k===TUT.i?'on':''}"></i>`).join(''); }
@@ -3057,7 +3069,19 @@ const moodDone=()=>[0,1,2,3].every(k=>state.slots[k]!==null&&state.slots[k]!==un
 // 実践編を終えるときは、作った進行と伴奏をそのまま残す
 function finishMood(){ const lv=DECK.review?0:DECK.lv; TUT.practice=false; clearInterval(TUT.wait); const keep={slots:[...state.slots],segs:state.segs,bars:state.bars,drum:state.drum,arp:state.arp,inst:state.inst,kit:state.kit,bass:state.bass,bassSnd:state.bassSnd,bassPat:state.bassPat,bpm:state.bpm};
   endTutorial(true); Object.assign(state,keep); state.ant=Array(16).fill(null); page=0;
-  $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save(); if(lv) levelClear(lv); }
+  $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save(); if(lv){ const was=LVL; levelClear(lv); if(LVL>was && lv<LV_MAX) showClearPop(lv); } }
+// 移調の練習：Key C で1周 → 好きなキーのボタンで聴き比べ（2つ以上のキーを聴いたら次へ進める）
+function keyTask(tk,next){
+  TUT.keysHeard=new Set();
+  const keyBtns=()=>tk.keys.map(k=>[k,()=>playKey(k),state.key!==k]);
+  const after=()=>{ const enough=TUT.keysHeard.size>=2;
+    coach([slotsEl,$('play')], enough ? `<b>同じ進行のまま、高さだけが変わりました。</b><br>ほかのキーも聴き比べてみましょう。<br><small>マスの数字はそのまま、アルファベットだけが変わっています。</small>`
+      : `いまのは <b>Key C</b> です。<br>下のボタンで、ほかのキーでも聴いてみましょう。<br><small>マスの数字はそのまま、アルファベットだけが変わります。</small>`,
+      [...keyBtns(), backBtn(), enough?['つぎへ',next]:['とばす',next,true]]); };
+  const playKey=k=>{ tutStopAudio(); state.key=k; renderAll(); TUT.keysHeard.add(k);
+    coach([slotsEl,$('play')], `♪ Key ${k} で再生中……`, []); TUT.onLoopEnd=after; play(); };
+  playKey('C');
+}
 function runCoach(kind){
   document.body.classList.add('tutlite');
   if(kind==='place'){
@@ -3091,6 +3115,7 @@ function runCoach(kind){
     const tk=TASKS[DECK[TUT.i].task]; tutStopAudio(); document.body.classList.remove('tutlite'); TUT.practice=true;
     tutLoadEx({degs:tk.load, style:tk.style, bpm:tk.bpm}); if(tk.guide){ state.guide=true; renderAll(); }
     const next=()=>{ TUT.practice=false; closeAll(); showSlide(TUT.i+1); };
+    if(tk.keys){ keyTask(tk,next); return; }
     const show=()=>{
       if($('varSheet').classList.contains('on')){ $('coach').hidden=true; return; }
       if(playing) coach([slotsEl,$('play')], '♪ 再生中……', []);
@@ -3149,6 +3174,7 @@ $('tutSkip').onclick=()=>endTutorial(true);
 $('presetQ').oninput=renderPresetList;
 $('moodPopGo').onclick=()=>{ $('moodPop').hidden=true; if(!MOODPOP.all) startLevel(MOODPOP.level); };
 $('moodPopLater').onclick=()=>{ $('moodPop').hidden=true; toast('パレット右下の「NEXT」から、いつでも次のレベルに進めます'); };
+$('toTitle').onclick=()=>{ closeAll(); if(playing) stop(); showModePick(); };
 $('lvBig').onclick=()=>{ if(LVL<LV_MAX) startLevel(LVL+1); };
 $('moodTip').onclick=e=>{ $('moodTip').hidden=true; MOODPOP.pending=false; if(e.target.id!=='moodTipX') startLevel(MOODPOP.level); };
 window.addEventListener('resize',()=>{ if(TUT.on && !$('coach').hidden && DECK[TUT.i].coach) runCoach(DECK[TUT.i].coach); });
@@ -3198,7 +3224,7 @@ const saveSongs=a=>{ try{ localStorage.setItem(SONGS_KEY,JSON.stringify(a)); }ca
 function songDegs(o){ return (o.slots||[]).slice(0,o.bars||4).map(v=>v==null?'－':nameOf(v,'num',false)).join(' - '); }
 function renderSongs(){
   const list=loadSongs(), box=$('songList'); box.innerHTML='';
-  if(!list.length){ box.innerHTML='<p class="small" style="margin:0">保存した進行はまだありません。</p>'; return; }
+  if(!list.length){ box.innerHTML='<p class="small" style="margin:0">セーブデータはまだありません。</p>'; return; }
   list.forEach((sg,i)=>{ const d=document.createElement('div'); d.className='song';
     d.innerHTML=`<div><b></b><small>${songDegs(sg.data)}</small></div><button data-a="open">開く</button><button data-a="share">共有</button><button data-a="del" class="del">削除</button>`;
     d.querySelector('b').textContent=sg.name;
@@ -3227,10 +3253,26 @@ let OPENED_SHARE=false;
   try{ const o=JSON.parse(b64d(m[1])); if(unpackSong(o)){ OPENED_SHARE=true; setTimeout(()=>toast('共有された進行を読み込みました'),400); } }catch(e){ setTimeout(()=>toast('リンクを読み込めませんでした'),400); }
   try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} })();
 histReset();
-function showModePick(){ const el=$('modePick'); el.hidden=false; renderLevels();
-  el.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ MODE=b.dataset.m; saveLv(); el.hidden=true; renderAll();
-    if(MODE==='step') startLevel(1); else toast('各レベルの解説は、設定メニューからいつでも見られます'); }); }
-if(FIRST_RUN && !OPENED_SHARE) showModePick();
+function showModePick(){ const el=$('modePick'); el.hidden=false; $('tsLevels').hidden=true;
+  const close=()=>{ el.hidden=true; renderAll(); };
+  // つづきから：前回の状態（レベルの進み具合と、作りかけの進行）から
+  const hasSave=!FIRST_RUN || LVL>0;
+  $('tsCont').hidden=!hasSave;
+  $('tsContSub').textContent = MODE==='free' ? 'フリーモードで自由に作る'
+    : LVL>=LV_MAX ? '全レベルクリア・自由に作る' : LVL===0 ? 'レベル1から' : `レベル${LVL}までクリア・次は LEVEL ${LVL+1}「${LEVELS[LVL].name}」`;
+  $('tsCont').onclick=()=>{ close(); if(MODE==='step' && LVL===0) startLevel(1); };
+  // はじめから：進み具合を消してレベル1から（進んでいるときは2回押しで）
+  const nb=$('tsNew'); nb.classList.remove('armed'); $('tsNewSub').textContent='レベル1から、1つずつ覚えていきます。';
+  nb.onclick=()=>{ if(MODE==='step' && LVL>0 && !nb.classList.contains('armed')){ nb.classList.add('armed'); $('tsNewSub').textContent='もう一度押すと、進み具合を消してレベル1から始めます（セーブデータは消えません）。'; return; }
+    MODE='step'; LVL=0; saveLv(); close(); startLevel(1); };
+  // 途中のレベルから
+  $('tsMid').onclick=()=>{ const box=$('tsLevels'); box.hidden=!box.hidden;
+    box.innerHTML=LEVELS.map((l,k)=>`<button data-l="${k+1}"><i>LEVEL ${k+1}</i><b>${l.name}</b></button>`).join('');
+    box.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const n=+b.dataset.l; MODE='step'; LVL=n-1; saveLv(); close(); startLevel(n); }); };
+  // フリーモード
+  $('tsFree').onclick=()=>{ MODE='free'; saveLv(); MOODPOP.pending=false; close(); toast('フリーモード：すべての機能を使えます'); };
+}
+if(!OPENED_SHARE) showModePick();
 </script>
 
 </body>
