@@ -681,7 +681,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.121（2026-10-23）</p>
+    <p class="appver">ver 1.122（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -748,7 +748,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.121（2026-10-23）</p>
+  <p class="appver">ver 1.122（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1891,17 +1891,19 @@ function libStop(){ LIB.timers.forEach(clearTimeout); LIB.timers=[]; LIB.playing
   const bk=LIB.bk; LIB.bk=null; LIB.stopping=false; LIB_PREVIEW=false;
   if(bk){ if(playing) stop(); Object.assign(state,bk); renderPages(); }
   document.querySelectorAll('.libplay.on').forEach(b=>{ b.classList.remove('on'); b.innerHTML=ico('play'); }); }
+// 進行をマスに入れる。1マスの長さ（4拍・2拍・1拍）はいまの設定のまま。
+// 1マスを半分に割る所（ライブラリでは3拍目）は、2拍のマスなら2拍目から。1拍のマスは割れないので、前半のコードだけにする
+function libFill(e){ const L=state.len||4;
+  state.bars=e.p.length;
+  state.slots=Array.from({length:16},(_,j)=>e.p[j]!==undefined?tokSpec(e.p[j]):null);
+  state.segs=Array.from({length:16},(_,j)=>L<2?[]:((e.segs||{})[j]||[]).map(g=>({beat:1+(g.beat-1)*L/4,v:tokSpec(g.v)}))); }
 function libPlay(i,btn){ const was=LIB.playing; libStop(); if(was===i) return; if(playing) stop();
   const e=PRESETS[i]; LIB.bk={bars:state.bars,len:state.len,slots:state.slots,segs:state.segs,ant:state.ant};
-  state.bars=e.p.length; state.len=4;
-  state.slots=Array.from({length:16},(_,j)=>e.p[j]!==undefined?tokSpec(e.p[j]):null);
-  state.segs=Array.from({length:16},(_,j)=>((e.segs||{})[j]||[]).map(g=>({beat:g.beat,v:tokSpec(g.v)})));
+  libFill(e);
   state.ant=Array(16).fill(null);
   LIB_PREVIEW=true; LIB.playing=i; btn.classList.add('on'); btn.innerHTML=ico('stop'); play(); }
 function libUse(i){ const e=PRESETS[i]; libStop(); if(playing) stop();
-  state.bars=e.p.length; state.len=4;
-  state.slots=Array.from({length:16},(_,j)=>e.p[j]!==undefined?tokSpec(e.p[j]):null);
-  state.segs=Array.from({length:16},(_,j)=>((e.segs||{})[j]||[]).map(g=>({beat:g.beat,v:tokSpec(g.v)})));
+  libFill(e);
   state.ant=Array(16).fill(null); selected=null; page=0; renderAll(); save(); closeLib(); toast(`「${e.name}」を入れました`); }
 // 進行ごとに、使えるようになるレベル（レベル3でライブラリが開き、クリアしたレベルの内容を使う進行が増えていく）
 //  3：パレットの7つだけ（4小節） 5：8小節 6：テンション 7：分数コード 8：明るい⇄暗い 9：キーの外・特殊なコード・1小節に2つ
