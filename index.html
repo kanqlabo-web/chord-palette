@@ -681,7 +681,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.122（2026-10-23）</p>
+    <p class="appver">ver 1.123（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -748,7 +748,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.122（2026-10-23）</p>
+  <p class="appver">ver 1.123（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -2491,7 +2491,7 @@ let lastR=null, barTones=null;
 // 次の和音を弾くとき、前の和音を自然に離す（音が重なって濁るのを防ぐ）
 let held=[];
 function choke(t){ held=held.filter(h=>{ if(h.end>t){ try{ h.g.gain.cancelScheduledValues(t); h.g.gain.setTargetAtTime(0,t,.025); }catch(e){} } return false; }); }
-let playedSteps=0, gpos=0;
+let playedSteps=0, gpos=0, LOOPN=0;   // LOOPN：進行を何周したか（フィルの位置を進行の頭にそろえるため）
 const totalBars=()=>state.bars*slotSteps()/16;
 const isFillBar=b=>b%4===3;
 const fillModeOf=(b,dr)=> state.fill && dr.F && isFillBar(b) ? (b%8===7?'big':'small') : null;   // フィルは再生を始めてから4小節ごと（コードの切り替えやマスの数とは関係なし）
@@ -2580,7 +2580,7 @@ function contEvs(pat,pi){ const now=pat.at[pi]||[], have=new Set(now.flatMap(e=>
 function contBass(bl,bi){ if(bl.some(e=>e[0]===bi)) return {list:bl,bi};
   const h=bl.find(e=>e[0]<bi && e[0]+e[2]>bi); return h ? {list:[[bi,h[1]==='ap'?0:h[1],h[0]+h[2]-bi,h[3]*.9]],bi} : {list:bl,bi:0}; }
 function scheduleStep(g,t){
-  const L=slotSteps(), s=g%16, b=Math.floor(playedSteps/16);     // b = 再生を始めてから何小節目か（ドラム用）
+  const L=slotSteps(), s=g%16, b=LOOPN*(L*state.bars/16)+Math.floor(g/16);     // b = 進行の頭から数えて何小節目か（ドラム用。途中で長さを変えてもずれない）
   const dr=DRUMS[state.drum], sd=stepDur(), fm=fillModeOf(b,dr), inFill=fm && s>=(fm==='big'?8:12);
   // シャッフルのフィルは3連符：拍の中の 0・1・2 番目を 1/3 ずつ並べる
   const tt = dr.swing&&inFill ? t+[0,1/3,2/3,0][s%4]*sd : t+(dr.swing&&s%4===2?sd*.34:0)+(dr.swing16&&s%2===1?sd*.3:0);
@@ -2648,7 +2648,7 @@ function scheduleStep(g,t){
     if(state.bass && head && !pushed){ const e0=bl.find(e=>e[0]===bi); chokeBass(tt, e0&&e0[4]&&lastBassVoice?lastBassVoice.g:null); }
     if(state.bass && !pushed && (head || lag===0 || rel>=lag+2)) playBass(bl,bi,tt,barTones,sd,cell.len-rel+nLag,nx.v);   // 遅らせた直後はベースを詰め込まない
   }
-  if(!document.hidden) visQ.push({t,b:i,s:off,L,beat:g%4===0,abs:playedSteps,g});
+  if(!document.hidden) visQ.push({t,b:i,s:off,L,beat:g%4===0,abs:playedSteps,g,ln:LOOPN});
 }
 // 1周で止めるときの締め：最初のコードを「ジャーン」と長く鳴らす（キック＋シンバル、ベースはルート）
 function endHit(t){ const c=cellsOf(0)[0], v=c&&c.v; if(v==null) return;
@@ -2687,7 +2687,7 @@ function tick(){
   const ahead = document.hidden ? 1.2 : .12;
   while(nextTime<ctx.currentTime+ahead){
     const T=state.bars*slotSteps(); gpos%=T;
-    scheduleStep(gpos,nextTime); nextTime+=stepDur(); gpos=(gpos+1)%T; playedSteps++;
+    scheduleStep(gpos,nextTime); nextTime+=stepDur(); gpos=(gpos+1)%T; if(gpos===0) LOOPN++; playedSteps++;
   }
 }
 const MOODPOP={pending:false,stopping:false,level:2,all:false};
@@ -2743,7 +2743,7 @@ async function play(){ ensureAudio(); pendingSound=null; if(starting) return; bg
   if(ctx.state!=='running'){ starting=true; await wakeAudio(); starting=false; }
   if(loadingNow()){ starting=true; $('play').setAttribute('aria-label','読み込み中'); $('play').style.opacity=.55;
     await Promise.race([ensureSounds(), new Promise(r=>setTimeout(r,8000))]); starting=false; $('play').style.opacity=''; }
-  ACC_TOP=null; lastR=null; barTones=null; pushedKey=null; lastBassM=null; LHCTX.prev=null; LHCTX.prevB=null; playing=true; playedSteps=0; gpos=0;
+  ACC_TOP=null; lastR=null; barTones=null; pushedKey=null; lastBassM=null; LHCTX.prev=null; LHCTX.prevB=null; playing=true; playedSteps=0; gpos=0; LOOPN=0;
   if(TUT.on){ TUT.loopLen=state.bars*slotSteps(); TUT.stopping=false; clearTimeout(TUT.stopT); } visQ=[]; cur=null; nextTime=ctx.currentTime+.06; tick(); timer=setInterval(tick,25); if(tickWorker) tickWorker.postMessage(25);
   $('play').innerHTML=STOP_SVG; $('play').setAttribute('aria-label','停止'); }
 function stop(){ if(EXPORT.on && !EXPORT.stopping) setTimeout(()=>endExport(false),0); if(compBus){ compBus.gain.cancelScheduledValues(0); compBus.gain.setValueAtTime(1,ctx.currentTime); } playing=false; clearInterval(timer); if(tickWorker) tickWorker.postMessage(0); bgStop(); visQ=[]; cur=null; dirty=true;
@@ -2810,7 +2810,7 @@ function drawLane(cv,kind){
       if(state.bass) cells.forEach(c=>{ if(c.v===null||c.v===undefined) return; const cx=px+c.off/L*pw, cwid=c.len/L*pw;
         drawBassBar(g,cx,py,cwid,ph,(bassList(DRUMS[state.drum])||[]).filter(e=>e[0]<c.len),(r=>r==='X'?col.muted:col[r.toLowerCase()])(roleAt(b,c.h,c.v)),col,c.len);
         if(c.off>0){ g.fillStyle=col.surface; g.fillRect(cx-r,0,2*r,H); } });
-    } else if(kind==='drum'){ const dr=DRUMS[state.drum], base=(playing&&cur&&cur.abs!=null)?cur.abs-cur.g:0, db=Math.floor((base+start)/16);
+    } else if(kind==='drum'){ const dr=DRUMS[state.drum], base=(playing&&cur&&cur.ln!=null)?cur.ln*state.bars*L:0, db=Math.floor((base+start)/16);
       drawDrumBar(g,px,py,pw,ph,(db%2===1&&dr.VB)?{...dr,V:dr.VB}:dr,col,b<state.bars?fillModeOf(db,dr):null,start%16,L); }
     else {
       const cells=b<state.bars?cellsOf(b):[{off:0,len:L,v:null}];
@@ -3441,9 +3441,9 @@ function libIntro(review){
   const d=[
     {html:()=>`<div class="eyebrow a">もうひとつのコツ</div>
      <h2 class="a" style="--dl:.1">定番の進行を<br>使いまわすのもアリ</h2>
-     <p class="a" style="--dl:.5">ヒット曲でも、${nm('王道進行')}や${nm('カノン進行')}のような<br>「よくある進行」が何度も使われています。</p>
+     <p class="a" style="--dl:.5">ヒット曲でも、${nm('王道進行')}や${nm('小室進行')}のような<br>「よくある進行」が何度も使われています。</p>
      <div class="exrow a" style="--dl:.9"><span>王道進行</span>${listenBtn('ohdo')}</div>
-     <div class="exrow a" style="--dl:1.1"><span>カノン進行</span>${listenBtn('canon')}</div>
+     <div class="exrow a" style="--dl:1.1"><span>小室進行</span>${listenBtn('komuro')}</div>
      <p class="sub a" style="--dl:1.4">同じ進行でも、伴奏・テンポ・メロディが違えば、まったく別の曲になります。</p>`},
     {html:()=>`<div class="eyebrow a">進行ライブラリ</div>
      <h2 class="a" style="--dl:.1">ゼロから組み立てる<br>＋ 定番を借りてアレンジ</h2>
@@ -3699,11 +3699,11 @@ $('saveFile').onchange=async e=>{ const f=e.target.files&&e.target.files[0]; e.t
   location.hash=''; location.reload(); };
 // ---- 曲を書き出す：MIDI（いまの伴奏を、そのまま音符にする） ----
 let CAPTURE=null;
-function captureSong(){ const C=[]; const sv={playedSteps,gpos,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice};
-  const lhSv=[LHCTX.prev,LHCTX.prevB]; LHCTX.prev=LHCTX.prevB=null; CAPTURE=C; ACC_TOP=null; lastR=null; barTones=null; pushedKey=null; lastBassM=null; held=[]; bassHeld=[]; lastBassVoice=null; playedSteps=0; gpos=0;
+function captureSong(){ const C=[]; const sv={playedSteps,gpos,LOOPN,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice};
+  const lhSv=[LHCTX.prev,LHCTX.prevB]; LHCTX.prev=LHCTX.prevB=null; CAPTURE=C; ACC_TOP=null; lastR=null; barTones=null; pushedKey=null; lastBassM=null; held=[]; bassHeld=[]; lastBassVoice=null; playedSteps=0; gpos=0; LOOPN=0; LOOPN=0;
   const T=state.bars*slotSteps(), sd=stepDur(); let t=0;
   try{ for(let n=0;n<T;n++){ scheduleStep(n,t); t+=sd; playedSteps++; } endHit(t); }
-  finally{ CAPTURE=null; [LHCTX.prev,LHCTX.prevB]=lhSv; ({playedSteps,gpos,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice}=sv); if(!playing) visQ=[]; }
+  finally{ CAPTURE=null; [LHCTX.prev,LHCTX.prevB]=lhSv; ({playedSteps,gpos,LOOPN,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice}=sv); if(!playing) visQ=[]; }
   return {ev:C, end:t+sd*16}; }
 const GM_PROG={piano:0,spiano:0,epiano:4,organ:16,nylon:24,eguitar:27,dist:30,pad:89,synth:81,strings:48};
 const GM_BASS={bass:33,ubass:32,sbass:38,ebass:34};
