@@ -972,8 +972,21 @@ const FILLS={
          small:{k:'...............X', s:'............Xx..', t3:'..............Xx'}},
   snare:{big:  {k:'........X.......', s:'........x.x.xxXX'},
          small:{s:'............xxXX', k:'............X...'}},
-  kime: {big:  {k:'........X..X..X.', s:'........X..X..X.', h:'...........g..g.'},
-         small:{k:'............X.X.', s:'............X.X.'}},
+  // キメ：キックとスネアとシンバルをそろえて「ダッ・ダッ」と止め、最後にスネアで次の小節へ
+  kime: {big:  {k:'........X..X....', s:'........X..X.oxX', c:'........x..x....'},
+         small:{k:'............X...', s:'............X.xX', c:'............x...'}},
+  // ゆったり：スネアからタムへ、上から下へ流れるように
+  groove:{big: {k:'........x.....x.', s:'........x.oo....', t1:'............x...', t2:'.............o..', t3:'...............x'},
+         small:{s:'............xoo.', t3:'...............x'}},
+  // ファンキー：オープンハイハットで区切って、ゴーストから強いスネアへ16分で盛り上げる
+  funk: {big:  {k:'........X.....x.', o:'........x.......', s:'..........gogoxX'},
+         small:{k:'............x...', s:'.............oxX'}},
+  // ジャジー：スネアのゴーストから低いタムへ、力を抜いてつなぐ
+  soul: {big:  {k:'........x.......', o:'........o.......', s:'..........o.xg..', t2:'..............o.', t3:'...............x'},
+         small:{s:'............xg..', t3:'..............ox'}},
+  // バラード：ハイハットを止めて、タムを弱く上から下へ。叩きすぎない
+  ballad:{big: {k:'........x.......', x:'........o.......', t1:'..........o.o...', t2:'..............x.', t3:'...............x'},
+         small:{x:'............o...', t2:'..............o.', t3:'...............x'}},
   // 4つ打ち系：フィルの間もキックの4つ打ちは止めない
   dance:{big:  {k:'........X...X...', s:'........ggooxxXX', h:'..........o...o.'},   // 弱→強のスネアロールで盛り上げる
          small:{k:'............X...', s:'.............oxX', h:'..............o.'}},
@@ -981,8 +994,9 @@ const FILLS={
          small:{k:'............X...', s:'............x.xx', t3:'...............X'}},
   soft: {big:  {k:'........X.......', s:'............o.x.', t2:'.............o..', t3:'...............x', h:'........g...g...'},
          small:{s:'..............ox', t3:'...............o'}},
-  shuf: {big:  {k:'........X.......', s:'........x..x.xxX'},
-         small:{s:'............x.xX', k:'............X...'}},
+  // スキップ風：3連符（タカタ・タカタ）。16分の 0・1・2 番目を 3連の 1・2・3 つ目として鳴らす
+  shuf: {big:  {k:'........x.......', s:'........xgo.....', t1:'............x...', t2:'.............x..', t3:'..............X.'},
+         small:{s:'............xg..', t3:'..............x.'}},
   // drum_.mid（Vintage Rock）から：小フィルはスネア→4拍目にフロアタム1発、大フィルはキックとスネアの掛け合いからフロアタム
   rock: {big:  {k:'........x.o.x...', s:'..........x.X.gx', t3:'........X.......'},
          small:{s:'...........gx...', t3:'..............X.'}},
@@ -1010,17 +1024,19 @@ const DRUMS = {
   xstick: {name:'しっとり', pro:'クロススティック8ビート', v:{k:'x.......x.....x.', x:'....x.......x...', h:'..x...x...x...x.'}, fill:'rock',
            bass:[[0,0,6,1],[6,'5',2,.7],[8,0,4,.85],[12,'5',2,.7],[14,'ap',2,.7]]},
   medium: {name:'ゆったり', pro:'ミディアム8ビート', v:{k:'x.............o.', s:'....X.......X...', h:'o.g.x.g.o.g.x.g.'},
-           vB:{k:'x.............o.', s:'....X.......X...', h:'o.g.x.g.o.g.x.g.'}, fill:'kime',
+           vB:{k:'x.............o.', s:'....X.......X...', h:'o.g.x.g.o.g.x.g.'}, fill:'groove',
            bass:[[0,0,3,1],[4,0,2,.8],[6,'3',2,.7],[8,'5',3,.85],[12,0,2,.8],[14,'ap',2,.75]]},
   half:   {name:'どっしり', pro:'ハーフタイム', v:{k:'x.....x...x.....', s:'........X.......', h:'o.g.o.g.o.g.o.g.'},
            vB:{k:'x.....x.......x.', s:'........X.....g.', h:'o.g.o.g.o.g.o.o.'}, fill:'halfp',   // スネアは3拍目だけ。ハイハットは8分のままで「半分の速さ」に聴こえる
            bass:[[0,0,6,1],[6,0,4,.8],[10,0,4,.75],[14,'ap',2,.7]]},
-  ballad: {name:'バラード', v:{k:'X.......X.......', x:'....X.......X...', h:'o.g.o.g.o.g.o.g.'}, vB:{k:'X.......X.....x.', x:'....X.......X...', h:'o.g.o.g.o.g.o.g.'}, fill:'soft',   // ハイハットは8分でそっと刻み、2小節目の終わりにキックで次へつなぐ
+  ballad: {name:'バラード', v:{k:'X.......X.......', x:'....X.......X...', h:'o.g.o.g.o.g.o.g.'}, vB:{k:'X.......X.....x.', x:'....X.......X...', h:'o.g.o.g.o.g.o.g.'}, fill:'ballad',   // ハイハットは8分でそっと刻み、2小節目の終わりにキックで次へつなぐ
            bass:[[0,0,13.5,.82],[14,0,1.8,.55]]},   // ベースは白玉（全音符）で支える
   shuffle:{name:'スキップ風', pro:'シャッフル（ライド）', v:{k:'x.....o.......g.', s:'.g..Xg.g.g..Xg.g', r:'o...o...o...o...', h:'..g...g...g...g.'}, swing:true, fill:'shuf',
            bass:[[0,0,2,1],[2,'3',2,.7],[4,'5',2,.85],[6,'6',2,.7],[8,12,2,.9],[10,'6',2,.7],[12,'5',2,.85],[14,'3',2,.7]]},
-  sixteen:{name:'ファンキー', pro:'16ビート', v:{k:'X..x....X.X..x..', s:'....X..g.g..X..g', h:'o.g.o.g.o.g.o.g.'}, fill:'kime',
-           bass:[[0,0,2,1],[3,12,1,.7],[6,0,1,.7],[7,0,1,.5],[8,0,2,.9],[10,12,1,.7],[11,'5',1,.6],[13,0,1,.7],[14,'ap',2,.8]]},
+  // 16ビート：ハイハットは16分で刻み、スネアのゴースト2つ（タタッ）からキック（ドン）へ
+  sixteen:{name:'ファンキー', pro:'16ビート', v:{k:'X......x..x..x..', s:'....Xgg.gg..X..g', h:'xgogxgogxgogxgog'},
+           vB:{k:'X......x..x.....', s:'....Xgg.gg..X.g.', h:'xgogxgogxgogxg..', o:'..............o.'}, fill:'funk',
+           bass:[[0,0,2,1],[3,12,1,.6],[7,0,1,.8],[10,0,1,.85],[11,12,1,.6],[13,'5',1,.75],[14,'ap',2,.8]]},
   dance:  {name:'ダンス', pro:'4つ打ち（クラブ）', duck:true, v:{k:'X...X...X...X...', s:'....X.......X...', h:'..o...o...o...o.'}, fill:'dance',
            bass:[[2,0,1.5,.9],[6,12,1.5,.8],[10,0,1.5,.9],[14,12,1.5,.8,true]]},   // 4つ目の裏はオクターブ上へすべり上がる
   bossa:  {name:'ボサノバ', v:{k:'X..xX..xX..xX..x', x:'X..X..X...X..X..', h:'g.g.g.g.g.g.g.g.'}, fill:null,
@@ -1028,9 +1044,9 @@ const DRUMS = {
   reggae: {name:'レゲエ', v:{k:'........X.......', x:'........X.......', h:'g.g.g.g.g.g.g.g.'}, fill:'soft',
            bass:[[0,0,3,1],[6,0,2,.8],[8,'5',2,.8],[10,'3',2,.75],[12,0,3,.9]]},
   // ゆったり跳ねるネオソウル風：16分を少し後ろに引きずる。キックはシンコペ、スネアは2・4拍目＋ゴースト
-  neosoul:{name:'ジャジー', pro:'ネオソウル（16分スイング）', swing16:true, v:{k:'x......x..x.....', s:'....X..g.g..X...', h:'x.o.x.o.x.o.x.oo', o:'..............g.'},
-           vB:{k:'x......x..x..x..', s:'....X..g.g..X.g.', h:'x.o.x.o.x.o.x.o.'}, fill:'kime',
-           bass:[[0,0,3,1,true],[3,0,1,.55],[6,'5',2,.75],[8,0,3,.9,false,true],[11,12,1,.6,true],[12,'5',1.5,.7],[14,'ap',2,.8,false,true]]},   // つなぎの音からコードの頭へ、ルートからオクターブ上へすべらせる
+  neosoul:{name:'ジャジー', pro:'ネオソウル（16分スイング）', swing16:true, v:{k:'x......x..x.....', s:'....Xgg.gg..X...', h:'xgogxgogxgogxgog'},
+           vB:{k:'x......x..x..x..', s:'....Xgg.gg..X.g.', h:'xgogxgogxgogxg..', o:'..............g.'}, fill:'soul',
+           bass:[[0,0,3,1,true],[3,0,1,.55],[7,'5',1.5,.75],[10,0,2,.9,false,true],[12,12,1.5,.6,true],[14,'ap',2,.8,false,true]]},   // つなぎの音からコードの頭へ、ルートからオクターブ上へすべらせる
   // ハードロック：オープン気味のハイハットで8分を叩きつけ、2・4拍目に強いスネア。2小節目の頭にクラッシュ
   hard:   {name:'ロック', pro:'ハードロック8ビート', v:{k:'X.....x.X.x.....', s:'....X.......X...', o:'x.o.x.o.x.o.x.o.'},
            vB:{k:'X.....x.X.x...x.', s:'....X.......X...', o:'..o.x.o.x.o.x.o.', c:'X...............'}, fill:'tom',
@@ -1185,7 +1201,7 @@ function renderPatEditor(){
   }
   if(isDrum){
     $('patOptTitle').textContent='フィル（4小節ごと）';
-    chips($('patOptChips'), [['tom','タム回し'],['snare','スネア'],['kime','キメ'],['dance','ロール'],['soft','ソフト'],['rock','ロック'],[null,'なし']], curMy().fill??null,
+    chips($('patOptChips'), [['tom','タム回し'],['snare','スネア'],['kime','キメ'],['dance','ロール'],['soft','ソフト'],['rock','ロック'],['groove','ゆったり'],['funk','ファンキー'],['soul','ジャジー'],['ballad','バラード'],['shuf','3連符'],[null,'なし']], curMy().fill??null,
       v=>{ curMy().fill=v; rebuildMy(); save(); renderPatEditor(); dirty=true; });
   }
 }
@@ -1250,21 +1266,21 @@ function bindRoll(rows){
 const ARP_ORDER=['pballad','hardrock','house','piano4','popanti','ballad','whole','sync','sync16','shuffle','shuff2','stacc','rock8','eighth','offbeat','garp','strum','rhodes','bossa','alberti'];
 // 通常モードの「伴奏スタイル」：ドラムとコードパターンの組み合わせ
 const STYLES=[
-  {name:'ポップス（定番）', drum:'pop', arp:'piano4', inst:'piano', kit:'std', bass:true},
-  {name:'ポップス（ノリノリ）', drum:'dpop', arp:'popanti', inst:'piano', kit:'std', bass:true},
-  {name:'ロック', drum:'hard', arp:'hardrock', inst:'dist', kit:'power', bass:true},
-  {name:'ギターポップ', drum:'rride', arp:'strum', inst:'eguitar', kit:'room', bass:true},
-  {name:'バラード', drum:'ballad', arp:'pballad', inst:'piano', kit:'room', bass:true},
-  {name:'しっとり', drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
-  {name:'ゆったり', drum:'medium', arp:'whole', inst:'pad', kit:'room', bass:true},
-  {name:'どっしり', drum:'half', arp:'stacc', inst:'piano', kit:'power', bass:true},
-  {name:'スキップ風', drum:'shuffle', arp:'shuffle', inst:'piano', kit:'std', bass:true},
-  {name:'ファンキー', drum:'sixteen', arp:'offbeat', inst:'eguitar', kit:'std', bass:true},
-  {name:'ダンス', drum:'dance', arp:'house', inst:'synth', kit:'tr808', bass:true, bassSnd:'sbass'},
-  {name:'ジャジー', drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
-  {name:'ボサノバ', drum:'bossa', arp:'bossa', inst:'nylon', kit:'brush', bass:true, bassSnd:'ubass'},
-  {name:'レゲエ', drum:'reggae', arp:'offbeat', inst:'organ', kit:'std', bass:true},
-  {name:'クラシック風', drum:'none', arp:'alberti', inst:'piano', kit:'std', bass:false},
+  {name:'ポップス（定番）', bpm:96, drum:'pop', arp:'piano4', inst:'piano', kit:'std', bass:true},
+  {name:'ポップス（ノリノリ）', bpm:128, drum:'dpop', arp:'popanti', inst:'piano', kit:'std', bass:true},
+  {name:'ロック', bpm:132, drum:'hard', arp:'hardrock', inst:'dist', kit:'power', bass:true},
+  {name:'ギターポップ', bpm:120, drum:'rride', arp:'strum', inst:'eguitar', kit:'room', bass:true},
+  {name:'バラード', bpm:72, drum:'ballad', arp:'pballad', inst:'piano', kit:'room', bass:true},
+  {name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
+  {name:'ゆったり', bpm:84, drum:'medium', arp:'whole', inst:'pad', kit:'room', bass:true},
+  {name:'どっしり', bpm:116, drum:'half', arp:'stacc', inst:'piano', kit:'power', bass:true},
+  {name:'スキップ風', bpm:108, drum:'shuffle', arp:'shuffle', inst:'piano', kit:'std', bass:true},
+  {name:'ファンキー', bpm:104, drum:'sixteen', arp:'offbeat', inst:'eguitar', kit:'std', bass:true},
+  {name:'ダンス', bpm:124, drum:'dance', arp:'house', inst:'synth', kit:'tr808', bass:true, bassSnd:'sbass'},
+  {name:'ジャジー', bpm:84, drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
+  {name:'ボサノバ', bpm:112, drum:'bossa', arp:'bossa', inst:'nylon', kit:'brush', bass:true, bassSnd:'ubass'},
+  {name:'レゲエ', bpm:80, drum:'reggae', arp:'offbeat', inst:'organ', kit:'std', bass:true},
+  {name:'クラシック風', bpm:100, drum:'none', arp:'alberti', inst:'piano', kit:'std', bass:false},
 ];
 const styleNow=()=>STYLES.find(x=>x.drum===state.drum&&x.arp===state.arp);
 // PROモードのベースパターン（0=ルート 12=オクターブ '3'/'5'/'6'=3度・5度・6度 'ap'=次のコードへつなぐ音）
@@ -1835,7 +1851,7 @@ function openSheet(kind){
   if(kind==='style'){ const opts=$('opts'); opts.innerHTML=''; const cur=styleNow();
     STYLES.forEach((st,k)=>{ const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', st===cur);
       b.innerHTML=`<canvas class="half"></canvas><canvas class="half"></canvas><span>${st.name}</span>`;
-      b.onclick=()=>{ setStyle(st); pickInst(st.inst); closeAll(); };
+      b.onclick=()=>{ setStyle(st); pickInst(st.inst); if(st.bpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; save(); } closeAll(); };   // 通常モードは伴奏に合ったテンポに自動で変える
       opts.appendChild(b); });
     bassSndRow();
     sheet.classList.add('on'); scrim.classList.add('on');
@@ -2327,8 +2343,10 @@ function playBass(list,s,t,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,v
   bassTone(m,t,Math.min(len,room)*sd*(legOut?1.01:.92),vel); GLIDE=null; lastBassM=m; }); }
 function scheduleStep(g,t){
   const L=slotSteps(), s=g%16, b=Math.floor(playedSteps/16);     // b = 再生を始めてから何小節目か（ドラム用）
-  const dr=DRUMS[state.drum], sd=stepDur(), tt=t+(dr.swing&&s%4===2?sd*.34:0)+(dr.swing16&&s%2===1?sd*.3:0);
-  const fm = fillModeOf(b,dr), V = (fm && s>=(fm==='big'?8:12)) ? (fm==='big'?dr.F:dr.FS) : (b%2===1 && dr.VB ? dr.VB : dr.V);
+  const dr=DRUMS[state.drum], sd=stepDur(), fm=fillModeOf(b,dr), inFill=fm && s>=(fm==='big'?8:12);
+  // シャッフルのフィルは3連符：拍の中の 0・1・2 番目を 1/3 ずつ並べる
+  const tt = dr.swing&&inFill ? t+[0,1/3,2/3,0][s%4]*sd : t+(dr.swing&&s%4===2?sd*.34:0)+(dr.swing16&&s%2===1?sd*.3:0);
+  const V = inFill ? (fm==='big'?dr.F:dr.FS) : (b%2===1 && dr.VB ? dr.VB : dr.V);
   for(const n in V){ const v=V[n][s]; if(v) drum(+n,tt,v); }
   // サイドチェイン風：キック（4分）のたびに伴奏の音量をぐっと沈めて、裏拍でふくらませる
   if(dr.duck && compBus && s%4===0){ const gg=compBus.gain; gg.cancelScheduledValues(tt); gg.setValueAtTime(1,tt); gg.linearRampToValueAtTime(.18,tt+.008); gg.setTargetAtTime(1,tt+.03,sd*.9); }
