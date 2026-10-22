@@ -2623,16 +2623,20 @@ if(document.fonts) document.fonts.ready.then(()=>dirty=true);
 
 // ================= チュートリアル =================
 const TUT={on:false, i:0, backup:null, wait:null, timer:null, loopLen:Infinity, stopping:false, stopT:null, onLoopEnd:null};
-const nm=d=>nameOf(d,numK(),false).replace('-5','♭5'), al=d=>chordText(d);   // チュートリアルの数字も、設定（アラビア数字／ローマ数字）に合わせる
+// チュートリアルのコード名も設定に合わせる（数字ならアラビア／ローマ、アルファベットなら C・Dm…）
+const nmN=d=>nameOf(d,numK(),false).replace('-5','♭5'), nm=d=>state.label==='alpha'?chordText(d).replace('-5','♭5'):nmN(d), al=d=>chordText(d);
 // 説明文の中のコードの数字（1・4・6m・5/7・3(7) など）を、ローマ数字の設定ならⅠ・Ⅳ…に置きかえる
 const ROM7=['','Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ'];
-const DEG_RE=/(?<![0-9A-Za-zⅠ-Ⅻ.(♭♯+\-]|LEVEL |レベル|Key |キー|BPM |レベル[0-9]・|LEVEL [0-9]・)([1-7])(?![0-9]|つ|小節|拍|度|回|番|音|分|秒|人|枚|文字|段|行|周|個|本|歩|ミリ|%|:|\.|・M|th|・9|〜|～|~| ?や ?M)/g;
-function romanize(root){ if(!root||numK()!=='roman') return;
-  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&&n.parentElement.closest('.kbd,.eyebrow,input,textarea,.tutdots,.L')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+const DEG_RE=/(?<![0-9A-Za-zⅠ-Ⅻ.(♭♯+\-]|LEVEL |レベル|Key |キー|BPM |レベル[0-9]・|LEVEL [0-9]・)([1-7])(m♭5|m-5|m)?(\(7\))?(?:\/([1-7]))?(?![0-9]|つ|小節|拍|度|回|番|音|分|秒|人|枚|文字|段|行|周|個|本|歩|ミリ|%|:|\.|・M|th|・9|〜|～|~| ?や ?M)/g;
+const SC7=[0,0,2,4,5,7,9,11];
+function romanize(root){ const alpha=state.label==='alpha'; if(!root||(!alpha&&numK()!=='roman')) return;
+  const conv=(m,d,q,sev,b)=>alpha ? nameOf({o:SC7[+d],q:q?(q==='m'?'m':'m-5'):'maj',x:sev?'7':'',b:b?SC7[+b]:null},'alpha',false).replace('-5','♭5')
+    : ROM7[+d]+(q||'')+(sev||'')+(b?'/'+ROM7[+b]:'');
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&&n.parentElement.closest('.kbd,.eyebrow,input,textarea,.tutdots,.L,.tc,.slot,.tile')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
   const list=[]; while(w.nextNode()) list.push(w.currentNode);
-  list.forEach(n=>{ const t=n.nodeValue.replace(DEG_RE,(m,d)=>ROM7[+d]); if(t!==n.nodeValue) n.nodeValue=t; }); }
+  list.forEach(n=>{ const t=n.nodeValue.replace(DEG_RE,conv); if(t!==n.nodeValue) n.nodeValue=t; }); }
 const HEAR=d=>JSON.stringify(isNum(d)?d:{b:null,...d}).replace(/"/g,'&quot;');   // タップで鳴らすためのコードの情報
-const tc=(d,cls,delay,ti)=>`<span class="tc ${cls||''} pop" style="--dl:${delay||0}" data-hear="${HEAR(d)}"${ti!=null?` data-ti="${ti}"`:''}><b>${nm(d)}</b><small>${al(d)}</small></span>`;
+const tc=(d,cls,delay,ti)=>`<span class="tc ${cls||''} pop" style="--dl:${delay||0}" data-hear="${HEAR(d)}"${ti!=null?` data-ti="${ti}"`:''}><b>${nm(d)}</b><small>${state.label==='alpha'?nmN(d):al(d)}</small></span>`;
 function exampleHTML(ex){
   const n=ex.degs.length, cols=`repeat(${n},minmax(0,1fr))`;
   const brk=(row,u)=>`<div class="brk${u?' u':''}">${row.map((g,k)=>`<span style="--fn:var(--${g.c});left:calc(${g.a}/${n}*100% + 2px);width:calc(${g.b-g.a+1}/${n}*100% - 4px);--dl:${1+k*.5+(g.row||0)*.25}">${g.t}</span>`).join('')}</div>`;
@@ -2846,7 +2850,7 @@ function kbdShow(d,anim){ const k=$('kbd'); if(!k) return; k.querySelectorAll('.
   kbdShow.t=setTimeout(()=>preview(d), anim?2100:0); }
 const bindKbd=()=>document.querySelectorAll('.tut [data-kd]').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tut [data-kd]').forEach(x=>x.classList.toggle('now',x===b)); kbdShow(+b.dataset.kd,true); });
 const SPX=o=>JSON.stringify({b:null,...o}).replace(/"/g,'&quot;');
-const hearChip=(d,dl)=>`<button class="tc hear pop" style="--dl:${dl}" data-hear="${SPX(d)}"><b>${al(d)}</b><small>${nm(d)}</small></button>`;
+const hearChip=(d,dl)=>`<button class="tc hear pop" style="--dl:${dl}" data-hear="${SPX(d)}"><b>${al(d)}</b><small>${nmN(d)}</small></button>`;
 const PAIR=(a,b)=>JSON.stringify([a,b].map(x=>isNum(x)?x:{b:null,...x})).replace(/"/g,'&quot;');
 // キーを指定したコードは、そのキーで鳴らす（いまのキーは変えない）
 function hearIn(d,key){ if(!key||key===state.key) return preview(d); if(playing) return; whenRunning(()=>{ if(playing) return; const k0=state.key; state.key=key; previewNow(d); state.key=k0; }); }
@@ -2945,7 +2949,7 @@ const L_SLIDES={
      <h2 class="a" style="--dl:.1">自分から数えて<br>4つ目のコードへ進む</h2>
      <div class="count4 a pairbtn" style="--dl:.4" data-pair="${PAIR(SP(4,'maj','7'),5)}">${[[SP(4,'maj','7'),'1つ目'],[3,'2つ目'],[4,'3つ目'],[5,'4つ目']].map(([d,t],k)=>`<div class="${k===0?'from':k===3?'to':''}"><span class="tc ${k===0?'D':k===3?'T':''}"><b>${nm(d)}</b></span><small>${t}</small></div>`).join('<i>›</i>')}</div>
      <p class="a" style="--dl:1">3(7) から 4・5 と数えて、<b>4つ目の 6m</b> へ進むと、ぴったり落ち着きます。</p>
-     <div class="pairs">${[[SP(2,'maj','7'),4],[SP(9,'maj','7'),1],[SP(0,'maj','7'),3]].map(([a,b],k)=>`<button class="pairbtn a" style="--dl:${1.4+k*.25}" data-pair="${PAIR(a,b)}"><span class="tc"><b>${al(a)}</b><small>${nm(a)}</small></span><span>→</span><span class="tc"><b>${al(b)}</b><small>${nm(b)}</small></span></button>`).join('')}</div>
+     <div class="pairs">${[[SP(2,'maj','7'),4],[SP(9,'maj','7'),1],[SP(0,'maj','7'),3]].map(([a,b],k)=>`<button class="pairbtn a" style="--dl:${1.4+k*.25}" data-pair="${PAIR(a,b)}"><span class="tc"><b>${al(a)}</b><small>${nmN(a)}</small></span><span>→</span><span class="tc"><b>${al(b)}</b><small>${nmN(b)}</small></span></button>`).join('')}</div>
      <p class="sub a" style="--dl:2">タップすると、行き先のコードまで続けて鳴らします</p>
      <p class="sub a" style="--dl:2.2">2(7) → 5、6(7) → 2m、1(7) → 4 も同じ「4つ目」。<br>進行ガイドは、4つ目へ進んでいないと黄色で知らせます。</p>`},
     {coach:'task', task:'secdom'},
@@ -3096,7 +3100,7 @@ function openTutorial(deck){
   DECK=Array.isArray(deck)?deck:SLIDES; TUT.lvNow=DECK.lv||0;
   TUT.on=true; TUT.backup=JSON.stringify(state); TUT.i=0; clearTimeout(HIST.t); histBtns();
   closeAll(); tutStopAudio();
-  state.pro=false; document.body.classList.remove('pro'); state.label=numK(); state.key='C'; state.guide=false;
+  state.pro=false; document.body.classList.remove('pro'); state.label=state.label==='alpha'?'alpha':numK(); state.key='C'; state.guide=false;
   renderAll(); showSlide(0);
 }
 // クリアしたあと：実際の画面で、新しく使えるようになった所を光らせて説明する
