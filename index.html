@@ -2623,7 +2623,14 @@ if(document.fonts) document.fonts.ready.then(()=>dirty=true);
 
 // ================= チュートリアル =================
 const TUT={on:false, i:0, backup:null, wait:null, timer:null, loopLen:Infinity, stopping:false, stopT:null, onLoopEnd:null};
-const nm=d=>isNum(d)?DEG[d].num.replace('m-5','m♭5'):nameOf(d,'num',false).replace('-5','♭5'), al=d=>chordText(d);
+const nm=d=>nameOf(d,numK(),false).replace('-5','♭5'), al=d=>chordText(d);   // チュートリアルの数字も、設定（アラビア数字／ローマ数字）に合わせる
+// 説明文の中のコードの数字（1・4・6m・5/7・3(7) など）を、ローマ数字の設定ならⅠ・Ⅳ…に置きかえる
+const ROM7=['','Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ'];
+const DEG_RE=/(?<![0-9A-Za-zⅠ-Ⅻ.(♭♯+\-]|LEVEL |レベル|Key |キー|BPM |レベル[0-9]・|LEVEL [0-9]・)([1-7])(?![0-9]|つ|小節|拍|度|回|番|音|分|秒|人|枚|文字|段|行|周|個|本|歩|ミリ|%|:|\.|・M|th|・9|〜|～|~| ?や ?M)/g;
+function romanize(root){ if(!root||numK()!=='roman') return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&&n.parentElement.closest('.kbd,.eyebrow,input,textarea,.tutdots,.L')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  const list=[]; while(w.nextNode()) list.push(w.currentNode);
+  list.forEach(n=>{ const t=n.nodeValue.replace(DEG_RE,(m,d)=>ROM7[+d]); if(t!==n.nodeValue) n.nodeValue=t; }); }
 const HEAR=d=>JSON.stringify(isNum(d)?d:{b:null,...d}).replace(/"/g,'&quot;');   // タップで鳴らすためのコードの情報
 const tc=(d,cls,delay,ti)=>`<span class="tc ${cls||''} pop" style="--dl:${delay||0}" data-hear="${HEAR(d)}"${ti!=null?` data-ti="${ti}"`:''}><b>${nm(d)}</b><small>${al(d)}</small></span>`;
 function exampleHTML(ex){
@@ -3089,7 +3096,7 @@ function openTutorial(deck){
   DECK=Array.isArray(deck)?deck:SLIDES; TUT.lvNow=DECK.lv||0;
   TUT.on=true; TUT.backup=JSON.stringify(state); TUT.i=0; clearTimeout(HIST.t); histBtns();
   closeAll(); tutStopAudio();
-  state.pro=false; document.body.classList.remove('pro'); state.label='num'; state.key='C'; state.guide=false;
+  state.pro=false; document.body.classList.remove('pro'); state.label=numK(); state.key='C'; state.guide=false;
   renderAll(); showSlide(0);
 }
 // クリアしたあと：実際の画面で、新しく使えるようになった所を光らせて説明する
@@ -3133,7 +3140,7 @@ function showSlide(i){
   const sl=DECK[TUT.i];
   if(sl.coach){ $('tut').hidden=true; runCoach(sl.coach); return; }
   closeCoach(); $('tut').hidden=false;
-  const st=$('tutStage'); st.innerHTML=sl.html(); tutDots(); TUT.step=0; TUT.slideStart=performance.now(); applyStep();
+  const st=$('tutStage'); st.innerHTML=sl.html(); romanize(st); tutDots(); TUT.step=0; TUT.slideStart=performance.now(); applyStep();
   $('tutBack').disabled=TUT.i===0 && !DECK[0].steps;
   st.querySelectorAll('.listen').forEach(b=>b.onclick=()=>{
     if(b.classList.contains('on')){ tutStopAudio(); return; }
@@ -3156,7 +3163,7 @@ function coach(target, text, btns, keepLite){
     if(!r){ e.style.display='none'; return; } e.style.display='';
     Object.assign(e.style,{x:r.left+'px',y:r.top+'px',width:(r.right-r.left)+'px',height:(r.bottom-r.top)+'px'});
     e.setAttribute('x',r.left); e.setAttribute('y',r.top); e.setAttribute('width',r.right-r.left); e.setAttribute('height',r.bottom-r.top); });
-  $('coachText').innerHTML=text;
+  $('coachText').innerHTML=text; romanize($('coachText'));
   const bb=$('coachBtns'); bb.innerHTML='';
   btns.forEach(([label,fn,ghost])=>{ const b=document.createElement('button'); b.textContent=label; if(ghost) b.className='alt'; b.onclick=fn; bb.appendChild(b); });
   const bub=$('coachBubble');
