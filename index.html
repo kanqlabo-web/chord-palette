@@ -173,6 +173,8 @@ body.pro .protag{display:inline-block}
 .edhead{max-width:520px;margin:0 auto 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .exrow{display:flex;align-items:center;justify-content:center;gap:12px;margin:10px 0}.exrow>span{font-weight:700}.exrow .listen{margin:0}
 .liblock{margin:16px 2px 0;color:var(--muted)}
+.chiphead{flex-basis:100%;font-size:.72rem;font-weight:700;color:var(--muted);margin:8px 0 -2px;letter-spacing:.04em}
+.chiphead:first-child{margin-top:0}
 .libalias{font-style:normal;font-weight:400;font-size:.8em;opacity:.65}
 .edname{font-family:var(--display);font-weight:900;font-size:2rem;line-height:1;min-width:0;margin-right:auto}
 .edname sup{font-size:.5em;vertical-align:.8em}
@@ -688,7 +690,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.142（2026-10-23）</p>
+    <p class="appver">ver 1.143（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -755,7 +757,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.142（2026-10-23）</p>
+  <p class="appver">ver 1.143（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -799,6 +801,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <label class="rangerow">右手 <input type="range" id="rhOff" min="-12" max="12" step="1"><output id="rhOffOut"></output></label>
     <label class="rangerow">左手 <input type="range" id="lhOff" min="-12" max="12" step="1"><output id="lhOffOut"></output></label></div>
   <div class="sheetsec" id="wideSec" hidden><h3>左右の広がり</h3><div class="chips" id="wideChips"></div><p class="small" style="margin:6px 0 0">いちばん低い音をまん中に置き、上の音を左・右…と交互に振り分けます（低い音ほど狭く）。ピアノ系の音色は、ピアノ音源のように低い音ほど左・高い音ほど右に並べます。</p></div>
+  <div class="sheetsec" id="part2Sec" hidden><h3>2つ目の楽器（重ねる）</h3><div class="chips" id="p2Pat"></div><div id="p2InstWrap" hidden><h3 style="margin-top:12px">2つ目の楽器の音色</h3><div class="chips" id="p2Inst"></div></div></div>
   <div class="sheetsec" id="kitSec" hidden><h3>ドラムの音</h3><div class="chips" id="kitChips2"></div></div>
   <div class="sheetsec" id="fillSec"><h3>フィルイン（4小節ごとにおかずとシンバル）</h3><div class="chips" id="fillChips"></div><h3>ベース</h3><div class="chips" id="bassSndChips"></div></div>
 </div>
@@ -1659,7 +1662,13 @@ function accOnly(key){ const A=ARPS[key]; if(!A) return null; const nk='acc_'+ke
 function migrateLay(o){ const lay=o.lay; delete o.lay; delete o.lay2; if(!lay||o.arp2) return; const k=accOnly(o.arp); if(k){ o.arp2=k; o.inst2=fixInst(lay); } }
 const ensureArp2=()=>{ if(/^acc_/.test(state.arp2||'')) accOnly(state.arp2.slice(4)); };
 const SYNTH_INST={spiano:'piano',synth:'synth'};
-const instShort=()=>INSTS[state.inst];
+const instShort=()=>INSTS[state.inst]+(!state.pro&&state.arp2&&ARPS[state.arp2]?'＋'+INSTS[state.inst2||'epiano']:'');
+// 音色・ドラムの音のジャンル分け（選ぶ画面で見出しをつけて並べる）
+const INST_GROUPS=[['ピアノ・鍵盤',['piano','epiano','lofi','spiano','organ']],['ギター',['steel','nylon','eguitar','dist']],
+  ['オーケストラ',['strings3','horn','glock']],['ブラス・管楽器',['brass3','trumpet','trombone','sax']],['シンセ',['synth','pad']],['和楽器',['koto','shami']]];
+const KIT_GROUPS=[['バンド',['std','room','power','brush']],['エレクトロ',['elec','tr808','synth']],['そのほか',['orch','lofi']]];
+const grouped=(G,names)=>{ const out=[], used=new Set(); G.forEach(([h,ks])=>{ const ok=ks.filter(k=>names[k]); if(!ok.length) return; out.push(['#',h]); ok.forEach(k=>{ out.push([k,names[k]]); used.add(k); }); });
+  const rest=Object.keys(names).filter(k=>!used.has(k)); if(rest.length){ out.push(['#','そのほか']); rest.forEach(k=>out.push([k,names[k]])); } return out; };
 const isSynthInst=()=>state.inst in SYNTH_INST;
 // PROモードのミキサー：ドラム・コード・ベースの音量とミュート・ソロ
 const MIX_CH=['arp','arp2','drum','bass'];
@@ -2030,6 +2039,7 @@ function renderAll(){
 function chips(el, items, cur, onPick){
   el.innerHTML='';
   items.forEach(([v,label])=>{
+    if(v==='#'){ const h=document.createElement('span'); h.className='chiphead'; h.textContent=label; el.appendChild(h); return; }   // ジャンルの見出し
     const b=document.createElement('button'); b.className='chip'; b.textContent=label;
     b.setAttribute('aria-pressed', v===cur); b.onclick=()=>onPick(v);
     el.appendChild(b);
@@ -2255,7 +2265,7 @@ function openSheet(kind){
   sheetKind=kind; document.querySelector('#sheet .proedit').style.display='';
   $('sheetTitle').textContent = kind==='drum' ? 'ドラム' : kind==='style' ? '伴奏スタイル' : kind==='arp2' ? 'コード2（2つ目の楽器）' : 'コードパターン';
   $('soundTitle').textContent = kind==='drum' ? 'ドラムの音' : kind==='style' ? 'コードの音色' : '音色';
-  const soundRow=()=>chips($('soundChips'), Object.entries(kind==='drum'?KITS:INSTS), kind==='drum'?state.kit:kind==='arp2'?(state.inst2||'epiano'):state.inst,
+  const soundRow=()=>chips($('soundChips'), kind==='drum'?grouped(KIT_GROUPS,KITS):grouped(INST_GROUPS,INSTS), kind==='drum'?state.kit:kind==='arp2'?(state.inst2||'epiano'):state.inst,
     v=>{ if(kind==='arp2'){ state.inst2=v; save(); renderAll(); ensureSounds(); } else (kind==='drum'?pickKit:pickInst)(v); soundRow(); });
   soundRow(); $('soundChips').parentElement.hidden=false;
   $('kitSec').hidden = kind!=='style';
@@ -2263,7 +2273,16 @@ function openSheet(kind){
   const fmtOff=v=>v===0?'標準':(v>0?'+':'')+v;   // 半音いくつ上げ下げするか
   [['rhOff','rhOffOut'],['lhOff','lhOffOut']].forEach(([k,o])=>{ const el=$(k); el.value=state[k]||0; $(o).textContent=fmtOff(+el.value);
     el.oninput=()=>{ state[k]=+el.value; $(o).textContent=fmtOff(state[k]); save(); dirty=true; if(!playing) preview(selected??(state.slots[page*4]??0)); }; });
-  if(kind==='style'){ const kitRow=()=>chips($('kitChips2'), Object.entries(KITS), state.kit, v=>{ pickKit(v); kitRow(); }); kitRow(); }
+  if(kind==='style'){ const kitRow=()=>chips($('kitChips2'), grouped(KIT_GROUPS,KITS), state.kit, v=>{ pickKit(v); kitRow(); }); kitRow(); }
+  // 通常モード：2つ目の楽器（コード2）を重ねる。弾き方と音色を選ぶ
+  $('part2Sec').hidden = kind!=='style';
+  if(kind==='style'){
+    const P2PATS=[['','なし'],[state.arp,'伴奏と同じ弾き方'],['glockline','キラキラ（高い音で短く）'],['brassobb','ヒット＋オブリ'],['hornline','3・3・2のメロディ'],['whole','のばす（白玉）'],['epic','ストリングス（和声法）'],['alberti','分散和音（クラシック風）'],['garp','つま弾き'],['strum','ジャカジャカ']];
+    const P2DEF={glockline:'glock',brassobb:'brass3',hornline:'horn',whole:'strings3',epic:'strings3',alberti:'piano',garp:'nylon',strum:'steel'};
+    const p2Row=()=>{ chips($('p2Pat'), P2PATS, state.arp2||'', v=>{ state.arp2=v; if(v) state.inst2=P2DEF[v]||'epiano'; save(); renderAll(); ensureSounds(); p2Row(); });
+      $('p2InstWrap').hidden=!state.arp2;
+      chips($('p2Inst'), grouped(INST_GROUPS,INSTS), state.inst2||'epiano', v=>{ state.inst2=v; save(); renderAll(); ensureSounds(); p2Row(); }); };
+    p2Row(); }
   $('fillSec').hidden = kind!=='drum' && kind!=='style';
   $('patNewBtn').closest('.proedit').style.display='';
   $('fillChips').previousElementSibling.hidden = $('fillChips').hidden = false;
@@ -2278,7 +2297,7 @@ function openSheet(kind){
   if(kind==='style'){ const opts=$('opts'); opts.innerHTML=''; const cur=styleNow();
     STYLES.forEach((st,k)=>{ const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', st===cur);
       b.innerHTML=`<canvas class="half"></canvas><canvas class="half"></canvas><span>${st.name}</span>`;
-      b.onclick=()=>{ const keep={inst:state.inst,kit:state.kit,bass:state.bass,bassSnd:state.bassSnd};
+      b.onclick=()=>{ const keep={inst:state.inst,arp2:state.arp2,inst2:state.inst2,kit:state.kit,bass:state.bass,bassSnd:state.bassSnd};   // 「音色をそのまま」は2つ目の楽器もそのまま
         setStyle(st); if(state.keepInst) Object.assign(state,keep); else pickInst(st.inst); renderAll(); save();
         if(st.bpm && !state.keepBpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; save(); } closeAll(); };   // 通常モードは伴奏に合ったテンポに自動で変える
       opts.appendChild(b); });
@@ -2323,7 +2342,7 @@ $('patClear').onclick=()=>{ setCurNotes([]); PR.sel=null; commitNotes(); drawNot
 
 function bassSndRow(){ chips($('bassSndChips'), [...Object.entries(BASS_SNDS),['none','なし']], state.bass?(state.bassSnd||'bass'):'none', v=>{ if(v==='none'){ state.bass=false; save(); renderAll(); bassSndRow(); return; } state.bass=true; state.bassSnd=v; save(); renderAll(); ensureSounds().then(()=>{ if(!playing) whenRunning(()=>{ const t=ctx.currentTime+.03; [0,7,12].forEach((n,k)=>bassTone(36+n,t+k*.18,.16,.9)); }); }); bassSndRow(); }); }
 function openBassSheet(){
-  sheetKind='bass'; document.querySelector('#sheet .proedit').style.display=''; $('kitSec').hidden=true;
+  sheetKind='bass'; document.querySelector('#sheet .proedit').style.display=''; $('kitSec').hidden=true; $('part2Sec').hidden=true;
   $('patHint').textContent = /^my\d+$/.test(state.bassPat) ? '選んでいるマイパターンを編集します' : '選んでいるパターンをコピーして編集します';
   const BASS_ORDER=[...myKeys(BASSES),...Object.keys(BASSES).filter(k=>!/^my\d+$/.test(k))];
   $('sheetTitle').textContent='ベース';
