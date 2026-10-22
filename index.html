@@ -687,7 +687,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.136（2026-10-23）</p>
+    <p class="appver">ver 1.137（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -754,7 +754,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.136（2026-10-23）</p>
+  <p class="appver">ver 1.137（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -797,7 +797,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sheetsec" id="rangeSec" hidden><h3>音域（PRO）</h3>
     <label class="rangerow">右手 <input type="range" id="rhOff" min="-12" max="12" step="1"><output id="rhOffOut"></output></label>
     <label class="rangerow">左手 <input type="range" id="lhOff" min="-12" max="12" step="1"><output id="lhOffOut"></output></label></div>
-  <div class="sheetsec" id="wideSec" hidden><h3>左右の広がり</h3><div class="chips" id="wideChips"></div><p class="small" style="margin:6px 0 0">高い音を左、低い音を右に置いて、オーケストラのように広げます（コード1・コード2の楽器）。</p></div>
+  <div class="sheetsec" id="wideSec" hidden><h3>左右の広がり</h3><div class="chips" id="wideChips"></div><p class="small" style="margin:6px 0 0">いちばん低い音をまん中に置き、そこから上の音を左・右・左・右…と交互に振り分けて広げます（コード1・コード2の楽器）。</p></div>
   <div class="sheetsec" id="laySec" hidden><h3>いちばん上の音に重ねる音色</h3><div class="chips" id="layChips"></div><p class="small" style="margin:6px 0 0">アクセント（いちばん上の音）だけを別の音色で鳴らします。キーボードのレイヤーと同じです。</p></div>
   <div class="sheetsec" id="kitSec" hidden><h3>ドラムの音</h3><div class="chips" id="kitChips2"></div></div>
   <div class="sheetsec" id="fillSec"><h3>フィルイン（4小節ごとにおかずとシンバル）</h3><div class="chips" id="fillChips"></div><h3>ベース</h3><div class="chips" id="bassSndChips"></div></div>
@@ -2463,7 +2463,7 @@ palette.addEventListener('keydown',e=>{
 });
 
 // ---------- audio ----------
-let PAN=null;   // 次に鳴らす音の左右の位置（-1=左〜1=右、null=まん中）
+let PAN=null, PAN_NEXT=null;   // 次に鳴らす音の左右の位置（-1=左〜1=右、null=まん中）
 let ctx=null, master, masterOut=null, noiseBuf, compBus=null, compVol=null, compBus2=null, compVol2=null, drumBus=null, bassBus=null, OUT=null, PART2=false;
 function ensureAudio(noResume){
   if(ctx && ctx.state==='closed') ctx=null;
@@ -2593,7 +2593,7 @@ function keyTone(m,t,dur,v,inst){
     const g=playZone(LOADED.eguitar,m,t,Math.max(dur,.06),.9*Math.pow(v,1.1),mute?.05:.1,mute?900:5000,false); OUT=null; return g; }
   const fx=INST_FX[I], set=LOADED[I];
   OUT=playing?BUS:null;
-  PAN = state.wide ? Math.max(-.75,Math.min(.75,(62-m)/22)) : null;   // 左右の広がり：高い音は左、低い音は右（オーケストラの並び：ヴァイオリンが左、チェロ・コントラバスが右）
+  PAN = state.wide ? (PAN_NEXT??0) : null;   // 左右の広がり（位置は playEvents で決める）
   const g = fx&&set&&playZone(set,m,t,Math.max(dur*fx.hold,.08),.36*fx.gain*Math.pow(v,1.6),fx.rel,Math.max(fx.cutMin||0,900+9000*v*v),fx.loop,fx.atk); PAN=null;
   const r = g || synthTone(m,t,dur,.34*Math.pow(v,1.3)); OUT=null; return r;
 }
@@ -2791,6 +2791,11 @@ function playEvents(evs,bt,ct,sd,pat){
     const ht = n.st0%4===0 ? 0 : (Math.random()-.5)*.004;   // 拍の頭はジャストで
     const off = (strum ? k*spd : n.k*.0015) + (n.st0-Math.floor(n.ev0??n.st0))*sd;   // 16分のあいだの音・フォールは、その分だけ遅らせて鳴らす   // 16分のあいだの音（32分・3連符）は、その分だけ遅らせて鳴らす
     const lay = state.lay&&LAYS[state.lay]&&ix>=6&&ix<=8 ? state.lay : null;   // アクセント（いちばん上の音）は重ねる音色で
+    // 左右の広がり：そのコードの音を低い順に並べ、いちばん低い音はまん中、そこから上へ 左・右・左・右…と交互に置いてバランスを取る
+    if(state.wide){ const same=[...new Set(notes.map(x=>x.m))].sort((a,b)=>a-b), pool=same.length>=2?same:[...new Set([tones[4],tones[0],tones[1],tones[2],tones[3],n.m].filter(x=>x!=null))].sort((a,b)=>a-b);
+      // ↑同時に鳴らす音（1音だけのときはそのコードの基本の音）の中での順番
+      let ri=pool.indexOf(n.m); if(ri<0){ ri=0; pool.forEach((x,i)=>{ if(Math.abs(x-n.m)<Math.abs(pool[ri]-n.m)) ri=i; }); }
+      PAN_NEXT = ri===0 ? 0 : (ri%2 ? -.6 : .6); }
     const g=keyTone(n.m, ct+ht+off, n.len*sd, COMP_LEVEL*n.vel*w*hv*(lay?1.15:1), lay); if(g) held.push({g,end:ct+n.len*sd*1.4+.5});
     // フォール：音の終わりから約0.14秒で10半音ほど一気に下げ、同時に消す（がっつり・短く）
     if(n.fall && g && g.voice){ const te=ct+ht+off+n.len*sd-.03;
