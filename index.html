@@ -662,7 +662,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.108（2026-10-23）</p>
+    <p class="appver">ver 1.109（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -719,7 +719,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.108（2026-10-23）</p>
+  <p class="appver">ver 1.109（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -966,6 +966,10 @@ function guitarShape(pcsAll,bpc,fifthPc){
   tryPos(0); for(let p=1;p<=9;p++) tryPos(p);
   return GSHAPE[key]=best;
 }
+let LHCTX={use:false,prev:null,reset:false};
+// 再生中にコードを決めるとき：左手を前の音とつなげる（start＝そのコードが鳴り始める、進行の中の位置）
+function chordAt(v,start){ LHCTX.use=true; LHCTX.reset = start%16===0 && Math.floor(start/16)%2===0; const t=chordNotes(v,lastR); LHCTX.use=false;
+  if(!GUITARS.has(state.inst)) LHCTX.prev=t.tones[0]; return t; }
 function chordNotes(v,prev){
   const sp=specOf(v), k=keyObj(), rpc=(k.pc+sp.o)%12;
   let ivs=[...QUAL[sp.q], ...(sp.q==='5'?[]:EXT[sp.x])];
@@ -974,7 +978,18 @@ function chordNotes(v,prev){
   const slash = sp.b!==null&&sp.b!==undefined, bpc = slash ? (k.pc+sp.b)%12 : rpc;
   // 左手：E2〜E♭3（PROモードでは音域スライダーでずらせる）
   const lhOff=state.pro?(state.lhOff||0):0, rhOff=state.pro?(state.rhOff||0):0;
-  const lo=40+lhOff, L=lo+(((bpc-lo)%12)+12)%12;   // 音域スライダーは「範囲」をずらす（音の名前は変えない）
+  const lo=40+lhOff;   // 音域スライダーは「範囲」をずらす（音の名前は変えない）
+  let L=lo+(((bpc-lo)%12)+12)%12;
+  // 再生中は、左手を前の音からのつながりで選ぶ（声部進行）：
+  // ・2度（全音・半音）の動きは必ず近い方へ
+  // ・それ以外も近い方を優先。ただし「1→2小節」「3→4小節」の中では特に近さを優先し、2小節ごとの区切り（3小節目・5小節目の頭）では真ん中の音域へ戻りやすくする
+  // ・決めた音域から大きくはみ出さない
+  if(LHCTX.use && LHCTX.prev!=null){ const prev=LHCTX.prev, center=lo+6, cands=[];
+    for(let m=lo-6;m<=lo+17;m++) if(((m-bpc)%12+12)%12===0) cands.push(m);
+    const near=[prev-2,prev-1,prev+1,prev+2,prev].filter(m=>((m-bpc)%12+12)%12===0 && m>=lo-8 && m<=lo+20);   // 2度の動き（少しなら音域の外でも）
+    if(near.length) L=near[0];
+    else { const w=LHCTX.reset?.7:.2; let best=L, bc=1e9;
+      cands.forEach(m=>{ const out=m<lo?(lo-m)*1.5:m>lo+11?(m-lo-11)*1.5:0, c=Math.abs(m-prev)+w*Math.abs(m-center)+out; if(c<bc){ bc=c; best=m; } }); L=best; } }
   // 左手のオクターブも弾くパターンでは、右手のいちばん下の音を左手オクターブより短3度以上上にして、音がぶつからないようにする
   const pat=ARPS[state.arp], R=voiceFor(pcs,prev, (pat&&pat.rhAbove ? Math.max(56,L+12+3) : 56)+rhOff);   // 右手：A♭3から上
   const r=[R[0],R[1]??R[0]+12,R[2]??(R[1]??R[0])+12];               // 2音（パワーコード）でも3つの役割を埋める
@@ -2528,7 +2543,7 @@ function scheduleStep(g,t){
     // なければ、これまでどおり次のコードを先に弾いて、小節の頭までのばす（タイ）
     const pi=g%16;
     if(rel===cell.len-an){
-      barTones=chordNotes(nx.v,lastR); lastR=barTones.R; choke(ct);
+      barTones=chordAt(nx.v, ni*L+nx.off); lastR=barTones.R; choke(ct);
       if(pat.sit){ PUSHCONT=false; pushedKey=nxKey;   // 次のコードの弾き始めを先に弾いて、そのままのばす（タイ）
         const nStart=((ni*L)%16+nx.off)%16, v=pat.sit.push ? pat.sit.push[0] : sitVar(pat, nx.len, nStart, nStart===0?b+1:b);
         playEvents((v.at[0]||[]).map(e=>[e[0],e[1],e[2]+an,e[3],e[4]]), barTones, ct, sd, pat);
@@ -2549,7 +2564,7 @@ function scheduleStep(g,t){
   } else if(has(cell)){
     // コードが変わった所から、パターンを頭から弾く（短いコードはパターンの前の部分だけ）
     const key=i+':'+cell.h, head=rel===lag, pushed = rel===0 && pushedKey===key;
-    if((head&&!pushed)||!barTones){ barTones=chordNotes(cell.v,lastR); lastR=barTones.R; }
+    if((head&&!pushed)||!barTones){ barTones=chordAt(cell.v, i*L+cell.off); lastR=barTones.R; }
     if(rel===0) pushedKey=null;
     // 小節の途中（3拍目など）で変わるコードは、パターンを頭から弾き直さず、小節の中の位置のまま続けてコードだけ変える
     //（その瞬間に伸ばしている音は、新しいコードで弾き直す）。8分のくり返しのパターンは、これまでと同じ鳴り方になる
@@ -2659,7 +2674,7 @@ async function play(){ ensureAudio(); pendingSound=null; if(starting) return; bg
   if(ctx.state!=='running'){ starting=true; await wakeAudio(); starting=false; }
   if(loadingNow()){ starting=true; $('play').setAttribute('aria-label','読み込み中'); $('play').style.opacity=.55;
     await Promise.race([ensureSounds(), new Promise(r=>setTimeout(r,8000))]); starting=false; $('play').style.opacity=''; }
-  lastR=null; barTones=null; pushedKey=null; lastBassM=null; playing=true; playedSteps=0; gpos=0;
+  lastR=null; barTones=null; pushedKey=null; lastBassM=null; LHCTX.prev=null; playing=true; playedSteps=0; gpos=0;
   if(TUT.on){ TUT.loopLen=state.bars*slotSteps(); TUT.stopping=false; clearTimeout(TUT.stopT); } visQ=[]; cur=null; nextTime=ctx.currentTime+.06; tick(); timer=setInterval(tick,25); if(tickWorker) tickWorker.postMessage(25);
   $('play').innerHTML=STOP_SVG; $('play').setAttribute('aria-label','停止'); }
 function stop(){ if(EXPORT.on && !EXPORT.stopping) setTimeout(()=>endExport(false),0); if(compBus){ compBus.gain.cancelScheduledValues(0); compBus.gain.setValueAtTime(1,ctx.currentTime); } playing=false; clearInterval(timer); if(tickWorker) tickWorker.postMessage(0); bgStop(); visQ=[]; cur=null; dirty=true;
@@ -3590,10 +3605,10 @@ $('saveFile').onchange=async e=>{ const f=e.target.files&&e.target.files[0]; e.t
 // ---- 曲を書き出す：MIDI（いまの伴奏を、そのまま音符にする） ----
 let CAPTURE=null;
 function captureSong(){ const C=[]; const sv={playedSteps,gpos,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice};
-  CAPTURE=C; lastR=null; barTones=null; pushedKey=null; lastBassM=null; held=[]; bassHeld=[]; lastBassVoice=null; playedSteps=0; gpos=0;
+  const lhSv=LHCTX.prev; LHCTX.prev=null; CAPTURE=C; lastR=null; barTones=null; pushedKey=null; lastBassM=null; held=[]; bassHeld=[]; lastBassVoice=null; playedSteps=0; gpos=0;
   const T=state.bars*slotSteps(), sd=stepDur(); let t=0;
   try{ for(let n=0;n<T;n++){ scheduleStep(n,t); t+=sd; playedSteps++; } endHit(t); }
-  finally{ CAPTURE=null; ({playedSteps,gpos,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice}=sv); if(!playing) visQ=[]; }
+  finally{ CAPTURE=null; LHCTX.prev=lhSv; ({playedSteps,gpos,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice}=sv); if(!playing) visQ=[]; }
   return {ev:C, end:t+sd*16}; }
 const GM_PROG={piano:0,spiano:0,epiano:4,organ:16,nylon:24,eguitar:27,dist:30,pad:89,synth:81,strings:48};
 const GM_BASS={bass:33,ubass:32,sbass:38,ebass:34};
