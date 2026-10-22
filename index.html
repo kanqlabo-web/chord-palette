@@ -542,6 +542,7 @@ body.tutlite .lvbig{visibility:hidden}
 .song small{display:block;font-size:.7rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--display);font-weight:700}
 .song button{flex:none;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:5px 10px;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer}
 .song button.del{color:var(--muted)}
+.updbar{position:fixed;z-index:71;left:50%;top:max(10px,env(safe-area-inset-top,0px));transform:translateX(-50%);border:0;border-radius:999px;padding:10px 18px;font:inherit;font-size:.85rem;font-weight:700;background:var(--t);color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;white-space:nowrap}
 .toast{position:fixed;z-index:70;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:999px;padding:10px 18px;font-size:.84rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:tin .3s ease;max-width:calc(100% - 32px);text-align:center}
 .sharebox{display:flex;flex-direction:column;gap:6px}
 .sharebox input{font:inherit;font-size:16px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
@@ -661,7 +662,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.106（2026-10-23）</p>
+    <p class="appver">ver 1.107（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -678,6 +679,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="popbtns"><button class="alt" id="moodPopLater">あとで</button><button id="moodPopGo">はじめる</button></div>
 </div></div>
 <div class="toast" id="toast" hidden></div>
+<button class="updbar" id="updBar" hidden>新しいバージョンがあります　タップで更新</button>
 <div class="coach" id="coach" hidden><svg class="dim" aria-hidden="true"><defs><mask id="coachMask"><rect width="100%" height="100%" fill="#fff"/><g id="coachHoles"></g></mask></defs><rect width="100%" height="100%" fill="rgba(8,12,20,.55)" mask="url(#coachMask)"/></svg><div class="bubble" id="coachBubble"><p id="coachText"></p><div class="bbtns" id="coachBtns"></div></div></div>
 
 <aside class="drawer" id="drawer" aria-label="設定">
@@ -717,7 +719,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.106（2026-10-23）</p>
+  <p class="appver">ver 1.107（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -3518,6 +3520,13 @@ function parseShort(h){ const q={}; h.split('&').forEach(kv=>{ const i=kv.indexO
   if(q.j) Object.assign(o,JSON.parse(b64d(q.j)));
   return o; }
 const shareUrl=o=>location.origin+location.pathname+'#'+shortHash(o);
+// 新しいバージョンの確認：GitHub Pages はページを最大10分ほどキャッシュするので、開いたとき・戻ってきたときに最新版を見に行く
+const APP_VER=(document.querySelector('.appver')||{}).textContent||'';
+async function checkUpdate(){ try{ if(!/^https?:/.test(location.protocol)) return;
+  const r=await fetch(location.pathname+'?check='+Date.now(),{cache:'no-store'}); if(!r.ok) return; const tx=await r.text();
+  const m=tx.match(/class="appver">([^<]+)</); if(m && APP_VER && m[1]!==APP_VER){ const b=$('updBar'); b.hidden=false;
+    b.onclick=()=>{ save(); location.replace(location.pathname+'?v='+Date.now()+location.hash); }; } }catch(e){} }
+setTimeout(checkUpdate,1500); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkUpdate(); });
 function toast(t){ const el=$('toast'); el.textContent=t; el.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>el.hidden=true,2600); }
 // 短縮リンク：is.gd で短いリンクを作る（作れなければ、ふつうのリンクのまま）
 function shortenUrl(url){ return new Promise(res=>{ const cb='isgd'+Date.now(), sc=document.createElement('script'); let done=false;
