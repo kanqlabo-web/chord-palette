@@ -686,7 +686,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.128（2026-10-23）</p>
+    <p class="appver">ver 1.129（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -753,7 +753,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.128（2026-10-23）</p>
+  <p class="appver">ver 1.129（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1159,10 +1159,11 @@ const DRUMS = {
            vB:{k:'x.....x..x....x.', s:'....X.......X...', h:'o.go.go.o.go.o..'}, fill:'soft',
            bass:[[0,0,6,.9],[6,0,2,.55],[8,'5',4,.75],[12,0,2,.6],[14,'ap',2,.65]]},
   // 壮大：キックとフロアタムで「ドン・ドドン」、スネアは3拍目だけ。2小節目の終わりはタムを連打して盛り上げる
-  // okesutora.mid から：大太鼓（キック＋フロアタム）は「ドーン……ドッ・ドーン」、スネアはマーチのように細かく、チキ・シャーと刻む
-  epic:   {name:'壮大', pro:'オーケストラ（大太鼓＋マーチスネア）', v:{k:'X......xX.......', t3:'X......xX.......', s:'xoxgxoxgxoxgxoxg', h:'o.o.o.o.o.o.o.o.', o:'.g.g.g.g.g.g.g.g', c:'X...............'},
-           vB:{k:'X.....xxX.......', t3:'X.....xxX.......', s:'xoxgxoxgxoxgxoxx', h:'o.o.o.o.o.o.o.o.', o:'.g.g.g.g.g.g.g.g'}, fill:'orch',
-           bass:[[0,0,7.8,.95],[8,0,7.8,.85]]},   // チューバ・コントラバスのように2分音符でのばす
+  // okesutora.mid（テンポ132として）から：2小節で1セット。大太鼓（キック＋低いタム）は1小節目の頭と、2小節目へ8分食って「ドーン……ッドーン」。
+  // スネアはマーチのように「タン・タタ・タン・タタッ」、ハイハットは「チキ・シャー」
+  epic:   {name:'壮大', pro:'オーケストラ（大太鼓＋マーチスネア）', v:{k:'X.............x.', t3:'X.............x.', s:'X.ooX.oxX.oX.oX.', h:'xx..xx..xx..xx..', o:'..o...o...o...o.'},
+           vB:{k:'X...............', t3:'X...............', s:'..ooX.oxX.oX.oXX', h:'xx..xx..xx..xx..', o:'..o...o...o...o.'}, fill:'orch',
+           bass:[[0,0,15.8,.95]]},   // チューバ・コントラバスのように全音符でのばす
   // 和風：和太鼓のように低いタムで「ドン・ドドン」、リムで鉦（かね）のような合いの手
   wa:     {name:'和風', pro:'和太鼓風（タム）', v:{k:'X.......X.......', t3:'X.....x.X...x.x.', x:'....x.......x...'},
            vB:{k:'X.......X.......', t3:'X.....x.X.x.x.xx', x:'....x.......x...'}, fill:'tom',
@@ -1252,10 +1253,10 @@ const ARPS = {
                 beat:[[[0,ALL,4,.55]]]}},
 
   // 壮大：ストリングスの白玉に、ホルン（重ねる音色）が上で2分音符のメロディ
-  // okesutora.mid から：低音（コントラバス＋チェロ＝ルートとオクターブ）は2分音符。上の3声は開離配置で、1拍ごとに転回して上へ動く
-  //（1拍目：ルート・5度・10度 → 2拍目：3度・ルート・5度を1段上に）
-  epic:   {name:'ストリングス（開離・広い音域）', pro:'開離配置（1拍ごとに転回して上へ）', legato:true,
-           sit:{bar:[[[0,[0,5],8,.66],[8,[0,5],8,.6],[0,[1,3,7],4,.58],[4,[2,6,8],4,.6],[8,[1,3,7],4,.56],[12,[2,6,8],4,.6]]],
+  // okesutora.mid（テンポ132として）から：コードは1小節ごと。低音（コントラバス＋チェロ＝ルートとオクターブ）は全音符。
+  // 上の3声は開離配置で、小節の前半はルート・5度・10度、後半は1段上へ転回（3度・ルート・5度）
+  epic:   {name:'ストリングス（開離・広い音域）', pro:'開離配置（2拍ごとに転回して上へ）', legato:true,
+           sit:{bar:[[[0,[0,5],16,.66],[0,[1,3,7],8,.58],[8,[2,6,8],8,.6]]],
                 halfA:[[[0,[0,5],8,.66],[0,[1,3,7],4,.58],[4,[2,6,8],4,.6]]],
                 halfB:[[[0,[0,5],8,.64],[0,[1,3,7],4,.56],[4,[2,6,8],4,.6]]],
                 beat:[[[0,[0,5],4,.64],[0,[1,3,7],4,.58]]]}},
@@ -1522,7 +1523,7 @@ const STYLES=[
   {id:16, name:'弾き語り', bpm:92, drum:'none', arp:'strum', inst:'steel', kit:'std', bass:false},
   {id:4, name:'バラード', bpm:72, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true},
   {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
-  {id:17, name:'壮大', bpm:66, drum:'epic', arp:'epic', inst:'strings', kit:'power', bass:true, bassSnd:'ubass'},
+  {id:17, name:'壮大', bpm:132, drum:'epic', arp:'epic', inst:'strings', kit:'power', bass:true, bassSnd:'ubass'},
   {id:18, name:'シティポップ', bpm:108, drum:'city', arp:'citypop', inst:'epiano', arp2:'brassobb', inst2:'brass', kit:'std', bass:true, bassSnd:'slap'},
   {id:9, name:'ファンキー', bpm:104, drum:'sixteen', arp:'offbeat', inst:'eguitar', kit:'std', bass:true},
   {id:11, name:'ジャジー', bpm:100, drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
