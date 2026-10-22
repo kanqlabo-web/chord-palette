@@ -974,10 +974,10 @@ function chordNotes(v,prev){
   // ギターの音色：実際のギターで押さえる形（ローコード、なければバレーコード）で鳴らす
   if(GUITARS.has(state.inst)){ const gs=guitarShape(ivs.map(i=>(rpc+i)%12), bpc, (rpc+fifth)%12);
     if(gs){ const n=gs.length, top=gs.slice(n-3), mid=gs.slice(1,n-3);
-      return {tones:[gs[0],...top, mid[0]??null, mid[1]??null, ...top.map(x=>x+12), null, null], R:top, strings:gs, bass, slash, fifth, third, seventh}; } }
+      return {tones:[gs[0],...top, mid[0]??null, mid[1]??null, ...top.map(x=>x+12), null, null], R:top, strings:gs, bass, slash, fifth, third, seventh, rpc, bpc, ivs, q:sp.q}; } }
   // 分散和音で1音ずつ弾くとき用の3音（ra）：右手が4音のときは5度を省いて、3度と7度・9度などの色の音を必ず残す
   let ra=null; if(R.length>=4){ const f5=(rpc+fifth)%12; let a=R.filter(m=>m%12!==f5); if(a.length!==3) a=R.filter(m=>m%12!==rpc); if(a.length!==3) a=R.slice(R.length-3); ra=a.slice(0,3); }
-  return {tones:[L,...r, slash?L+12:L+fifth, L+12, ...r.map(x=>x+12), R[3]??null, R[3]!=null?R[3]+12:null], R, ra, bass, slash, fifth, third, seventh};   // ベースはE1〜E♭2（実際のベースの音域）
+  return {tones:[L,...r, slash?L+12:L+fifth, L+12, ...r.map(x=>x+12), R[3]??null, R[3]!=null?R[3]+12:null], R, ra, bass, slash, fifth, third, seventh, rpc, bpc, ivs, q:sp.q};   // ベースはE1〜E♭2（実際のベースの音域）
 }
 
 // ---- drum patterns: 16 steps per voice. X=強 x=中 o=弱 g=ゴースト .=休み
@@ -1079,25 +1079,29 @@ for(const k in DRUMS){ const d=DRUMS[k]; d.V=parseVoices(d.v); if(d.vB) d.VB=par
 const ALL=[0,1,2,3], RH=[1,2,3], WIDE=[0,4,5,6,7,8];
 function each(steps,ns,len,vel){ return steps.map((st,i)=>[st,Array.isArray(ns[0])?ns[i%ns.length]:ns,len,typeof vel==='function'?vel(st,i):vel]); }
 function twice(ev){ return [...ev, ...ev.map(e=>[e[0]+8,...e.slice(1)])]; }
+// ---- MIDI をそのまま写したフレーズ（ballade.mid / jazzy.mid）。各音は [位置, {t:コードの中の役割, g:元の音の高さ, s:元のコードの根音}, 長さ, 強さ]
+// t: B=ベース（分数コードならその音） R=根音 3=3度 5=5度 7=7度 9=9度 6=6度 q<n>=経過音（根音から音階でn個上）
+// 1小節ずつ順番に弾き分ける（vars）。元のコードとの高さの差だけずらして、同じ形・同じ音域で弾く
+const PHR_BALL=[[[0.0,{"t":"5","g":60,"s":5},2.0,0.55],[0.0,{"t":"R","g":65,"s":5},4.0,0.52],[0.0,{"t":"9","g":67,"s":5},6.0,0.41],[0.0,{"t":"3","g":69,"s":5},8.0,0.6],[0.0,{"t":"R","g":53,"s":5},16.0,0.55],[2.0,{"t":"5","g":60,"s":5},14.0,0.55],[4.0,{"t":"R","g":65,"s":5},11.0,0.54],[6.0,{"t":"9","g":67,"s":5},8.0,0.52],[8.0,{"t":"3","g":69,"s":5},8.0,0.55],[14.0,{"t":"9","g":67,"s":5},2.0,0.52],[15.0,{"t":"R","g":65,"s":5},1.0,0.55]],[[0.0,{"t":"R","g":60,"s":0},2.0,0.5],[0.0,{"t":"9","g":62,"s":0},4.0,0.41],[0.0,{"t":"3","g":64,"s":0},6.0,0.43],[0.0,{"t":"5","g":67,"s":0},8.0,0.54],[0.0,{"t":"B","g":52,"s":4},16.0,0.54],[2.0,{"t":"R","g":60,"s":0},14.0,0.5],[4.0,{"t":"9","g":62,"s":0},12.0,0.48],[6.0,{"t":"3","g":64,"s":0},10.0,0.51],[8.0,{"t":"5","g":67,"s":0},8.0,0.54],[14.0,{"t":"q6","g":70,"s":0},2.0,0.62],[15.0,{"t":"q5","g":69,"s":0},1.0,0.51]],[[0.0,{"t":"B","g":50,"s":2},8.0,0.5],[0.0,{"t":"3","g":62,"s":10},8.0,0.59],[0.0,{"t":"5","g":65,"s":10},8.0,0.59],[0.0,{"t":"R","g":70,"s":10},8.0,0.55],[8.0,{"t":"9","g":70,"s":9},4.0,0.54],[8.0,{"t":"B","g":49,"s":1},5.83,0.36],[8.0,{"t":"3","g":61,"s":9},8.0,0.5],[8.0,{"t":"5","g":65,"s":9},8.0,0.47],[12.0,{"t":"9","g":70,"s":9},4.0,0.55],[13.5,{"t":"R","g":69,"s":9},2.5,0.52],[15.0,{"t":"7","g":67,"s":9},1.0,0.51]],[[0.0,{"t":"R","g":65,"s":5},10.0,0.5],[0.0,{"t":"B","g":41,"s":5},16.0,0.26],[0.0,{"t":"5","g":60,"s":5},16.0,0.45],[0.0,{"t":"3","g":69,"s":5},16.0,0.6],[2.0,{"t":"5","g":48,"s":5},14.0,0.41],[4.0,{"t":"R","g":53,"s":5},12.0,0.44],[6.0,{"t":"9","g":55,"s":5},10.0,0.54],[8.0,{"t":"3","g":57,"s":5},8.0,0.57],[10.0,{"t":"R","g":65,"s":5},6.0,0.41],[12.0,{"t":"5","g":72,"s":5},4.0,0.41],[14.0,{"t":"9","g":67,"s":5},2.0,0.41]],[[0.0,{"t":"R","g":58,"s":10},2.0,0.48],[0.0,{"t":"9","g":60,"s":10},4.0,0.5],[0.0,{"t":"5","g":65,"s":10},6.0,0.55],[0.0,{"t":"B","g":46,"s":10},16.0,0.38],[0.0,{"t":"3","g":62,"s":10},16.0,0.41],[2.0,{"t":"R","g":58,"s":10},14.0,0.48],[4.0,{"t":"9","g":60,"s":10},12.0,0.42],[6.0,{"t":"5","g":65,"s":10},8.0,0.47],[8.0,{"t":"9","g":72,"s":10},8.0,0.45],[14.0,{"t":"5","g":65,"s":10},2.0,0.51]],[[0.0,{"t":"3","g":57,"s":5},2.0,0.45],[0.0,{"t":"5","g":60,"s":5},4.0,0.46],[0.0,{"t":"R","g":65,"s":5},6.0,0.5],[0.0,{"t":"B","g":45,"s":9},16.0,0.45],[2.0,{"t":"3","g":57,"s":5},14.0,0.5],[4.0,{"t":"5","g":60,"s":5},12.0,0.5],[6.0,{"t":"R","g":65,"s":5},10.0,0.51],[8.0,{"t":"5","g":72,"s":5},8.0,0.55],[14.0,{"t":"q1","g":67,"s":5},2.04,0.59]],[[0.0,{"t":"3","g":59,"s":8},4.0,0.64],[0.0,{"t":"5","g":62,"s":8},6.0,0.5],[0.0,{"t":"6","g":65,"s":8},8.0,0.55],[0.0,{"t":"B","g":44,"s":8},16.0,0.45],[2.0,{"t":"R","g":56,"s":8},14.0,0.5],[4.0,{"t":"3","g":59,"s":8},12.0,0.54],[6.0,{"t":"5","g":62,"s":8},10.0,0.47],[8.0,{"t":"6","g":65,"s":8},8.0,0.45],[12.0,{"t":"q0","g":67,"s":8},4.0,0.41]],[[0.0,{"t":"R","g":55,"s":7},2.0,0.56],[0.0,{"t":"3","g":58,"s":7},4.0,0.44],[0.0,{"t":"5","g":62,"s":7},6.0,0.45],[0.0,{"t":"B","g":43,"s":7},8.0,0.54],[0.0,{"t":"7","g":65,"s":7},8.0,0.43],[2.0,{"t":"R","g":55,"s":7},6.0,0.47],[4.0,{"t":"3","g":58,"s":7},4.0,0.28],[6.0,{"t":"5","g":62,"s":7},2.0,0.49],[8.0,{"t":"B","g":48,"s":0},4.0,0.38],[8.0,{"t":"R","g":60,"s":0},4.0,0.47],[8.0,{"t":"3","g":65,"s":0},4.0,0.48],[8.0,{"t":"5","g":67,"s":0},4.0,0.55],[12.0,{"t":"B","g":48,"s":0},4.0,0.39],[12.0,{"t":"R","g":60,"s":0},4.0,0.44],[12.0,{"t":"3","g":64,"s":0},4.0,0.41],[12.0,{"t":"5","g":67,"s":0},4.0,0.45]]];
+const PHR_JAZ=[[[0.0,{"t":"R","g":58,"s":10},3.99,0.75],[0.0,{"t":"3","g":62,"s":10},3.99,0.67],[0.0,{"t":"5","g":65,"s":10},3.99,0.57],[0.0,{"t":"7","g":69,"s":10},3.99,0.69],[0.0,{"t":"B","g":46,"s":10},6.0,0.85],[4.0,{"t":"R","g":58,"s":10},2.0,0.78],[4.0,{"t":"3","g":62,"s":10},2.0,0.69],[4.0,{"t":"5","g":65,"s":10},2.0,0.61],[4.0,{"t":"7","g":69,"s":10},2.0,0.74],[6.0,{"t":"B","g":46,"s":10},2.0,0.75],[7.19,{"t":"R","g":58,"s":10},0.81,0.73],[7.19,{"t":"3","g":62,"s":10},0.81,0.57],[7.19,{"t":"5","g":65,"s":10},0.81,0.56],[7.19,{"t":"7","g":69,"s":10},0.81,0.7],[8.0,{"t":"B","g":45,"s":9},2.0,0.88],[9.19,{"t":"R","g":57,"s":9},0.81,0.78],[9.19,{"t":"3","g":61,"s":9},0.81,0.6],[9.19,{"t":"5","g":64,"s":9},0.81,0.62],[9.19,{"t":"7","g":67,"s":9},0.81,0.64],[10.0,{"t":"B","g":45,"s":9},2.0,0.78],[12.0,{"t":"R","g":57,"s":9},3.99,0.86],[12.0,{"t":"3","g":49,"s":9},4.0,0.76],[12.0,{"t":"3","g":61,"s":9},4.0,0.69],[12.0,{"t":"5","g":64,"s":9},4.0,0.69],[12.0,{"t":"7","g":67,"s":9},4.0,0.78]],[[0.0,{"t":"5","g":57,"s":2},3.99,0.78],[0.0,{"t":"7","g":60,"s":2},3.99,0.66],[0.0,{"t":"R","g":62,"s":2},3.99,0.74],[0.0,{"t":"3","g":65,"s":2},3.99,0.74],[0.0,{"t":"B","g":50,"s":2},6.0,0.84],[4.0,{"t":"5","g":57,"s":2},2.0,0.8],[4.0,{"t":"7","g":60,"s":2},2.0,0.65],[4.0,{"t":"R","g":62,"s":2},2.0,0.7],[4.0,{"t":"3","g":65,"s":2},2.0,0.71],[6.0,{"t":"B","g":50,"s":2},2.0,0.68],[7.19,{"t":"5","g":57,"s":2},0.81,0.84],[7.19,{"t":"7","g":60,"s":2},0.81,0.62],[7.19,{"t":"R","g":62,"s":2},0.81,0.64],[7.19,{"t":"3","g":65,"s":2},0.81,0.73],[8.0,{"t":"B","g":43,"s":7},1.23,0.84],[9.19,{"t":"R","g":55,"s":7},0.81,0.77],[9.19,{"t":"3","g":58,"s":7},0.81,0.69],[9.19,{"t":"5","g":62,"s":7},0.81,0.55],[9.19,{"t":"7","g":65,"s":7},0.81,0.61],[10.0,{"t":"B","g":43,"s":7},2.0,0.84],[12.0,{"t":"B","g":45,"s":9},1.23,0.88],[13.19,{"t":"R","g":57,"s":9},0.81,0.79],[13.19,{"t":"3","g":60,"s":9},0.81,0.67],[13.19,{"t":"5","g":64,"s":9},0.81,0.62],[13.19,{"t":"7","g":67,"s":9},0.81,0.69],[14.0,{"t":"B","g":45,"s":9},2.0,0.84]],[[0.0,{"t":"R","g":58,"s":10},3.99,0.73],[0.0,{"t":"3","g":62,"s":10},3.99,0.64],[0.0,{"t":"5","g":65,"s":10},3.99,0.55],[0.0,{"t":"7","g":69,"s":10},3.99,0.67],[0.0,{"t":"B","g":46,"s":10},6.0,0.83],[4.0,{"t":"R","g":58,"s":10},2.0,0.75],[4.0,{"t":"3","g":62,"s":10},2.0,0.66],[4.0,{"t":"5","g":65,"s":10},2.0,0.59],[4.0,{"t":"7","g":69,"s":10},2.0,0.71],[6.0,{"t":"B","g":46,"s":10},2.0,0.73],[7.19,{"t":"R","g":58,"s":10},0.81,0.7],[7.19,{"t":"3","g":62,"s":10},0.81,0.55],[7.19,{"t":"5","g":65,"s":10},0.81,0.54],[7.19,{"t":"7","g":69,"s":10},0.81,0.68],[8.0,{"t":"B","g":45,"s":9},2.0,0.85],[9.19,{"t":"R","g":57,"s":9},0.81,0.75],[9.19,{"t":"3","g":61,"s":9},0.81,0.57],[9.19,{"t":"5","g":64,"s":9},0.81,0.6],[9.19,{"t":"7","g":67,"s":9},0.81,0.62],[10.0,{"t":"B","g":45,"s":9},2.0,0.75],[12.0,{"t":"R","g":57,"s":9},3.99,0.84],[12.0,{"t":"3","g":49,"s":9},4.0,0.74],[12.0,{"t":"3","g":61,"s":9},4.0,0.67],[12.0,{"t":"5","g":64,"s":9},4.0,0.67],[12.0,{"t":"7","g":67,"s":9},4.0,0.75]],[[0.0,{"t":"7","g":60,"s":2},3.99,0.86],[0.0,{"t":"3","g":65,"s":2},3.99,0.74],[0.0,{"t":"5","g":69,"s":2},3.99,0.81],[0.0,{"t":"B","g":50,"s":2},6.0,0.84],[4.0,{"t":"7","g":60,"s":2},2.0,0.86],[4.0,{"t":"3","g":65,"s":2},2.0,0.81],[4.0,{"t":"5","g":69,"s":2},2.0,0.81],[6.0,{"t":"B","g":50,"s":2},2.0,0.84],[7.19,{"t":"7","g":60,"s":2},0.83,0.83],[7.19,{"t":"3","g":65,"s":2},0.95,0.69],[7.19,{"t":"5","g":69,"s":2},1.0,0.78],[8.0,{"t":"R","g":53,"s":5},2.0,0.79],[9.19,{"t":"5","g":60,"s":5},0.91,0.87],[9.19,{"t":"3","g":69,"s":5},1.06,0.73],[9.19,{"t":"R","g":65,"s":5},1.18,0.62],[9.19,{"t":"7","g":63,"s":5},1.21,0.85],[10.0,{"t":"R","g":53,"s":5},4.0,0.85],[12.0,{"t":"5","g":60,"s":5},4.0,0.88],[12.0,{"t":"7","g":63,"s":5},4.0,0.84],[12.0,{"t":"R","g":65,"s":5},4.0,0.79],[12.0,{"t":"3","g":69,"s":5},4.0,0.85],[14.0,{"t":"R","g":53,"s":5},2.0,0.86]]];
+const PHR_JCHG=[[0.0,{"t":"B","g":43,"s":7},1.23,0.84],[1.19,{"t":"R","g":55,"s":7},0.81,0.77],[1.19,{"t":"3","g":58,"s":7},0.81,0.69],[1.19,{"t":"5","g":62,"s":7},0.81,0.55],[1.19,{"t":"7","g":65,"s":7},0.81,0.61],[2.0,{"t":"B","g":43,"s":7},2.0,0.84]];
 const ARPS = {
   // 和音（左手のルート・5度・オクターブ＋その上に3和音）を8分で刻む。普段はブリッジミュートで短く、アクセントだけ伸ばす
   hardrock:{name:'ロック（刻み）', pro:'8分刻み（ブリッジミュート）', rhAbove:true, ev:[[0,[0,4,5,1,2,3],3.5,.95,'d'],[4,[0,4,5,1,2,3],.7,.5,'d'],[6,[0,4,5,1,2,3],1.8,.88,'d'],[8,[0,4,5,1,2,3],.7,.55,'d'],[10,[0,4,5,1,2,3],.7,.5,'d'],[12,[0,4,5,1,2,3],1.8,.88,'d'],[14,[0,4,5,1,2,3],1.8,.84,'d']]},
   // キー名 rhodes は保存データとの互換のため（中身はネオソウル風のピアノ）
   // jazzy.mid から：左手は拍の頭、右手は4声のコードで、2拍目の裏（16分）に短く入れる。
   // 小節の途中でコードが変わるときは、左手が拍の頭・右手が16分あとに入る（chgEv）
-  rhodes: {name:'ジャジー', pro:'ネオソウル・コンピング（16分）', legato:true, ev:[[0,[0],6,.8],[0,RH,4,.7],[4,RH,2,.64],[6,[0],2,.66],[7,RH,.8,.62],[8,[0],2,.74],[9,RH,.8,.64],[10,[0],2,.68],[12,RH,4,.72],[14,[0],2,.66]],
-           chgEv:[[0,[0],2,.8],[1,RH,.8,.7],[2,[0],2,.72]], chgLen:4},
+  rhodes: {name:'ジャジー', pro:'ネオソウル・コンピング（16分）', legato:true, phrase:true, colors:'79', vars:PHR_JAZ, chgEv:PHR_JCHG, chgLen:4},
   house:  {name:'ズンチャ（ダンス）', pro:'裏拍シンセ（サイドチェイン）', legato:true, ev:[[0,ALL,2,.3],[2,RH,2,.85],[4,ALL,2,.3],[6,RH,2,.85],[8,ALL,2,.3],[10,RH,2,.85],[12,ALL,2,.3],[14,RH,2,.85]]},
   whole:  {name:'のばす（ジャーン）', pro:'白玉（全音符）', ev:[[0,ALL,16,.75]]},
   // pops.mid から：右手は4分で短めに、左手は1拍目と3拍目、その前の8分裏（2拍目裏・4拍目裏）でつなぐ
-  piano4: {name:'ピアノ（定番）', pro:'4分刻み（左手は裏でつなぐ）', ev:[[0,[0],4,.66],[0,RH,2.2,.62],[4,RH,1.8,.56],[6,[0],2,.5],[8,[0],4,.62],[8,RH,2.2,.6],[12,RH,1.8,.56],[14,[0],2,.5]]},
+  piano4: {name:'ピアノ（定番）', pro:'4分刻み（左手は裏でつなぐ）', legato:true, ev:[[0,[0],6,.7],[0,RH,4,.66],[4,RH,4,.6],[6,[0],2,.55],[8,[0],6,.68],[8,RH,4,.64],[12,RH,4,.6],[14,[0],2,.55]]},   // 長さはペダルを踏んでいる長さ
   // norinori.mid から：コードは8分前に食って（pushBy）次の小節へのばし、そのあいだを8分の分散和音でつなぐ
   popanti:{name:'ピアノ（前のめり）', pro:'8分食い（コードを先取り）', legato:true, pushBy:2,
-           ev:[[0,[0],8,.72],[0,RH,6,.7],[2,[1],2,.5],[4,[2],2,.52],[6,[3],2,.55],[8,[0],6,.74],[8,RH,6,.72],[10,[1],4,.48],[12,[2],2,.5]],
+           ev:[[0,[0],8,.72],[0,RH,8,.7],[2,[1],6,.5],[4,[2],4,.52],[6,[3],2,.55],[8,[0],6,.74],[8,RH,6,.72],[10,[1],4,.48],[12,[2],2,.5]],   // 長さはペダル（8と14で踏みかえ）
            pushEv:[[0,[0],10,.78],[0,RH,10,.76]]},
   // ballade.mid から：左手はルートをのばし、右手は1拍目に和音、そのあと8分で下から1音ずつ重ねていく（ペダルでのばしたまま）
-  pballad:{name:'ピアノバラード', pro:'バラード（右手の分散和音）', legato:true, rhAbove:true, restart:true,
-           ev:[[0,[0],16,.68],[0,RH,2,.6],[2,[1],14,.48],[4,[2],12,.5],[6,[3],10,.52],[8,[6],8,.55],[12,[3],4,.42],[14,[2],2,.4]]},
+  pballad:{name:'ピアノバラード', pro:'バラード（右手の分散和音）', legato:true, restart:true, phrase:true, colors:'9', vars:PHR_BALL},
   ballad: {name:'ポロロン（バラード）', pro:'アルペジオ（バラード）', legato:true, restart:true, ev:[[0,[0],16,.6],[0,RH,6,.52],[2,[4],14,.45],[4,[5],12,.48],[6,[1],10,.5],[8,[2],8,.54],[10,[3],6,.52],[12,[7],4,.5],[14,[6],2,.45]]},   // ballade.mid の左手の分散和音から
   sync:   {name:'リズミカル', pro:'シンコペ（付点8分）', ev:[[0,ALL,3,.8],[3,RH,.7,.72],[6,ALL,2,.78],[10,RH,2,.72],[14,ALL,2,.86]]},
   sync16: {name:'リズミカル（細かめ）', pro:'16分シンコペ', ev:[[0,ALL,1,.82],[3,RH,.6,.6],[6,RH,1,.72],[8,[0],2,.65],[10,RH,.6,.68],[11,RH,2.5,.78],[14,RH,.6,.62]]},
@@ -1174,7 +1178,7 @@ function newMy(kind,from){        // from: もとにするパターンのキー�
     if(kind==='drum'){ const d=DRUMS[from]; if(d){ fill=d.fill||null; DRUM_ROWS.forEach(([k])=>{ if(d.v[k]) [...d.v[k]].forEach((c,st)=>{ const vel=VEL[c]||0; if(vel) notes.push({r:k,st,len:1,vel}); }); }); } }
     else if(kind==='bass'){ const src=from==='auto'||!BASSES[from] ? DRUMS[state.drum].bass : BASSES[from].v;
       (src||[]).forEach(([st,iv,len,vel,slide])=>{ const r=String(iv===7?'5':iv); if(BASS_ROWS.some(([k])=>k===r)&&st<16) notes.push({r,st,len:Math.max(1,Math.min(Math.round(len*2)/2,16-st)),vel,slide:!!slide}); }); }
-    else { const a=ARPS[from]; if(a) a.ev.forEach(([st,ns,len,vel])=>ns.forEach(r=>{ const rr=r>5&&r<9?r-5:r; if(KEY_ROWS.some(([k])=>k===rr)&&st<16) notes.push({r:String(rr),st,len:Math.max(.5,Math.min(len,16-st)),vel}); })); }
+    else { const a=ARPS[from]; if(a) a.ev.forEach(([st0,ns,len,vel])=>{ const st=Math.round(st0); evIdx(ns).forEach(r=>{ const rr=r>5&&r<9?r-5:r; if(KEY_ROWS.some(([k])=>k===rr)&&st<16) notes.push({r:String(rr),st,len:Math.max(.5,Math.min(len,16-st)),vel}); }); }); }
   }
   const m={name, notes:kind==='drum'?notes:tidyNotes(notes)}; if(kind==='drum') m.fill=fill??null;
   list.push(m);
@@ -1331,8 +1335,13 @@ const BASSES={
   DRUM_ORDER.forEach(k=>{ const v=DRUMS[k].bass; if(!v||have.has(JSON.stringify(v))) return; have.add(JSON.stringify(v));
     BASSES['d_'+k]={name:NAME[k]||DRUMS[k].pro||DRUMS[k].name, v}; }); })();
 const bassList=dr=>(state.pro&&state.bassPat&&state.bassPat!=='auto'&&BASSES[state.bassPat])?BASSES[state.bassPat].v:dr.bass;
-for(const k in ARPS){ const m={}; ARPS[k].ev.forEach(e=>{ (m[e[0]]=m[e[0]]||[]).push(e); }); ARPS[k].at=m;
-  if(ARPS[k].chgEv){ const c={}; ARPS[k].chgEv.forEach(e=>{ (c[e[0]]=c[e[0]]||[]).push(e); }); ARPS[k].chgAt=c; } }
+const atMap=evs=>{ const m={}; evs.forEach(e=>{ const k=Math.floor(e[0]); (m[k]=m[k]||[]).push(e); }); return m; };
+for(const k in ARPS){ const A=ARPS[k]; if(A.phrase){ A.ev=A.vars[0]; A.atVars=A.vars.map(atMap); }
+  const m=atMap(ARPS[k].ev); ARPS[k].at=m;
+  if(ARPS[k].chgEv) ARPS[k].chgAt=atMap(ARPS[k].chgEv); }
+// フレーズの音を、表示用の段（0=左手根音 4=左手5度 5=左手8度 1〜3=右手 下・中・上）に置きかえる
+const phraseRow=o=>o.g<53 ? (o.t==='5'?4:(o.t==='B'||o.t==='R')&&o.g<48?0:5) : o.g<62?1:o.g<67?2:3;
+const evIdx=ns=>Array.isArray(ns)?ns:[phraseRow(ns)];
 const INSTS={spiano:'シンセピアノ',synth:'シンセ',
   piano:'ピアノ',nylon:'ガットギター',eguitar:'エレキギター',dist:'ひずみギター',organ:'オルガン',pad:'シンセパッド'};
 const SYNTH_INST={spiano:'piano',synth:'synth'};
@@ -2324,8 +2333,34 @@ const antOf=i=>{ if(!state.pro&&!SHARE_VIEW) return 0; const a=state.ant?state.a
 const rawShiftOf=(i,h)=>{ if(!state.pro&&!SHARE_VIEW) return null; const a=h?((segsOf(i)[h-1]||{}).ant):(state.ant||[])[i]; return a==null?null:a; };
 const shiftOf=(i,h)=>{ if(!state.pro&&!SHARE_VIEW) return 0; if(!h) return antOf(i); const sg=segsOf(i)[h-1]; return (sg&&sg.ant)||0; };
 const shiftMark=a=>a>0?'←食':a<0?'後→':'';
+// MIDI から写したフレーズの1音：いまのコードの中で同じ役割の音を、元と同じくらいの高さで選ぶ
+const SCALE7=[0,2,4,5,7,9,11];
+function phrasePitch(o,bt,pat){
+  const k=keyObj(), rpc=bt.rpc, has=x=>bt.ivs.some(i=>i%12===x), inKey=pc=>SCALE7.includes((pc-k.pc+12)%12), col=pat.colors||'';
+  let pc; const t=o.t;
+  if(t==='B') pc=bt.bpc;
+  else if(t==='R') pc=rpc;
+  else if(t==='3') pc=rpc+bt.third;
+  else if(t==='5') pc=rpc+bt.fifth;
+  else if(t==='7') pc= has(10)?rpc+10 : has(11)?rpc+11 : col.includes('7')&&bt.q!=='m-5' ? rpc+bt.seventh : rpc;   // 7度がないコードは根音（ジャジーはキーの音階の7度を足す）
+  else if(t==='9') pc= has(2)?rpc+2 : has(1)?rpc+1 : has(3)&&bt.third!==3?rpc+3 : col.includes('9')&&inKey(rpc+2)&&(bt.q==='maj'||bt.q==='m') ? rpc+2 : rpc;   // add9 の響き（キーの音階にあるときだけ）
+  else if(t==='6') pc= has(9)?rpc+9 : rpc+bt.fifth;
+  else if(t==='11') pc= has(5)?rpc+5 : rpc+bt.third;
+  else { const sc=SCALE7.map(x=>(k.pc+x)%12), di=x=>{ x=((x%12)+12)%12; let i=sc.indexOf(x); return i>=0?i:sc.indexOf((x+11)%12); };
+    pc=sc[(di(rpc)+(+t.slice(1)))%7]; }   // 経過音：根音から音階でいくつ上か（キーの音階の中で）
+  pc=((pc%12)+12)%12;
+  const ref=t==='B'?bt.bpc:rpc, delta=((ref-o.s)%12+18)%12-6, target=o.g+delta;
+  return target+((pc-target%12+18)%12-6);
+}
 function playEvents(evs,bt,ct,sd,pat){
   const tones=bt.tones, notes=[];
+  if(evs.some(e=>!Array.isArray(e[1]))){   // フレーズ（MIDI の写し）
+    const done=new Set();
+    evs.forEach(e=>{ if(Array.isArray(e[1])) return; const m=phrasePitch(e[1],bt,pat), at=ct+(e[0]-Math.floor(e[0]))*sd, key=m+'@'+at.toFixed(3);
+      if(done.has(key)) return; done.add(key);
+      const hv=1+(Math.random()-.5)*.1, w=(state.bass&&m<48)?.55:1;
+      const g=keyTone(m, at, e[2]*sd, COMP_LEVEL*1.15*e[3]*w*hv); if(g) held.push({g,end:at+e[2]*sd*1.4+.5}); });
+    evs=evs.filter(e=>Array.isArray(e[1])); if(!evs.length) return; }
   const RHS=new Set([1,2,3,6,7,8]);
   evs.forEach(([st0,ns0,len,vel,dir])=>{
     let ns=ns0;
@@ -2388,7 +2423,7 @@ function playBass(list,s,t,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,v
 // パターンを続けたままコードを変えるとき：その位置の音＋その瞬間に伸びている音（新しいコードで弾き直す）
 let PUSHCONT=false;
 function contEvs(pat,pi){ const now=pat.at[pi]||[], have=new Set(now.flatMap(e=>e[1]));
-  const hold=(pat.ev||[]).filter(e=>e[0]<pi && e[0]+e[2]>pi).map(e=>[pi,e[1].filter(x=>!have.has(x)),e[0]+e[2]-pi,e[3]*.9,e[4]]).filter(e=>e[1].length);
+  const hold=(pat.ev||[]).filter(e=>e[0]<pi && e[0]+e[2]>pi).map(e=>[pi,Array.isArray(e[1])?e[1].filter(x=>!have.has(x)):e[1],e[0]+e[2]-pi,e[3]*.9,e[4]]).filter(e=>!Array.isArray(e[1])||e[1].length);
   return [...now,...hold]; }
 function contBass(bl,bi){ if(bl.some(e=>e[0]===bi)) return {list:bl,bi};
   const h=bl.find(e=>e[0]<bi && e[0]+e[2]>bi); return h ? {list:[[bi,h[1]==='ap'?0:h[1],h[0]+h[2]-bi,h[3]*.9]],bi} : {list:bl,bi:0}; }
@@ -2403,7 +2438,9 @@ function scheduleStep(g,t){
   if(dr.duck && compBus && !CAPTURE && s%4===0){ const gg=compBus.gain; gg.cancelScheduledValues(tt); gg.setValueAtTime(1,tt); gg.linearRampToValueAtTime(.18,tt+.008); gg.setTargetAtTime(1,tt+.03,sd*.9); }
   else if(!dr.duck && compBus && !CAPTURE && s===0 && compBus.gain.value<.99){ compBus.gain.cancelScheduledValues(tt); compBus.gain.setValueAtTime(1,tt); }
   if(state.fill && dr.F && s===0 && b%4===0 && b>0) drum(49,tt,.6);
-  const pat=ARPS[state.arp], ct=t+((dr.swing||pat.swing)&&s%4===2?sd*.34:0)+(dr.swing16&&s%2===1?sd*.3:0);   // シャッフル系は裏拍を跳ねさせる
+  const pat=ARPS[state.arp];
+  if(pat.phrase){ const vi=b%pat.vars.length; pat.ev=pat.vars[vi]; pat.at=pat.atVars[vi]; }   // MIDI の小節を順番に弾き分ける
+  const ct=pat.phrase ? t : t+((dr.swing||pat.swing)&&s%4===2?sd*.34:0)+(dr.swing16&&s%2===1?sd*.3:0);   // フレーズは MIDI のタイミングそのまま   // シャッフル系は裏拍を跳ねさせる
   const bassOf=bb=>bassList(dr);
   // いま鳴らすコード（マス i の中の何番目のコードか）
   const i=Math.floor(g/L), off=g%L, cells=cellsOf(i), ci=cells.findIndex(c=>off>=c.off&&off<c.off+c.len), cell=cells[ci], rel=off-cell.off;
@@ -2585,7 +2622,7 @@ function drawArpBar(g,x,y,w,h,a,c,col,n=16){
   const sw=w/n, rh=h/9, r=devicePixelRatio||1, ROW={0:0,4:1,5:2,1:3,2:4,3:5,6:6,7:7,8:8};
   g.fillStyle=col.line; for(let i=4;i<n;i+=4) g.fillRect(x+i*sw,y+2*r,1*r,h-4*r);
   g.fillStyle=c;
-  a.ev.forEach(([st,ns,len,vel])=>{ if(st>=n) return; ns.forEach(ix=>{
+  a.ev.forEach(([st,ns,len,vel])=>{ if(st>=n) return; evIdx(ns).forEach(ix=>{
     const l=Math.min(len,n-st); g.globalAlpha=.35+.65*vel;
     rr(g,x+st*sw+r*.5,y+(8-ROW[ix])*rh+rh*.12,Math.max(l*sw-1*r,1.5*r),rh*.76,1.2*r); g.fill(); }); });
   g.globalAlpha=1;
