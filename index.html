@@ -3285,11 +3285,41 @@ function unpackSong(o){ if(!o||!Array.isArray(o.slots)) return false;
   rebuildMy(); if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4';
   if(!INSTS[state.inst]) state.inst='piano'; if(!KITS[state.kit]) state.kit='std';
   state.slots=Array.from({length:16},(_,i)=>state.slots[i]??null); state.segs=Array.from({length:16},(_,i)=>(state.segs||[])[i]||[]); state.ant=Array.from({length:16},(_,i)=>(state.ant||[])[i]??null);
-  state.pro=!!state.pro; document.body.classList.toggle('pro',state.pro); page=0; selected=null;
+  state.pro=!!state.pro; document.body.classList.toggle('pro',state.pro); page=0; selected=null; try{ applyMix(); }catch(e){}
   $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save(); ensureSounds(); return true; }
 const b64e=str=>{ const u=new TextEncoder().encode(str); let b=''; u.forEach(c=>b+=String.fromCharCode(c)); return btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); };
 const b64d=t=>{ const b=atob(t.replace(/-/g,'+').replace(/_/g,'/')); return new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0))); };
-const shareUrl=o=>location.origin+location.pathname+'#s='+b64e(JSON.stringify(o));
+// 短いリンク：「#c=コード,コード,…&t=テンポ&y=伴奏スタイル…」。初期値と同じものは書かない
+const tokE=v=> v==null?'_' : isNum(v)?String(v) : '~'+[v.o,v.q,v.x||'',v.b??''].map(x=>encodeURIComponent(String(x))).join('.').replace(/\.+$/,'');
+const tokD=t=>{ if(t==='_'||t==='') return null; if(t[0]!=='~') return +t; const [o,q,x,b]=t.slice(1).split('.').map(decodeURIComponent); return {o:+o,q:q??'',x:x||'',b:(b===undefined||b==='')?null:+b}; };
+const MIX0=m=>!m||Object.values(m).every(c=>!c||((c.v??1)===1&&!c.m&&!c.s));
+function shortHash(o){ const P=[];
+  const segs=o.segs||[], ant=o.ant||[];
+  P.push('c='+o.slots.map((v,i)=>tokE(v)+(ant[i]?'@'+ant[i]:'')+(segs[i]||[]).map(g=>'|'+g.beat+':'+tokE(g.v)+(g.ant?'@'+g.ant:'')).join('')).join(','));
+  P.push('t='+o.bpm);
+  const y=STYLES.findIndex(st=>st.drum===o.drum&&st.arp===o.arp&&st.inst===o.inst&&st.kit===o.kit&&(st.bass!==false)===!!o.bass&&(st.bassSnd||'bass')===(o.bassSnd||'bass'));
+  if(y>=0 && !o.myDrum && !o.myArp) P.push('y='+y);
+  else { P.push('d='+encodeURIComponent(o.drum),'a='+encodeURIComponent(o.arp),'i='+o.inst,'m='+o.kit); if(!o.bass) P.push('b=0'); if((o.bassSnd||'bass')!=='bass') P.push('n='+o.bassSnd); }
+  if(o.key&&o.key!=='C') P.push('k='+KEYS.findIndex(k=>k.id===o.key));
+  if(o.len&&o.len!==4) P.push('l='+o.len);
+  if(o.fill) P.push('f=1');
+  if(o.pro) P.push('P=1');
+  if(o.bassPat&&o.bassPat!=='auto'&&!o.myBass) P.push('p='+encodeURIComponent(o.bassPat));
+  if(o.mix&&!MIX0(o.mix)) P.push('x='+b64e(JSON.stringify(o.mix)));
+  const my={}; ['myDrum','myArp','myBass'].forEach(k=>{ if(o[k]) my[k]=o[k]; }); if(Object.keys(my).length) P.push('j='+b64e(JSON.stringify(my)));
+  return P.join('&'); }
+function parseShort(h){ const q={}; h.split('&').forEach(kv=>{ const i=kv.indexOf('='); if(i>0) q[kv.slice(0,i)]=kv.slice(i+1); });
+  if(q.c===undefined) return null;
+  const slots=[], segs=[], ant=[];
+  q.c.split(',').forEach(cell=>{ const [head,...rest]=cell.split('|'); const [t,a]=head.split('@'); slots.push(tokD(t)); ant.push(a?+a:null);
+    segs.push(rest.map(r=>{ const c=r.indexOf(':'), [tv,ga]=r.slice(c+1).split('@'); const g={beat:+r.slice(0,c),v:tokD(tv)}; if(ga) g.ant=+ga; return g; })); });
+  const o={v:2,slots,segs,ant,bars:slots.length,bpm:+q.t||96,key:q.k?(KEYS[+q.k]||KEYS[0]).id:'C',len:+q.l||4,fill:q.f==='1',pro:q.P==='1',bassPat:q.p?decodeURIComponent(q.p):'auto',mix:q.x?JSON.parse(b64d(q.x)):{}};
+  const st=q.y!==undefined?STYLES[+q.y]:null;
+  if(st) Object.assign(o,{drum:st.drum,arp:st.arp,inst:st.inst,kit:st.kit,bass:st.bass!==false,bassSnd:st.bassSnd||'bass'});
+  else Object.assign(o,{drum:decodeURIComponent(q.d||'pop'),arp:decodeURIComponent(q.a||'piano4'),inst:q.i||'piano',kit:q.m||'std',bass:q.b!=='0',bassSnd:q.n||'bass'});
+  if(q.j) Object.assign(o,JSON.parse(b64d(q.j)));
+  return o; }
+const shareUrl=o=>location.origin+location.pathname+'#'+shortHash(o);
 function toast(t){ const el=$('toast'); el.textContent=t; el.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>el.hidden=true,2600); }
 async function shareSong(o,name){
   const url=shareUrl(o), title=(name||$('progName').textContent||'コード進行')+'｜コード進行パレット';
@@ -3404,10 +3434,11 @@ armed($('resetAll'),'もう一度押すと全部戻します',()=>{ if(playing) 
 $('menuBtn').addEventListener('click',renderSongs);
 // 共有リンクから開いたとき：その進行を読み込む（チュートリアルは自動では出さない）
 let OPENED_SHARE=false;
-(()=>{ let h=location.hash; try{ h=decodeURIComponent(h); }catch(e){}
-  const m=h.match(/[#&]s=([A-Za-z0-9_+\/-]+)/) || location.search.match(/[?&]s=([A-Za-z0-9_+\/-]+)/); if(!m) return;
+(()=>{ const raw=location.hash.replace(/^#/,''); let h=raw; try{ h=decodeURIComponent(raw); }catch(e){}
+  const isShort=/^c=/.test(raw)||/^c=/.test(h);
+  const m=isShort?null:(h.match(/[#&]?s=([A-Za-z0-9_+\/-]+)/) || location.search.match(/[?&]s=([A-Za-z0-9_+\/-]+)/)); if(!isShort && !m) return;
   OPENED_SHARE=true;   // 共有リンクから来たら、読み込めなくてもタイトル画面は出さない
-  try{ const o=JSON.parse(b64d(m[1]));
+  try{ const o=isShort ? parseShort(/^c=/.test(raw)?raw:h) : JSON.parse(b64d(m[1])); if(!o) throw 0;
     // 開く前に自分の作りかけの曲があれば「保存した進行」に残しておく
     if(state.slots.some(v=>v!=null)){ const a=loadSongs(); a.unshift({name:'共有リンクを開く前の曲（'+new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+'）',date:Date.now(),data:packSong()}); saveSongs(a); }
     if(unpackSong(o)){ OPENED_SHARE=true; SHARE_VIEW=true; renderAll(); setTimeout(()=>toast('共有された曲を開きました（すべての機能を使えます）'),400); } }catch(e){ setTimeout(()=>toast('リンクを読み込めませんでした（リンクが途中で切れているかもしれません）'),400); }
