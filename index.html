@@ -499,6 +499,9 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .varnow.T{--fn:var(--t)}.varnow.S{--fn:var(--s)}.varnow.D{--fn:var(--d)}
 .flipgrid{display:flex;flex-direction:column;gap:10px;width:100%}
 .halfbox{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.halfbox.ins{display:flex}.halfbox.ins>.tc{flex:1 1 0;min-width:0}
+.halfbox.ins>.tc.new{animation:wedge .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--wd)}
+@keyframes wedge{0%{flex-grow:0;max-width:0;opacity:0;transform:translateY(-16px) scale(.7);border-width:0}60%{opacity:1}100%{flex-grow:1;max-width:100%;opacity:1;transform:none}}
 .halfbox .tc{min-width:0;padding:8px 0}
 .halfbox .tc b{font-size:clamp(.75rem,3.6vw,1.1rem);white-space:nowrap}
 .lvtitle .unl{margin-top:6px;font-size:.78rem;color:var(--muted)}
@@ -2968,16 +2971,20 @@ const L_SLIDES={
      ${segExHTML('half',.4)}
      <div class="exnote"><p class="a" style="--dl:1.2;--fn:var(--d)">コードの切り替わりが細かくなると、進行に勢いが出ます。</p><p class="a" style="--dl:1.5;--fn:var(--ink)">あいだに入る、つなぎ役のコードを「経過和音（けいかわおん）」と呼びます。</p><p class="a" style="--dl:1.8;--fn:var(--t)">置いてあるコードの<b>右側</b>にドラッグすると、3拍目からのコードを入れられます。</p></div>
      ${listenBtn('half')}`},
-    {html:()=>`<div class="eyebrow a">組み合わせる</div>
-     <h2 class="a" style="--dl:.1">シンプルな4コードに<br>ひと味足す</h2>
+    {html:()=>`<div class="eyebrow a">組み合わせる①</div>
+     <h2 class="a" style="--dl:.1">分数コードを挟んで<br>なめらかに</h2>
      ${segExHTML('halfBase',.4)}
-     <p class="sub a" style="--dl:.7">もとの進行：1小節に1つずつ</p>
-     ${segExHTML('halfSlash',1)}
-     <p class="sub a" style="--dl:1.3"><b>分数コードを挟む</b>：ベースが ド→シ→ラ→ソ→ファ と1歩ずつ下りて、<b>なめらか</b>に</p>
-     ${segExHTML('halfFlip',1.6)}
-     <p class="sub a" style="--dl:1.9"><b>m を外したコードを挟む</b>：どれも次の小節のコード（4つ目）へ進むので、<b>ぐっと引き寄せられておしゃれ</b>に</p>
-     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${listenBtn('halfBase').replace('聴いてみる','もとの進行')}${listenBtn('halfSlash').replace('聴いてみる','分数コード')}${listenBtn('halfFlip').replace('聴いてみる','m を外したコード')}</div>
-     <p class="sub a" style="--dl:2.2">後半に挟むコードは、次のコードへの<b>つなぎ役</b>。聴き比べてみましょう。</p>`},
+     <p class="sub a" style="--dl:.6">もとの進行</p>
+     ${insExHTML('halfSlash',1,1.7)}
+     <p class="a" style="--dl:2.4">5/7 と 1/5 を挟むと、ベースが<br><b>ド→シ→ラ→ソ→ファ</b> と1歩ずつ下ります。</p>
+     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${listenBtn('halfBase').replace('聴いてみる','もとの進行')}${listenBtn('halfSlash').replace('聴いてみる','挟んだ進行')}</div>`},
+    {html:()=>`<div class="eyebrow a">組み合わせる②</div>
+     <h2 class="a" style="--dl:.1">m を外したコードを挟んで<br>おしゃれに</h2>
+     ${segExHTML('halfBase',.4)}
+     <p class="sub a" style="--dl:.6">もとの進行</p>
+     ${insExHTML('halfFlip',1,1.7)}
+     <p class="a" style="--dl:2.4">どれも<b>次の小節のコード（4つ目）</b>へ進むので、<br>ぐっと引き寄せられます。</p>
+     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${listenBtn('halfBase').replace('聴いてみる','もとの進行')}${listenBtn('halfFlip').replace('聴いてみる','挟んだ進行')}</div>`},
     {coach:'task', task:'split'}],
 };
 Object.assign(EX,{
@@ -2986,6 +2993,11 @@ Object.assign(EX,{
   halfFlip:{degs:[0,5,3,4], segs:{0:[{beat:3,v:SP(4,'maj','7')}],1:[{beat:3,v:SP(0,'maj','7')}],2:[{beat:3,v:SP(2,'maj','7')}]}, roles:['T','T','S','D'], roles2:['D','D','D'], groups:[], style:'バラード', bpm:80},
 });
 EX.half.roles2=['D','D','T','D'];
+// もとの4コードに、後半のコードが割って入るお手本（wd 秒後に、右から押し広げて入ってくる）
+function insExHTML(key,dl,wd){ const ex=EX[key];
+  return `<div class="exrow a" data-ex="${key}" style="--dl:${dl};grid-template-columns:repeat(4,minmax(0,1fr))">${ex.degs.map((d,k)=>{ const sg=(ex.segs[k]||[])[0];
+    return sg ? `<span class="halfbox ins" data-ti="${k}"><span class="tc ${ex.roles[k]}" data-hear="${HEAR(d)}"><b>${nm(d)}</b></span><span class="tc new ${(ex.roles2||[])[k]||''}" style="--wd:${wd+k*.25}s" data-hear="${HEAR(sg.v)}"><b>${nm(sg.v)}</b></span></span>`
+      : `<span class="tc ${ex.roles[k]}" data-ti="${k}" data-hear="${HEAR(d)}"><b>${nm(d)}</b><small>${ex.roles[k]}</small></span>`; }).join('')}</div>`; }
 // 1小節に2つのコードが入るお手本（マスを前半・後半に分けて表示）。各コードはタップで鳴らせる
 function segExHTML(key,dl){ const ex=EX[key];
   return `<div class="exrow a" data-ex="${key}" style="--dl:${dl};grid-template-columns:repeat(4,minmax(0,1fr))">${ex.degs.map((d,k)=>{ const sg=(ex.segs[k]||[])[0];
