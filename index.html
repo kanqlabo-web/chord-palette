@@ -679,7 +679,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.118（2026-10-23）</p>
+    <p class="appver">ver 1.119（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -746,7 +746,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.118（2026-10-23）</p>
+  <p class="appver">ver 1.119（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -944,7 +944,8 @@ const LABELS={num:'数字',roman:'ローマ数字',alpha:'アルファベット'
 // 音の番号: 0=左手 1〜3=右手（低→高） 4=左手5度 5=左手オクターブ 6〜8=右手のオクターブ上 9,10=右手4音目
 function voiceFor(pcs,prev,minLo=56,accTop=null){
   const n=Math.min(pcs.length,4), cands=[];
-  for(let lo=minLo;lo<=minLo+12;lo++){ if(!pcs.includes(lo%12)) continue;   // 右手の一番下の音：A♭3〜A♭4
+  const hiLo = accTop!=null ? Math.max(minLo+12, accTop) : minLo+12;   // アクセントのあとは、上へつなげられるよう高い形も候補に入れる
+  for(let lo=minLo;lo<=hiLo;lo++){ if(!pcs.includes(lo%12)) continue;   // 右手の一番下の音：ふだんは A♭3〜A♭4
     const v=[lo]; for(let k=1;k<n;k++){ let m=v[k-1]+1; while(!pcs.includes(m%12)||v.some(x=>x%12===m%12)) m++; v.push(m); }
     cands.push(v); }
   // 前の和音に近い形を選ぶ。ただし真ん中の音域（平均E4付近）から離れすぎないように罰点をつける
@@ -952,10 +953,11 @@ function voiceFor(pcs,prev,minLo=56,accTop=null){
   const ref=prev||[58,63,67,70], dist=a=>a.reduce((s,m,i)=>s+Math.abs(m-(ref[i]??ref[ref.length-1]+3)),0)
     + 2*Math.max(0,Math.abs(a.reduce((s,m)=>s+m,0)/a.length-64)-2.5)*a.length;
   cands.sort((a,b)=>dist(a)-dist(b));
-  // 直前にアクセント（高い音）で終わったときは、いちばん上の音がそのアクセントの近く（少し下〜少し上）に来る形を選んで、上でつなげる
-  if(accTop!=null){ const top=a=>a[a.length-1], up=cands.filter(a=>top(a)>=accTop-2 && top(a)<=accTop+4);
-    if(up.length){ up.sort((a,b)=>Math.abs(top(a)-accTop)-Math.abs(top(b)-accTop)||dist(a)-dist(b)); return up[0]; } }
-  return cands[0];
+  // 直前の最後の音がアクセント（高い音）だったときは、次の和音のいちばん上の音をアクセントと同じか少し上（〜5半音）に上げて、上でつなげる
+  if(accTop!=null){ const top=a=>a[a.length-1], pick=f=>{ const up=cands.filter(f); up.sort((a,b)=>Math.abs(top(a)-accTop)-Math.abs(top(b)-accTop)||dist(a)-dist(b)); return up[0]; };
+    const r=pick(a=>top(a)>=accTop && top(a)<=accTop+5) || pick(a=>top(a)>=accTop-2 && top(a)<accTop);
+    if(r) return r; }
+  return cands.filter(a=>a[0]<=minLo+12)[0]||cands[0];
 }
 // ---- ギターのボイシング：標準チューニング（E2 A2 D3 G3 B3 E4）で、実際に押さえられる形を探す
 // ・いちばん低い弦がベース音（ルート／分数コードはその音）。それより低い弦はミュート、上は1弦まで全部鳴らす
