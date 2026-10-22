@@ -691,7 +691,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.147（2026-10-23）</p>
+    <p class="appver">ver 1.148（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -758,7 +758,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.147（2026-10-23）</p>
+  <p class="appver">ver 1.148（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1600,7 +1600,7 @@ const STYLES=[
   {id:4, name:'バラード', bpm:72, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true},
   {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
   {id:17, name:'壮大', bpm:110, wide:true, drum:'epic', arp:'epic', inst:'strings3', arp2:'alberti', inst2:'piano', kit:'orch', bass:true, bassSnd:'ubass'},
-  {id:18, name:'シティポップ', bpm:108, drum:'city', arp:'clavfunk', inst:'clav', arp2:'brassobb', inst2:'brass3', kit:'std', bass:true, bassSnd:'slap3'},
+  {id:18, name:'シティポップ', bpm:108, drum:'city', arp:'clavfunk', inst:'clav', arp2:'brassobb', inst2:'brass3', kit:'cityB', bass:true, bassSnd:'slap3'},
   {id:9, name:'ファンキー', bpm:104, drum:'sixteen', arp:'offbeat', inst:'eguitar', kit:'std', bass:true},
   {id:11, name:'ジャジー', bpm:100, drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
   {id:19, name:'ローファイ', bpm:80, drum:'lofi', arp:'lofi', inst:'lofi', kit:'lofi', bass:true, bassSnd:'ubass'},
@@ -1677,7 +1677,7 @@ const instShort=()=>INSTS[state.inst]+(!state.pro&&state.arp2&&ARPS[state.arp2]?
 // 音色・ドラムの音のジャンル分け（選ぶ画面で見出しをつけて並べる）
 const INST_GROUPS=[['ピアノ',['piano','epiano','clav','clav2','clav3','lofi','spiano','organ']],['ギター',['steel','nylon','eguitar','dist']],
   ['オーケストラ',['strings3','horn','glock']],['管楽器',['brass3','trumpet','trombone','sax']],['電子音',['synth','pad']],['和楽器',['koto','shami']]];
-const KIT_GROUPS=[['バンド',['std','room','power','brush']],['電子',['elec','tr808','synth']],['そのほか',['orch','lofi']]];
+const KIT_GROUPS=[['バンド',['std','room','power','brush']],['シティポップ',['cityB','cityA','cityD']],['電子',['elec','tr808','synth']],['そのほか',['orch','lofi']]];
 // 場所を取らないよう、まずジャンルを選び、その中の音色だけを並べる（いま選んでいる音色のジャンルに印）
 function groupPick(el, G, names, cur, onPick){
   const gs=G.map(([h,ks])=>[h,ks.filter(k=>names[k])]).filter(g=>g[1].length), used=new Set(gs.flatMap(g=>g[1]));
@@ -1704,7 +1704,7 @@ function applyMix(){ if(!ctx||!drumBus) return;
 const BASS_SNDS={bass:'エレキベース',ubass:'ウッドベース（コントラバス）',slap3:'はじくベース（スラップ）',sbass:'電子音のベース'};   // はじくベースは聴き比べて JCLive に決定
 const BASS_ALIAS={slap:'slap3',slap2:'slap3',slap4:'slap3',slap5:'slap3',slap6:'slap3'}; const fixBass=v=>BASS_ALIAS[v]||v;
 const BASS_FX={bass:{gain:1,cut:2200},slap3:{gain:.8,cut:1900,loop:true},ubass:{gain:1.15,cut:1800},sbass:{gain:.75,cut:3200,loop:true}};
-const KITS={orch:'オーケストラの太鼓',std:'ふつうのドラム',room:'よく響くドラム',power:'力強いドラム',brush:'やさしいドラム（ブラシ）',lofi:'こもったドラム',elec:'電子ドラム',tr808:'ヒップホップ風（808）',synth:'ピコピコ電子ドラム'};
+const KITS={cityB:'シティポップのドラムA',cityA:'シティポップのドラムB',cityD:'シティポップのドラムC',orch:'オーケストラの太鼓',std:'ふつうのドラム',room:'よく響くドラム',power:'力強いドラム',brush:'やさしいドラム（ブラシ）',lofi:'こもったドラム',elec:'電子ドラム',tr808:'ヒップホップ風（808）',synth:'ピコピコ電子ドラム'};
 // 有名なコード進行の名前。数字＝ダイアトニック（0=Ⅰ 1=Ⅱm 2=Ⅲm 3=Ⅳ 4=Ⅴ 5=Ⅵm 6=Ⅶm-5）、文字＝それ以外のコード（CHROM）
 const CHROM={III7:{o:4,q:'maj',x:'7'}, bVII:{o:10,q:'maj',x:''}, bVI:{o:8,q:'maj',x:''}, IVm:{o:5,q:'m',x:''}, Vm:{o:7,q:'m',x:''}, II7:{o:2,q:'maj',x:'7'}, VI7:{o:9,q:'maj',x:'7'}};
 // コード進行ライブラリ（Key C で書いたものを、キーからの度数で持つ）。c=分類 q=元のコードの並び p=マス segs=3拍目からのコード
@@ -2679,7 +2679,10 @@ function legatoVoice(lv,m,t,dur){
 }
 const DRUM_VOL={36:1.15,37:.75,38:.9,42:.3,46:.22,49:.28,51:.26,50:.8,47:.8,45:.85};
 function drum(note,t,vel=1){ if(CAPTURE){ CAPTURE.push({k:'drum',n:note,t,d:.1,v:vel}); return; } OUT=playing?drumBus:null; drumIn(note,t,vel); OUT=null; }
+// ドラムの音ごとの大きさの調整（ほかのキットとそろえる）。シティポップのドラムは JCLive の音源で、キックとスネアが大きめなので下げる
+const KIT_GAIN={cityA:{36:.5,38:.62,42:1.05,46:1.05},cityB:{36:.52,38:.62,42:1.8,46:1.4},cityD:{36:.67,38:.95,42:1.7,46:1.4}};
 function drumIn(note,t,vel=1){
+  const KG=KIT_GAIN[state.kit]; if(KG&&KG[note]) vel*=KG[note];
   const lofi=state.kit==='lofi', kit=LOADED['kit-'+(lofi?'std':state.kit)];
   if(kit&&kit[note]){ const sv=OUT; if(lofi) OUT=lofiDrum(OUT||master); const ok=playZone(kit[note],note,t,note===49?2.5:1.2,DRUM_VOL[note]*vel*(lofi?.9:1),.25); OUT=sv; if(ok) return; }
   const f={36:kick,37:rim,38:snare,42:t=>hat(t,vel>.7),46:ohat,49:t=>noise(t,'highpass',6000,1.2,.1*vel),51:t=>noise(t,'bandpass',6500,.4,.07*vel,2),
