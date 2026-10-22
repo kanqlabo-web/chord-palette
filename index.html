@@ -691,7 +691,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.149（2026-10-23）</p>
+    <p class="appver">ver 1.150（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -758,7 +758,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.149（2026-10-23）</p>
+  <p class="appver">ver 1.150（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -2680,33 +2680,34 @@ function legatoVoice(lv,m,t,dur){
 const DRUM_VOL={36:1.15,37:.75,38:.9,42:.3,46:.22,49:.28,51:.26,50:.8,47:.8,45:.85};
 function drum(note,t,vel=1){ if(CAPTURE){ CAPTURE.push({k:'drum',n:note,t,d:.1,v:vel}); return; } OUT=playing?drumBus:null; drumIn(note,t,vel); OUT=null; }
 // ドラムの音ごとの大きさの調整（ほかのキットとそろえる）。シティポップのドラムは JCLive の音源で、キックとスネアが大きめなので下げる
-const KIT_GAIN={cityD:{36:.67,38:.95,42:1.7,46:1.4},city:{36:1.1,38:1.05,42:.9,46:.9}};
+const KIT_GAIN={cityD:{36:.67,38:.95,42:1.7,46:1.4},city:{36:.8,38:.85,42:.85,46:.85}};
 const KIT_ALIAS={cityA:'city',cityB:'city'}; const fixKit=v=>KIT_ALIAS[v]||v;
-// シティポップのドラム：きれいな FluidR3 のスタンダードを加工して、80年代のように乾いて締まった音に。
-// キックは短く・低音とアタックを足す、スネアは短いゲートリバーブ（パッと広がってスッと切れる残響）、全体を軽くコンプで押さえる
+// シティポップのドラム：きれいな FluidR3 のスタンダードを加工して、80年代の「くしゃっ」とした軽い音に。
+// 低音は控えめ・音圧は上げない。スネアは胴鳴りを削って紙っぽいアタック（1.8kHz）を出し、軽くひずませ、短い小さな残響を少しだけ
 let CITYD=null;
 function cityDrum(dest,note){
   if(!CITYD||CITYD.ctx!==ctx) CITYD={ctx,m:new Map()};
   let c=CITYD.m.get(dest);
-  if(!c){ const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-20; comp.ratio.value=4; comp.attack.value=.004; comp.release.value=.12; comp.knee.value=6;
-    const out=ctx.createGain(); out.gain.value=1.25; comp.connect(out); out.connect(dest);
-    const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=38; hp.connect(comp);
-    const kLow=ctx.createBiquadFilter(); kLow.type='peaking'; kLow.frequency.value=65; kLow.Q.value=1; kLow.gain.value=4;
-    const kClick=ctx.createBiquadFilter(); kClick.type='peaking'; kClick.frequency.value=3500; kClick.Q.value=1.2; kClick.gain.value=4; kLow.connect(kClick); kClick.connect(hp);
-    const sBody=ctx.createBiquadFilter(); sBody.type='peaking'; sBody.frequency.value=220; sBody.Q.value=1; sBody.gain.value=3;
-    const sAir=ctx.createBiquadFilter(); sAir.type='highshelf'; sAir.frequency.value=6000; sAir.gain.value=3; sBody.connect(sAir); sAir.connect(hp);
-    // ゲートリバーブ：0.2秒ほどの密な残響を、急に切る
-    const sr=ctx.sampleRate, L=Math.floor(sr*.22), ir=ctx.createBuffer(2,L,sr);
-    for(let ch=0;ch<2;ch++){ const d=ir.getChannelData(ch); for(let i=0;i<L;i++){ const x=i/L; d[i]=(Math.random()*2-1)*(x<.85?1-.3*x:(1-x)/.15*.75)*.5; } }
-    const cv=ctx.createConvolver(); cv.buffer=ir; const wet=ctx.createGain(); wet.gain.value=.32; sAir.connect(cv); cv.connect(wet); wet.connect(comp);
-    const other=ctx.createBiquadFilter(); other.type='highshelf'; other.frequency.value=8000; other.gain.value=2; other.connect(hp);
+  if(!c){ const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=2.5; comp.attack.value=.01; comp.release.value=.15; comp.knee.value=10;
+    const out=ctx.createGain(); out.gain.value=.85; comp.connect(out); out.connect(dest);
+    const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=55; hp.connect(comp);
+    const sat=ctx.createWaveShaper(); const N=1024, cv0=new Float32Array(N); for(let i=0;i<N;i++){ const x=i/(N-1)*2-1; cv0[i]=Math.tanh(1.6*x)/Math.tanh(1.6); } sat.curve=cv0; sat.connect(hp);   // 軽いひずみ（くしゃっと）
+    const kLow=ctx.createBiquadFilter(); kLow.type='lowshelf'; kLow.frequency.value=90; kLow.gain.value=-3;
+    const kClick=ctx.createBiquadFilter(); kClick.type='peaking'; kClick.frequency.value=2500; kClick.Q.value=1; kClick.gain.value=2; kLow.connect(kClick); kClick.connect(sat);
+    const sBody=ctx.createBiquadFilter(); sBody.type='peaking'; sBody.frequency.value=200; sBody.Q.value=1; sBody.gain.value=-4;
+    const sCrack=ctx.createBiquadFilter(); sCrack.type='peaking'; sCrack.frequency.value=1800; sCrack.Q.value=1.2; sCrack.gain.value=4;
+    const sTop=ctx.createBiquadFilter(); sTop.type='lowpass'; sTop.frequency.value=9000; sBody.connect(sCrack); sCrack.connect(sTop); sTop.connect(sat);
+    const sr=ctx.sampleRate, L=Math.floor(sr*.14), ir=ctx.createBuffer(2,L,sr);
+    for(let ch=0;ch<2;ch++){ const d=ir.getChannelData(ch); for(let i=0;i<L;i++){ const x=i/L; d[i]=(Math.random()*2-1)*Math.pow(1-x,2)*.5; } }
+    const cv=ctx.createConvolver(); cv.buffer=ir; const wet=ctx.createGain(); wet.gain.value=.16; sTop.connect(cv); cv.connect(wet); wet.connect(hp);
+    const other=ctx.createBiquadFilter(); other.type='peaking'; other.frequency.value=7000; other.Q.value=.8; other.gain.value=1.5; other.connect(sat);
     c={kick:kLow, snare:sBody, other}; CITYD.m.set(dest,c); }
   return note===36?c.kick : (note===38||note===37)?c.snare : c.other; }
 function drumIn(note,t,vel=1){
   const KG=KIT_GAIN[state.kit]; if(KG&&KG[note]) vel*=KG[note];
   const lofi=state.kit==='lofi', city=state.kit==='city', kit=LOADED['kit-'+(lofi||city?'std':state.kit)];
   if(kit&&kit[note]){ const sv=OUT; if(lofi) OUT=lofiDrum(OUT||master); if(city) OUT=cityDrum(OUT||master,note);
-    const dur = city ? (note===36?.32:note===38?.38:note===42?.12:note===49?2:.9) : (note===49?2.5:1.2);   // シティポップは短く締める
+    const dur = city ? (note===36?.26:note===38?.3:note===42?.1:note===49?1.6:.7) : (note===49?2.5:1.2);   // シティポップは短く締める
     const ok=playZone(kit[note],note,t,dur,DRUM_VOL[note]*vel*(lofi?.9:1),city?.07:.25); OUT=sv; if(ok) return; }
   const f={36:kick,37:rim,38:snare,42:t=>hat(t,vel>.7),46:ohat,49:t=>noise(t,'highpass',6000,1.2,.1*vel),51:t=>noise(t,'bandpass',6500,.4,.07*vel,2),
     50:t=>tom(t,220),47:t=>tom(t,160),45:t=>tom(t,115)}[note]; if(f) f(t);
