@@ -589,6 +589,7 @@ body.tutlite .gstrip{visibility:hidden}
 .coach .dim rect{transition:x .35s,y .35s,width .35s,height .35s}
 .coach .bubble{position:fixed;max-width:420px;margin:0;
   background:var(--surface);color:var(--ink);border-radius:16px;padding:14px 16px;box-shadow:0 12px 30px rgba(0,0,0,.25);pointer-events:auto;transition:top .35s,left .35s}
+.coach.dragging .bubble{opacity:.12;pointer-events:none;transition:opacity .15s}
 .coach .bubble p{margin:0 0 10px;font-size:.92rem;line-height:1.6;font-weight:500}
 .coach .bbtns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .coach .bbtns button{border:0;border-radius:10px;padding:9px 16px;font:inherit;font-weight:700;background:var(--ink);color:var(--bg);cursor:pointer}
@@ -1933,7 +1934,9 @@ function begin(e, source){
   drag={source,x0:e.clientX,y0:e.clientY,moving:false,ghost:null,over:null};
   try{ e.target.setPointerCapture(e.pointerId); }catch(_){}
 }
-palette.addEventListener('pointerdown',e=>{ const t=e.target.closest('.tile'); if(t) begin(e,{type:'tile',deg:+t.dataset.deg}); });
+palette.addEventListener('pointerdown',e=>{ const t=e.target.closest('.tile'); if(t){ $('coach').classList.add('dragging'); begin(e,{type:'tile',deg:+t.dataset.deg}); } });
+// コードをドラッグしている間は、説明の吹き出しを薄くして、下のマスにはめられるようにする
+['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,()=>$('coach').classList.remove('dragging'),true));
 slotsEl.addEventListener('pointerdown',e=>{
   if(e.target.closest('.x')) return;
   const s=e.target.closest('.slot'); if(!s) return;
@@ -2385,16 +2388,22 @@ function scheduleStep(g,t){
   }
   if(!document.hidden) visQ.push({t,b:i,s:off,L,beat:g%4===0,abs:playedSteps,g});
 }
+// 1周で止めるときの締め：最初のコードを「ジャーン」と長く鳴らす（キック＋シンバル、ベースはルート）
+function endHit(t){ const c=cellsOf(0)[0], v=c&&c.v; if(v==null) return;
+  const bt=chordNotes(v,lastR), sd=stepDur(), pat=ARPS[state.arp]||{};
+  choke(t); chokeBass(t); playEvents([[0,[0,1,2,3,4],14,.9,'d']], bt, t, sd, pat);
+  if(state.bass) bassTone(bt.bass, t, sd*14, .95);
+  if(state.drum!=='none'){ drum(36,t,.9); drum(49,t,.8); } }
 function tick(){
   // 最初のチュートリアルのあと、はじめて1周聴き終わったら止めて「雰囲気のつくり方」の案内を出す
   if(!TUT.on && MOODPOP.pending && playedSteps>=state.bars*slotSteps()){
-    if(!MOODPOP.stopping){ MOODPOP.stopping=true; const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+400;
+    if(!MOODPOP.stopping){ MOODPOP.stopping=true; endHit(nextTime); const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+900;
       setTimeout(()=>{ MOODPOP.stopping=false; MOODPOP.pending=false; if(playing) stop(); showMoodPop(); },ms); }
     return;
   }
   // チュートリアル中は、進行を1周したら止める
   if(TUT.on && playedSteps>=TUT.loopLen){
-    if(!TUT.stopping){ TUT.stopping=true; const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+500;
+    if(!TUT.stopping){ TUT.stopping=true; endHit(nextTime); const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+900;
       TUT.stopT=setTimeout(()=>{ TUT.stopping=false; if(playing) stop(); const f=TUT.onLoopEnd; TUT.onLoopEnd=null; if(f) f(); },ms); }
     return;
   }
@@ -3070,6 +3079,10 @@ function coach(target, text, btns, keepLite){
       cands.push([cx,r.bottom+M],[cx,r.top-M-h]); });
     rects.forEach(r=>{ const cy=clampY((r.top+r.bottom)/2-h/2); cands.push([r.right+M+8,cy],[r.left-M-8-W,cy]); });
     let pos=cands.find(([x,y])=>fits(x,y));
+    // 2か所を抜いていて、どこにも収まらないとき（スマホでパレットとマスを両方見せるなど）は、最後に渡した場所（マス）に重ならない位置を優先
+    const ov=(r,x,y)=>Math.max(0,Math.min(r.right,x+W)-Math.max(r.left,x))*Math.max(0,Math.min(r.bottom,y+h)-Math.max(r.top,y));
+    if(!pos && rects.length>1){ const last=rects[rects.length-1], cx=clampX(VW/2-W/2);
+      pos=[[cx,12],[cx,VH-h-12],[cx,clampY(last.top-M-h)],[cx,clampY(last.bottom+M)]].map(p=>[p,ov(last,...p)*1000+rects.slice(0,-1).reduce((a,r)=>a+ov(r,...p),0)]).sort((a,b)=>a[1]-b[1])[0][0]; }
     if(!pos){ const r=rects[0], below=(r.top+r.bottom)/2<VH/2; pos=[clampX(VW/2-W/2), below?Math.min(VH-h-12,r.bottom+12):Math.max(12,r.top-12-h)]; }
     bub.style.left=pos[0]+'px'; bub.style.top=pos[1]+'px'; });
 }
@@ -3103,7 +3116,7 @@ function runCoach(kind){
   if(kind==='place'){
     tutLoad([]);
     const done=()=>[0,1,2,3].every(k=>state.slots[k]!==null&&state.slots[k]!==undefined);
-    const show=()=>coach(wideLayout()?[palette,slotsEl]:unionRect(palette,slotsEl), done() ? 'いいですね！4つ並びました。' : (wideLayout()?'左のパレットから、右の4つのマスに':'上のパレットから、下の4つのマスに')+'好きなコードをドラッグしてはめてみましょう。<br><small>（タップして選んでから、マスをタップしてもOK）</small>', done()?[backBtn(),nextBtn()]:[backBtn(),['あとで',()=>showSlide(TUT.i+1),true]]);
+    const show=()=>coach([palette,slotsEl], done() ? 'いいですね！4つ並びました。' : (wideLayout()?'左のパレットから、右の4つのマスに':'上のパレットから、下の4つのマスに')+'好きなコードをドラッグしてはめてみましょう。<br><small>（タップして選んでから、マスをタップしてもOK）</small>', done()?[backBtn(),nextBtn()]:[backBtn(),['あとで',()=>showSlide(TUT.i+1),true]]);
     show(); let was=done(); TUT.wait=setInterval(()=>{ const d=done(); if(d!==was){ was=d; show(); } },300);
   } else if(kind==='play'){
     if(![0,1,2,3].every(k=>state.slots[k]!=null)) tutLoad([0,4,5,3]);
@@ -3118,7 +3131,7 @@ function runCoach(kind){
     if(!TUT.moodInit){ const b=JSON.parse(TUT.backup);
       Object.assign(state,{label:b.label,key:b.key,guide:b.guide,pro:b.pro}); document.body.classList.toggle('pro',!!state.pro);
       tutLoadEx({degs:[],style:m.style,bpm:m.bpm}); TUT.moodInit=true; }
-    const tgt=()=>wideLayout()?[palette,slotsEl]:unionRect(palette,slotsEl), quit=['やめる',()=>endTutorial(true),true];
+    const tgt=()=>[palette,slotsEl], quit=['やめる',()=>endTutorial(true),true];
     const show=()=>{
       if(playing) coach([slotsEl,$('play')], `♪ 再生中……<br>「${m.name}」な感じになっているかな？`, [quit]);
       else if(!moodDone()) coach(tgt(), `お題：<b>「${m.name}」</b>な進行を作ってみましょう。<br><small>ヒント：${m.hint}</small>`, [backBtn(),quit]);
