@@ -679,7 +679,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.116（2026-10-23）</p>
+    <p class="appver">ver 1.117（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -689,7 +689,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <input type="search" id="libQ" placeholder="名前・雰囲気・数字で探す" autocomplete="off">
     <div class="libcats" id="libCats"></div>
     <div class="libtags" id="libTags"></div>
-    <p class="small libnote">再生ボタンで試し聴き、「使う」でマスに入れます（いまのマスは置きかわります）。</p>
+    <p class="small libnote">再生ボタンで今の伴奏のまま1周試し聴き、「使う」でマスに入れます（いまのマスは置きかわります）。</p>
     <div class="liblist" id="libList"></div>
   </div>
 </div>
@@ -746,7 +746,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.116（2026-10-23）</p>
+  <p class="appver">ver 1.117（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1873,13 +1873,21 @@ const PDEG=t=>typeof t==='number'?DEG[t].num: typeof t==='string'?(({III7:'3(7)'
 // ---------- コード進行ライブラリ（別画面） ----------
 const LIB_CATS=[['all','すべて'],['I','1 から始まる'],['IV','4 から始まる'],['VIm','6m から始まる'],['other','そのほか'],['25','ツーファイブ']];
 const LIB_TAGS=[...new Set(PRESETS.flatMap(p=>p.tags||[]))];
-const LIB={cat:'all',tag:null,playing:null,timers:[]};
+const LIB={cat:'all',tag:null,playing:null,timers:[],bk:null,stopping:false,endT:null};
 const libName=t=>nameOf(tokSpec(t), state.label==='alpha'?'alpha':numK(), false).replace('-5','♭5');
-function libStop(){ LIB.timers.forEach(clearTimeout); LIB.timers=[]; LIB.playing=null; document.querySelectorAll('.libplay.on').forEach(b=>{ b.classList.remove('on'); b.innerHTML=ico('play'); }); }
+// 試し聴き：いまの伴奏（ドラム・コード・ベース）でその進行を1周演奏して、最初のコードで締める。
+// マスの中身は一時的に入れ替えるだけで、止めたら元に戻す（保存もしない）
+function libStop(){ LIB.timers.forEach(clearTimeout); LIB.timers=[]; LIB.playing=null; clearTimeout(LIB.endT);
+  const bk=LIB.bk; LIB.bk=null; LIB.stopping=false;
+  if(bk){ if(playing) stop(); Object.assign(state,bk); renderPages(); }
+  document.querySelectorAll('.libplay.on').forEach(b=>{ b.classList.remove('on'); b.innerHTML=ico('play'); }); }
 function libPlay(i,btn){ const was=LIB.playing; libStop(); if(was===i) return; if(playing) stop();
-  const seq=PRESETS[i].q||PRESETS[i].p, gap=60/state.bpm*2*1000; LIB.playing=i; btn.classList.add('on'); btn.innerHTML=ico('stop');
-  ensureSounds(); seq.forEach((t,k)=>LIB.timers.push(setTimeout(()=>preview(tokSpec(t)),k*gap)));
-  LIB.timers.push(setTimeout(libStop,seq.length*gap+200)); }
+  const e=PRESETS[i]; LIB.bk={bars:state.bars,len:state.len,slots:state.slots,segs:state.segs,ant:state.ant};
+  state.bars=e.p.length; state.len=4;
+  state.slots=Array.from({length:16},(_,j)=>e.p[j]!==undefined?tokSpec(e.p[j]):null);
+  state.segs=Array.from({length:16},(_,j)=>((e.segs||{})[j]||[]).map(g=>({beat:g.beat,v:tokSpec(g.v)})));
+  state.ant=Array(16).fill(null);
+  LIB.playing=i; btn.classList.add('on'); btn.innerHTML=ico('stop'); play(); }
 function libUse(i){ const e=PRESETS[i]; libStop(); if(playing) stop();
   state.bars=e.p.length; state.len=4;
   state.slots=Array.from({length:16},(_,j)=>e.p[j]!==undefined?tokSpec(e.p[j]):null);
@@ -2623,6 +2631,12 @@ function tick(){
       setTimeout(()=>{ if(playing){ playing=false; stop(); } setTimeout(()=>endExport(true),2600); },ms+100); }
     return;
   }
+  // コード一覧の試し聴きは、1周したら最初のコードで締めて止める
+  if(LIB.bk && playedSteps>=state.bars*slotSteps()){
+    if(!LIB.stopping){ LIB.stopping=true; endHit(nextTime); const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+1600;
+      LIB.endT=setTimeout(()=>{ if(LIB.bk) libStop(); },ms); }
+    return;
+  }
   // 最初のチュートリアルのあと、はじめて1周聴き終わったら止めて「雰囲気のつくり方」の案内を出す
   if(!TUT.on && MOODPOP.pending && playedSteps>=state.bars*slotSteps()){
     if(!MOODPOP.stopping){ MOODPOP.stopping=true; endHit(nextTime); const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+900;
@@ -2702,7 +2716,7 @@ async function play(){ ensureAudio(); pendingSound=null; if(starting) return; bg
   $('play').innerHTML=STOP_SVG; $('play').setAttribute('aria-label','停止'); }
 function stop(){ if(EXPORT.on && !EXPORT.stopping) setTimeout(()=>endExport(false),0); if(compBus){ compBus.gain.cancelScheduledValues(0); compBus.gain.setValueAtTime(1,ctx.currentTime); } playing=false; clearInterval(timer); if(tickWorker) tickWorker.postMessage(0); bgStop(); visQ=[]; cur=null; dirty=true;
   $('play').innerHTML=PLAY_SVG; $('play').setAttribute('aria-label','再生'); $('play').classList.remove('beat');
-  slotsEl.querySelectorAll('.slot').forEach(s=>s.classList.remove('now')); renderPages(); }
+  slotsEl.querySelectorAll('.slot').forEach(s=>s.classList.remove('now')); renderPages(); if(LIB.bk) libStop(); }
 $('play').onclick=()=>playing?stop():play();
 $('undoBtn').onclick=$('patUndo').onclick=()=>histGo(-1);
 $('redoBtn').onclick=$('patRedo').onclick=()=>histGo(1);
