@@ -691,7 +691,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.146（2026-10-23）</p>
+    <p class="appver">ver 1.147（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -758,7 +758,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.146（2026-10-23）</p>
+  <p class="appver">ver 1.147（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1299,6 +1299,15 @@ const ARPS = {
                 beat:[[[0,[0],3,.6],[0,RH,2,.7]]],
                 push:[[[0,RH,2,.72],[0,[0],2,.6]]]}},
 
+  // クラビネットの刻み（山下達郎風のシティポップ）：16分を止めずに、和音の「チャッ」とミュートした「ッ」（弦を押さえて止めた短い音）を混ぜる。
+  // 2拍目裏・4拍目（の裏）にアクセント、次のコードへは8分食う
+  clavfunk:{name:'クラビネットの刻み', pro:'16分カッティング（ミュート混じり・8分食い）', legato:false, pushBy:2,
+           sit:{bar:[[[0,RH,.5,.74],[1,[1],.22,.3],[2,RH,.5,.56],[3,RH,.45,.66],[4,[1],.22,.3],[5,RH,.45,.52],[6,RH,1,.78],[7,[1],.22,.32],
+                       [8,RH,.5,.7],[9,[1],.22,.3],[10,RH,.5,.56],[11,RH,.45,.68],[12,[1],.22,.3],[13,RH,.45,.52],[14,RH,1,.78],[15,[1],.22,.32]]],
+                halfA:[[[0,RH,.5,.74],[1,[1],.22,.3],[2,RH,.5,.56],[3,RH,.45,.66],[4,[1],.22,.3],[5,RH,.45,.52],[6,RH,1,.78],[7,[1],.22,.32]]],
+                halfB:[[[0,RH,.5,.72],[1,[1],.22,.3],[2,RH,.5,.56],[3,RH,.45,.66],[4,[1],.22,.3],[5,RH,.45,.52],[6,RH,1,.78],[7,[1],.22,.32]]],
+                beat:[[[0,RH,.5,.72],[1,[1],.22,.3],[2,RH,.5,.56],[3,RH,.45,.64]]],
+                push:[[[0,RH,1,.8],[1,[1],.22,.32]]]}},
   // ローファイ：コードを少し遅らせて、長めにのばす（ゆるい・眠たい感じ）
   lofi:   {name:'ローファイ', pro:'レイドバック（ゆるい和音）', legato:true,
            // 1拍目に和音を置いて、2拍目の裏でそっと弾き直してのばす。左手は1拍目と3拍目だけ
@@ -1334,7 +1343,7 @@ const ARPS = {
   // 2小節目は2拍目の裏で短く「パッ」、そのあと16分のスタッカートで下の方を刻む（コードの音だけで）
   // brass.mid から（ブラスらしく中音域に、4声で厚く）：次のコードを8分食って「プァー↘」（最後にフォール）、2拍目の裏から「テ↑レ↑チャ↑チャ→ラ↓チャ↑」。
   // 2小節目は2拍目の裏で短く「パッ」、そのあと16分のスタッカートで下の方を刻む（コードの音だけで）
-  brassobb:{name:'上もの：パッと合いの手', pro:'上もの：ヒット＋フォール＋オブリ（2小節・8分食い）', legato:true, pushBy:2, rhShift:4, vol:.62,   // vol：パターン全体の大きさ（ほかの楽器に重ねる上ものなので控えめに）
+  brassobb:{name:'上もの：パッと合いの手', pro:'上もの：ヒット＋フォール＋オブリ（2小節・8分食い）', legato:true, pushBy:2, rhShift:4, vol:.72,   // vol：パターン全体の大きさ（ほかの楽器に重ねる上ものなので控えめに）
            sit:{bar:[[[0,[1,2,3,6],3.4,.78,null,'fall'],
                        [6,[2],1,.66],[7,[3],1,.68],[8,[3,6],.5,.74],[9,[3,6],.5,.68],[10,[2,3],.5,.66],[11,[3,6],.5,.74]],
                       [[2,[1,2,3,6],.6,.74],[6,[1],.5,.6],[7,[2],.5,.62],[8,[3],.5,.66],[9,[3],.5,.62],[10,[2],.5,.6],[11,[2],.5,.58],[12,[3],.5,.66],[13,[3],.5,.62]]],
@@ -1576,7 +1585,7 @@ function bindRoll(rows){
     velEl.hidden=true; d=null; commitNotes(); drawNotes(); };
   roll.onpointerup=up; roll.onpointercancel=up;
 }
-const ARP_ORDER=['piano4','popanti','drive','pballad','whole','epic','hardrock','strum','garp','citypop','rhodes','lofi','sync','offbeat','stacc','shuffle','house','bossa','koto','alberti','glockline','brassobb','hornline'];
+const ARP_ORDER=['piano4','popanti','drive','pballad','whole','epic','hardrock','strum','garp','citypop','clavfunk','rhodes','lofi','sync','offbeat','stacc','shuffle','house','bossa','koto','alberti','glockline','brassobb','hornline'];
 // まとめて消したパターン（保存データ・共有リンクは近いものに置きかえる）
 const ARP_ALIAS={ballad:'pballad',sync16:'sync',shuff2:'shuffle',rock8:'hardrock',eighth:'drive'};
 // 通常モードの「伴奏スタイル」：ドラムとコードパターンの組み合わせ
@@ -1591,7 +1600,7 @@ const STYLES=[
   {id:4, name:'バラード', bpm:72, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true},
   {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
   {id:17, name:'壮大', bpm:110, wide:true, drum:'epic', arp:'epic', inst:'strings3', arp2:'alberti', inst2:'piano', kit:'orch', bass:true, bassSnd:'ubass'},
-  {id:18, name:'シティポップ', bpm:108, drum:'city', arp:'citypop', inst:'clav', arp2:'brassobb', inst2:'brass3', kit:'std', bass:true, bassSnd:'slap3'},
+  {id:18, name:'シティポップ', bpm:108, drum:'city', arp:'clavfunk', inst:'clav', arp2:'brassobb', inst2:'brass3', kit:'std', bass:true, bassSnd:'slap3'},
   {id:9, name:'ファンキー', bpm:104, drum:'sixteen', arp:'offbeat', inst:'eguitar', kit:'std', bass:true},
   {id:11, name:'ジャジー', bpm:100, drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
   {id:19, name:'ローファイ', bpm:80, drum:'lofi', arp:'lofi', inst:'lofi', kit:'lofi', bass:true, bassSnd:'ubass'},
@@ -1694,7 +1703,7 @@ function applyMix(){ if(!ctx||!drumBus) return;
 }
 const BASS_SNDS={bass:'エレキベース',ubass:'ウッドベース（コントラバス）',slap3:'はじくベース（スラップ）',sbass:'電子音のベース'};   // はじくベースは聴き比べて JCLive に決定
 const BASS_ALIAS={slap:'slap3',slap2:'slap3',slap4:'slap3',slap5:'slap3',slap6:'slap3'}; const fixBass=v=>BASS_ALIAS[v]||v;
-const BASS_FX={bass:{gain:1,cut:2200},slap3:{gain:.75,cut:4200,loop:true},ubass:{gain:1.15,cut:1800},sbass:{gain:.75,cut:3200,loop:true}};
+const BASS_FX={bass:{gain:1,cut:2200},slap3:{gain:.8,cut:1900,loop:true},ubass:{gain:1.15,cut:1800},sbass:{gain:.75,cut:3200,loop:true}};
 const KITS={orch:'オーケストラの太鼓',std:'ふつうのドラム',room:'よく響くドラム',power:'力強いドラム',brush:'やさしいドラム（ブラシ）',lofi:'こもったドラム',elec:'電子ドラム',tr808:'ヒップホップ風（808）',synth:'ピコピコ電子ドラム'};
 // 有名なコード進行の名前。数字＝ダイアトニック（0=Ⅰ 1=Ⅱm 2=Ⅲm 3=Ⅳ 4=Ⅴ 5=Ⅵm 6=Ⅶm-5）、文字＝それ以外のコード（CHROM）
 const CHROM={III7:{o:4,q:'maj',x:'7'}, bVII:{o:10,q:'maj',x:''}, bVI:{o:8,q:'maj',x:''}, IVm:{o:5,q:'m',x:''}, Vm:{o:7,q:'m',x:''}, II7:{o:2,q:'maj',x:'7'}, VI7:{o:9,q:'maj',x:'7'}};
