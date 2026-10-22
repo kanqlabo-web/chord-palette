@@ -101,13 +101,15 @@ body.pro .edall{display:inline-block}
 body.pro .proedit{display:flex;gap:8px;align-items:center}
 .proedit .chip{background:var(--ink);color:var(--bg);border-color:var(--ink);white-space:nowrap;flex:none}
 .proedit small{font-size:.7rem;color:var(--muted);line-height:1.4}
-.pgrid{display:flex;gap:4px;max-width:560px;margin:0 auto 12px;--rh:26px}
+.pgrid{display:block;max-width:560px;margin:0 auto 12px;--rh:26px}
+.prwrap{display:flex;gap:4px}
+.scenebar{margin:0 0 10px}.scenebar .small{margin:6px 0 0}
 .prlabs{display:flex;flex-direction:column;width:64px;flex:none}
 .prlabs span{height:var(--rh);display:flex;align-items:center;font-size:.6rem;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden}
-.proll{position:relative;flex:1;min-width:0;height:calc(var(--rows) * var(--rh));border-radius:6px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:crosshair;
+.proll{--cols:16;position:relative;flex:1;min-width:0;height:calc(var(--rows) * var(--rh));border-radius:6px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:crosshair;
   background:
-    repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 30%,transparent) 0 1.5px,transparent 1.5px calc(100%/4)),
-    repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px calc(100%/16)),
+    repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 30%,transparent) 0 1.5px,transparent 1.5px calc(100% / var(--cols) * 4)),
+    repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px calc(100% / var(--cols))),
     repeating-linear-gradient(180deg,transparent 0 calc(var(--rh) - 1px),var(--line) calc(var(--rh) - 1px) var(--rh)),
     var(--lane)}
 .prnotes{position:absolute;inset:0;pointer-events:none}
@@ -115,7 +117,7 @@ body.pro .proedit{display:flex;gap:8px;align-items:center}
   background:color-mix(in srgb,var(--t) calc(25% + var(--v) * 60%),var(--surface));overflow:hidden;
   box-shadow:inset -4px 0 0 -2px color-mix(in srgb,var(--ink) 55%,transparent)}
 .prn b{position:absolute;left:2px;bottom:2px;width:3px;border-radius:2px;background:var(--ink);opacity:.7;max-height:calc(100% - 4px)}
-.prn.dr{border-color:var(--ink);background:color-mix(in srgb,var(--ink) calc(20% + var(--v) * 75%),var(--surface));box-shadow:none;margin-left:1px;width:calc(100%/16 - 2px)!important}
+.prn.dr{border-color:var(--ink);background:color-mix(in srgb,var(--ink) calc(20% + var(--v) * 75%),var(--surface));box-shadow:none;margin-left:1px;width:calc(100% / var(--cols) - 2px)!important}
 .prn.dr b{display:none}
 .prn.sel{outline:2px solid var(--d);outline-offset:1px}
 .prn.sl::after{content:'';position:absolute;left:0;top:0;bottom:0;width:9px;background:linear-gradient(to top right,transparent 48%,var(--ink) 50%,transparent 60%);opacity:.8}
@@ -658,7 +660,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.104（2026-10-23）</p>
+    <p class="appver">ver 1.105（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -714,7 +716,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.104（2026-10-23）</p>
+  <p class="appver">ver 1.105（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1086,8 +1088,8 @@ function twice(ev){ return [...ev, ...ev.map(e=>[e[0]+8,...e.slice(1)])]; }
 // bar=1小節ずっと同じコード halfA=小節の前半だけのコード halfB=小節の後半（3拍目）から変わったコード beat=1拍だけのコード
 // 各音は [コードが鳴り始めてからの位置, {t:コードの中の役割, g:元の音の高さ, s:元のコードの根音}, 長さ, 強さ]
 // t: B=ベース（分数コードならその音） R=根音 3=3度 5=5度 7=7度 9=9度 6=6度。コードにない音（7度・9度など）は、いちばん近い構成音に置きかえる
-const SIT_BALL={"bar":[[[0.0,{"t":"5","g":60,"s":5},2.0,0.55],[0.0,{"t":"R","g":65,"s":5},4.0,0.52],[0.0,{"t":"9","g":67,"s":5},6.0,0.41],[0.0,{"t":"3","g":69,"s":5},8.0,0.6],[0.0,{"t":"R","g":53,"s":5},16.0,0.55],[2.0,{"t":"5","g":60,"s":5},14.0,0.55],[4.0,{"t":"R","g":65,"s":5},11.0,0.54],[6.0,{"t":"9","g":67,"s":5},8.0,0.52],[8.0,{"t":"3","g":69,"s":5},8.0,0.55],[14.0,{"t":"9","g":67,"s":5},2.0,0.52],[15.0,{"t":"R","g":65,"s":5},1.0,0.55]],[[0.0,{"t":"R","g":60,"s":0},2.0,0.5],[0.0,{"t":"9","g":62,"s":0},4.0,0.41],[0.0,{"t":"3","g":64,"s":0},6.0,0.43],[0.0,{"t":"5","g":67,"s":0},8.0,0.54],[0.0,{"t":"B","g":52,"s":4},16.0,0.54],[2.0,{"t":"R","g":60,"s":0},14.0,0.5],[4.0,{"t":"9","g":62,"s":0},12.0,0.48],[6.0,{"t":"3","g":64,"s":0},10.0,0.51],[8.0,{"t":"5","g":67,"s":0},8.0,0.54],[14.0,{"t":"7","g":70,"s":0},2.0,0.62],[15.0,{"t":"6","g":69,"s":0},1.0,0.51]],[[0.0,{"t":"R","g":65,"s":5},10.0,0.5],[0.0,{"t":"B","g":41,"s":5},16.0,0.26],[0.0,{"t":"5","g":60,"s":5},16.0,0.45],[0.0,{"t":"3","g":69,"s":5},16.0,0.6],[2.0,{"t":"5","g":48,"s":5},14.0,0.41],[4.0,{"t":"R","g":53,"s":5},12.0,0.44],[6.0,{"t":"9","g":55,"s":5},10.0,0.54],[8.0,{"t":"3","g":57,"s":5},8.0,0.57],[10.0,{"t":"R","g":65,"s":5},6.0,0.41],[12.0,{"t":"5","g":72,"s":5},4.0,0.41],[14.0,{"t":"9","g":67,"s":5},2.0,0.41]],[[0.0,{"t":"R","g":58,"s":10},2.0,0.48],[0.0,{"t":"9","g":60,"s":10},4.0,0.5],[0.0,{"t":"5","g":65,"s":10},6.0,0.55],[0.0,{"t":"B","g":46,"s":10},16.0,0.38],[0.0,{"t":"3","g":62,"s":10},16.0,0.41],[2.0,{"t":"R","g":58,"s":10},14.0,0.48],[4.0,{"t":"9","g":60,"s":10},12.0,0.42],[6.0,{"t":"5","g":65,"s":10},8.0,0.47],[8.0,{"t":"9","g":72,"s":10},8.0,0.45],[14.0,{"t":"5","g":65,"s":10},2.0,0.51]],[[0.0,{"t":"3","g":57,"s":5},2.0,0.45],[0.0,{"t":"5","g":60,"s":5},4.0,0.46],[0.0,{"t":"R","g":65,"s":5},6.0,0.5],[0.0,{"t":"B","g":45,"s":9},16.0,0.45],[2.0,{"t":"3","g":57,"s":5},14.0,0.5],[4.0,{"t":"5","g":60,"s":5},12.0,0.5],[6.0,{"t":"R","g":65,"s":5},10.0,0.51],[8.0,{"t":"5","g":72,"s":5},8.0,0.55],[14.0,{"t":"9","g":67,"s":5},2.0,0.59]]],"halfA":[[[0.0,{"t":"B","g":50,"s":2},8.0,0.5],[0.0,{"t":"3","g":62,"s":10},8.0,0.59],[0.0,{"t":"5","g":65,"s":10},8.0,0.59],[0.0,{"t":"R","g":70,"s":10},8.0,0.55]],[[0.0,{"t":"R","g":55,"s":7},2.0,0.56],[0.0,{"t":"3","g":58,"s":7},4.0,0.44],[0.0,{"t":"5","g":62,"s":7},6.0,0.45],[0.0,{"t":"B","g":43,"s":7},8.0,0.54],[0.0,{"t":"7","g":65,"s":7},8.0,0.43],[2.0,{"t":"R","g":55,"s":7},6.0,0.47],[4.0,{"t":"3","g":58,"s":7},4.0,0.28],[6.0,{"t":"5","g":62,"s":7},2.0,0.49]]],"halfB":[[[0.0,{"t":"9","g":70,"s":9},4.0,0.54],[0.0,{"t":"B","g":49,"s":1},5.83,0.36],[0.0,{"t":"3","g":61,"s":9},8.0,0.5],[0.0,{"t":"5","g":65,"s":9},8.0,0.47],[4.0,{"t":"9","g":70,"s":9},4.0,0.55],[5.5,{"t":"R","g":69,"s":9},2.5,0.52],[7.0,{"t":"7","g":67,"s":9},1.0,0.51]]],"beat":[[[0.0,{"t":"B","g":48,"s":0},4.0,0.38],[0.0,{"t":"R","g":60,"s":0},4.0,0.47],[0.0,{"t":"3","g":65,"s":0},4.0,0.48],[0.0,{"t":"5","g":67,"s":0},4.0,0.55]],[[0.0,{"t":"B","g":48,"s":0},4.0,0.39],[0.0,{"t":"R","g":60,"s":0},4.0,0.44],[0.0,{"t":"3","g":64,"s":0},4.0,0.41],[0.0,{"t":"5","g":67,"s":0},4.0,0.45]]]};
-const SIT_JAZ={"bar":[[[0.0,{"t":"R","g":58,"s":10},3.99,0.75],[0.0,{"t":"3","g":62,"s":10},3.99,0.67],[0.0,{"t":"5","g":65,"s":10},3.99,0.57],[0.0,{"t":"7","g":69,"s":10},3.99,0.69],[0.0,{"t":"B","g":46,"s":10},6.0,0.85],[4.0,{"t":"R","g":58,"s":10},2.0,0.78],[4.0,{"t":"3","g":62,"s":10},2.0,0.69],[4.0,{"t":"5","g":65,"s":10},2.0,0.61],[4.0,{"t":"7","g":69,"s":10},2.0,0.74],[6.0,{"t":"B","g":46,"s":10},2.0,0.75],[7.19,{"t":"R","g":58,"s":10},0.81,0.73],[7.19,{"t":"3","g":62,"s":10},0.81,0.57],[7.19,{"t":"5","g":65,"s":10},0.81,0.56],[7.19,{"t":"7","g":69,"s":10},0.81,0.7],[8.0,{"t":"R","g":58,"s":10},3.99,0.69],[8.0,{"t":"3","g":62,"s":10},3.99,0.62],[8.0,{"t":"5","g":65,"s":10},3.99,0.52],[8.0,{"t":"7","g":69,"s":10},3.99,0.63],[8.0,{"t":"B","g":46,"s":10},6.0,0.78],[12.0,{"t":"R","g":58,"s":10},2.0,0.72],[12.0,{"t":"3","g":62,"s":10},2.0,0.63],[12.0,{"t":"5","g":65,"s":10},2.0,0.56],[12.0,{"t":"7","g":69,"s":10},2.0,0.68],[14.0,{"t":"B","g":46,"s":10},2.0,0.69],[15.190000000000001,{"t":"R","g":58,"s":10},0.81,0.67],[15.190000000000001,{"t":"3","g":62,"s":10},0.81,0.52],[15.190000000000001,{"t":"5","g":65,"s":10},0.81,0.52],[15.190000000000001,{"t":"7","g":69,"s":10},0.81,0.64]],[[0.0,{"t":"5","g":57,"s":2},3.99,0.78],[0.0,{"t":"7","g":60,"s":2},3.99,0.66],[0.0,{"t":"R","g":62,"s":2},3.99,0.74],[0.0,{"t":"3","g":65,"s":2},3.99,0.74],[0.0,{"t":"B","g":50,"s":2},6.0,0.84],[4.0,{"t":"5","g":57,"s":2},2.0,0.8],[4.0,{"t":"7","g":60,"s":2},2.0,0.65],[4.0,{"t":"R","g":62,"s":2},2.0,0.7],[4.0,{"t":"3","g":65,"s":2},2.0,0.71],[6.0,{"t":"B","g":50,"s":2},2.0,0.68],[7.19,{"t":"5","g":57,"s":2},0.81,0.84],[7.19,{"t":"7","g":60,"s":2},0.81,0.62],[7.19,{"t":"R","g":62,"s":2},0.81,0.64],[7.19,{"t":"3","g":65,"s":2},0.81,0.73],[8.0,{"t":"5","g":57,"s":2},3.99,0.72],[8.0,{"t":"7","g":60,"s":2},3.99,0.61],[8.0,{"t":"R","g":62,"s":2},3.99,0.68],[8.0,{"t":"3","g":65,"s":2},3.99,0.68],[8.0,{"t":"B","g":50,"s":2},6.0,0.77],[12.0,{"t":"5","g":57,"s":2},2.0,0.74],[12.0,{"t":"7","g":60,"s":2},2.0,0.6],[12.0,{"t":"R","g":62,"s":2},2.0,0.64],[12.0,{"t":"3","g":65,"s":2},2.0,0.65],[14.0,{"t":"B","g":50,"s":2},2.0,0.63],[15.190000000000001,{"t":"5","g":57,"s":2},0.81,0.77],[15.190000000000001,{"t":"7","g":60,"s":2},0.81,0.57],[15.190000000000001,{"t":"R","g":62,"s":2},0.81,0.59],[15.190000000000001,{"t":"3","g":65,"s":2},0.81,0.67]],[[0.0,{"t":"7","g":60,"s":2},3.99,0.86],[0.0,{"t":"3","g":65,"s":2},3.99,0.74],[0.0,{"t":"5","g":69,"s":2},3.99,0.81],[0.0,{"t":"B","g":50,"s":2},6.0,0.84],[4.0,{"t":"7","g":60,"s":2},2.0,0.86],[4.0,{"t":"3","g":65,"s":2},2.0,0.81],[4.0,{"t":"5","g":69,"s":2},2.0,0.81],[6.0,{"t":"B","g":50,"s":2},2.0,0.84],[7.19,{"t":"7","g":60,"s":2},0.81,0.83],[7.19,{"t":"3","g":65,"s":2},0.81,0.69],[7.19,{"t":"5","g":69,"s":2},0.81,0.78],[8.0,{"t":"7","g":60,"s":2},3.99,0.79],[8.0,{"t":"3","g":65,"s":2},3.99,0.68],[8.0,{"t":"5","g":69,"s":2},3.99,0.75],[8.0,{"t":"B","g":50,"s":2},6.0,0.77],[12.0,{"t":"7","g":60,"s":2},2.0,0.79],[12.0,{"t":"3","g":65,"s":2},2.0,0.75],[12.0,{"t":"5","g":69,"s":2},2.0,0.75],[14.0,{"t":"B","g":50,"s":2},2.0,0.77],[15.190000000000001,{"t":"7","g":60,"s":2},0.81,0.76],[15.190000000000001,{"t":"3","g":65,"s":2},0.81,0.63],[15.190000000000001,{"t":"5","g":69,"s":2},0.81,0.72]]],"halfA":[[[0.0,{"t":"R","g":58,"s":10},3.99,0.75],[0.0,{"t":"3","g":62,"s":10},3.99,0.67],[0.0,{"t":"5","g":65,"s":10},3.99,0.57],[0.0,{"t":"7","g":69,"s":10},3.99,0.69],[0.0,{"t":"B","g":46,"s":10},6.0,0.85],[4.0,{"t":"R","g":58,"s":10},2.0,0.78],[4.0,{"t":"3","g":62,"s":10},2.0,0.69],[4.0,{"t":"5","g":65,"s":10},2.0,0.61],[4.0,{"t":"7","g":69,"s":10},2.0,0.74],[6.0,{"t":"B","g":46,"s":10},2.0,0.75],[7.19,{"t":"R","g":58,"s":10},0.81,0.73],[7.19,{"t":"3","g":62,"s":10},0.81,0.57],[7.19,{"t":"5","g":65,"s":10},0.81,0.56],[7.19,{"t":"7","g":69,"s":10},0.81,0.7]],[[0.0,{"t":"5","g":57,"s":2},3.99,0.78],[0.0,{"t":"7","g":60,"s":2},3.99,0.66],[0.0,{"t":"R","g":62,"s":2},3.99,0.74],[0.0,{"t":"3","g":65,"s":2},3.99,0.74],[0.0,{"t":"B","g":50,"s":2},6.0,0.84],[4.0,{"t":"5","g":57,"s":2},2.0,0.8],[4.0,{"t":"7","g":60,"s":2},2.0,0.65],[4.0,{"t":"R","g":62,"s":2},2.0,0.7],[4.0,{"t":"3","g":65,"s":2},2.0,0.71],[6.0,{"t":"B","g":50,"s":2},2.0,0.68],[7.19,{"t":"5","g":57,"s":2},0.81,0.84],[7.19,{"t":"7","g":60,"s":2},0.81,0.62],[7.19,{"t":"R","g":62,"s":2},0.81,0.64],[7.19,{"t":"3","g":65,"s":2},0.81,0.73]],[[0.0,{"t":"7","g":60,"s":2},3.99,0.86],[0.0,{"t":"3","g":65,"s":2},3.99,0.74],[0.0,{"t":"5","g":69,"s":2},3.99,0.81],[0.0,{"t":"B","g":50,"s":2},6.0,0.84],[4.0,{"t":"7","g":60,"s":2},2.0,0.86],[4.0,{"t":"3","g":65,"s":2},2.0,0.81],[4.0,{"t":"5","g":69,"s":2},2.0,0.81],[6.0,{"t":"B","g":50,"s":2},2.0,0.84],[7.19,{"t":"7","g":60,"s":2},0.81,0.83],[7.19,{"t":"3","g":65,"s":2},0.81,0.69],[7.19,{"t":"5","g":69,"s":2},0.81,0.78]]],"halfB":[[[0.0,{"t":"B","g":45,"s":9},2.0,0.88],[1.19,{"t":"R","g":57,"s":9},0.81,0.78],[1.19,{"t":"3","g":61,"s":9},0.81,0.6],[1.19,{"t":"5","g":64,"s":9},0.81,0.62],[1.19,{"t":"7","g":67,"s":9},0.81,0.64],[2.0,{"t":"B","g":45,"s":9},2.0,0.78],[4.0,{"t":"R","g":57,"s":9},3.99,0.86],[4.0,{"t":"3","g":49,"s":9},4.0,0.76],[4.0,{"t":"3","g":61,"s":9},4.0,0.69],[4.0,{"t":"5","g":64,"s":9},4.0,0.69],[4.0,{"t":"7","g":67,"s":9},4.0,0.78]],[[0.0,{"t":"R","g":53,"s":5},2.0,0.79],[1.19,{"t":"5","g":60,"s":5},0.91,0.87],[1.19,{"t":"3","g":69,"s":5},1.06,0.73],[1.19,{"t":"R","g":65,"s":5},1.18,0.62],[1.19,{"t":"7","g":63,"s":5},1.21,0.85],[2.0,{"t":"R","g":53,"s":5},4.0,0.85],[4.0,{"t":"5","g":60,"s":5},4.0,0.88],[4.0,{"t":"7","g":63,"s":5},4.0,0.84],[4.0,{"t":"R","g":65,"s":5},4.0,0.79],[4.0,{"t":"3","g":69,"s":5},4.0,0.85],[6.0,{"t":"R","g":53,"s":5},2.0,0.86]]],"beat":[[[0.0,{"t":"B","g":43,"s":7},1.23,0.84],[1.19,{"t":"R","g":55,"s":7},0.81,0.77],[1.19,{"t":"3","g":58,"s":7},0.81,0.69],[1.19,{"t":"5","g":62,"s":7},0.81,0.55],[1.19,{"t":"7","g":65,"s":7},0.81,0.61],[2.0,{"t":"B","g":43,"s":7},2.0,0.84]],[[0.0,{"t":"B","g":45,"s":9},1.23,0.88],[1.19,{"t":"R","g":57,"s":9},0.81,0.79],[1.19,{"t":"3","g":60,"s":9},0.81,0.67],[1.19,{"t":"5","g":64,"s":9},0.81,0.62],[1.19,{"t":"7","g":67,"s":9},0.81,0.69],[2.0,{"t":"B","g":45,"s":9},2.0,0.84]]]};
+const SIT_BALL={"bar":[[[0.0,{"t":"5","g":61,"s":5},2.0,0.55],[0.0,{"t":"R","g":66,"s":5},4.0,0.52],[0.0,{"t":"9","g":68,"s":5},6.0,0.41],[0.0,{"t":"3","g":70,"s":5},8.0,0.6],[0.0,{"t":"R","g":54,"s":5},16.0,0.55],[2.0,{"t":"5","g":61,"s":5},14.0,0.55],[4.0,{"t":"R","g":66,"s":5},11.0,0.54],[6.0,{"t":"9","g":68,"s":5},8.0,0.52],[8.0,{"t":"3","g":70,"s":5},8.0,0.55],[14.0,{"t":"9","g":68,"s":5},2.0,0.52],[15.0,{"t":"R","g":66,"s":5},1.0,0.55]],[[0.0,{"t":"R","g":60,"s":0},2.0,0.5],[0.0,{"t":"9","g":62,"s":0},4.0,0.41],[0.0,{"t":"3","g":64,"s":0},6.0,0.43],[0.0,{"t":"5","g":67,"s":0},8.0,0.54],[0.0,{"t":"B","g":52,"s":4},16.0,0.54],[2.0,{"t":"R","g":60,"s":0},14.0,0.5],[4.0,{"t":"9","g":62,"s":0},12.0,0.48],[6.0,{"t":"3","g":64,"s":0},10.0,0.51],[8.0,{"t":"5","g":67,"s":0},8.0,0.54],[14.0,{"t":"7","g":70,"s":0},2.0,0.62],[15.0,{"t":"6","g":69,"s":0},1.0,0.51]],[[0.0,{"t":"R","g":67,"s":5},10.0,0.5],[0.0,{"t":"B","g":43,"s":5},16.0,0.26],[0.0,{"t":"5","g":62,"s":5},16.0,0.45],[0.0,{"t":"3","g":71,"s":5},16.0,0.6],[2.0,{"t":"5","g":50,"s":5},14.0,0.41],[4.0,{"t":"R","g":55,"s":5},12.0,0.44],[6.0,{"t":"9","g":57,"s":5},10.0,0.54],[8.0,{"t":"3","g":59,"s":5},8.0,0.57],[10.0,{"t":"R","g":67,"s":5},6.0,0.41],[12.0,{"t":"5","g":74,"s":5},4.0,0.41],[14.0,{"t":"9","g":69,"s":5},2.0,0.41]],[[0.0,{"t":"R","g":60,"s":10},2.0,0.48],[0.0,{"t":"9","g":62,"s":10},4.0,0.5],[0.0,{"t":"5","g":67,"s":10},6.0,0.55],[0.0,{"t":"B","g":48,"s":10},16.0,0.38],[0.0,{"t":"3","g":64,"s":10},16.0,0.41],[2.0,{"t":"R","g":60,"s":10},14.0,0.48],[4.0,{"t":"9","g":62,"s":10},12.0,0.42],[6.0,{"t":"5","g":67,"s":10},8.0,0.47],[8.0,{"t":"9","g":74,"s":10},8.0,0.45],[14.0,{"t":"5","g":67,"s":10},2.0,0.51]],[[0.0,{"t":"3","g":59,"s":5},2.0,0.45],[0.0,{"t":"5","g":62,"s":5},4.0,0.46],[0.0,{"t":"R","g":67,"s":5},6.0,0.5],[0.0,{"t":"B","g":47,"s":9},16.0,0.45],[2.0,{"t":"3","g":59,"s":5},14.0,0.5],[4.0,{"t":"5","g":62,"s":5},12.0,0.5],[6.0,{"t":"R","g":67,"s":5},10.0,0.51],[8.0,{"t":"5","g":74,"s":5},8.0,0.55],[14.0,{"t":"9","g":69,"s":5},2.0,0.59]]],"halfA":[[[0.0,{"t":"B","g":49,"s":2},8.0,0.5],[0.0,{"t":"3","g":61,"s":10},8.0,0.59],[0.0,{"t":"5","g":64,"s":10},8.0,0.59],[0.0,{"t":"R","g":69,"s":10},8.0,0.55]],[[0.0,{"t":"R","g":61,"s":7},2.0,0.56],[0.0,{"t":"3","g":64,"s":7},4.0,0.44],[0.0,{"t":"5","g":68,"s":7},6.0,0.45],[0.0,{"t":"B","g":49,"s":7},8.0,0.54],[0.0,{"t":"7","g":71,"s":7},8.0,0.43],[2.0,{"t":"R","g":61,"s":7},6.0,0.47],[4.0,{"t":"3","g":64,"s":7},4.0,0.28],[6.0,{"t":"5","g":68,"s":7},2.0,0.49]]],"halfB":[[[0.0,{"t":"9","g":68,"s":9},4.0,0.54],[0.0,{"t":"B","g":47,"s":1},5.83,0.36],[0.0,{"t":"3","g":59,"s":9},8.0,0.5],[0.0,{"t":"5","g":63,"s":9},8.0,0.47],[4.0,{"t":"9","g":68,"s":9},4.0,0.55],[5.5,{"t":"R","g":67,"s":9},2.5,0.52],[7.0,{"t":"7","g":65,"s":9},1.0,0.51]]],"beat":[[[0.0,{"t":"B","g":49,"s":0},4.0,0.38],[0.0,{"t":"R","g":61,"s":0},4.0,0.47],[0.0,{"t":"3","g":66,"s":0},4.0,0.48],[0.0,{"t":"5","g":68,"s":0},4.0,0.55]],[[0.0,{"t":"B","g":49,"s":0},4.0,0.39],[0.0,{"t":"R","g":61,"s":0},4.0,0.44],[0.0,{"t":"3","g":65,"s":0},4.0,0.41],[0.0,{"t":"5","g":68,"s":0},4.0,0.45]]]};
+const SIT_JAZ={"bar":[[[0.0,{"t":"R","g":58,"s":10},3.99,0.75],[0.0,{"t":"3","g":62,"s":10},3.99,0.67],[0.0,{"t":"5","g":65,"s":10},3.99,0.57],[0.0,{"t":"7","g":69,"s":10},3.99,0.69],[0.0,{"t":"B","g":46,"s":10},6.0,0.85],[4.0,{"t":"R","g":58,"s":10},2.0,0.78],[4.0,{"t":"3","g":62,"s":10},2.0,0.69],[4.0,{"t":"5","g":65,"s":10},2.0,0.61],[4.0,{"t":"7","g":69,"s":10},2.0,0.74],[6.0,{"t":"B","g":46,"s":10},2.0,0.75],[7.19,{"t":"R","g":58,"s":10},0.81,0.73],[7.19,{"t":"3","g":62,"s":10},0.81,0.57],[7.19,{"t":"5","g":65,"s":10},0.81,0.56],[7.19,{"t":"7","g":69,"s":10},0.81,0.7],[8.0,{"t":"B","g":45,"s":9},2.0,0.88],[9.19,{"t":"R","g":57,"s":9},0.81,0.78],[9.19,{"t":"3","g":61,"s":9},0.81,0.6],[9.19,{"t":"5","g":64,"s":9},0.81,0.62],[9.19,{"t":"7","g":67,"s":9},0.81,0.64],[10.0,{"t":"B","g":45,"s":9},2.0,0.78],[12.0,{"t":"R","g":57,"s":9},3.99,0.86],[12.0,{"t":"3","g":49,"s":9},4.0,0.76],[12.0,{"t":"3","g":61,"s":9},4.0,0.69],[12.0,{"t":"5","g":64,"s":9},4.0,0.69],[12.0,{"t":"7","g":67,"s":9},4.0,0.78]],[[0.0,{"t":"7","g":60,"s":2},3.99,0.86],[0.0,{"t":"3","g":65,"s":2},3.99,0.74],[0.0,{"t":"5","g":69,"s":2},3.99,0.81],[0.0,{"t":"B","g":50,"s":2},6.0,0.84],[4.0,{"t":"7","g":60,"s":2},2.0,0.86],[4.0,{"t":"3","g":65,"s":2},2.0,0.81],[4.0,{"t":"5","g":69,"s":2},2.0,0.81],[6.0,{"t":"B","g":50,"s":2},2.0,0.84],[7.19,{"t":"7","g":60,"s":2},0.81,0.83],[7.19,{"t":"3","g":65,"s":2},0.81,0.69],[7.19,{"t":"5","g":69,"s":2},0.81,0.78],[8.0,{"t":"R","g":53,"s":5},2.0,0.79],[9.19,{"t":"5","g":60,"s":5},0.91,0.87],[9.19,{"t":"3","g":69,"s":5},1.06,0.73],[9.19,{"t":"R","g":65,"s":5},1.18,0.62],[9.19,{"t":"7","g":63,"s":5},1.21,0.85],[10.0,{"t":"R","g":53,"s":5},4.0,0.85],[12.0,{"t":"5","g":60,"s":5},4.0,0.88],[12.0,{"t":"7","g":63,"s":5},4.0,0.84],[12.0,{"t":"R","g":65,"s":5},4.0,0.79],[12.0,{"t":"3","g":69,"s":5},4.0,0.85],[14.0,{"t":"R","g":53,"s":5},2.0,0.86]]],"halfA":[[[0.0,{"t":"R","g":58,"s":10},3.99,0.75],[0.0,{"t":"3","g":62,"s":10},3.99,0.67],[0.0,{"t":"5","g":65,"s":10},3.99,0.57],[0.0,{"t":"7","g":69,"s":10},3.99,0.69],[0.0,{"t":"B","g":46,"s":10},6.0,0.85],[4.0,{"t":"R","g":58,"s":10},2.0,0.78],[4.0,{"t":"3","g":62,"s":10},2.0,0.69],[4.0,{"t":"5","g":65,"s":10},2.0,0.61],[4.0,{"t":"7","g":69,"s":10},2.0,0.74],[6.0,{"t":"B","g":46,"s":10},2.0,0.75],[7.19,{"t":"R","g":58,"s":10},0.81,0.73],[7.19,{"t":"3","g":62,"s":10},0.81,0.57],[7.19,{"t":"5","g":65,"s":10},0.81,0.56],[7.19,{"t":"7","g":69,"s":10},0.81,0.7]],[[0.0,{"t":"5","g":59,"s":2},3.99,0.78],[0.0,{"t":"7","g":62,"s":2},3.99,0.66],[0.0,{"t":"R","g":64,"s":2},3.99,0.74],[0.0,{"t":"3","g":67,"s":2},3.99,0.74],[0.0,{"t":"B","g":52,"s":2},6.0,0.84],[4.0,{"t":"5","g":59,"s":2},2.0,0.8],[4.0,{"t":"7","g":62,"s":2},2.0,0.65],[4.0,{"t":"R","g":64,"s":2},2.0,0.7],[4.0,{"t":"3","g":67,"s":2},2.0,0.71],[6.0,{"t":"B","g":52,"s":2},2.0,0.68],[7.19,{"t":"5","g":59,"s":2},0.81,0.84],[7.19,{"t":"7","g":62,"s":2},0.81,0.62],[7.19,{"t":"R","g":64,"s":2},0.81,0.64],[7.19,{"t":"3","g":67,"s":2},0.81,0.73]],[[0.0,{"t":"7","g":58,"s":2},3.99,0.86],[0.0,{"t":"3","g":63,"s":2},3.99,0.74],[0.0,{"t":"5","g":67,"s":2},3.99,0.81],[0.0,{"t":"B","g":48,"s":2},6.0,0.84],[4.0,{"t":"7","g":58,"s":2},2.0,0.86],[4.0,{"t":"3","g":63,"s":2},2.0,0.81],[4.0,{"t":"5","g":67,"s":2},2.0,0.81],[6.0,{"t":"B","g":48,"s":2},2.0,0.84],[7.19,{"t":"7","g":58,"s":2},0.81,0.83],[7.19,{"t":"3","g":63,"s":2},0.81,0.69],[7.19,{"t":"5","g":67,"s":2},0.81,0.78]]],"halfB":[[[0.0,{"t":"B","g":46,"s":9},2.0,0.88],[1.19,{"t":"R","g":58,"s":9},0.81,0.78],[1.19,{"t":"3","g":62,"s":9},0.81,0.6],[1.19,{"t":"5","g":65,"s":9},0.81,0.62],[1.19,{"t":"7","g":68,"s":9},0.81,0.64],[2.0,{"t":"B","g":46,"s":9},2.0,0.78],[4.0,{"t":"R","g":58,"s":9},3.99,0.86],[4.0,{"t":"3","g":50,"s":9},4.0,0.76],[4.0,{"t":"3","g":62,"s":9},4.0,0.69],[4.0,{"t":"5","g":65,"s":9},4.0,0.69],[4.0,{"t":"7","g":68,"s":9},4.0,0.78]],[[0.0,{"t":"R","g":55,"s":5},2.0,0.79],[1.19,{"t":"5","g":62,"s":5},0.91,0.87],[1.19,{"t":"3","g":71,"s":5},1.06,0.73],[1.19,{"t":"R","g":67,"s":5},1.18,0.62],[1.19,{"t":"7","g":65,"s":5},1.21,0.85],[2.0,{"t":"R","g":55,"s":5},4.0,0.85],[4.0,{"t":"5","g":62,"s":5},4.0,0.88],[4.0,{"t":"7","g":65,"s":5},4.0,0.84],[4.0,{"t":"R","g":67,"s":5},4.0,0.79],[4.0,{"t":"3","g":71,"s":5},4.0,0.85],[6.0,{"t":"R","g":55,"s":5},2.0,0.86]]],"beat":[[[0.0,{"t":"B","g":46,"s":7},1.23,0.84],[1.19,{"t":"R","g":58,"s":7},0.81,0.77],[1.19,{"t":"3","g":61,"s":7},0.81,0.69],[1.19,{"t":"5","g":65,"s":7},0.81,0.55],[1.19,{"t":"7","g":68,"s":7},0.81,0.61],[2.0,{"t":"B","g":46,"s":7},2.0,0.84]],[[0.0,{"t":"B","g":46,"s":9},1.23,0.88],[1.19,{"t":"R","g":58,"s":9},0.81,0.79],[1.19,{"t":"3","g":61,"s":9},0.81,0.67],[1.19,{"t":"5","g":65,"s":9},0.81,0.62],[1.19,{"t":"7","g":68,"s":9},0.81,0.69],[2.0,{"t":"B","g":46,"s":9},2.0,0.84]]]};
 const ARPS = {
   // 和音（左手のルート・5度・オクターブ＋その上に3和音）を8分で刻む。普段はブリッジミュートで短く、アクセントだけ伸ばす
   hardrock:{name:'ロック（刻み）', pro:'8分刻み（ブリッジミュート）', rhAbove:true, ev:[[0,[0,4,5,1,2,3],3.5,.95,'d'],[4,[0,4,5,1,2,3],.7,.5,'d'],[6,[0,4,5,1,2,3],1.8,.88,'d'],[8,[0,4,5,1,2,3],.7,.55,'d'],[10,[0,4,5,1,2,3],.7,.5,'d'],[12,[0,4,5,1,2,3],1.8,.88,'d'],[14,[0,4,5,1,2,3],1.8,.84,'d']]},
@@ -1157,8 +1159,14 @@ function rebuildMy(){
     if(d.fill){ d.F=parseVoices(FILLS[d.fill].big); d.FS=parseVoices(FILLS[d.fill].small); } else { d.F=null; d.FS=null; }
   });
   (state.myArps||[]).forEach((m,i)=>{ migrateMy(m,'arp');
-    const ev=m.notes.map(n=>[n.st,[+n.r],n.len,n.vel]);
-    const a=ARPS['my'+i]={name:m.name||`マイパターン${i+1}`, legato:true, ev}; const mm={}; ev.forEach(e=>{ (mm[e[0]]=mm[e[0]]||[]).push(e); }); a.at=mm;
+    const toEv=ns=>(ns||[]).map(n=>[n.st,[+n.r],n.len,n.vel]);
+    const ev=toEv(m.notes);
+    const a=ARPS['my'+i]={name:m.name||`マイパターン${i+1}`, legato:true, ev}; a.at=atMap(ev);
+    // 場面ごとの弾き方（作ってある場面だけ。ない場面は1小節の弾き方などで代わりに弾く）
+    const sn=m.sitNotes||{}, kinds=['halfA','halfB','beat'].filter(k=>(sn[k]||[]).length);
+    if(kinds.length || (sn.push||[]).length || m.pushBy){ a.sit={bar:[{evs:ev,at:a.at}]}; kinds.forEach(k=>{ const e=toEv(sn[k]); a.sit[k]=[{evs:e,at:atMap(e)}]; });
+      if((sn.push||[]).length){ const e=toEv(sn.push); a.sit.push=[{evs:e,at:atMap(e)}]; } }
+    if(m.pushBy) a.pushBy=m.pushBy;
   });
   if(typeof BASSES!=='undefined'){ myKeys(BASSES).forEach(k=>delete BASSES[k]);
     (state.myBasses||[]).forEach((m,i)=>{ migrateMy(m,'bass');
@@ -1179,21 +1187,29 @@ function tidyNotes(notes){
   return out;
 }
 function newMy(kind,from){        // from: もとにするパターンのキー（null なら空っぽから）
-  const list=listOf(kind), name=`マイパターン${list.length+1}`; let notes=[], fill=kind==='drum'?'tom':undefined;
-  if(from && /^my\d+$/.test(from)){ const src=list[+from.slice(2)]; if(src){ notes=JSON.parse(JSON.stringify(src.notes||[])); fill=src.fill; } }
+  const list=listOf(kind), name=`マイパターン${list.length+1}`; let notes=[], fill=kind==='drum'?'tom':undefined, sit=null, pushBy=0;
+  if(from && /^my\d+$/.test(from)){ const src=list[+from.slice(2)]; if(src){ notes=JSON.parse(JSON.stringify(src.notes||[])); fill=src.fill; if(src.sitNotes) sit=JSON.parse(JSON.stringify(src.sitNotes)); pushBy=src.pushBy||0; } }
   else if(from){
     if(kind==='drum'){ const d=DRUMS[from]; if(d){ fill=d.fill||null; DRUM_ROWS.forEach(([k])=>{ if(d.v[k]) [...d.v[k]].forEach((c,st)=>{ const vel=VEL[c]||0; if(vel) notes.push({r:k,st,len:1,vel}); }); }); } }
     else if(kind==='bass'){ const src=from==='auto'||!BASSES[from] ? DRUMS[state.drum].bass : BASSES[from].v;
       (src||[]).forEach(([st,iv,len,vel,slide])=>{ const r=String(iv===7?'5':iv); if(BASS_ROWS.some(([k])=>k===r)&&st<16) notes.push({r,st,len:Math.max(1,Math.min(Math.round(len*2)/2,16-st)),vel,slide:!!slide}); }); }
-    else { const a=ARPS[from]; if(a) a.ev.forEach(([st0,ns,len,vel])=>{ const st=Math.round(st0); evIdx(ns).forEach(r=>{ const rr=r>5&&r<9?r-5:r; if(KEY_ROWS.some(([k])=>k===rr)&&st<16) notes.push({r:String(rr),st,len:Math.max(.5,Math.min(len,16-st)),vel}); }); }); }
+    else { const a=ARPS[from]; const conv=(evs,N)=>{ const out=[]; evs.forEach(([st0,ns,len,vel])=>{ const st=Math.round(st0); evIdx(ns).forEach(r=>{ const rr=r>5&&r<9?r-5:r; if(KEY_ROWS.some(([k])=>k===rr)&&st<N) out.push({r:String(rr),st,len:Math.max(.5,Math.min(len,N-st)),vel}); }); }); return tidyNotes(out); };
+      if(a){ notes=conv(a.ev,16);
+        if(a.sit){ sit={}; [['halfA',8],['halfB',8],['beat',4]].forEach(([k,N])=>{ if(a.sit[k]) sit[k]=conv(a.sit[k][0].evs,N); }); }
+        if(a.pushBy) pushBy=a.pushBy; } }
   }
-  const m={name, notes:kind==='drum'?notes:tidyNotes(notes)}; if(kind==='drum') m.fill=fill??null;
+  const m={name, notes:kind==='drum'?notes:tidyNotes(notes)}; if(kind==='drum') m.fill=fill??null; if(sit) m.sitNotes=sit; if(pushBy) m.pushBy=pushBy;
   list.push(m);
   state[SK(kind)]='my'+(list.length-1); if(kind==='bass') state.bass=true;
   rebuildMy(); save();
 }
 let patKind='drum';
 const curMy=()=>listOf(patKind)[+state[SK(patKind)].slice(2)];
+// コードのマイパターンは「場面」ごとに弾き方を作れる（bar=1小節同じコード、halfA=前半2拍、halfB=3拍目から、beat=1拍だけ、push=食ったとき）
+const SCENES=[['bar','1小節',16],['halfA','前半（2拍）',8],['halfB','3拍目から',8],['beat','1拍だけ',4],['push','食ったとき',4]];
+const sceneN=()=>patKind==='arp'?(SCENES.find(x=>x[0]===(PR.scene||'bar'))||SCENES[0])[2]:16;
+const curNotes=()=>{ const m=curMy(); const sc=patKind==='arp'?(PR.scene||'bar'):'bar'; if(sc==='bar') return m.notes; m.sitNotes=m.sitNotes||{}; return (m.sitNotes[sc]=m.sitNotes[sc]||[]); };
+const setCurNotes=a=>{ const m=curMy(); const sc=patKind==='arp'?(PR.scene||'bar'):'bar'; if(sc==='bar') m.notes=a; else { m.sitNotes=m.sitNotes||{}; m.sitNotes[sc]=a; } };
 function openPatEditor(kind,mode){  // mode: 'edit'=今のマイパターンを編集 / 'new'=空っぽから新規（マイパターン以外を編集するときは、そのコピーを作る）
   patKind=kind;
   const isMy=/^my\d+$/.test(state[SK(kind)]);
@@ -1222,11 +1238,23 @@ function renderPatEditor(){
     : 'タップで追加・削除。音の右端をドラッグで長さ、まん中をドラッグで移動。長押ししたまま上下に動かすと強さ（ベロシティ）を変えられます。'
       + (patKind==='bass' ? '長押しして動かさずに離すと、その音のポルタメント（前の音からすべらせる）をオン・オフできます。' : '');
   const rows = isDrum ? DRUM_ROWS : patKind==='bass' ? BASS_ROWS : KEY_ROWS;
-  g.innerHTML=`<div class="prlabs">${rows.map(([,l])=>`<span>${l}</span>`).join('')}</div><div class="proll" id="proll" style="--rows:${rows.length}"><div class="prnotes"></div><div class="prvel" hidden></div><div class="prmenu" hidden></div></div>`;
+  const sceneBar = patKind==='arp' ? `<div class="scenebar"><div class="chips" id="sceneChips"></div><p class="small" id="sceneNote"></p></div>` : '';
+  g.innerHTML=`${sceneBar}<div class="prwrap"><div class="prlabs">${rows.map(([,l])=>`<span>${l}</span>`).join('')}</div><div class="proll" id="proll" style="--rows:${rows.length};--cols:${sceneN()};${sceneN()<16?`max-width:${sceneN()/16*100}%`:''}"><div class="prnotes"></div><div class="prvel" hidden></div><div class="prmenu" hidden></div></div></div>`;
+  if(patKind==='arp'){ const sc=PR.scene||'bar', m=curMy();
+    chips($('sceneChips'), SCENES.map(([k,l])=>[k, l+(k!=='bar'&&(m.sitNotes||{})[k]&&m.sitNotes[k].length?' ●':'')]), sc, v=>{ PR.scene=v; PR.sel=null; renderPatEditor(); });
+    $('sceneNote').textContent = sc==='bar' ? '1小節ずっと同じコードのときの弾き方です（ほかの場面を作っていないときも、これを使います）。'
+      : sc==='push' ? '食ったとき（コードを先取りしたとき）に、先に弾く音です。空っぽなら、次のコードの弾き始めを先に弾きます。'
+      : `コードが${sc==='halfA'?'小節の前半（2拍）だけ':sc==='halfB'?'3拍目から変わった':'1拍だけ'}のときの弾き方です。空っぽなら、1小節の弾き方を使います。`;
+    const opt=$('patOptChips').closest('.sheetsec'); }
   drawNotes();
   bindRoll(rows);
   const opt=$('patOptChips').closest('.sheetsec');
-  opt.hidden=patKind==='arp';
+  opt.hidden=false;
+  if(patKind==='arp'){
+    $('patOptTitle').textContent='コードが変わる所';
+    chips($('patOptChips'), [[0,'ちょうどで弾く'],[2,'いつも8分食う'],[1,'いつも16分食う']], curMy().pushBy||0,
+      v=>{ curMy().pushBy=v; rebuildMy(); save(); renderPatEditor(); dirty=true; });
+  }
 
   if(patKind==='bass'){
     $('patOptTitle').textContent='ポルタメントの速さ';
@@ -1242,11 +1270,12 @@ function renderPatEditor(){
 function drawNotes(){
   const roll=$('proll'); if(!roll) return; const box=roll.querySelector('.prnotes'), isDrum=patKind==='drum';
   const rows = isDrum ? DRUM_ROWS : patKind==='bass' ? BASS_ROWS : KEY_ROWS, ri=r=>rows.findIndex(([k])=>String(k)===String(r));
-  box.innerHTML=curMy().notes.map((n,i)=>{ const y=ri(n.r); if(y<0) return '';
+  const N=sceneN();
+  box.innerHTML=curNotes().map((n,i)=>{ const y=ri(n.r); if(y<0) return '';
     const sl=patKind==='bass' && n.slide;
-    return `<i class="prn${isDrum?' dr':''}${sl?' sl':''}${PR.sel===n?' sel':''}" data-i="${i}" style="left:${n.st/16*100}%;width:${(isDrum?1:n.len)/16*100}%;top:calc(${y} * var(--rh));--v:${n.vel}"><b style="height:${Math.round(n.vel*100)}%"></b></i>`; }).join('');
+    return `<i class="prn${isDrum?' dr':''}${sl?' sl':''}${PR.sel===n?' sel':''}" data-i="${i}" style="left:${n.st/N*100}%;width:${(isDrum?1:n.len)/N*100}%;top:calc(${y} * var(--rh));--v:${n.vel}"><b style="height:${Math.round(n.vel*100)}%"></b></i>`; }).join('');
 }
-function commitNotes(){ const m=curMy(); if(patKind!=='drum') m.notes=tidyNotes(m.notes); else { const seen={}; m.notes=m.notes.filter(n=>{ const k=n.r+':'+n.st; if(seen[k]) return false; seen[k]=1; return true; }); }
+function commitNotes(){ const m=curMy(); if(patKind!=='drum') setCurNotes(tidyNotes(curNotes())); else { const seen={}; m.notes=m.notes.filter(n=>{ const k=n.r+':'+n.st; if(seen[k]) return false; seen[k]=1; return true; }); }
   rebuildMy(); save(); dirty=true; }
 function bindRoll(rows){
   const roll=$('proll'), isDrum=patKind==='drum', velEl=roll.querySelector('.prvel'), menu=roll.querySelector('.prmenu');
@@ -1257,21 +1286,22 @@ function bindRoll(rows){
     menu.style.left=Math.max(0,Math.min(p.w-190,p.px-95))+'px'; menu.style.top=Math.max(-44,p.py-62)+'px';
     menu.onpointerdown=e=>e.stopPropagation();
     menu.querySelector('[data-a="slide"]').onclick=()=>{ n.slide=!n.slide; commitNotes(); drawNotes(); openMenu(n,p); };
-    menu.querySelector('[data-a="del"]').onclick=()=>{ curMy().notes=curMy().notes.filter(x=>x!==n); PR.sel=null; closeMenu(); commitNotes(); drawNotes(); }; };
-  const pos=e=>{ const r=roll.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*16, y=Math.floor((e.clientY-r.top)/r.height*rows.length);
-    return {x:Math.max(0,Math.min(15.999,x)), row:Math.max(0,Math.min(rows.length-1,y)), px:e.clientX-r.left, py:e.clientY-r.top, w:r.width}; };
+    menu.querySelector('[data-a="del"]').onclick=()=>{ setCurNotes(curNotes().filter(x=>x!==n)); PR.sel=null; closeMenu(); commitNotes(); drawNotes(); }; };
+  const N=sceneN();
+  const pos=e=>{ const r=roll.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*N, y=Math.floor((e.clientY-r.top)/r.height*rows.length);
+    return {x:Math.max(0,Math.min(N-.001,x)), row:Math.max(0,Math.min(rows.length-1,y)), px:e.clientX-r.left, py:e.clientY-r.top, w:r.width}; };
   const rkey=y=>String(rows[y][0]);
-  const nextStart=(n)=>{ const ns=curMy().notes.filter(x=>x!==n&&x.r===n.r&&x.st>n.st).map(x=>x.st); return Math.min(16,...ns); };
+  const nextStart=(n)=>{ const ns=curNotes().filter(x=>x!==n&&x.r===n.r&&x.st>n.st).map(x=>x.st); return Math.min(N,...ns); };
   const showVel=(n,p)=>{ velEl.hidden=false; velEl.textContent=`ベロシティ ${Math.max(1,Math.round(n.vel*127))}`;
     velEl.style.left=Math.max(0,Math.min(p.w-110,p.px-55))+'px'; velEl.style.top=Math.max(-34,p.py-58)+'px'; };
   let d=null;
   roll.onpointerdown=e=>{
     if(!menu.hidden){ closeMenu(); e.preventDefault(); return; }
     e.preventDefault(); try{ roll.setPointerCapture(e.pointerId); }catch(_){}
-    const p=pos(e), key=rkey(p.row), m=curMy();
+    const p=pos(e), key=rkey(p.row), m={get notes(){ return curNotes(); }, set notes(a){ setCurNotes(a); }};
     const hit=m.notes.find(n=>String(n.r)===key && p.x>=n.st && p.x<n.st+(isDrum?1:n.len));
     if(hit){
-      const right=(hit.st+(isDrum?1:hit.len))/16*p.w, wpx=(isDrum?1:hit.len)/16*p.w;
+      const right=(hit.st+(isDrum?1:hit.len))/N*p.w, wpx=(isDrum?1:hit.len)/N*p.w;
       d={mode:'press', n:hit, p0:p, st0:hit.st, r0:p.row, vel0:hit.vel, edge:!isDrum && p.px>right-Math.max(10,wpx*.45)};
       PR.sel=hit; drawNotes();
       d.lp=setTimeout(()=>{ if(d&&d.mode==='press'){ d.mode='vel'; d.p0=p; d.vel0=hit.vel; if(navigator.vibrate) try{ navigator.vibrate(15); }catch(_){} showVel(hit,p); } },430);
@@ -1286,10 +1316,10 @@ function bindRoll(rows){
     const n=d.n;
     if(d.mode==='vel'){ if(Math.abs(p.py-d.p0.py)>4) d.velMoved=true; n.vel=Math.max(.05,Math.min(1,d.vel0+(d.p0.py-p.py)/140)); showVel(n,p); drawNotes(); }
     else if(d.mode==='resize' || (d.mode==='create' && !isDrum && far)){ d.moved=true; n.len=Math.max(1,Math.min(Math.ceil(p.x)-n.st, nextStart(n)-n.st)); if(n.len<1) n.len=1; drawNotes(); }
-    else if(d.mode==='move'){ const st=Math.max(0,Math.min(16-(isDrum?1:Math.ceil(n.len)), Math.round(d.st0+dx/p.w*16))); const r=rkey(p.row);
-      if(st!==n.st||r!==n.r){ n.st=st; if(r!==n.r){ n.r=r; previewRow(r,n.vel); } if(!isDrum && n.st+n.len>16) n.len=16-n.st; drawNotes(); } }
+    else if(d.mode==='move'){ const st=Math.max(0,Math.min(N-(isDrum?1:Math.ceil(n.len)), Math.round(d.st0+dx/p.w*N))); const r=rkey(p.row);
+      if(st!==n.st||r!==n.r){ n.st=st; if(r!==n.r){ n.r=r; previewRow(r,n.vel); } if(!isDrum && n.st+n.len>N) n.len=N-n.st; drawNotes(); } }
   };
-  const up=e=>{ if(!d) return; clearTimeout(d.lp); const n=d.n, m=curMy();
+  const up=e=>{ if(!d) return; clearTimeout(d.lp); const n=d.n, m={get notes(){ return curNotes(); }, set notes(a){ setCurNotes(a); }};
     if(d.mode==='press'){ m.notes=m.notes.filter(x=>x!==n); PR.sel=null; }         // タップ＝削除
     else if(d.mode==='move'){ m.notes=m.notes.filter(x=>x===n || !(String(x.r)===String(n.r) && (isDrum ? x.st===n.st : (x.st<n.st+n.len && x.st+x.len>n.st)))); previewRow(n.r,n.vel); }   // 重なった音は上書き
     else if(d.mode==='vel'){ if(!d.velMoved && patKind==='bass'){ velEl.hidden=true; const p0=d.p0; d=null; commitNotes(); drawNotes(); openMenu(n,p0); return; } previewRow(n.r,n.vel); }
@@ -1939,7 +1969,7 @@ $('patDup').onclick=()=>{ newMy(patKind,state[SK(patKind)]); renderPatEditor(); 
 $('patDel').onclick=()=>{ const b=$('patDel');
   if(!b.dataset.armed){ b.dataset.armed='1'; b.textContent='もう一度押すと消します'; return; }
   const list=listOf(patKind); list.splice(+state[SK(patKind)].slice(2),1); state[SK(patKind)]= patKind==='drum'?'pop':patKind==='bass'?'auto':'piano4'; rebuildMy(); save(); renderAll(); closeAll(); };
-$('patClear').onclick=()=>{ curMy().notes=[]; PR.sel=null; commitNotes(); drawNotes(); };
+$('patClear').onclick=()=>{ setCurNotes([]); PR.sel=null; commitNotes(); drawNotes(); };
 
 function bassSndRow(){ chips($('bassSndChips'), [...Object.entries(BASS_SNDS),['none','なし']], state.bass?(state.bassSnd||'bass'):'none', v=>{ if(v==='none'){ state.bass=false; save(); renderAll(); bassSndRow(); return; } state.bass=true; state.bassSnd=v; save(); renderAll(); ensureSounds().then(()=>{ if(!playing) whenRunning(()=>{ const t=ctx.currentTime+.03; [0,7,12].forEach((n,k)=>bassTone(36+n,t+k*.18,.16,.9)); }); }); bassSndRow(); }); }
 function openBassSheet(){
@@ -2345,7 +2375,8 @@ const shiftMark=a=>a>0?'←食':a<0?'後→':'';
 const SCALE7=[0,2,4,5,7,9,11];
 function phrasePitch(o,bt,pat){
   const rpc=bt.rpc, has=x=>bt.ivs.some(i=>i%12===x), t=o.t;
-  const ref=t==='B'?bt.bpc:rpc, delta=((ref-o.s)%12+18)%12-6, target=o.g+delta;
+  // 音域は元の演奏の高さのまま（場面ごとに右手の高さをそろえてある）。コードが変わっても音域が飛ばないように、元の高さにいちばん近い音を選ぶ
+  const target=t==='B'?Math.max(38,Math.min(52,o.g)):o.g;
   const near=pc=>target+((((pc%12)+12)%12-target%12+18)%12-6);
   let pc=null;
   if(t==='B') pc=bt.bpc;
@@ -2364,12 +2395,14 @@ function phrasePitch(o,bt,pat){
 function playEvents(evs,bt,ct,sd,pat){
   const tones=bt.tones, notes=[];
   if(evs.some(e=>!Array.isArray(e[1]))){   // フレーズ（MIDI の写し）
-    const done=new Set();
-    evs.forEach(e=>{ if(Array.isArray(e[1])) return; const m=phrasePitch(e[1],bt,pat), at=ct+(e[0]-Math.floor(e[0]))*sd, key=m+'@'+at.toFixed(3);
+    const done=new Set(), ph=evs.filter(e=>!Array.isArray(e[1])).map(e=>({e,m:phrasePitch(e[1],bt,pat)})), top={};
+    ph.forEach(({e,m})=>{ top[e[0]]=Math.max(top[e[0]]??-1,m); });
+    ph.forEach(({e,m})=>{ const at=ct+(e[0]-Math.floor(e[0]))*sd, key=m+'@'+at.toFixed(3);
       if(done.has(key)) return; done.add(key);
       if((phrSounding[m]||0)>at+.02) return; phrSounding[m]=at+e[2]*sd;   // まだ鳴っている同じ音は重ねない
-      const hv=1+(Math.random()-.5)*.1, w=(state.bass&&m<48)?.55:1;
-      const g=keyTone(m, at, e[2]*sd, COMP_LEVEL*1.15*e[3]*w*hv); if(g) held.push({g,end:at+e[2]*sd*1.4+.5}); });
+      // 強さはほかの伴奏と同じ考え方：いちばん上の音を立たせ、内声と左手は控えめに
+      const hv=1+(Math.random()-.5)*.1; let w = m===top[e[0]] ? 1 : m<53 ? .8 : .66; if(state.bass&&m<48) w*=.55;
+      const g=keyTone(m, at, e[2]*sd, COMP_LEVEL*e[3]*w*hv); if(g) held.push({g,end:at+e[2]*sd*1.4+.5}); });
     evs=evs.filter(e=>Array.isArray(e[1])); if(!evs.length) return; }
   const RHS=new Set([1,2,3,6,7,8]);
   evs.forEach(([st0,ns0,len,vel,dir])=>{
@@ -2474,7 +2507,7 @@ function scheduleStep(g,t){
     if(rel===cell.len-an){
       barTones=chordNotes(nx.v,lastR); lastR=barTones.R; choke(ct);
       if(pat.sit){ PUSHCONT=false; pushedKey=nxKey;   // 次のコードの弾き始めを先に弾いて、そのままのばす（タイ）
-        const nStart=((ni*L)%16+nx.off)%16, v=sitVar(pat, nx.len, nStart, nStart===0?b+1:b);
+        const nStart=((ni*L)%16+nx.off)%16, v=pat.sit.push ? pat.sit.push[0] : sitVar(pat, nx.len, nStart, nStart===0?b+1:b);
         playEvents((v.at[0]||[]).map(e=>[e[0],e[1],e[2]+an,e[3],e[4]]), barTones, ct, sd, pat);
         if(state.bass){ const e0=bassOf(b).find(e=>e[0]===0); chokeBass(ct, e0&&e0[4]&&lastBassVoice?lastBassVoice.g:null); playBass(bassOf(b),0,ct,barTones,sd,an+nx.len); } }
       else if(pat.pushEv){ PUSHCONT=false; pushedKey=nxKey; playEvents(pat.pushEv, barTones, ct, sd, pat);   // 先取りして次の小節の頭までのばす（タイ）
