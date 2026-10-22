@@ -687,7 +687,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.131（2026-10-23）</p>
+    <p class="appver">ver 1.132（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -754,7 +754,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.131（2026-10-23）</p>
+  <p class="appver">ver 1.132（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1287,7 +1287,7 @@ const ARPS = {
                 halfA:[[[0,[1,2,3,6],3.4,.78,null,'fall'],[6,[2],1,.66],[7,[3],1,.68]]],
                 halfB:[[[0,[1,2,3,6],2,.76],[4,[3,6],.5,.72],[5,[3,6],.5,.66],[6,[2,3],.5,.64],[7,[3,6],.5,.72]]],
                 beat:[[[0,[1,2,3,6],2,.74]]],
-                push:[[[0,[1,2,3,6],4,.82]]]}},
+                push:[[[0,[1,2,3,6],3.4,.82,null,'fall']],[[0,[1,2,3,6],1.6,.8,null,'fall']]]}},   // 1小節目へ食う時はのばしてからフォール、2小節目へ食う時は短くフォールして2拍目裏の「パッ」へ
 
   // メロディ：高い所で「タン・タン・タ」（3+3+2）と上がっていく（ホルン・ストリングス向き）
   hornline:{name:'上もの：3・3・2のメロディ', pro:'上もの：付点4分×2＋4分で上行', legato:true,
@@ -1336,7 +1336,7 @@ function rebuildMy(){
     const sn=m.sitNotes||{}, kinds=['halfA','halfB','beat'].filter(k=>(sn[k]||[]).length);
     if(kinds.length || (sn.push||[]).length || (sn.bar2||[]).length || m.pushBy){ a.sit={bar:[{evs:ev,at:a.at}]}; kinds.forEach(k=>{ const e=toEv(sn[k]); a.sit[k]=[{evs:e,at:atMap(e)}]; });
       if((sn.bar2||[]).length){ const e=toEv(sn.bar2); a.sit.bar.push({evs:e,at:atMap(e)}); }   // 2小節目（1・2小節目を交互に）
-      if((sn.push||[]).length){ const e=toEv(sn.push); a.sit.push=[{evs:e,at:atMap(e)}]; } }
+      if((sn.push||[]).length){ const e=toEv(sn.push); a.sit.push=[{evs:e,at:atMap(e)}]; if((sn.push2||[]).length){ const e2=toEv(sn.push2); a.sit.push.push({evs:e2,at:atMap(e2)}); } } }
     if(m.pushBy) a.pushBy=m.pushBy;
   });
   if(typeof BASSES!=='undefined'){ myKeys(BASSES).forEach(k=>delete BASSES[k]);
@@ -1370,7 +1370,7 @@ function newMy(kind,from){        // from: もとにするパターンのキー�
       (src||[]).forEach(([st,iv,len,vel])=>{ const r=String(iv===7?'5':iv); if(BASS_ROWS.some(([k])=>k===r)&&st<16) notes.push({r,st,len:Math.max(1,Math.min(Math.round(len*2)/2,16-st)),vel}); }); }
     else { const a=ARPS[from]; const conv=(evs,N)=>{ const out=[]; evs.forEach(e=>{ const [st0,ns,len,vel]=e; const st=Math.round(st0); ns.forEach(r=>{ const rr=r; if(KEY_ROWS.some(([k])=>k===rr)&&st<N){ const n={r:String(rr),st,len:Math.max(.5,Math.min(len,N-st)),vel}; if(e[5]==='fall') n.fall=true; out.push(n); } }); }); return tidyNotes(out); };
       if(a){ notes=conv(a.ev,16);
-        if(a.sit){ sit={}; [['halfA',8],['halfB',8],['beat',4],['push',4]].forEach(([k,N])=>{ if(a.sit[k]) sit[k]=conv(a.sit[k][0].evs,N); }); if(a.sit.bar&&a.sit.bar[1]) sit.bar2=conv(a.sit.bar[1].evs,16); }
+        if(a.sit){ sit={}; [['halfA',8],['halfB',8],['beat',4],['push',4]].forEach(([k,N])=>{ if(a.sit[k]) sit[k]=conv(a.sit[k][0].evs,N); }); if(a.sit.bar&&a.sit.bar[1]) sit.bar2=conv(a.sit.bar[1].evs,16); if(a.sit.push&&a.sit.push[1]) sit.push2=conv(a.sit.push[1].evs,4); }
         if(a.pushBy) pushBy=a.pushBy;
         extra={swing:a.swing?'swing':'', accLink:!!a.accLink, rhAbove:!!a.rhAbove, pluck:!!a.pluck, legato:!!a.legato}; } }
   }
@@ -1382,7 +1382,7 @@ function newMy(kind,from){        // from: もとにするパターンのキー�
 let patKind='drum';
 const curMy=()=>listOf(patKind)[+state[SK(patKind)].slice(2)];
 // コードのマイパターンは「場面」ごとに弾き方を作れる（bar=1小節同じコード、halfA=前半2拍、halfB=3拍目から、beat=1拍だけ、push=食ったとき）
-const SCENES=[['bar','1小節',16],['bar2','2小節目',16],['halfA','前半（2拍）',8],['halfB','3拍目から',8],['beat','1拍だけ',4],['push','食ったとき',4]];
+const SCENES=[['bar','1小節',16],['bar2','2小節目',16],['halfA','前半（2拍）',8],['halfB','3拍目から',8],['beat','1拍だけ',4],['push','食ったとき',4],['push2','2小節目へ食ったとき',4]];
 const DRUM_SCENES=[['bar','1小節目',16],['B','2小節目',16]];   // ドラムは2小節で1セット（2小節目を作らなければ1小節目をくり返す）
 const isArpK=k=>k==='arp'||k==='arp2';
 const scenesOf=k=>isArpK(k)?SCENES:k==='drum'?DRUM_SCENES:null;
@@ -1427,6 +1427,7 @@ function renderPatEditor(){
     chips($('sceneChips'), SCENES.map(([k,l])=>[k, l+(k!=='bar'&&(m.sitNotes||{})[k]&&m.sitNotes[k].length?' ●':'')]), sc, v=>{ PR.scene=v; PR.sel=null; renderPatEditor(); });
     $('sceneNote').textContent = sc==='bar' ? '1小節ずっと同じコードのときの弾き方です（ほかの場面を作っていないときも、これを使います）。'
       : sc==='bar2' ? '同じコードが続くときの2小節目の弾き方です（1・2小節目を交互にくり返します）。空っぽなら1小節目と同じです。'
+      : sc==='push2' ? '2小節目へ食ったときに先に弾く音です（2小節パターン用）。空っぽなら「食ったとき」と同じです。'
       : sc==='push' ? '食ったとき（コードを先取りしたとき）に、先に弾く音です。空っぽなら、次のコードの弾き始めを先に弾きます。'
       : `コードが${sc==='halfA'?'小節の前半（2拍）だけ':sc==='halfB'?'3拍目から変わった':'1拍だけ'}のときの弾き方です。空っぽなら、1小節の弾き方を使います。`;
     const opt=$('patOptChips').closest('.sheetsec'); }
@@ -2806,8 +2807,8 @@ function chordPart(g,t,L,s,b,dr,sd,tt){
     if(rel===cell.len-an){
       barTones=chordAt(nx.v, ni*L+nx.off); lastR=barTones.R; choke(ct);
       if(pat.sit){ PUSHCONT=false; pushedKey=nxKey;   // 次のコードの弾き始めを先に弾いて、そのままのばす（タイ）
-        const nStart=((ni*L)%16+nx.off)%16, v=pat.sit.push ? pat.sit.push[0] : sitVar(pat, nx.len, nStart, nStart===0?b+1:b);
-        playEvents((v.at[0]||[]).map(e=>[e[0],e[1],e[2]+an,e[3],e[4]]), barTones, ct, sd, pat);
+        const nStart=((ni*L)%16+nx.off)%16, nb=nStart===0?b+1:b, v=pat.sit.push ? pat.sit.push[nb%pat.sit.push.length] : sitVar(pat, nx.len, nStart, nb);   // 食う先が何小節目かで弾き方を変えられる（2小節パターン）
+        playEvents((v.at[0]||[]).map(e=>[e[0],e[1],e[2]+an,e[3],e[4],e[5]]), barTones, ct, sd, pat);   // e[5]＝フォールなども引き継ぐ
         if(state.bass){ const e0=bassOf(b).find(e=>e[0]===0); chokeBass(ct, e0&&e0[4]&&lastBassVoice?lastBassVoice.g:null); playBass(bassOf(b),0,ct,barTones,sd,an+nx.len); } }
       else if(pat.at[pi]){ PUSHCONT=true; pushedKey=null; playEvents(contEvs(pat,pi), barTones, ct, sd, pat);
         if(state.bass){ const r=contBass(bassOf(b),pi); chokeBass(ct); playBass(r.list,r.bi,ct,barTones,sd,cell.len-rel,nx.v); } }
