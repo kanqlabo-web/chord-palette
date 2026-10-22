@@ -687,7 +687,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.132（2026-10-23）</p>
+    <p class="appver">ver 1.133（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -754,7 +754,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.132（2026-10-23）</p>
+  <p class="appver">ver 1.133（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1283,11 +1283,11 @@ const ARPS = {
   brassobb:{name:'上もの：ブラスのヒット＋オブリ', pro:'上もの：ヒット＋フォール＋オブリ（2小節・8分食い）', legato:true, pushBy:2,
            sit:{bar:[[[0,[1,2,3,6],3.4,.78,null,'fall'],
                        [6,[2],1,.66],[7,[3],1,.68],[8,[3,6],.5,.74],[9,[3,6],.5,.68],[10,[2,3],.5,.66],[11,[3,6],.5,.74]],
-                      [[2,[1,2,3,6],1,.74],[6,[1],.5,.6],[7,[2],.5,.62],[8,[3],.5,.66],[9,[3],.5,.62],[10,[2],.5,.6],[11,[2],.5,.58],[12,[3],.5,.66],[13,[3],.5,.62]]],
+                      [[2,[1,2,3,6],.6,.74],[6,[1],.5,.6],[7,[2],.5,.62],[8,[3],.5,.66],[9,[3],.5,.62],[10,[2],.5,.6],[11,[2],.5,.58],[12,[3],.5,.66],[13,[3],.5,.62]]],
                 halfA:[[[0,[1,2,3,6],3.4,.78,null,'fall'],[6,[2],1,.66],[7,[3],1,.68]]],
                 halfB:[[[0,[1,2,3,6],2,.76],[4,[3,6],.5,.72],[5,[3,6],.5,.66],[6,[2,3],.5,.64],[7,[3,6],.5,.72]]],
                 beat:[[[0,[1,2,3,6],2,.74]]],
-                push:[[[0,[1,2,3,6],3.4,.82,null,'fall']],[[0,[1,2,3,6],1.6,.8,null,'fall']]]}},   // 1小節目へ食う時はのばしてからフォール、2小節目へ食う時は短くフォールして2拍目裏の「パッ」へ
+                push:[[[0,[1,2,3,6],3,.82,null,'fall']],[[0,[1,2,3,6],1,.8]]]}},   // 1小節目へ食う時は「チャーッ↘」（フォール）、2小節目へ食う時は「チャッ」と短く切って2拍目裏の「チャッ」へ
 
   // メロディ：高い所で「タン・タン・タ」（3+3+2）と上がっていく（ホルン・ストリングス向き）
   hornline:{name:'上もの：3・3・2のメロディ', pro:'上もの：付点4分×2＋4分で上行', legato:true,
@@ -1428,7 +1428,7 @@ function renderPatEditor(){
     $('sceneNote').textContent = sc==='bar' ? '1小節ずっと同じコードのときの弾き方です（ほかの場面を作っていないときも、これを使います）。'
       : sc==='bar2' ? '同じコードが続くときの2小節目の弾き方です（1・2小節目を交互にくり返します）。空っぽなら1小節目と同じです。'
       : sc==='push2' ? '2小節目へ食ったときに先に弾く音です（2小節パターン用）。空っぽなら「食ったとき」と同じです。'
-      : sc==='push' ? '食ったとき（コードを先取りしたとき）に、先に弾く音です。空っぽなら、次のコードの弾き始めを先に弾きます。'
+      : sc==='push' ? '食ったとき（コードを先取りしたとき）に、先に弾く音です。書いた長さのまま鳴ります（食った分はのばしません）。空っぽなら、次のコードの弾き始めを先に弾いて、小節の頭までのばします。'
       : `コードが${sc==='halfA'?'小節の前半（2拍）だけ':sc==='halfB'?'3拍目から変わった':'1拍だけ'}のときの弾き方です。空っぽなら、1小節の弾き方を使います。`;
     const opt=$('patOptChips').closest('.sheetsec'); }
   drawNotes();
@@ -2808,7 +2808,7 @@ function chordPart(g,t,L,s,b,dr,sd,tt){
       barTones=chordAt(nx.v, ni*L+nx.off); lastR=barTones.R; choke(ct);
       if(pat.sit){ PUSHCONT=false; pushedKey=nxKey;   // 次のコードの弾き始めを先に弾いて、そのままのばす（タイ）
         const nStart=((ni*L)%16+nx.off)%16, nb=nStart===0?b+1:b, v=pat.sit.push ? pat.sit.push[nb%pat.sit.push.length] : sitVar(pat, nx.len, nStart, nb);   // 食う先が何小節目かで弾き方を変えられる（2小節パターン）
-        playEvents((v.at[0]||[]).map(e=>[e[0],e[1],e[2]+an,e[3],e[4],e[5]]), barTones, ct, sd, pat);   // e[5]＝フォールなども引き継ぐ
+        playEvents((v.at[0]||[]).map(e=>[e[0],e[1],pat.sit.push?e[2]:e[2]+an,e[3],e[4],e[5]]), barTones, ct, sd, pat);   // 「食ったとき」の弾き方があれば書いた長さのまま（食った分のばさない）。e[5]＝フォールなども引き継ぐ
         if(state.bass){ const e0=bassOf(b).find(e=>e[0]===0); chokeBass(ct, e0&&e0[4]&&lastBassVoice?lastBassVoice.g:null); playBass(bassOf(b),0,ct,barTones,sd,an+nx.len); } }
       else if(pat.at[pi]){ PUSHCONT=true; pushedKey=null; playEvents(contEvs(pat,pi), barTones, ct, sd, pat);
         if(state.bass){ const r=contBass(bassOf(b),pi); chokeBass(ct); playBass(r.list,r.bi,ct,barTones,sd,cell.len-rel,nx.v); } }
