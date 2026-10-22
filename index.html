@@ -686,7 +686,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.127（2026-10-23）</p>
+    <p class="appver">ver 1.128（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -753,7 +753,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.127（2026-10-23）</p>
+  <p class="appver">ver 1.128（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1095,6 +1095,9 @@ const FILLS={
   rock: {big:  {k:'........x.o.x...', s:'..........x.X.gx', t3:'........X.......'},
          small:{s:'...........gx...', t3:'..............X.'}},
   // drum1.mid（Halftime Pulse）から：リムショットで3・4拍をつなぐ
+  // オーケストラ：大太鼓をだんだん強く連打して（クレッシェンド）次の小節へ
+  orch: {big:  {k:'........ggooxxXX', t3:'........ggooxxXX'},
+         small:{k:'............ooxX', t3:'............ooxX'}},
   halfp:{big:  {k:'........x.x....X', s:'............x...', x:'....X...........', o:'..........o.....'},
          small:{s:'............X...', k:'...............x'}},
 };
@@ -1156,9 +1159,10 @@ const DRUMS = {
            vB:{k:'x.....x..x....x.', s:'....X.......X...', h:'o.go.go.o.go.o..'}, fill:'soft',
            bass:[[0,0,6,.9],[6,0,2,.55],[8,'5',4,.75],[12,0,2,.6],[14,'ap',2,.65]]},
   // 壮大：キックとフロアタムで「ドン・ドドン」、スネアは3拍目だけ。2小節目の終わりはタムを連打して盛り上げる
-  epic:   {name:'壮大', pro:'シネマティック（タム）', v:{k:'X.......X.......', s:'........X.......', t3:'....x..x....x...', c:'X...............'},
-           vB:{k:'X.......x.......', s:'........X.......', t3:'....x..x....xxxx'}, fill:'tom',
-           bass:[[0,0,8,.95],[8,0,6,.85],[14,'ap',2,.7]]},
+  // okesutora.mid から：大太鼓（キック＋フロアタム）は「ドーン……ドッ・ドーン」、スネアはマーチのように細かく、チキ・シャーと刻む
+  epic:   {name:'壮大', pro:'オーケストラ（大太鼓＋マーチスネア）', v:{k:'X......xX.......', t3:'X......xX.......', s:'xoxgxoxgxoxgxoxg', h:'o.o.o.o.o.o.o.o.', o:'.g.g.g.g.g.g.g.g', c:'X...............'},
+           vB:{k:'X.....xxX.......', t3:'X.....xxX.......', s:'xoxgxoxgxoxgxoxx', h:'o.o.o.o.o.o.o.o.', o:'.g.g.g.g.g.g.g.g'}, fill:'orch',
+           bass:[[0,0,7.8,.95],[8,0,7.8,.85]]},   // チューバ・コントラバスのように2分音符でのばす
   // 和風：和太鼓のように低いタムで「ドン・ドドン」、リムで鉦（かね）のような合いの手
   wa:     {name:'和風', pro:'和太鼓風（タム）', v:{k:'X.......X.......', t3:'X.....x.X...x.x.', x:'....x.......x...'},
            vB:{k:'X.......X.......', t3:'X.....x.X.x.x.xx', x:'....x.......x...'}, fill:'tom',
@@ -1248,12 +1252,13 @@ const ARPS = {
                 beat:[[[0,ALL,4,.55]]]}},
 
   // 壮大：ストリングスの白玉に、ホルン（重ねる音色）が上で2分音符のメロディ
-  epic:   {name:'ストリングス（開離・広い音域）', pro:'開離配置の白玉（3オクターブ）', legato:true,
-           // ストリングスらしく、低音（ルート・5度・オクターブ）から高音（1オクターブ上の3和音）まで広く開いて並べる。上の声部は3拍目で動く
-           sit:{bar:[[[0,[0,4],16,.66],[0,[5],16,.56],[0,[2],16,.52],[0,[6],8,.56],[0,[8],8,.58],[8,[7],8,.56],[8,[8],8,.6]]],
-                halfA:[[[0,[0,4],8,.66],[0,[5],8,.56],[0,[2],8,.52],[0,[6,8],8,.57]]],
-                halfB:[[[0,[0,4],8,.64],[0,[5],8,.54],[0,[2],8,.5],[0,[7,8],8,.57]]],
-                beat:[[[0,[0,4],4,.64],[0,[2],4,.5],[0,[6,8],4,.56]]]}},
+  // okesutora.mid から：低音（コントラバス＋チェロ＝ルートとオクターブ）は2分音符。上の3声は開離配置で、1拍ごとに転回して上へ動く
+  //（1拍目：ルート・5度・10度 → 2拍目：3度・ルート・5度を1段上に）
+  epic:   {name:'ストリングス（開離・広い音域）', pro:'開離配置（1拍ごとに転回して上へ）', legato:true,
+           sit:{bar:[[[0,[0,5],8,.66],[8,[0,5],8,.6],[0,[1,3,7],4,.58],[4,[2,6,8],4,.6],[8,[1,3,7],4,.56],[12,[2,6,8],4,.6]]],
+                halfA:[[[0,[0,5],8,.66],[0,[1,3,7],4,.58],[4,[2,6,8],4,.6]]],
+                halfB:[[[0,[0,5],8,.64],[0,[1,3,7],4,.56],[4,[2,6,8],4,.6]]],
+                beat:[[[0,[0,5],4,.64],[0,[1,3,7],4,.58]]]}},
 
   // 和風：琴のように、下から上へ・上から下へ流れる分散和音
   koto:   {name:'琴（分散和音）', pro:'琴アルペジオ', legato:true,
@@ -1269,12 +1274,17 @@ const ARPS = {
            sit:{bar:[[[0,[6],6,.5],[6,[7],2,.44],[8,[8],8,.48]]],
                 halfA:[[[0,[6],6,.5],[6,[7],2,.44]]], halfB:[[[0,[8],8,.48]]], beat:[[[0,[6],4,.46]]]}},
   // ブラス：次のコードを8分食って「プァー」、そのあと「テ↑レ↑チャ↑チャ→ラ↓チャ↑」とオブリ（合いの手）
-  brassobb:{name:'上もの：ブラスのヒット＋オブリ', pro:'上もの：ヒット＋オブリ（8分食い）', legato:true, pushBy:2,
-           sit:{bar:[[[0,[6,7,8],3,.66],[4,[2],1,.5],[5,[3],1,.54],[6,[6],2,.6],[8,[6],1.5,.56],[10,[3],1,.52],[11,[7],3,.62],[14,[6,7,8],1.4,.6]]],
-                halfA:[[[0,[6,7,8],3,.66],[4,[2],1,.5],[5,[3],1,.54],[6,[6],2,.6]]],
-                halfB:[[[0,[6,7,8],2,.64],[2,[3],1,.5],[3,[6],1,.54],[4,[7],3,.6]]],
+  // brass.mid から：次のコードを8分食って「プァー」（最後に半音ずつ下がるフォール）、2拍目の裏から「テ↑レ↑チャ↑チャ→ラ↓チャ↑」。
+  // 2小節目は2拍目の裏で短く「パッ」、そのあと16分のスタッカートで下の方を刻む（コードの音だけで）
+  brassobb:{name:'上もの：ブラスのヒット＋オブリ', pro:'上もの：ヒット＋フォール＋オブリ（2小節・8分食い）', legato:true, pushBy:2,
+           sit:{bar:[[[0,[6,7,8],3.4,.68],[3.5,[6,7,8],.16,.42,null,-1],[3.66,[6,7,8],.16,.38,null,-2],[3.83,[6,7,8],.16,.34,null,-3],
+                       [6,[6],1,.56],[7,[7],1,.58],[8,[7,8],.5,.62],[9,[7,8],.5,.58],[10,[6,7],.5,.56],[11,[7,8],.5,.62]],
+                      [[2,[6,7,8],1,.64],[6,[1],.5,.5],[7,[2],.5,.52],[8,[3],.5,.56],[9,[3],.5,.52],[10,[2],.5,.5],[11,[2],.5,.48],[12,[3],.5,.56],[13,[3],.5,.52]]],
+                halfA:[[[0,[6,7,8],3.4,.68],[3.5,[6,7,8],.16,.42,null,-1],[3.66,[6,7,8],.16,.38,null,-2],[3.83,[6,7,8],.16,.34,null,-3],[6,[6],1,.56],[7,[7],1,.58]]],
+                halfB:[[[0,[6,7,8],2,.66],[4,[7,8],.5,.6],[5,[7,8],.5,.56],[6,[6,7],.5,.54],[7,[7,8],.5,.6]]],
                 beat:[[[0,[6,7,8],2,.62]]],
-                push:[[[0,[6,7,8],3,.72]]]}},
+                push:[[[0,[6,7,8],4,.72]]]}},
+
   // メロディ：高い所で「タン・タン・タ」（3+3+2）と上がっていく（ホルン・ストリングス向き）
   hornline:{name:'上もの：3・3・2のメロディ', pro:'上もの：付点4分×2＋4分で上行', legato:true,
            sit:{bar:[[[0,[6],6,.56],[6,[7],6,.54],[12,[8],4,.58]]],
@@ -1443,7 +1453,7 @@ function renderPatEditor(){
   }
   if(isDrum){
     $('patOptTitle').textContent='フィル（4小節ごと）';
-    chips($('patOptChips'), [['tom','タム回し'],['snare','スネア'],['kime','キメ'],['dance','ロール'],['soft','ソフト'],['rock','ロック'],['groove','ゆったり'],['funk','ファンキー'],['soul','ジャジー'],['ballad','バラード'],['shuf','3連符'],[null,'なし']], curMy().fill??null,
+    chips($('patOptChips'), [['tom','タム回し'],['snare','スネア'],['kime','キメ'],['dance','ロール'],['soft','ソフト'],['rock','ロック'],['groove','ゆったり'],['funk','ファンキー'],['soul','ジャジー'],['ballad','バラード'],['shuf','3連符'],['orch','オーケストラ'],[null,'なし']], curMy().fill??null,
       v=>{ curMy().fill=v; rebuildMy(); save(); renderPatEditor(); dirty=true; });
   }
 }
@@ -1512,7 +1522,7 @@ const STYLES=[
   {id:16, name:'弾き語り', bpm:92, drum:'none', arp:'strum', inst:'steel', kit:'std', bass:false},
   {id:4, name:'バラード', bpm:72, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true},
   {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
-  {id:17, name:'壮大', bpm:76, drum:'epic', arp:'epic', inst:'strings', arp2:'hornline', inst2:'horn', kit:'power', bass:true},
+  {id:17, name:'壮大', bpm:66, drum:'epic', arp:'epic', inst:'strings', kit:'power', bass:true, bassSnd:'ubass'},
   {id:18, name:'シティポップ', bpm:108, drum:'city', arp:'citypop', inst:'epiano', arp2:'brassobb', inst2:'brass', kit:'std', bass:true, bassSnd:'slap'},
   {id:9, name:'ファンキー', bpm:104, drum:'sixteen', arp:'offbeat', inst:'eguitar', kit:'std', bass:true},
   {id:11, name:'ジャジー', bpm:100, drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
@@ -2680,7 +2690,7 @@ function playEvents(evs,bt,ct,sd,pat){
   const tones=bt.tones, notes=[];
   if(evs.length) ACC_TOP = pat&&pat.accLink && evs.some(e=>e[1].includes(6)) && tones[6]!=null ? tones[6] : null;   // 「アクセントのあと上げてつなぐ」パターンだけ
   const RHS=new Set([1,2,3,6,7,8]);
-  evs.forEach(([st0,ns0,len,vel,dir])=>{
+  evs.forEach(([st0,ns0,len,vel,dir,tr])=>{
     let ns=ns0;
     // 右手を1〜2音ずつ弾く（分散和音）ときは、4音のコードでも色の音（3度・7度・9度）が抜けないように ra を使う
     const arp = bt.ra && ns.length<3 && ns.every(ix=>RHS.has(ix));
@@ -2689,7 +2699,7 @@ function playEvents(evs,bt,ct,sd,pat){
     if(!arp && state.inst==='strings' && ns.includes(1)&&ns.includes(2)&&ns.includes(3)){ ns=ns.map(ix=>ix===2?7:ix); if(ns.includes(0)&&!ns.includes(4)) ns=[...ns,4]; ns=[...new Set(ns)]; }
     ns=ns.filter(ix=>tones[ix]!=null);                    // ギターの4・5弦のコードなど、ない弦は鳴らさない
     const top=dir==='u'?ns[0]:ns[ns.length-1];
-    ns.forEach((ix,k)=>notes.push({ix,k,len,vel,dir,st0,top:ix===top, m: arp ? (ix<=3 ? bt.ra[ix-1] : bt.ra[ix-6]+12) : tones[ix]}));
+    ns.forEach((ix,k)=>notes.push({ix,k,len,vel,dir,st0,top:ix===top, m:(arp ? (ix<=3 ? bt.ra[ix-1] : bt.ra[ix-6]+12) : tones[ix])+(tr||0)}));   // tr＝半音いくつずらすか（ブラスのフォールなど）
   });
   if(!notes.length) return;
   // ギターのストローク：同じタイミングの音を、低い弦→高い弦（ダウン）／高い弦→低い弦（アップ）の順に少しずつずらして鳴らす
@@ -2708,7 +2718,7 @@ function playEvents(evs,bt,ct,sd,pat){
     if(state.bass && n.m<48) w*=.55;              // ベースがいるときは、ピアノ左手の低い音（C3より下）を控えめにして低音が濁らないように
     const hv = 1+(Math.random()-.5)*.14;                 // 人間っぽい揺れ
     const ht = n.st0%4===0 ? 0 : (Math.random()-.5)*.004;   // 拍の頭はジャストで
-    const off = strum ? k*spd : n.k*.0015;
+    const off = (strum ? k*spd : n.k*.0015) + (n.st0-Math.floor(n.st0))*sd;   // 16分のあいだの音（32分・3連符）は、その分だけ遅らせて鳴らす
     const lay = state.lay&&LAYS[state.lay]&&ix>=6&&ix<=8 ? state.lay : null;   // アクセント（いちばん上の音）は重ねる音色で
     const g=keyTone(n.m, ct+ht+off, n.len*sd, COMP_LEVEL*n.vel*w*hv*(lay?1.15:1), lay); if(g) held.push({g,end:ct+n.len*sd*1.4+.5});
   });
