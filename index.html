@@ -3323,12 +3323,22 @@ function parseShort(h){ const q={}; h.split('&').forEach(kv=>{ const i=kv.indexO
   return o; }
 const shareUrl=o=>location.origin+location.pathname+'#'+shortHash(o);
 function toast(t){ const el=$('toast'); el.textContent=t; el.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>el.hidden=true,2600); }
+// 短縮リンク：is.gd で短いリンクを作る（作れなければ、ふつうのリンクのまま）
+function shortenUrl(url){ return new Promise(res=>{ const cb='isgd'+Date.now(), sc=document.createElement('script'); let done=false;
+  const fin=v=>{ if(done) return; done=true; delete window[cb]; sc.remove(); res(v); };
+  window[cb]=d=>fin(d&&d.shorturl||null); sc.onerror=()=>fin(null); setTimeout(()=>fin(null),5000);
+  sc.src='https://is.gd/create.php?format=json&callback='+cb+'&url='+encodeURIComponent(url); document.head.appendChild(sc); }); }
 async function shareSong(o,name){
-  const url=shareUrl(o), title=(name||$('progName').textContent||'コード進行')+'｜コード進行パレット';
-  try{ if(navigator.share){ await navigator.share({title,url}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
-  try{ await navigator.clipboard.writeText(url); toast('共有リンクをコピーしました'); return; }catch(e){}
-  // コピーもできない環境：リンクを表示して手でコピーしてもらう
-  const box=$('shareBox'); box.innerHTML=''; const d=document.createElement('div'); d.className='sharebox'; d.innerHTML='<small>このリンクをコピーして送ってください</small><input readonly>'; d.querySelector('input').value=url; box.prepend(d); d.querySelector('input').select(); }
+  const long=shareUrl(o), title=(name||$('progName').textContent||'コード進行')+'｜コード進行パレット';
+  const box=$('shareBox'); box.innerHTML='<p class="small" style="margin:8px 0 0">短いリンクを作っています……</p>';
+  const url=(await shortenUrl(long))||long;
+  // 短くするのに少し時間がかかるので、共有・コピーはもう一度ボタンで（スマホは、押した直後でないと共有画面を開けないため）
+  box.innerHTML=''; const d=document.createElement('div'); d.className='sharebox';
+  d.innerHTML=`<small>${url===long?'共有リンク（短くできなかったので、そのままのリンクです）':'共有リンクができました'}</small><input readonly><div class="chips">${navigator.share?'<button class="chip main" data-a="share">共有する</button>':''}<button class="chip" data-a="copy">コピー</button></div>`;
+  const inp=d.querySelector('input'); inp.value=url; box.appendChild(d);
+  const sh=d.querySelector('[data-a="share"]'); if(sh) sh.onclick=async()=>{ try{ await navigator.share({title,url}); }catch(e){} };
+  d.querySelector('[data-a="copy"]').onclick=async()=>{ try{ await navigator.clipboard.writeText(url); toast('リンクをコピーしました'); }catch(e){ inp.focus(); inp.select(); toast('リンクを選択しました。コピーしてください'); } };
+}
 const SONGS_KEY='chord-palette-songs';
 const loadSongs=()=>{ try{ return JSON.parse(localStorage.getItem(SONGS_KEY))||[]; }catch(e){ return []; } };
 const saveSongs=a=>{ try{ localStorage.setItem(SONGS_KEY,JSON.stringify(a)); }catch(e){ toast('保存できませんでした（ブラウザの容量がいっぱいかもしれません）'); } };
