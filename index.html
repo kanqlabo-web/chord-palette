@@ -687,7 +687,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.130（2026-10-23）</p>
+    <p class="appver">ver 1.131（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -754,7 +754,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.130（2026-10-23）</p>
+  <p class="appver">ver 1.131（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1533,7 +1533,7 @@ const STYLES=[
   {id:4, name:'バラード', bpm:72, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true},
   {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
   {id:17, name:'壮大', bpm:132, drum:'epic', arp:'epic', inst:'strings3', kit:'power', bass:true, bassSnd:'ubass'},
-  {id:18, name:'シティポップ', bpm:108, drum:'city', arp:'citypop', inst:'epiano', arp2:'brassobb', inst2:'brass2', kit:'std', bass:true, bassSnd:'slap'},
+  {id:18, name:'シティポップ', bpm:108, drum:'city', arp:'citypop', inst:'epiano', arp2:'brassobb', inst2:'brass3', kit:'std', bass:true, bassSnd:'slap'},
   {id:9, name:'ファンキー', bpm:104, drum:'sixteen', arp:'offbeat', inst:'eguitar', kit:'std', bass:true},
   {id:11, name:'ジャジー', bpm:100, drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
   {id:19, name:'ローファイ', bpm:80, drum:'lofi', arp:'lofi', inst:'lofi', kit:'lofi', bass:true, bassSnd:'ubass'},
@@ -1587,11 +1587,14 @@ for(const k in ARPS){ const A=ARPS[k]; if(A.sit){ for(const kd in A.sit) A.sit[k
 
 const INSTS={piano:'ピアノ',epiano:'エレピ',lofi:'ローファイ・エレピ',spiano:'シンセピアノ',organ:'オルガン',
   steel:'アコギ',nylon:'ガットギター',eguitar:'エレキギター',dist:'ひずみギター',
-  strings3:'ストリングスA',strings2:'ストリングスB',strings:'ストリングスC',brass2:'ブラスA',brass3:'ブラスB',brass:'ブラスC',trumpet:'トランペット',trombone:'トロンボーン',sax:'サックス',horn:'ホルン',glock:'グロッケン',synth:'シンセ',pad:'シンセパッド',koto:'琴',shami:'三味線'};
+  strings3:'ストリングス',brass3:'ブラス',trumpet:'トランペット',trombone:'トロンボーン',sax:'サックス',horn:'ホルン',glock:'グロッケン',synth:'シンセ',pad:'シンセパッド',koto:'琴',shami:'三味線'};
 // 音源ファイルの名前（ひずみギターはエレキを、ローファイはエレピを加工して使う）
 const SETOF=i=>({dist:'eguitar',lofi:'epiano'})[i]||i;
+// 聴き比べて決めた音（ストリングス＝JCLive、ブラス＝JCLive）。前の候補を選んでいた保存データ・リンクはこちらに置きかえる
+const INST_ALIAS={strings:'strings3',strings2:'strings3',brass:'brass3',brass2:'brass3'};
+const fixInst=v=>INST_ALIAS[v]||v;
 // アクセント（いちばん上の音）に重ねる音色。キーボード1台のレイヤー／スプリットでできる範囲
-const LAYS={'':'重ねない',glock:'グロッケン',brass2:'ブラス',trumpet:'トランペット',sax:'サックス',horn:'ホルン',strings3:'ストリングス'};
+const LAYS={'':'重ねない',glock:'グロッケン',brass3:'ブラス',trumpet:'トランペット',sax:'サックス',horn:'ホルン',strings3:'ストリングス'};
 const SYNTH_INST={spiano:'piano',synth:'synth'};
 const instShort=()=>INSTS[state.inst]+(state.lay&&LAYS[state.lay]?'＋'+LAYS[state.lay]:'');
 const isSynthInst=()=>state.inst in SYNTH_INST;
@@ -1712,7 +1715,7 @@ function progLabel(){
 let state={slots:Array(16).fill(null), bars:4, key:'C', label:'num', inst:'piano', arp2:'', inst2:'epiano', lay2:'', kit:'std', drum:'pop', arp:'piano4', bassPat:'auto', bassSnd:'bass', fill:false, bass:true, pro:false, guide:true, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:7};
 const DEFAULT_STATE=JSON.parse(JSON.stringify(state));   // リセット用の初期設定
 let FIRST_RUN=true;
-try{ const s=JSON.parse(localStorage.getItem('chord-palette-v3')); if(s) FIRST_RUN=false; if(s&&Array.isArray(s.slots)&&s.slots.length===16) state={...state,...s}; if(!s.ver||s.ver<6){ state.bass=true; } if(!s.ver||s.ver<7){ state.drum='pop'; state.fill=false; state.ver=7; } if(!s.ver||s.ver<4){ state.inst='spiano'; state.kit='synth'; } if(!INSTS[state.inst]) state.inst='piano'; if(!KITS[state.kit]) state.kit='std'; }catch(e){}
+try{ const s=JSON.parse(localStorage.getItem('chord-palette-v3')); if(s) FIRST_RUN=false; if(s&&Array.isArray(s.slots)&&s.slots.length===16) state={...state,...s}; if(!s.ver||s.ver<6){ state.bass=true; } if(!s.ver||s.ver<7){ state.drum='pop'; state.fill=false; state.ver=7; } if(!s.ver||s.ver<4){ state.inst='spiano'; state.kit='synth'; } state.inst=fixInst(state.inst); state.inst2=fixInst(state.inst2); state.lay=fixInst(state.lay||''); state.lay2=fixInst(state.lay2||''); if(!INSTS[state.inst]) state.inst='piano'; if(!KITS[state.kit]) state.kit='std'; }catch(e){}
 if(!Array.isArray(state.segs)) state.segs=Array.from({length:16},(_,i)=>state.split&&state.split[i]?[state.split[i]]:[]);
 delete state.split; if(![1,2,4].includes(state.len)) state.len=4;
 if(state.myDrum){ state.myDrums=[{name:'マイパターン1',...state.myDrum}]; if(state.drum==='my') state.drum='my0'; } delete state.myDrum;
@@ -2712,8 +2715,8 @@ function playEvents(evs,bt,ct,sd,pat){
     const top=dir==='u'?ns[0]:ns[ns.length-1];
     const sh=typeof tr==='number'?tr:0;
     ns.forEach((ix,k)=>notes.push({ix,k,len,vel,dir,st0,ev0:st0,top:ix===top, m:(arp ? (ix<=3 ? bt.ra[ix-1] : bt.ra[ix-6]+12) : tones[ix])+sh}));   // tr＝半音いくつずらすか
-    // フォール（'fall'）：のばした音の終わりで、半音ずつ3つ、素早く下がって抜ける（ブラスの「プァー↘」）
-    if(tr==='fall'){ const base=notes.slice(-ns.length); [1,2,3].forEach(d=>base.forEach(n=>notes.push({...n, st0:st0+len-.5+d*.17, len:.16, vel:vel*(.62-.08*d), m:n.m-d, top:false}))); }
+    // フォール（'fall'）：のばした音の終わりで、音程を一気に下げながら抜く（ブラスの「プァー↘」）
+    if(tr==='fall') notes.slice(-ns.length).forEach(n=>n.fall=true);
   });
   if(!notes.length) return;
   // ギターのストローク：同じタイミングの音を、低い弦→高い弦（ダウン）／高い弦→低い弦（アップ）の順に少しずつずらして鳴らす
@@ -2735,6 +2738,10 @@ function playEvents(evs,bt,ct,sd,pat){
     const off = (strum ? k*spd : n.k*.0015) + (n.st0-Math.floor(n.ev0??n.st0))*sd;   // 16分のあいだの音・フォールは、その分だけ遅らせて鳴らす   // 16分のあいだの音（32分・3連符）は、その分だけ遅らせて鳴らす
     const lay = state.lay&&LAYS[state.lay]&&ix>=6&&ix<=8 ? state.lay : null;   // アクセント（いちばん上の音）は重ねる音色で
     const g=keyTone(n.m, ct+ht+off, n.len*sd, COMP_LEVEL*n.vel*w*hv*(lay?1.15:1), lay); if(g) held.push({g,end:ct+n.len*sd*1.4+.5});
+    // フォール：音の終わりから約0.14秒で10半音ほど一気に下げ、同時に消す（がっつり・短く）
+    if(n.fall && g && g.voice){ const te=ct+ht+off+n.len*sd-.03;
+      try{ g.voice.params.forEach(([pr,k])=>{ pr.cancelScheduledValues(te); pr.setValueAtTime(k(n.m),te); pr.exponentialRampToValueAtTime(k(n.m-10),te+.14); });
+        g.gain.cancelScheduledValues(te); g.gain.setValueAtTime(g.voice.level,te); g.gain.linearRampToValueAtTime(g.voice.level*.7,te+.06); g.gain.linearRampToValueAtTime(.0001,te+.15); }catch(e){} }
   });
 }
 // ベース：5度はコードの本当の5度に。コードが変わる所で必ず切る（次のコードにはみ出さない）
@@ -3810,7 +3817,7 @@ function unpackSong(o){ if(!o||!Array.isArray(o.slots)) return false;
   if(o.arp2===undefined){ state.arp2=''; }
   if(o.myBass){ listOf('bass').push({...o.myBass,name:(o.myBass.name||'共有パターン')}); state.bassPat='my'+(listOf('bass').length-1); }
   rebuildMy(); if(state.arp2 && !ARPS[state.arp2]) state.arp2=ARP_ALIAS[state.arp2]||''; if(ARP_ALIAS[state.arp]) state.arp=ARP_ALIAS[state.arp]; if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4'; if(!LAYS[state.lay||'']) state.lay='';
-  if(!INSTS[state.inst]) state.inst='piano'; if(!KITS[state.kit]) state.kit='std';
+  state.inst=fixInst(state.inst); state.inst2=fixInst(state.inst2); state.lay=fixInst(state.lay||''); state.lay2=fixInst(state.lay2||''); if(!INSTS[state.inst]) state.inst='piano'; if(!KITS[state.kit]) state.kit='std';
   state.slots=Array.from({length:16},(_,i)=>state.slots[i]??null); state.segs=Array.from({length:16},(_,i)=>(state.segs||[])[i]||[]); state.ant=Array.from({length:16},(_,i)=>(state.ant||[])[i]??null);
   state.pro=!!state.pro; document.body.classList.toggle('pro',state.pro); page=0; selected=null; try{ applyMix(); }catch(e){}
   $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save(); ensureSounds(); return true; }
