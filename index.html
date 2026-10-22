@@ -3265,7 +3265,7 @@ document.body.classList.toggle('pro',!!state.pro);
 renderAll(); frame(); ensureSounds();
 // ---------- 保存・共有 ----------
 // 共有リンク：進行と音の設定を URL の「#s=…」に詰める（サーバー不要。開いた人のブラウザで復元）
-const SHARE_KEYS=['slots','segs','ant','bars','len','key','bpm','drum','arp','inst','kit','bass','bassSnd','bassPat','fill','mix'];   // 曲を再現するのに必要なものだけ（開いた人の設定・進み具合は変えない）
+const SHARE_KEYS=['slots','segs','ant','bars','len','key','bpm','drum','arp','inst','kit','bass','bassSnd','bassPat','fill','mix','pro'];   // 曲を再現するのに必要なもの（PROモードかどうかも）。開いた人の進み具合は変えない
 function packSong(){ const o={v:1}; SHARE_KEYS.forEach(k=>o[k]=state[k]);
   // リンクを短くするため、使っている小節だけ・空の情報は省く
   o.slots=state.slots.slice(0,state.bars);
@@ -3285,7 +3285,7 @@ function unpackSong(o){ if(!o||!Array.isArray(o.slots)) return false;
   rebuildMy(); if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4';
   if(!INSTS[state.inst]) state.inst='piano'; if(!KITS[state.kit]) state.kit='std';
   state.slots=Array.from({length:16},(_,i)=>state.slots[i]??null); state.segs=Array.from({length:16},(_,i)=>(state.segs||[])[i]||[]); state.ant=Array.from({length:16},(_,i)=>(state.ant||[])[i]??null);
-  page=0; selected=null;
+  state.pro=!!state.pro; document.body.classList.toggle('pro',state.pro); page=0; selected=null;
   $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save(); ensureSounds(); return true; }
 const b64e=str=>{ const u=new TextEncoder().encode(str); let b=''; u.forEach(c=>b+=String.fromCharCode(c)); return btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); };
 const b64d=t=>{ const b=atob(t.replace(/-/g,'+').replace(/_/g,'/')); return new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0))); };
