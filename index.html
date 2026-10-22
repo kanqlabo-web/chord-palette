@@ -2388,7 +2388,7 @@ function scheduleStep(g,t){
     // 次のコードを「食って」先に鳴らす。
     // パターンにその位置で弾く音があれば、パターンはそのまま続けてコードだけ先に変える（16ビート系）。
     // なければ、これまでどおり次のコードを先に弾いて、小節の頭までのばす（タイ）
-    const pi=off%16;
+    const pi=g%16;
     if(rel===cell.len-an){
       barTones=chordNotes(nx.v,lastR); lastR=barTones.R; choke(ct);
       if(pat.at[pi]){ PUSHCONT=true; pushedKey=null; playEvents(contEvs(pat,pi), barTones, ct, sd, pat);
@@ -2401,7 +2401,7 @@ function scheduleStep(g,t){
     }
   } else if(has(cell) && lag>0 && rel<lag){
     // 後ろ倒し：遅らせている間は、前のコードのままパターンを続ける
-    if(barTones){ const evs=pat.at[cell.off>0?off%16:rel]; if(evs && rel>0) playEvents(evs, barTones, ct, sd, pat); }
+    if(barTones){ const evs=pat.at[g%16]; if(evs && rel>0) playEvents(evs, barTones, ct, sd, pat); }
   } else if(has(cell)){
     // コードが変わった所から、パターンを頭から弾く（短いコードはパターンの前の部分だけ）
     const key=i+':'+cell.h, head=rel===lag, pushed = rel===0 && pushedKey===key;
@@ -2410,13 +2410,14 @@ function scheduleStep(g,t){
     // 小節の途中（3拍目など）で変わるコードは、パターンを頭から弾き直さず、小節の中の位置のまま続けてコードだけ変える
     //（その瞬間に伸ばしている音は、新しいコードで弾き直す）。8分のくり返しのパターンは、これまでと同じ鳴り方になる
     // 後ろ倒し（拍をずらした）ときも同じ：パターンにその位置で弾く音があれば、続けたままコードだけ変える
-    const mid = cell.off>0 || (lag>0 && !!pat.at[off%16]), pi = mid ? off%16 : rel;
+    // パターンの位置は「小節の中の位置」。1マスが2拍・1拍のときも、小節の途中のコードはパターンを続けたままコードだけ変える
+    const pi = g%16, mid = pi!==0 && (cell.off>0 || L<16 || !!pat.at[pi]);
     let evs = pushed ? null : (head && !mid) ? pat.at[0] : pat.at[pi];
     if(head && mid && !pushed){ const ce=contEvs(pat,pi); evs = ce.length ? ce : pat.at[0]; }
     if(head && !pushed) choke(ct);
     else if(evs && !pat.legato && evs.some(e=>e[1].length>1)) choke(ct);
     if(evs) playEvents(evs, barTones, ct, sd, pat);
-    let bl=state.bass?bassOf(b):null, bi=mid?off%16:(head?0:rel);
+    let bl=state.bass?bassOf(b):null, bi=(head&&!mid)?0:pi;
     if(bl && head && mid && !pushed){ const r=contBass(bl,bi); bl=r.list; bi=r.bi; }
     if(state.bass && head && !pushed){ const e0=bl.find(e=>e[0]===bi); chokeBass(tt, e0&&e0[4]&&lastBassVoice?lastBassVoice.g:null); }
     if(state.bass && !pushed && (head || lag===0 || rel>=lag+2)) playBass(bl,bi,tt,barTones,sd,cell.len-rel+nLag,nx.v);   // 遅らせた直後はベースを詰め込まない
