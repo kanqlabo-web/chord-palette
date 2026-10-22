@@ -690,7 +690,8 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>小節数</h3><div class="chips" id="barChips"></div></div>
   <div class="sec" id="lenSec"><h3>コードの切り替え（1マスの長さ）</h3><div class="chips" id="lenChips"></div>
     <p class="small" id="lenNote"></p></div>
-  <div class="sec"><h3>コードの表示</h3><div class="chips" id="labelChips"></div></div>
+  <div class="sec"><h3>コードの表示</h3><div class="chips" id="labelChips"></div>
+    <h3 style="margin-top:12px">数字の書き方</h3><div class="chips" id="numChips"></div></div>
   <div class="sec"><h3>リセット</h3>
     <div class="chips"><button class="chip" id="resetSlots">マスを空にする</button><button class="chip" id="resetAll">設定もすべて最初に戻す</button></div>
     <p class="small" style="margin:0">セーブデータとマイパターンは消えません。</p></div>
@@ -891,7 +892,9 @@ function labelOf(v,kind){
   return size<1 ? `<span style="font-size:${size}em">${t}</span>` : t;
 }
 const bigHTML=v=>labelOf(v,state.label);
-const smallHTML=v=>labelOf(v,state.label==='alpha'?'roman':'alpha');
+// 数字の書き方（1・2・3 か Ⅰ・Ⅱ・Ⅲ か）と、大きく出すのが数字かアルファベットかは、別々に選べる
+const numK=()=>state.numStyle==='roman'?'roman':'num';
+const smallHTML=v=>labelOf(v,state.label==='alpha'?numK():'alpha');
 const plainLabel=v=>nameOf(v,state.label,false).replace('-5','⁻⁵');
 const LABELS={num:'数字',roman:'ローマ数字',alpha:'アルファベット'};
 // ボイシング：左手はルート（分数コードならその音）、右手は前の和音から近い形を選ぶ（なめらかなボイスリーディング）
@@ -1684,7 +1687,10 @@ function buildMenu(){
   if(UL()>=5) chips($('barChips'), [[4,'4'+unit],[8,'8'+unit],[16,'16'+unit]], state.bars, v=>{ state.bars=v; if(page*4>=v) page=0; renderAll(); });
   chips($('lenChips'), [[4,'4拍（1小節）'],[2,'2拍'],[1,'1拍']], state.len, v=>{ state.len=v; renderAll(); });
   $('lenNote').textContent = '2拍にすると、1マスが2拍になります（4マスで2小節）。' + (state.pro ? 'PROモードの拍ごとの切り替えは、1マスの中（2拍なら2拍目）で使えます。' : '');
-  chips($('labelChips'), Object.entries(LABELS), state.label, v=>{ state.label=v; renderAll(); });
+  if(state.label==='roman'){ state.label='num'; state.numStyle='roman'; }   // 前の設定（ローマ数字）からの引き継ぎ
+  if(state.label!=='alpha') state.label=numK();
+  chips($('labelChips'), [['num','数字'],['alpha','アルファベット']], state.label==='alpha'?'alpha':'num', v=>{ state.label=v==='alpha'?'alpha':numK(); save(); renderAll(); });
+  chips($('numChips'), [['arabic','1・2・3（アラビア数字）'],['roman','Ⅰ・Ⅱ・Ⅲ（ローマ数字）']], state.numStyle==='roman'?'roman':'arabic', v=>{ state.numStyle=v; if(state.label!=='alpha') state.label=numK(); save(); renderAll(); });
   $('guideChips').closest('.sec').hidden=UL()<2;
   if(UL()>=2) chips($('guideChips'), [[true,'表示する'],[false,'表示しない']], state.guide, v=>{ state.guide=v; renderAll(); });
   $('proChips').closest('.sec').hidden=UL()<LV_MAX && !state.pro;
@@ -2030,7 +2036,7 @@ function openVar(i,h){
   box.hidden=useWheel; wh.hidden=!useWheel;
   if(!useWheel){ box.innerHTML='';
     opts.forEach(x=>{ const b=document.createElement('button'); b.setAttribute('aria-pressed', isNum(x)?v===x:(!isNum(v)&&sameSpec(x,v)));
-      const rl=ctxRole(x,null,null,false); b.className=rl; b.innerHTML=`<i>${rl}</i><b>${nameOf(x,state.label,true)}</b><small>${nameOf(x,state.label==='alpha'?'num':'alpha',false)}</small>`;
+      const rl=ctxRole(x,null,null,false); b.className=rl; b.innerHTML=`<i>${rl}</i><b>${nameOf(x,state.label,true)}</b><small>${nameOf(x,state.label==='alpha'?numK():'alpha',false)}</small>`;
       b.onclick=()=>{ setV(i,h,x); preview(x); renderSlots(); openVar(i,h); };
       box.appendChild(b); }); }
   else {
@@ -2043,7 +2049,7 @@ function openVar(i,h){
       const di=STEPS.indexOf(t.o), isPlain=b===null && t.x==='' && di>=0 && (DEG[di].q===''?'maj':DEG[di].q)===t.q;
       const nv=isPlain?di:{...t,b}; setV(i,h,nv); preview(nv); renderSlots(); openVar(i,h); };
     const rl=ctxRole(v,null,null,false), nowB=(sp.b==null||sp.b===sp.o)?null:sp.b;
-    $('varNow').className='varnow '+rl; $('varNow').innerHTML=`<b>${nameOf(v,state.label,true)}</b><small>${nameOf(v,state.label==='alpha'?'num':'alpha',false)}</small><i>${rl}</i>`;
+    $('varNow').className='varnow '+rl; $('varNow').innerHTML=`<b>${nameOf(v,state.label,true)}</b><small>${nameOf(v,state.label==='alpha'?numK():'alpha',false)}</small><i>${rl}</i>`;
     wheel($('varKind'), kinds.map((x,k)=>[k, nameOf(x,state.label,false)]), ki, k=>apply(kinds[k], nowB));
     const tones=[...new Set(QUAL[sp.q]||[0,4,7])];
     wheel($('varBassW'), tones.map(iv=>{ const b=iv?(sp.o+iv)%12:null; return [b, `${NUM_OF[(iv?b:sp.o)%12]}${iv?'':'（そのまま）'}`]; }), nowB, b=>apply(kinds[ki], b));
