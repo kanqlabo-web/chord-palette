@@ -1,22 +1,20 @@
 #!/bin/bash
-# 使い方: deploy.sh "コミットメッセージ"   — バージョンを自動で上げて、index.html を作り、push して、リモートと一致するか確認する
+# 使い方: bash tools/deploy.sh "コミットメッセージ"
+#  版数を1つ上げて（日付も入れる）、tools/chord-palette.src.html から index.html と beta/index.html を作り、commit・push する
+#  コミットの最後に付ける行は、環境変数 COMMIT_TRAILER で渡せる（例：Co-Authored-By の行など）
 set -e
-S=/tmp/claude-0/-home-claude/cb90b389-4cb1-5166-985c-0cf20ec415ab/scratchpad
-cd /home/claude/chord-palette
+R=$(cd "$(dirname "$0")/.." && pwd); T=$R/tools; SRC=$T/chord-palette.src.html
+cd "$R"
 N=$(( $(grep -o "ver 1\.[0-9]*" index.html | head -1 | cut -d. -f2) + 1 ))   # 今の版数＋1（浅いクローンでもずれないように）
 D=$(TZ=Asia/Tokyo date +%Y-%m-%d)
-sed -i -E "s/ver 1\.[0-9]+（[0-9-]*）/ver 1.$N（$D）/g" /home/claude/chord-palette.html
-{ cat $S/hdr.txt; cat /home/claude/chord-palette.html; printf '\n</body>\n</html>'; } > index.html
-# 試作版も同じ中身で作り直し、ソースも tools/ に残す
-bash $S/build_beta.sh >/dev/null && cp $S/site/beta/index.html beta/index.html
-cp /home/claude/chord-palette.html tools/chord-palette.src.html; cp $S/build_beta.sh $S/deploy.sh tools/
-git add -A && git commit -qm "$1（ver 1.$N）
+sed -i -E "s/ver 1\.[0-9]+（[0-9-]*）/ver 1.$N（$D）/g" "$SRC"
+{ cat "$T/hdr.txt"; cat "$SRC"; printf '\n</body>\n</html>'; } > index.html
+awk '/<script>/{f=1;next} /<\/script>/{f=0} f' index.html > /tmp/cp-main.js && node --check /tmp/cp-main.js
+bash "$T/build_beta.sh"
+git add -A
+git commit -qm "$1（ver 1.$N）${COMMIT_TRAILER:+
 
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Lc8ncBESE1t4zMTwrtxnnQ"
+$COMMIT_TRAILER}"
 git push -q
-L=$(git rev-parse HEAD); R=$(git ls-remote origin refs/heads/main | cut -f1)
-[ "$L" = "$R" ] && echo "PUSHED ver 1.$N ${L:0:7}" || echo "PUSH MISMATCH local $L remote $R"
-# GitHub Pages の公開が終わるまで待って結果を出す（最大約3分。終わらなければ状態だけ表示）
-for i in $(seq 1 18); do st=$(gh run list -L 1 --json status,headSha --jq '.[0].status+" "+.[0].headSha[0:7]' 2>/dev/null); case "$st" in "completed "*) break;; esac; sleep 10; done
-gh run list -L 1 2>/dev/null | cut -f1-2,5,9
+L=$(git rev-parse HEAD); Rm=$(git ls-remote origin refs/heads/main | cut -f1)
+[ "$L" = "$Rm" ] && echo "PUSHED ver 1.$N ${L:0:7}" || echo "PUSH MISMATCH local $L remote $Rm"
