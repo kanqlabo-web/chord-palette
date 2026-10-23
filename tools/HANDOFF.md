@@ -184,3 +184,4 @@
 - 07-tracks.js 末尾: twoPane(左カテゴリ/右リスト), pickRow(1行の要約ボタン), openPicker(title,catsFn,cur,onPick)=全画面 #pickScr。onPick が true を返すと閉じる（スタイル・パターン）、false なら開いたまま（音色の聴き比べ）。
 - groupPick を上書きして、楽器・ドラム音は全部 openPicker 経由。STYLE_CATS がスタイルの分類、patCats(kind) が PRO の演奏パターン分類。
 - 未対応: 「2つ目の楽器」(P2PATS) と PRO ベースのパターンはまだチップ表示。
+- シート(#sheet)は下の「決定」(#sheetOk)で確定。✕・外側・Esc は sheetRestore() で開いた時の state(JSON) に戻す（07-tracks.js 末尾）。シート内で選んでもシートは閉じず openSheet(kind) で描き直す。

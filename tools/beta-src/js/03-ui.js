@@ -530,7 +530,7 @@ function openSheet(kind){
   order.forEach(k=>{
     const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', (patOf(kind)||'')===k);
     b.innerHTML=k===''?`<canvas></canvas><span>なし（使わない）</span>`:`<canvas></canvas><span>${patName(src[k])}</span>`;
-    b.onclick=()=>{ setPatOf(kind,k); save(); renderAll(); ensureSounds(); if(typeof renderTracks==='function') renderTracks(); closeAll(); };
+    b.onclick=()=>{ setPatOf(kind,k); save(); renderAll(); ensureSounds(); if(typeof renderTracks==='function') renderTracks(); openSheet(kind); };   // 決定ボタンで閉じる
     opts.appendChild(b);
   });
   sheet.classList.add('on'); scrim.classList.add('on');
@@ -584,7 +584,7 @@ function openBassSheet(){
   const opts=$('opts'); opts.innerHTML='';
   BASS_ORDER.forEach(k=>{ const b=document.createElement('button'); b.className='opt'; b.setAttribute('aria-pressed', (state.bassPat||'auto')===k);
     b.innerHTML=`<canvas></canvas><span>${BASSES[k].name}</span>`;
-    b.onclick=()=>{ state.bassPat=k; state.bass=true; renderAll(); closeAll(); dirty=true; };
+    b.onclick=()=>{ state.bassPat=k; state.bass=true; renderAll(); dirty=true; openBassSheet(); };
     opts.appendChild(b); });
   sheet.classList.add('on'); scrim.classList.add('on');
   requestAnimationFrame(()=>{ const col=colors();

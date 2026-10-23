@@ -487,14 +487,31 @@ function patCats(kind){ const drum=kind==='drum', src=drum?DRUMS:ARPS, order=dru
   const cats=[['自分で作ったもの',my.map(it)], ['伴奏スタイルの演奏',rest.filter(k=>used[k]&&!LAYER_PATS.has(k)).map(it)], ['重ねる上もの',rest.filter(k=>LAYER_PATS.has(k)).map(it)], ['そのほか',rest.filter(k=>!used[k]&&!LAYER_PATS.has(k)).map(it)]];
   if(p2like) cats.unshift(['なし（使わない）',[{k:'',label:'なし（使わない）',sub:'この楽器を鳴らさない'}]]);
   return cats; }
-{ const os=openSheet; openSheet=function(kind){ const r=os.apply(this,arguments); const opts=$('opts');
+{ const os=openSheet; openSheet=function(kind){ sheetSnap(); const r=os.apply(this,arguments); const opts=$('opts');
     if(!state.pro && (kind==='arp'||kind==='drum'||kind==='style')) requestAnimationFrame(()=>{ const st=styleNow();
       pickRow(opts,'伴奏スタイル',st?st.name:'（組み合わせ中）',st?styleSub(st):'',null, st?c=>{ const g=fit(c), col=colors(), H=c.height; drawArpBar(g,0,0,c.width,H*.55,ARPS[st.arp],col.t,col); if(DRUMS[st.drum]) drawDrumBar(g,0,H*.58,c.width,H*.42,DRUMS[st.drum],col); }:null,
         ()=>openPicker('伴奏スタイルを選ぶ', styleCats, st&&st.id, id=>{ const st=STYLES.find(s=>s.id===id); const keep={inst:state.inst,arp2:state.arp2,inst2:state.inst2,kit:state.kit,bass:state.bass,bassSnd:state.bassSnd};
           setStyle(st); if(state.keepInst) Object.assign(state,keep); else pickInst(st.inst); renderAll(); save();
-          if(st.bpm && !state.keepBpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; save(); } closeAll(); return true; })); });
+          if(st.bpm && !state.keepBpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; save(); } openSheet(kind); return true; })); });
     else if(state.pro && kind!=='bass' && kind!=='style') requestAnimationFrame(()=>{ if(sheetKind!==kind) return; const k=patOf(kind)||'', drum=kind==='drum', src=drum?DRUMS:ARPS;
       pickRow(opts,'演奏（パターン）',k&&src[k]?patName(src[k]):'なし（使わない）','',null, k&&src[k]?c=>{ const g=fit(c), col=colors(); if(drum) drawDrumBar(g,0,0,c.width,c.height,src[k],col); else drawArpBar(g,0,0,c.width,c.height,src[k],col.t,col); }:null,
-        ()=>openPicker(drum?'ドラムの演奏を選ぶ':'演奏を選ぶ', ()=>patCats(kind), k, v=>{ setPatOf(kind,v); save(); renderAll(); ensureSounds(); renderTracks(); closeAll(); return true; })); });
+        ()=>openPicker(drum?'ドラムの演奏を選ぶ':'演奏を選ぶ', ()=>patCats(kind), k, v=>{ setPatOf(kind,v); save(); renderAll(); ensureSounds(); renderTracks(); openSheet(kind); return true; })); });
     else { opts.classList.add('opts'); }
     return r; }; }
+
+// ---------- シートは「決定」で確定、✕・外側タップはキャンセル（開いたときの状態に戻す） ----------
+let SHEET_SNAP=null;
+function sheetSnap(){ if(!sheet.classList.contains('on')) SHEET_SNAP=JSON.stringify(state); }
+function sheetRestore(){ if(!SHEET_SNAP || !sheet.classList.contains('on')) return; const o=JSON.parse(SHEET_SNAP); SHEET_SNAP=null;
+  Object.keys(state).forEach(k=>delete state[k]); Object.assign(state,o); rebuildMy();
+  $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; save(); renderAll(); applyMix(); ensureSounds(); if(!$('trk').hidden) renderTracks(); }
+{ const st=document.createElement('style'); st.textContent=`
+  #sheetFoot{position:sticky;bottom:calc(-16px - env(safe-area-inset-bottom,0px));margin:18px -16px calc(-16px - env(safe-area-inset-bottom,0px));padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);z-index:2}
+  #sheetOk{width:100%;min-height:48px;border:0;border-radius:12px;background:var(--ink);color:var(--surface);font:inherit;font-weight:800;font-size:1rem}`;
+  document.head.appendChild(st);
+  const f=document.createElement('div'); f.id='sheetFoot'; f.innerHTML='<button id="sheetOk">決定</button>'; sheet.appendChild(f);
+  $('sheetOk').onclick=()=>{ SHEET_SNAP=null; closeAll(); };
+  $('closeSheet').setAttribute('aria-label','キャンセル');
+  $('closeSheet').onclick=()=>{ sheetRestore(); closeAll(); };
+  scrim.onclick=()=>{ sheetRestore(); closeAll(); };
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') sheetRestore(); },true); }
