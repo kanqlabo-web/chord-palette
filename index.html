@@ -111,7 +111,7 @@ body.pro .proedit{display:flex;gap:8px;align-items:center}
 .kbr i.on{background:color-mix(in srgb,var(--t) 55%,#fff)}.kbr i.bk.on{background:color-mix(in srgb,var(--t) 70%,#000)}
 .kbr i.lo{box-shadow:inset 0 -5px 0 var(--d)}
 .kbr i em{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-style:normal;font-size:.5rem;color:var(--muted);pointer-events:none}
-.rangerow{display:flex;align-items:center;gap:10px;font-size:.85rem;font-weight:700;margin:6px 0}.rangerow input{flex:1}.rangerow output{min-width:3.4em;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500}
+.rangerow{display:flex;align-items:center;gap:10px;font-size:.85rem;font-weight:700;margin:6px 0}.rangerow .chip{padding:4px 10px;font-size:.75rem}.rangerow output{min-width:6.5em!important}.rangerow input{flex:1}.rangerow output{min-width:3.4em;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500}
 .scenebar{margin:0 0 10px}.scenebar .small{margin:6px 0 0}
 .prlabs{display:flex;flex-direction:column;width:64px;flex:none}
 .prlabs span{height:var(--rh);display:flex;align-items:center;font-size:.6rem;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden}
@@ -707,7 +707,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.181（2026-10-23）</p>
+    <p class="appver">ver 1.182（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -774,7 +774,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.181（2026-10-23）</p>
+  <p class="appver">ver 1.182（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -815,9 +815,9 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sheetsec" id="keepSec" hidden style="margin-top:14px"><h3>伴奏を変えるとき</h3><div class="chips" id="keepChips"></div></div>
   <div class="sheetsec" style="margin-top:16px"><h3 id="soundTitle"></h3><div class="chips" id="soundChips"></div></div>
   <div class="sheetsec" id="rangeSec" hidden><h3 id="rangeTitle">音域（PRO）</h3>
-    <p class="small" style="margin:0 0 6px">鍵盤をタップすると、そこから1オクターブ（色の付いた所）がその手の範囲になります。和音はこの中から弾きます。</p>
-    <div class="kbrow" id="rhRow"><div class="kbhead"><b id="rhLab">右手</b><span id="rhOut"></span><button class="chip" id="rhReset">標準</button></div><div class="kbr" id="rhKb"></div></div>
-    <div class="kbrow" id="lhRow"><div class="kbhead"><b>左手</b><span id="lhOut"></span><button class="chip" id="lhReset">標準</button></div><div class="kbr" id="lhKb"></div></div></div>
+    <p class="small" style="margin:0 0 6px">鍵盤の上の絶対的な範囲（いちばん下の音〜1オクターブ）を選びます。和音はなるべくこの中で弾きます。</p>
+    <div class="rangerow" id="rhRow"><b id="rhLab">右手</b><input type="range" id="rhKb" step="1"><output id="rhOut"></output><button class="chip" id="rhReset">標準</button></div>
+    <div class="rangerow" id="lhRow"><b>左手</b><input type="range" id="lhKb" step="1"><output id="lhOut"></output><button class="chip" id="lhReset">標準</button></div></div>
   <div class="sheetsec" id="wideSec" hidden><h3>左右の広がり</h3><div class="chips" id="wideChips"></div><p class="small" style="margin:6px 0 0">いちばん低い音をまん中に置き、上の音を左・右…と交互に振り分けます（低い音ほど狭く）。ピアノ系の音色は、ピアノ音源のように低い音ほど左・高い音ほど右に並べます。</p></div>
   <div class="sheetsec" id="part2Sec" hidden><h3>2つ目の楽器（重ねる）</h3><div class="chips" id="p2Pat"></div><div id="p2InstWrap" hidden><h3 style="margin-top:12px">2つ目の楽器の音色</h3><div class="chips" id="p2Inst"></div></div></div>
   <div class="sheetsec" id="kitSec" hidden><h3>ドラムの音</h3><div class="chips" id="kitChips2"></div></div>
@@ -976,19 +976,22 @@ const LABELS={num:'数字',roman:'ローマ数字',alpha:'アルファベット'
 function voiceFor(pcs,prev,minLo=56,accTop=null){
   const n=Math.min(pcs.length,4), cands=[];
   const hiLo = accTop!=null ? Math.max(minLo+12, accTop) : minLo+12;   // アクセントのあとは、上へつなげられるよう高い形も候補に入れる
-  for(let lo=minLo;lo<=hiLo;lo++){ if(!pcs.includes(lo%12)) continue;   // 右手の一番下の音：ふだんは A♭3〜A♭4
+  for(let lo=minLo-4;lo<=hiLo+3;lo++){ if(!pcs.includes(lo%12)) continue;   // 右手の一番下の音：ふだんは A♭3〜A♭4（範囲の外は、全部の声が2度以内で動けるときだけ）
     const v=[lo]; for(let k=1;k<n;k++){ let m=v[k-1]+1; while(!pcs.includes(m%12)||v.some(x=>x%12===m%12)) m++; v.push(m); }
     cands.push(v); }
   // 前の和音に近い形を選ぶ。ただし真ん中の音域（平均E4付近）から離れすぎないように罰点をつける
   // （近さだけで選ぶと、Am→Bm-5→C→Em のような進行で1周ごとに少しずつ上がり続けてしまう）
   const ref=prev||[58,63,67,70], dist=a=>a.reduce((s,m,i)=>s+Math.abs(m-(ref[i]??ref[ref.length-1]+3)),0)
     + 2*Math.max(0,Math.abs(a.reduce((s,m)=>s+m,0)/a.length-64)-2.5)*a.length;
-  cands.sort((a,b)=>dist(a)-dist(b));
+  // 音域の外の形：全部の声が前の和音から2度以内（なめらか）に動けるなら少しの罰点、そうでなければ大きな罰点
+  const step=a=>prev&&prev.length>=a.length&&a.every((m,i)=>Math.abs(m-prev[i])<=2), outP=a=>{ const o=Math.max(0,minLo-a[0])+Math.max(0,a[0]-(minLo+12)); return o?(step(a)?o*.5:1000+o):0; };
+  const dist0=dist; const distO=a=>dist0(a)+outP(a);
+  cands.sort((a,b)=>distO(a)-distO(b));
   // 直前の最後の音がアクセント（高い音）だったときは、次の和音のいちばん上の音をアクセントと同じか少し上（〜5半音）に上げて、上でつなげる
   if(accTop!=null){ const top=a=>a[a.length-1], pick=f=>{ const up=cands.filter(f); up.sort((a,b)=>Math.abs(top(a)-accTop)-Math.abs(top(b)-accTop)||dist(a)-dist(b)); return up[0]; };
     const r=pick(a=>top(a)>=accTop && top(a)<=accTop+5) || pick(a=>top(a)>=accTop-2 && top(a)<accTop);
     if(r) return r; }
-  return cands.filter(a=>a[0]<=minLo+12)[0]||cands[0];
+  return cands[0];
 }
 // ---- ギターのボイシング：標準チューニング（E2 A2 D3 G3 B3 E4）で、実際に押さえられる形を探す
 // ・いちばん低い弦がベース音（ルート／分数コードはその音）。それより低い弦はミュート、上は1弦まで全部鳴らす
@@ -1038,7 +1041,7 @@ let LHCTX={use:false,prev:null,prevB:null,reset:false,satb:null};
 // つながりで高さを選ぶ（左手・ベース共通）：def=ふつうの高さ、lo=音域の下（lo〜lo+11 が基本）、prev=前の音、below=下にはみ出してよい幅
 function leadTo(def,pc,lo,prev,below){ if(prev==null) return def;
   const isPc=m=>((m-pc)%12+12)%12===0, center=lo+6;
-  const near=[prev,prev-1,prev+1,prev-2,prev+2].filter(m=>isPc(m) && m>=lo-below-2 && m<=lo+20);   // 2度の動きは必ず近い方へ（少しなら音域の外でも）
+  const near=[prev,prev-1,prev+1,prev-2,prev+2].filter(m=>isPc(m) && m>=lo-below-5 && m<=lo+20);   // 2度の動き（下向きを先に）は必ず近い方へ。音域から多少はみ出してもよい
   if(near.length) return near[0];
   const w=LHCTX.reset?.7:.2; let best=def, bc=1e9;   // 2小節の区切りでは真ん中の音域へ戻りやすく
   for(let m=lo-below;m<=lo+17;m++){ if(!isPc(m)) continue; const out=m<lo?(lo-m)*1.5:m>lo+11?(m-lo-11)*1.5:0, c=Math.abs(m-prev)+w*Math.abs(m-center)+out; if(c<bc){ bc=c; best=m; } }
@@ -1108,7 +1111,10 @@ function chordNotes(v,prev){
   // ・決めた音域から大きくはみ出さない
   if(LHCTX.use) L=leadTo(L, bpc, lo, LHCTX.prev, 6);
   // 左手のオクターブも弾くパターンでは、右手のいちばん下の音を左手オクターブより短3度以上上にして、音がぶつからないようにする
-  const pat=ARPS[state.arp], R=voiceFor(pcs,prev, (pat&&pat.rhAbove ? Math.max(56,L+12+3) : 56)+rhOff+((pat&&pat.rhShift)||0), LHCTX.use?LHCTX.accTop:null);   // rhShift：パターンごとの高さ（ブラスは少し上）   // 右手：A♭3から上
+  const pat=ARPS[state.arp], R0=voiceFor(pcs,prev, (pat&&pat.rhAbove ? Math.max(56,L+12+3) : 56)+rhOff+((pat&&pat.rhShift)||0), LHCTX.use?LHCTX.accTop:null);   // rhShift：パターンごとの高さ（ブラスは少し上）   // 右手：A♭3から上
+  // 平行移動：同じ形のコードが半音・全音で動くとき（Cm7→Bm7→B♭m7 など）は、前の和音の形をそのまま滑らせる（ブラスのセクションのように）
+  let R=R0; if(prev&&prev.length===R0.length){ const want=[...pcs].map(x=>((x%12)+12)%12).sort((a,b)=>a-b).join();
+    if(pcs.length===prev.length) for(const d of [-1,1,-2,2]){ const sh=prev.map(x=>x+d); if([...sh].map(x=>((x%12)+12)%12).sort((a,b)=>a-b).join()===want){ R=sh; break; } } }
   // shell：右手を「ルート・3度・7度」（7度がなければ5度）の3音で、ルートを G3〜F♯4 に置く（citypop.mid の電子ピアノの形）
   if(pat&&pat.shell){ const lo2=55+rhOff+((pat.rhShift)||0), r0=lo2+(((rpc-lo2)%12)+12)%12, i3=[4,3,5,2].find(i=>ivs.includes(i))??4, i7=[11,10,9].find(i=>ivs.includes(i))??7;
     const C=[[0,i3,i7],[i3,i7,12],[i7,12,12+i3]].map(v=>{ const b=lo2-1+((((rpc+v[0])-(lo2-1))%12)+12)%12; return v.map(x=>b+x-v[0]); }).filter(v=>v[0]>=lo2-1&&v[0]<=lo2+11);
@@ -2556,8 +2562,8 @@ function openSheet(kind){
     [...opts.children].forEach((b,i)=>{
       const cv=b.querySelector('canvas'), g=fit(cv), k=order[i];
       if(k==='') return;
-      if(kind==='drum') drawDrumBar(g,0,0,cv.width,cv.height,DRUMS[k],col);
-      else drawArpBar(g,0,0,cv.width,cv.height,ARPS[k],col.t,col);
+      if(kind==='drum'){ if(DRUMS[k]) drawDrumBar(g,0,0,cv.width,cv.height,DRUMS[k],col); }
+      else if(ARPS[k]) drawArpBar(g,0,0,cv.width,cv.height,ARPS[k],col.t,col);   // すばやく別のシートに切りかえたときは描かない
     });
   });
 }
@@ -2585,12 +2591,10 @@ function renderRange(kind){
       const sv=state.arp; if(k==='rhLo2') state.arp=state.arp2||sv; const d=RH_DEF(); state.arp=sv; return d+((k==='rhLo2'?state.rhOff2:state.rhOff)||0); };
     [['rh',isB?'bassLo':p2?'rhLo2':'rhLo'],['lh',p2?'lhLo2':'lhLo']].forEach(([id,k])=>{
       const lo0=isB?16:id==='lh'?28:40, hi0=isB?60:id==='lh'?72:96, kb=$(id+'Kb'), out=$(id+'Out');
-      const draw=(scroll)=>{ const lo=state[k]??defOf(k); out.textContent=`${midiName(lo)}〜${midiName(lo+11)}`+(state[k]==null?'（標準）':'');
-        let h='<div class="keys">'; for(let m=lo0;m<=hi0;m++){ const bk=[1,3,6,8,10].includes(m%12); h+=`<i class="${bk?'bk':''}${m>=lo&&m<lo+12?' on':''}${m===lo?' lo':''}" data-m="${m}">${m%12===0?`<em>C${m/12-1}</em>`:''}</i>`; }
-        kb.innerHTML=h+'</div>'; if(scroll){ const el=kb.querySelector(`[data-m="${lo}"]`); if(el) kb.scrollLeft=Math.max(0,el.offsetLeft-kb.clientWidth/2+80); } };
-      kb.onclick=e=>{ const t=e.target.closest('i[data-m]'); if(!t) return; state[k]=+t.dataset.m; draw(false); save(); dirty=true; if(!playing) preview(selected??(state.slots[page*4]??0)); };
-      $(id+'Reset').onclick=()=>{ state[k]=null; draw(true); save(); dirty=true; };
-      draw(true); }); }
+      const draw=()=>{ const lo=state[k]??defOf(k); kb.min=lo0; kb.max=hi0; kb.value=lo; out.textContent=`${midiName(lo)}〜${midiName(lo+11)}`+(state[k]==null?'（標準）':''); };
+      kb.oninput=()=>{ state[k]=+kb.value; draw(); save(); dirty=true; if(!playing) preview(selected??(state.slots[page*4]??0)); };
+      $(id+'Reset').onclick=()=>{ state[k]=null; draw(); save(); dirty=true; };
+      draw(); }); }
 }
 function openBassSheet(){
   sheetKind='bass'; document.querySelector('#sheet .proedit').style.display=''; $('kitSec').hidden=true; $('part2Sec').hidden=true;
