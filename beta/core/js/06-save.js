@@ -13,7 +13,7 @@ function packSong(){ const o={v:1}; SHARE_KEYS.forEach(k=>o[k]=state[k]);
   if(!state.arp2){ delete o.arp2; delete o.inst2; } else if(/^my\d+$/.test(state.arp2)) o.myArp2=listOf('arp')[+state.arp2.slice(2)];
   if(state.pro && /^my\d+$/.test(state.bassPat)) o.myBass=listOf('bass')[+state.bassPat.slice(2)];
   // PRO で足した楽器（マイパターンなら中身も）と、トラックの名前・色
-  if(state.pro && (state.xtr||[]).length) o.xtr=state.xtr.map(t=>{ const c={...t}; if(/^my\d+$/.test(t.arp||'')) c.myArp=listOf('arp')[+t.arp.slice(2)]; return c; });
+  if(state.pro && (state.xtr||[]).length) o.xtr=state.xtr.map(t=>{ const c={...t}; if(/^my\d+$/.test(t.arp||'')) c.myArp=listOf('arp')[+t.arp.slice(2)]; if(t.type==='drum'&&/^my\d+$/.test(t.drum||'')) c.myDrum=listOf('drum')[+t.drum.slice(2)]; if(t.type==='bass'&&/^my\d+$/.test(t.bassPat||'')) c.myBass=listOf('bass')[+t.bassPat.slice(2)]; return c; });
   if(state.pro && state.tk && Object.values(state.tk).some(m=>m&&(m.name||m.color))) o.tk=state.tk;
   return o; }
 function unpackSong(o){ if(!o||!Array.isArray(o.slots)) return false;
@@ -24,7 +24,7 @@ function unpackSong(o){ if(!o||!Array.isArray(o.slots)) return false;
   if(o.myArp2){ listOf('arp').push({...o.myArp2,name:(o.myArp2.name||'共有パターン')}); state.arp2='my'+(listOf('arp').length-1); }
   if(o.arp2===undefined){ state.arp2=''; }
   if(o.myBass){ listOf('bass').push({...o.myBass,name:(o.myBass.name||'共有パターン')}); state.bassPat='my'+(listOf('bass').length-1); }
-  state.xtr=(o.xtr||[]).map(t=>{ const c={...t}; if(c.myArp){ listOf('arp').push({...c.myArp,name:(c.myArp.name||'共有パターン')}); c.arp='my'+(listOf('arp').length-1); delete c.myArp; } return c; }); state.tk=o.tk||{};
+  state.xtr=(o.xtr||[]).map(t=>{ const c={...t}; if(c.myArp){ listOf('arp').push({...c.myArp,name:(c.myArp.name||'共有パターン')}); c.arp='my'+(listOf('arp').length-1); delete c.myArp; } if(c.myDrum){ listOf('drum').push({...c.myDrum,name:(c.myDrum.name||'共有パターン')}); c.drum='my'+(listOf('drum').length-1); delete c.myDrum; } if(c.myBass){ listOf('bass').push({...c.myBass,name:(c.myBass.name||'共有パターン')}); c.bassPat='my'+(listOf('bass').length-1); delete c.myBass; } return c; }); state.tk=o.tk||{};
   rebuildMy(); migrateLay(state); ensureArp2(); if(state.arp2 && !ARPS[state.arp2]) state.arp2=ARP_ALIAS[state.arp2]||''; if(ARP_ALIAS[state.arp]) state.arp=ARP_ALIAS[state.arp]; if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4';
   state.inst=fixInst(state.inst); state.inst2=fixInst(state.inst2); if(state.arp2 && !ARPS[state.arp2] && !/^(acc_|my\d)/.test(state.arp2)) state.arp2=''; if(!INSTS[state.inst]) state.inst='piano'; state.kit=fixKit(state.kit); if(!KITS[state.kit]) state.kit='std';
   state.slots=Array.from({length:16},(_,i)=>state.slots[i]??null); state.segs=Array.from({length:16},(_,i)=>(state.segs||[])[i]||[]); state.ant=Array.from({length:16},(_,i)=>(state.ant||[])[i]??null);

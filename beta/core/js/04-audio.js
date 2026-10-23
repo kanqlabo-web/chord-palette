@@ -25,6 +25,8 @@ function mkReverb(){ const sr=ctx.sampleRate, n=Math.floor(sr*2.4), ir=ctx.creat
   for(let c=0;c<2;c++){ const d=ir.getChannelData(c); for(let i=0;i<n;i++){ const x=i/sr; d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.2)*Math.exp(-x*1.6)*(x<.012?x/.012:1); } }
   const cv=ctx.createConvolver(); cv.buffer=ir; const g=ctx.createGain(); g.gain.value=.8; cv.connect(g); g.connect(master); return cv; }
 // 足した楽器の音の入口（なければ作る）
+// 足したドラム・ベースの出口（トラックごとのチャンネル）
+function xChan(id){ const had=!!CHAN[id], c=mkChan(id); if(!had) applyMix(); return c.inp; }
 const XB={}; function xBus(k){ const t=(state.xtr||[])[k-2]; if(!t) return compBus2; const c=CHAN[t.id]||mkChan(t.id);
   if(!XB[t.id]){ XB[t.id]=ctx.createGain(); XB[t.id].connect(c.inp); applyMix(); } return XB[t.id]; }
 function ensureAudio(noResume){
@@ -75,7 +77,10 @@ function neededSets(){ const n=[]; if(state.kit!=='synth') n.push('kit-'+(state.
   if(state.arp2&&ARPS[state.arp2]){ if(!(state.inst2 in SYNTH_INST)) n.push(SETOF(state.inst2||'epiano')); }
   // PRO で足した楽器
   if(state.pro) (state.xtr||[]).forEach(t=>{ if(t&&t.arp&&ARPS[t.arp]&&!(t.inst in SYNTH_INST)) n.push(SETOF(t.inst||'piano')); });
-  const b=state.bassSnd||'bass'; if(b!=='sbass' && (!isSynthInst()||b!=='bass')) n.push(b); return n; }
+  const b=state.bassSnd||'bass'; if(b!=='sbass' && (!isSynthInst()||b!=='bass')) n.push(b);
+  // PRO で足したドラム・ベース
+  if(state.pro) (state.xtr||[]).forEach(t=>{ if(t&&t.type==='drum'&&t.kit!=='synth') n.push('kit-'+(t.kit==='lofi'||t.kit==='city'?'std':(t.kit||'std'))); if(t&&t.type==='bass'&&t.bassSnd!=='sbass') n.push(t.bassSnd||'bass'); });
+  return [...new Set(n)]; }
 function loadingNow(){ return neededSets().some(n=>!LOADED[n]&&!FAILED[n]); }
 function ensureSounds(){ const p=Promise.all(neededSets().map(loadSet)); renderBadge(); return p; }
 function renderBadge(){ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中…':''); }
@@ -392,7 +397,7 @@ const shiftMark=a=>a>0?'←食':a<0?'後→':'';
 // 最後に鳴らした音がアクセント（いちばん上の音）だったら、その高さを覚えておき、次のコードのいちばん上の音をそこへつなげる
 let ACC_TOP=null;
 const TIE_LAST=[null,null], SOUNDING=[[],[]], LAST_SOLO=[null,null];   // SOUNDING：パートごとの同じタイミングの音、LAST_SOLO：直前に1音だけで弾いた音（同じ高さにならないように）   // パートごとの直前の音（同じ高さが続いたらつなぐため）
-function playEvents(evs,bt,ct,sd,pat){
+function playEvents(evs,bt,ct,sd,pat){ if(NO_KEYS) return;
   if(bt&&bt.ivs&&bt.rpc!=null) setScaleFor([...bt.ivs.map(i=>(bt.rpc+i)%12), ...(bt.bpc!=null?[bt.bpc]:[])]);
   const tones=bt.tones, notes=[];
   if(evs.length) ACC_TOP = pat&&pat.accLink && evs.some(e=>e[1].includes(6)) && tones[6]!=null ? tones[6] : null;   // 「アクセントのあと上げてつなぐ」パターンだけ
@@ -628,14 +633,26 @@ const partDef=k=> k===1 ? {arp:state.arp2, inst:state.inst2||'epiano'} : (state.
 function withPart(k,f){ if(!k) return f(); const d=partDef(k); if(!d) return; const P=PS[k]||(PS[k]=newP());
   const sv={barTones,lastR,pushedKey,PUSHCONT,held,ACC:ACC_TOP,prev:LHCTX.prev,prevB:LHCTX.prevB,satb:LHCTX.satb,arp:state.arp,inst:state.inst,bass:state.bass,wide:state.wide,pn:PARTN};
   ({barTones,lastR,pushedKey,PUSHCONT,held}=P); ACC_TOP=P.ACC; LHCTX.prev=P.prev; LHCTX.prevB=P.prevB; LHCTX.satb=P.satb;
-  state.arp=d.arp; state.inst=d.inst||'epiano'; state.bass=false; if(k>=2) state.wide=!!d.wide; PART2=true; PARTN=k;
+  const isB=d.type==='bass', svB=isB?{bassPat:state.bassPat,bassSnd:state.bassSnd,bus:bassBus,lv:lastBassVoice,bh:bassHeld,lm:lastBassM}:null;
+  if(isB){ state.bass=true; state.bassPat=d.bassPat||'auto'; state.bassSnd=d.bassSnd||'bass'; bassBus=xChan(d.id); NO_KEYS=true; lastBassVoice=P.lv||null; bassHeld=P.bh||(P.bh=[]); lastBassM=P.lm??null; }
+  else { state.arp=d.arp; state.inst=d.inst||'epiano'; state.bass=false; if(k>=2) state.wide=!!d.wide; }
+  PART2=true; PARTN=k;
   try{ return f(); } finally { PART2=sv.pn>0; PARTN=sv.pn;
+    if(isB){ P.lv=lastBassVoice; P.bh=bassHeld; P.lm=lastBassM; Object.assign(state,{bassPat:svB.bassPat,bassSnd:svB.bassSnd}); bassBus=svB.bus; lastBassVoice=svB.lv; bassHeld=svB.bh; lastBassM=svB.lm; NO_KEYS=false; }
     Object.assign(P,{barTones,lastR,pushedKey,PUSHCONT,held,ACC:ACC_TOP,prev:LHCTX.prev,prevB:LHCTX.prevB,satb:LHCTX.satb});
     ({barTones,lastR,pushedKey,PUSHCONT,held}=sv); ACC_TOP=sv.ACC; LHCTX.prev=sv.prev; LHCTX.prevB=sv.prevB; LHCTX.satb=sv.satb;
     Object.assign(state,{arp:sv.arp,inst:sv.inst,bass:sv.bass,wide:sv.wide}); } }
 function withPart2(f){ return withPart(1,f); }
+let NO_KEYS=false;   // 足したベースを鳴らすあいだは、コードの音を鳴らさない
+// 足したドラム1つ分の、この16分（メインのドラムと同じ決め方）
+function xDrumStep(x,s,b,t,sd){ const d=DRUMS[x.drum], fm=fillModeOf(b,d), inF=fm && s>=(fm==='big'?8:12);
+  const tt = d.swing&&inF ? t+[0,1/3,2/3,0][s%4]*sd : t+(d.swing&&s%4===2?sd*.34:0)+(d.swing16&&s%2===1?sd*.3:0);
+  const V = inF ? (fm==='big'?d.F:d.FS) : (b%2===1 && d.VB ? d.VB : d.V);
+  const sk=state.kit, sb=drumBus; state.kit=x.kit||'std'; drumBus=xChan(x.id);
+  try{ for(const n in V){ const v=V[n][s]; if(v) drum(+n,tt,d.dyn?Math.pow(v,d.dyn):v); }
+    if(state.fill && d.F && s===0 && b%4===0 && b>0 && d.crash0!==false) drum(49,tt,.6); } finally { state.kit=sk; drumBus=sb; } }
 // 鳴らすコード楽器の番号（コード2・足した楽器のうち、パターンがあるもの）
-const extraParts=()=>[...(state.arp2&&ARPS[state.arp2]?[1]:[]), ...(state.pro?(state.xtr||[]).map((t,i)=>t&&t.arp&&ARPS[t.arp]?i+2:null).filter(x=>x!=null):[])];
+const extraParts=()=>[...(state.arp2&&ARPS[state.arp2]?[1]:[]), ...(state.pro?(state.xtr||[]).map((t,i)=>t&&!t.type&&t.arp&&ARPS[t.arp]?i+2:null).filter(x=>x!=null):[])];
 function scheduleStep(g,t){
   const L=slotSteps(), s=g%16, b=LOOPN*(L*state.bars/16)+Math.floor(g/16);     // b = 進行の頭から数えて何小節目か（ドラム用。途中で長さを変えてもずれない）
   if(ENDED_EARLY){ if(!document.hidden) visQ.push({t,b:Math.floor(g/L),s:g%L,L,beat:g%4===0,abs:playedSteps,g,ln:LOOPN}); return; }   // 締めたあとは何も鳴らさない
@@ -651,6 +668,10 @@ function scheduleStep(g,t){
   BOWBAR=b; const {i,off}=chordPart(g,t,L,s,b,dr,sd,tt);
   // 2つ目の楽器（コード2・上もの）。同じコード進行を、別のパターン・別の音色で重ねる（ベースは1回だけ）。通常モードは伴奏スタイルが決める
   extraParts().forEach(k=>withPart(k,()=>chordPart(g,t,L,s,b,dr,sd,tt)));
+  // PRO で足したベース（ベースだけ鳴らす）・ドラム（それぞれのチャンネルへ）
+  if(state.pro) (state.xtr||[]).forEach((x,i)=>{ if(!x) return;
+    if(x.type==='bass') withPart(i+2,()=>chordPart(g,t,L,s,b,dr,sd,tt));
+    else if(x.type==='drum' && DRUMS[x.drum]) xDrumStep(x,s,b,t,sd); });
   if(!document.hidden) visQ.push({t,b:i,s:off,L,beat:g%4===0,abs:playedSteps,g,ln:LOOPN});
 }
 // 1周で止めるときの締め：最初のコードを「ジャーン」と長く鳴らす（キック＋シンバル、ベースはルート）

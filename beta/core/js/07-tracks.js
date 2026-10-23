@@ -37,19 +37,26 @@ const FX_KEYS=['pan','rev','echo','comp','hi','lo'];
 const TRK_COLORS=['#3567D6','#24946A','#DA6A22','#8A4FD3','#D13F6B','#1F8FA8','#B8860B','#5B6475'];
 const TRK_DEF={arp:['コード',0],arp2:['コード2',3],drum:['ドラム',7],bass:['ベース',2]};
 // トラックの一覧（いま鳴らすもの）。kind：arp・arp2・x:ID・drum・bass
+// 足したドラム・ベースを、いつものドラム・ベースとして扱って f を実行する（その場で入れ替えて、すぐ戻す）
+function withTrk(kind,f){ const x=xOf(kind), ty=x&&x.type; if(ty!=='drum'&&ty!=='bass') return f(kind);
+  const K=ty==='drum'?['drum','kit']:['bassPat','bassSnd'], sv=K.map(k=>state[k]), sb=state.bass;
+  K.forEach(k=>state[k]=x[k]); if(ty==='bass') state.bass=true;
+  try{ return f(ty); } finally { K.forEach((k,i)=>state[k]=sv[i]); state.bass=sb; } }
 function trackList(){ const L=[{kind:'arp'}];
   if(state.arp2 && ARPS[state.arp2]) L.push({kind:'arp2'});
-  (state.xtr||[]).forEach(t=>L.push({kind:'x:'+t.id}));
-  if(state.bass) L.push({kind:'bass'}); if(state.drum!=='none' && !state.drumOff) L.push({kind:'drum'});   // 上からコード・ベース・ドラム
+  const X=state.xtr||[], of=ty=>X.filter(t=>(t.type||'chord')===ty).map(t=>({kind:'x:'+t.id}));
+  L.push(...of('chord'));   // 上からコード・ベース・ドラム（ベース・ドラムは2つ以上でも）
+  if(state.bass) L.push({kind:'bass'}); L.push(...of('bass'));
+  if(state.drum!=='none' && !state.drumOff) L.push({kind:'drum'}); L.push(...of('drum'));
   return L; }
 const mixKey=kind=>kind.startsWith('x:')?kind.slice(2):kind;
 const tkMeta=kind=>{ const x=xOf(kind); if(x) return x; state.tk=state.tk||{}; return state.tk[kind]=state.tk[kind]||{}; };
 const tkName=kind=>tkMeta(kind).name || (TRK_DEF[kind]||[])[0] || '楽器';
 const tkColor=kind=>{ const m=tkMeta(kind); if(m.color) return m.color; const d=TRK_DEF[kind]; if(d) return TRK_COLORS[d[1]]; const i=(state.xtr||[]).indexOf(xOf(kind)); return TRK_COLORS[(4+Math.max(0,i))%TRK_COLORS.length]; };
-const tkInst=kind=>{ const x=xOf(kind); if(x) return INSTS[x.inst]||''; if(kind==='arp') return INSTS[state.inst]||''; if(kind==='arp2') return INSTS[state.inst2||'epiano']||''; if(kind==='drum') return KITS[state.kit]||''; return BASS_SNDS[state.bassSnd||'bass']||''; };
-const tkPatName=kind=>{ if(kind==='drum') return patName(DRUMS[state.drum]||{name:''}); if(kind==='bass') return (BASSES[state.bassPat||'auto']||{name:'ドラムに合わせる'}).name; const k=patOf(kind); return k&&ARPS[k]?patName(ARPS[k]):'なし'; };
+const tkInst=kind=>withTrk(kind,kind=>{ const x=xOf(kind); if(x) return INSTS[x.inst]||''; if(kind==='arp') return INSTS[state.inst]||''; if(kind==='arp2') return INSTS[state.inst2||'epiano']||''; if(kind==='drum') return KITS[state.kit]||''; return BASS_SNDS[state.bassSnd||'bass']||''; });
+const tkPatName=kind=>withTrk(kind,kind=>{ if(kind==='drum') return patName(DRUMS[state.drum]||{name:''}); if(kind==='bass') return (BASSES[state.bassPat||'auto']||{name:'ドラムに合わせる'}).name; const k=patOf(kind); return k&&ARPS[k]?patName(ARPS[k]):'なし'; });
 // メイン画面の帯に出す、トラックのまとめ
-function trackSummary(){ const L=trackList(); return L.length+'つ ・ '+L.filter(t=>t.kind!=='drum'&&t.kind!=='bass').map(t=>tkInst(t.kind)).join('＋'); }
+function trackSummary(){ const L=trackList(); return L.length+'つ ・ '+L.filter(t=>!isDrumK(t.kind)&&!isBassK(t.kind)).map(t=>tkInst(t.kind)).join('＋'); }
 
 // ---- 画面（DAW 風。部品とスタイルは、このファイルの中で作る） ----
 // 上：ミキサー・閉じる。下：メイン画面の再生ボタンとテンポ（同じものをこちらへ移して使う）
@@ -129,7 +136,7 @@ const SICO=(()=>{ const F='fill="currentColor" fill-opacity=".18"';
     'bs:sbass':S('bass',`<rect ${F} x="3" y="5" width="22" height="18" rx="2.5"/><path d="M6 18v-7h4v7h4v-7h4v7h4"/>`),
   }; })();
 const icoInst=k=>SICO[k]||SICO.piano, icoKit=k=>SICO['kit:'+k]||SICO['kit:std'], icoBass=k=>SICO['bs:'+k]||SICO['bs:bass'];
-const tkIco=kind=>{ if(kind==='drum') return icoKit(state.kit); if(kind==='bass') return icoBass(state.bassSnd||'bass'); const x=xOf(kind); return icoInst(x?x.inst:kind==='arp2'?(state.inst2||'epiano'):state.inst); };
+const tkIco=kind=>withTrk(kind,kind=>{ if(kind==='drum') return icoKit(state.kit); if(kind==='bass') return icoBass(state.bassSnd||'bass'); const x=xOf(kind); return icoInst(x?x.inst:kind==='arp2'?(state.inst2||'epiano'):state.inst); });
 const instFam=kind=>{ if(kind==='drum') return 'drum'; if(kind==='bass') return 'bass'; const x=xOf(kind), k=x?x.inst:kind==='arp2'?(state.inst2||'epiano'):state.inst;
   if(/^(steel|nylon|eguitar|dist)$/.test(k)) return 'guitar'; if(/^strings/.test(k)) return 'strings'; if(/^(brass|sbrass|trumpet|trombone|horn)/.test(k)) return 'brass';
   if(k==='sax') return 'sax'; if(/^(synth|pad)$/.test(k)) return 'synth'; if(k==='glock') return 'bells'; if(/^(koto|shami)$/.test(k)) return 'wa'; return 'keys'; };
@@ -267,7 +274,7 @@ $('bpm').addEventListener('input',()=>applyMix());   // エコーの間隔をテ
 
 // ---- その場所で実際に使っている弾き方（場面）を調べる。鳴らすときの選び方（sitVar）と同じ
 const SIT_KEYS={bar:['bar','bar2','bar3rd','bar4th'], bar3:['bar3','bar32']};
-function sceneAt(kind,b,cell){ const L=slotSteps(), has=cell.v!==null&&cell.v!==undefined;
+function sceneAt(kind,b,cell){ if(xType(kind)==='drum') return withTrk(kind,k=>sceneAt(k,b,cell)); const L=slotSteps(), has=cell.v!==null&&cell.v!==undefined;
   const lag=has?Math.min(Math.max(0,-shiftOf(b,cell.h)),cell.len-1):0, g0=b*L+cell.off+lag, bar=Math.floor(g0/16), startPi=g0%16, len=cell.len-lag;
   if(kind==='drum'){ const dr=DRUMS[state.drum]||{}; return {key:(bar%2===1&&dr.VB)?'B':'bar', bar, off:startPi}; }
   const pat=ARPS[patOf(kind)]; if(!pat) return null;
@@ -330,12 +337,12 @@ function setChordLine(E){ const L=slotSteps(); state.ant=state.ant||Array(16).fi
 // 実際に鳴り始める位置（食い・後ろ倒し、パターンの決まった食いも入れる。鳴らすときと同じ決め方）
 const hasV=v=>v!==null&&v!==undefined;
 const contOf=(E,k)=>k>0 && hasV(E[k].v) && E[k].h===0 && E[k].ant==null && JSON.stringify(E[k].v)===JSON.stringify(E[k-1].v);
-function effStarts(kind,E){ const pat=ARPS[kind==='bass'||kind==='drum'?state.arp:patOf(kind)]||{}, end=state.bars*slotSteps();
+function effStarts(kind,E){ const pat=ARPS[isBassK(kind)||isDrumK(kind)?state.arp:patOf(kind)]||{}, end=state.bars*slotSteps();
   return E.map((e,k)=>{ if(k===0||!hasV(e.v)) return e.pos; const pv=E[k-1], nx=E[k+1]?E[k+1].pos:end; let a=e.ant;
     if(a==null){ const same=hasV(pv.v)&&JSON.stringify(e.v)===JSON.stringify(pv.v); a=(same&&!(pat.sit&&pat.sit.push))?0:(pat.push2nd&&e.pos%16===0&&(e.pos/16)%2===0)?0:(pat.pushBy||0); }
     a=Math.max(-(nx-e.pos-1),Math.min(a,e.pos-pv.pos-1)); return e.pos-a; }); }
 // 帯：コードごとに区切り、役割の色（T・S・D）でぬって、その場所で鳴る弾き方を描く。ドラムは1本の帯
-function drawRegion(cv,kind,bw,col,E){ if(!cv.clientWidth) return; const g=fit(cv), W=cv.width, H=cv.height, r=devicePixelRatio||1, N=state.bars, L=slotSteps();
+function drawRegion(cv,kind,bw,col,E){ { const xt=xType(kind); if(xt==='drum'||xt==='bass') return withTrk(kind,k=>drawRegion(cv,k,bw,col,E)); } if(!cv.clientWidth) return; const g=fit(cv), W=cv.width, H=cv.height, r=devicePixelRatio||1, N=state.bars, L=slotSteps();
   g.clearRect(0,0,W,H); const w=bw*r, ps=w/L, pad=5*r, ty=pad+3*r, th=H-2*pad-6*r;
   const box=(x,y,ww,hh,c,a)=>{ g.globalAlpha=a; g.fillStyle=c; rr(g,x,y,ww,hh,7*r); g.fill(); g.globalAlpha=1; g.strokeStyle=c; g.lineWidth=1.2*r; rr(g,x,y,ww,hh,7*r); g.stroke(); };
   if(kind==='drum'){ const dr=DRUMS[state.drum]; box(1.5*r,pad,W-3*r,H-2*pad,col.muted,.14); if(!dr) return;
@@ -352,7 +359,7 @@ function drawRegion(cv,kind,bw,col,E){ if(!cv.clientWidth) return; const g=fit(c
 // それ以外の所をタップすると、その場所で使っている弾き方を開く
 function bindRegion(el,kind){ let drag=null, sx=0, sy=0, moved=false;
   const stepW=()=>(parseFloat(trk.style.getPropertyValue('--dbw'))||96)/slotSteps();
-  el.addEventListener('pointerdown',ev=>{ sx=ev.clientX; sy=ev.clientY; moved=false; drag=null; if(kind==='drum') return;
+  el.addEventListener('pointerdown',ev=>{ sx=ev.clientX; sy=ev.clientY; moved=false; drag=null; if(isDrumK(kind)) return;
     const rc=el.getBoundingClientRect(), x=ev.clientX-rc.left, ps=stepW(), E=chordLine(), S=effStarts(kind,E);
     let best=-1, bd=18; S.forEach((s,k)=>{ if(k===0||contOf(E,k)||!(hasV(E[k].v)||hasV(E[k-1].v))) return; const d=Math.abs(s*ps-x); if(d<bd){ bd=d; best=k; } });
     if(best>0){ drag={k:best,E,ps,left:rc.left}; el.setPointerCapture(ev.pointerId); ev.preventDefault(); } });
@@ -361,7 +368,7 @@ function bindRegion(el,kind){ let drag=null, sx=0, sy=0, moved=false;
     const s=Math.round((ev.clientX-drag.left)/ps), lo=Math.floor(prev/4)*4+4, hi=Math.ceil(next/4)*4-4; if(lo>hi) return;
     const pos=Math.max(lo,Math.min(hi,Math.round(s/4)*4)), a=Math.max(-2,Math.min(2,pos-s));
     drag.pos=pos; drag.ant=a; const E2=E.map(x=>({...x})); E2[k].pos=pos; E2[k].ant=a;
-    trk.querySelectorAll('.dtrack').forEach(row=>{ const kd=row.dataset.kind; if(kd!=='drum') drawRegion(row.querySelector('canvas'),kd,ps*L,colors(),E2); });
+    trk.querySelectorAll('.dtrack').forEach(row=>{ const kd=row.dataset.kind; if(!isDrumK(kd)) drawRegion(row.querySelector('canvas'),kd,ps*L,colors(),E2); });
     let tip=el.querySelector('.dtip'); if(!tip){ tip=document.createElement('span'); tip.className='dtip'; el.appendChild(tip); }
     const bt=pos%L/4+1, sl=Math.floor(pos/L)+1; tip.style.left=((pos-a)*ps)+'px';
     tip.textContent=`${sl}${state.len<4?'マス目':'小節目'}の${bt}拍目${a>0?`（${a===2?'8分':'16分'}食う）`:a<0?`（${a===-2?'8分':'16分'}後ろ）`:''}`; });
@@ -371,10 +378,10 @@ function bindRegion(el,kind){ let drag=null, sx=0, sy=0, moved=false;
   el.addEventListener('pointercancel',()=>{ if(drag){ drag=null; el.querySelector('.dtip')?.remove(); renderTracks(); } }); }
 // 帯をタップ：その場所のコード（ドラムは小節）で使っている弾き方を開く
 function tapRegion(kind,ev,el){ const bw=parseFloat(trk.style.getPropertyValue('--dbw'))||96, L=slotSteps(), st=(ev.clientX-el.getBoundingClientRect().left)/bw*L;
-  if(kind==='drum'){ const b=Math.max(0,Math.min(state.bars-1,Math.floor(st/L))), cell=cellsOf(b)[0], sc=sceneAt('drum',b,cell); openBlk('drum', sc.key, `${b+1}${state.len<4?'マス目':'小節目'}`, b*L, (b+1)*L); return; }
+  if(isDrumK(kind)){ const b=Math.max(0,Math.min(state.bars-1,Math.floor(st/L))), cell=cellsOf(b)[0], sc=sceneAt(kind,b,cell); openBlk(kind, sc.key, `${b+1}${state.len<4?'マス目':'小節目'}`, b*L, (b+1)*L); return; }
   const E=chordLine(), S=effStarts(kind,E); let k=0; S.forEach((s,i)=>{ if(st>=s) k=i; }); const e=E[k];
   if(!hasV(e.v)){ toast('ここにはコードがありません'); return; }
-  const cell=cellsOf(e.b)[e.h], sc=kind==='bass'?null:sceneAt(kind,e.b,cell);
+  const cell=cellsOf(e.b)[e.h], sc=isBassK(kind)?null:sceneAt(kind,e.b,cell);
   const where=`${e.b+1}${state.len<4?'マス目':'小節目'}${cell.off?`の${cell.off/4+1}拍目から`:''}`;
   let j=k+1; while(j<E.length&&contOf(E,j)) j++; let k0=k; while(k0>0&&contOf(E,k0)) k0--;
   openBlk(kind, sc&&sc.key, where+'「'+chordText(e.v)+'」', Math.max(0,S[k0]), j<E.length?S[j]:state.bars*L); }
@@ -395,9 +402,9 @@ function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=tru
   const x=mixOf(mixKey(kind)), pan=x.pan||0, canDel=true, m=tkMeta(kind);
   p.style.setProperty('--tc',tkColor(kind));
   const rng=(f,label,min,max,val,txt)=>`<label class="dirow"><span>${label}<output>${txt}</output></span><input type="range" min="${min}" max="${max}" step=".01" value="${val}" data-f="${f}"></label>`;
-  const sndName = kind==='drum' ? (KITS[state.kit]||'ドラム') : kind==='bass' ? (BASS_SNDS[state.bassSnd||'bass']||'ベース') : tkInst(kind);
+  const sndName = tkInst(kind)||'';
   p.innerHTML=`<div class="dititle"><button class="ditb" id="diSnd" ><div class="dipic">${tkIco(kind)}</div><b>${esc(sndName)}${ICO.chev}</b><small>タップして楽器を変える</small></button></div>
-    <div class="disec"><div class="dib"><button class="dilink" id="diPick"><span>${kind==='drum'?'パターン・フィルインを選ぶ':kind==='bass'?'パターンを選ぶ':'パターン・音域を選ぶ'}</span>${ICO.chev}</button></div></div>
+    <div class="disec"><div class="dib"><button class="dilink" id="diPick"><span>${isDrumK(kind)?'パターン・フィルインを選ぶ':isBassK(kind)?'パターンを選ぶ':'パターン・音域を選ぶ'}</span>${ICO.chev}</button></div></div>
     <div class="disec"><h3>出力</h3><div class="dib">
       ${rng('v','音量',0,1.5,x.v??1,Math.round((x.v??1)*100))}
       ${rng('pan','左右（パン）',-1,1,pan,panTxt(pan))}
@@ -405,10 +412,10 @@ function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=tru
     <div class="disec"><h3>エフェクト</h3><div class="dib">${FX_ROWS.map(([f,l,a,b])=>rng(f,l,a,b,x[f]||0,fxTxt(f,x[f]||0))).join('')}</div></div>
     <div class="disec"><h3>トラックの名前と色</h3><div class="dib"><input class="diname2" id="diName" maxlength="16" value="${esc(tkName(kind))}" aria-label="トラックの名前"><div class="tcolors" id="diColors"></div></div></div>
     ${canDel?'<button class="didel" id="diDel">このトラックをなくす</button>':''}`;
-  $('diPick').onclick=()=>openSheet(kind);
+  $('diPick').onclick=()=>(xType(kind)==='drum'||xType(kind)==='bass')?xPatPick(kind):openSheet(kind);
   $('diSnd').onclick=()=>{ const X=xOf(kind), done=()=>{ save(); renderAll(); ensureSounds(); applyMix(); renderTracks(); return false; };
-    if(kind==='bass') openPicker('ベースの音を選ぶ', ()=>[['ベース',Object.entries(BASS_SNDS).map(([k,l])=>({k,label:l,ico:icoBass(k)}))]], state.bassSnd||'bass', v=>{ state.bassSnd=v; return done(); });
-    else if(kind==='drum') openPicker('ドラムの音を選ぶ', ()=>catsOf(KIT_GROUPS,KITS,icoKit), state.kit, v=>{ pickKit(v); return done(); });
+    if(isBassK(kind)) openPicker('ベースの音を選ぶ', ()=>[['ベース',Object.entries(BASS_SNDS).map(([k,l])=>({k,label:l,ico:icoBass(k)}))]], X?(X.bassSnd||'bass'):(state.bassSnd||'bass'), v=>{ if(X) X.bassSnd=v; else state.bassSnd=v; return done(); });
+    else if(isDrumK(kind)) openPicker('ドラムの音を選ぶ', ()=>catsOf(KIT_GROUPS,KITS,icoKit), X?(X.kit||'std'):state.kit, v=>{ if(X) X.kit=v; else pickKit(v); return done(); });
     else openPicker('楽器を選ぶ', ()=>catsOf(INST_GROUPS,INSTS,icoInst), X?(X.inst||'piano'):kind==='arp2'?(state.inst2||'epiano'):state.inst, v=>{ if(X) X.inst=v; else if(kind==='arp2') state.inst2=v; else pickInst(v); return done(); }); };
   p.querySelectorAll('.dirow input').forEach(inp=>inp.oninput=()=>{ const f=inp.dataset.f; x[f]=+inp.value; inp.previousElementSibling.querySelector('output').textContent= f==='pan'?panTxt(x.pan):f==='v'?Math.round(x.v*100):fxTxt(f,x[f]); applyMix(); save(); });
   p.querySelectorAll('.dims button').forEach(b=>b.onclick=()=>{ x[b.dataset.k]=!x[b.dataset.k]; applyMix(); save(); renderTracks(); });
@@ -421,14 +428,21 @@ addEventListener('resize',()=>{ if(!trk.hidden) renderTracks(); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{ if(!trk.hidden) renderTracks(); });
 // 楽器を足す：コード2が空いていればコード2に、そうでなければ足した楽器（state.xtr）に。足したらパターンを選ぶ画面を開く
 // 楽器を足す：選ぶ画面で選んで「決定」したときだけ足す。ドラム・ベースは、ないときだけ選べる
+function xPatPick(kind){ const drum=isDrumK(kind), done=()=>{ save(); renderAll(); ensureSounds(); renderTracks(); return true; };
+  if(drum) openPicker('ドラムの演奏を選ぶ', ()=>patCats(kind), patOf(kind), v=>{ setPatOf(kind,v); return done(); }, false);
+  else openPicker('ベースの弾き方を選ぶ', ()=>[['ベースの弾き方',Object.keys(BASSES).map(k=>({k,label:BASSES[k].name}))]], patOf(kind)||'auto', v=>{ setPatOf(kind,v); return done(); }, false); }
 const FAM_PAT={keys:'piano4',guitar:'strum',strings:'whole',brass:'brassobb',sax:'hornline',synth:'anilead',bells:'glockline',wa:'koto'};
 function addTrack(){ const hasDrum=state.drum!=='none'&&!state.drumOff, cats=()=>{ const c=catsOf(INST_GROUPS,INSTS,icoInst);
-    const sub1=has=>has?'もうあります（1つまで）':'';
-    c.push(['ドラム',KIT_GROUPS.flatMap(([h,ks])=>ks.map(k=>({k:'@drum:'+k,label:KITS[k],sub:sub1(hasDrum)||h,ico:icoKit(k)})))]);
-    c.push(['ベース',Object.entries(BASS_SNDS).map(([k,l])=>({k:'@bass:'+k,label:l,sub:sub1(state.bass),ico:icoBass(k)}))]); return c; };
+    c.push(['ドラム',KIT_GROUPS.flatMap(([h,ks])=>ks.map(k=>({k:'@drum:'+k,label:KITS[k],sub:h,ico:icoKit(k)})))]);
+    c.push(['ベース',Object.entries(BASS_SNDS).map(([k,l])=>({k:'@bass:'+k,label:l,ico:icoBass(k)}))]); return c; };
+  const newX=o=>{ state.xtr=state.xtr||[]; const ids=new Set(state.xtr.map(t=>t.id)); let n=1; while(ids.has('t'+n)) n++; state.xtr.push({id:'t'+n,...o}); };
   openPicker('楽器を足す', cats, null, v=>{
-    if(v.startsWith('@drum:')){ if(hasDrum){ toast('ドラムは1つまでです（ミキサーで音を変えられます）'); return; } state.drumOff=false; if(state.drum==='none') state.drum='pop'; state.kit=v.slice(6); mixOf('drum').m=false; }
-    else if(v.startsWith('@bass:')){ if(state.bass){ toast('ベースは1つまでです（ミキサーで音を変えられます）'); return; } state.bass=true; state.bassSnd=v.slice(6); state.bassPat=state.bassPat||'auto'; }
+    if(v.startsWith('@drum:')){ const kit=v.slice(6), nd=(state.xtr||[]).filter(t=>t.type==='drum').length;
+      if(!hasDrum){ state.drumOff=false; if(state.drum==='none') state.drum='pop'; state.kit=kit; mixOf('drum').m=false; }
+      else newX({type:'drum', drum:state.drum, kit, name:'ドラム'+(nd+2)}); }
+    else if(v.startsWith('@bass:')){ const snd=v.slice(6), nb=(state.xtr||[]).filter(t=>t.type==='bass').length;
+      if(!state.bass){ state.bass=true; state.bassSnd=snd; state.bassPat=state.bassPat||'auto'; }
+      else newX({type:'bass', bassPat:state.bassPat||'auto', bassSnd:snd, name:'ベース'+(nb+2)}); }
     else { const pat=ARPS[FAM_PAT[famOfInst(v)]]?FAM_PAT[famOfInst(v)]:'whole';
       if(!state.arp2 || !ARPS[state.arp2]){ state.arp2=pat; state.inst2=v; }
       else { state.xtr=state.xtr||[]; const ids=new Set(state.xtr.map(t=>t.id)); let n=1; while(ids.has('t'+n)) n++;
@@ -448,7 +462,7 @@ function removeTrack(kind){ const x=xOf(kind);
 // パターンを直接編集する。いつもの伴奏（組み込みのパターン）は、自分用のコピーを作って開き、何も変えずに閉じたらコピーを消して元に戻す
 let PAT_TMP=null;
 function editTrackPattern(kind,scene,where){ const k=patOf(kind);
-  if((kind==='arp2'||xOf(kind)) && (!k || !ARPS[k])) return openSheet(kind);
+  if((kind==='arp2'||xType(kind)==='chord') && (!k || !ARPS[k])) return openSheet(kind);
   const wasMy=/^my\d+$/.test(k||''), nm=tkPatName(kind);
   if(scene) PR.scene=scene;
   openPatEditor(kind,'edit');
@@ -561,7 +575,7 @@ const styleCats=()=>STYLE_CATS.map(([h,ids])=>[h, ids.map(id=>STYLES.find(s=>s.i
   cv:cv=>{ const g=fit(cv), col=colors(), H=cv.height; drawArpBar(g,0,0,cv.width,H*.55,ARPS[st.arp],col.t,col); if(DRUMS[st.drum]) drawDrumBar(g,0,H*.58,cv.width,H*.42,DRUMS[st.drum],col); }}))]);
 // 演奏のパターンの分類（PRO）：自分で作ったもの／伴奏スタイルで使うもの／重ねる上もの／そのほか
 const LAYER_PATS=new Set(['glockline','brassobb','brasshit','hornline','anilead']);
-function patCats(kind){ const drum=kind==='drum', src=drum?DRUMS:ARPS, order=drum?drumOrder():arpOrder(), X=xOf(kind), p2like=kind==='arp2'||!!X;
+function patCats(kind){ const drum=isDrumK(kind), src=drum?DRUMS:ARPS, order=drum?drumOrder():arpOrder(), X=xOf(kind), p2like=kind==='arp2'||!!X;
   const used={}; STYLES.forEach(st=>{ const k=drum?st.drum:st.arp; (used[k]=used[k]||[]).push(st.name); if(!drum&&st.arp2) (used[st.arp2]=used[st.arp2]||[]).push(st.name+'の上もの'); });
   const col=colors(), cv=k=>c=>{ const g=fit(c); if(drum) drawDrumBar(g,0,0,c.width,c.height,DRUMS[k],col); else drawArpBar(g,0,0,c.width,c.height,ARPS[k],col.t,col); };
   const it=k=>({k, label:patName(src[k]), sub:/^my\d+$/.test(k)?'自分で作ったパターン':used[k]?used[k].join('・')+'で使う':'', cv:cv(k)});
@@ -655,21 +669,21 @@ const BSW=18, BRH=30;   // 16分1つの幅・1行の高さ
     <div class="bfoot"><button class="chip" id="blkPick">ほかの弾き方</button><button class="chip" id="blkMore">細かい設定</button><button id="blkOk">決定</button></div>`;
   document.body.appendChild(el); }
 function blkPlayIco(){ const b=$('blkPlay'); if(b){ b.innerHTML=playing?STOP_SVG:PLAY_SVG; b.setAttribute('aria-label',playing?'止める':'再生'); } }
-function blkRows(){ const k=BLKE.kind; return k==='drum'?DRUM_ROWS:k==='bass'?BASS_ROWS:(curMy().melody?[...MEL_ROWS,...KEY_ROWS]:KEY_ROWS); }
+function blkRows(){ const k=BLKE.kind; return isDrumK(k)?DRUM_ROWS:isBassK(k)?BASS_ROWS:(curMy().melody?[...MEL_ROWS,...KEY_ROWS]:KEY_ROWS); }
 const sceneLen=k=>{ const L=scenesOf(patKind); return L?((L.find(x=>x[0]===k)||[0,0,16])[2]):16; };
 // 場面の音（読むだけ。ない場面を作らない）
 const notesOfScene=k=>{ const m=curMy(); return k==='bar'?m.notes:((m.sitNotes||{})[k]||[]); };
 // 曲の中の区切り：その場所で鳴る場面（key）と、場面の中のどこから使うか（off）
 function blkSegs(){ const kind=BLKE.kind, L=slotSteps(), col=colors(), out=[];
-  if(kind==='drum'){ for(let b=0;b<state.bars;b++){ const sc=sceneAt('drum',b,cellsOf(b)[0]); out.push({x0:b*L, len:L, key:sc.key, off:(b*L)%16, c:col.muted, b}); } return out; }
+  if(isDrumK(kind)){ for(let b=0;b<state.bars;b++){ const sc=sceneAt(kind,b,cellsOf(b)[0]); out.push({x0:b*L, len:L, key:sc.key, off:(b*L)%16, c:col.muted, b}); } return out; }
   const E=chordLine(), S=effStarts(kind,E), end=state.bars*L;
   E.forEach((e,k)=>{ if(!hasV(e.v)) return; const x0=Math.max(0,S[k]), x1=k+1<E.length?S[k+1]:end; if(x1<=x0) return;
-    let key='bar', off=0; if(kind!=='bass'){ const sc=sceneAt(kind,e.b,cellsOf(e.b)[e.h]); if(!sc) return; key=sc.key; off=sc.off||0; }
+    let key='bar', off=0; if(!isBassK(kind)){ const sc=sceneAt(kind,e.b,cellsOf(e.b)[e.h]); if(!sc) return; key=sc.key; off=sc.off||0; }
     out.push({x0, len:Math.min(x1-x0, sceneLen(key)-off), key, off, c:roleCol(col,roleAt(e.b,e.h,e.v)), v:e.v, b:e.b}); });
   return out; }
 function blkUses(key){ return BSEGS.filter(s=>s.key===key).length; }
 function openBlk(kind,scene,where,x0,x1){ const k=patOf(kind);
-  if((kind==='arp2'||xOf(kind)) && (!k || !ARPS[k])) return openSheet(kind);
+  if((kind==='arp2'||xType(kind)==='chord') && (!k || !ARPS[k])) return openSheet(kind);
   const wasMy=/^my\d+$/.test(k||'');
   BLKE={kind, x0, x1, snap:JSON.stringify(state), wasMy, prev:k, nm:tkPatName(kind), cur:scene||'bar'};
   patKind=kind; PR.scene='bar'; PR.mode='edit'; PR.selSet.clear();
@@ -678,14 +692,14 @@ function openBlk(kind,scene,where,x0,x1){ const k=patOf(kind);
   $('patGrid').innerHTML='';
   $('blkEd').hidden=false; blkPlayIco(); renderAll(); renderTracks(); drawBlk();
   requestAnimationFrame(()=>{ $('bScroll').scrollLeft=Math.max(0,x0*BSW-4); }); }
-function drawBlk(){ if(!BLKE) return; const kind=BLKE.kind, rows=blkRows(), L=slotSteps(), W=state.bars*L*BSW, isDrum=kind==='drum';
+function drawBlk(){ if(!BLKE) return; const kind=BLKE.kind, rows=blkRows(), L=slotSteps(), W=state.bars*L*BSW, isDrum=isDrumK(kind);
   BSEGS=blkSegs(); const ri=r=>rows.findIndex(([k])=>String(k)===String(r)), m=curMy();
   $('blkTitle').innerHTML=`${esc(tkName(kind))}の弾き方<small>${esc(m.name||'')}</small>`;
   $('blkHelp').textContent = isDrum ? '何もない所をタップで音を置く、音をタップで消す。音をドラッグで動かす。横にスクロールできます。'
     : '何もない所をタップで音を置く、音をタップで消す。音の右端をドラッグで長さ、まん中をドラッグで動かす。横にスクロールできます。';
   const c=BLKE.cur, n=blkUses(c);
   $('blkNote').textContent = (BLKE.wasMy ? '' : `「${BLKE.nm}」をもとにした自分用のパターンです（何も変えなければ元のままです）。`)
-    + (kind!=='bass'&&n>1 ? `同じ色の濃い所は、さっき触った「${SCENE_NAME(c)}」の弾き方を使う${n}か所です（いっしょに変わります）。` : kind==='bass' ? 'ベースはどのコードでも同じ弾き方です（いっしょに変わります）。' : '');
+    + (!isBassK(kind)&&n>1 ? `同じ色の濃い所は、さっき触った「${SCENE_NAME(c)}」の弾き方を使う${n}か所です（いっしょに変わります）。` : isBassK(kind) ? 'ベースはどのコードでも同じ弾き方です（いっしょに変わります）。' : '');
   let ru='', segs='', notes='';
   for(let b=0;b<state.bars;b++) ru+=`<span class="bn" style="left:${b*L*BSW}px">${b+1}</span>`;
   BSEGS.forEach((s,si)=>{ const lab = isDrum ? (s.key==='B'?'2小節目':'') : SCENE_NAME(s.key);
@@ -699,7 +713,7 @@ function drawBlk(){ if(!BLKE) return; const kind=BLKE.kind, rows=blkRows(), L=sl
   sc.innerHTML=`<div style="width:calc(var(--lw) + ${W}px)"><div class="bruler"><div class="bcorner"></div><div class="brt" style="width:${W}px">${ru}</div></div>
     <div class="bmain"><div class="blabs">${rows.map(([,l])=>`<span>${l}</span>`).join('')}</div><div class="broll" id="bRoll" style="width:${W}px;height:calc(${rows.length} * var(--rh));--cols:${state.bars*L}">${segs}${notes}<div class="bph" id="bPh" hidden></div></div></div></div>`;
   sc.scrollLeft=sl; sc.scrollTop=stp; bindBig(rows); }
-function bindBig(rows){ const roll=$('bRoll'), isDrum=BLKE.kind==='drum';
+function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
   roll.addEventListener('touchstart',e=>{ if(e.target.closest('.prn') && e.cancelable) e.preventDefault(); },{passive:false});   // 音をつかんだときはスクロールしない
   const pos=e=>{ const r=roll.getBoundingClientRect(), x=(e.clientX-r.left)/BSW, row=Math.floor((e.clientY-r.top)/BRH); return {x, row:Math.max(0,Math.min(rows.length-1,row))}; };
   const segAt=x=>BSEGS.find(s=>x>=s.x0&&x<s.x0+s.len);
@@ -739,11 +753,11 @@ $('blkOk').onclick=blkOk; $('blkX').onclick=blkCancel;
 $('blkPlay').onclick=()=>{ playing?stop():play(); };
 document.addEventListener('keydown',e=>{ if(e.key==='Escape' && BLKE) blkCancel(); });
 // ほかの弾き方を選ぶ：選んだら、その弾き方で開き直す（キャンセルすれば開いたときに戻る）
-$('blkPick').onclick=()=>{ const B=BLKE, kind=B.kind, drum=kind==='drum', bass=kind==='bass';
+$('blkPick').onclick=()=>{ const B=BLKE, kind=B.kind, drum=isDrumK(kind), bass=isBassK(kind);
   const cats = bass ? ()=>[['ベースの弾き方',Object.keys(BASSES).map(k=>({k,label:BASSES[k].name}))]] : ()=>patCats(kind);
   openPicker(drum?'ドラムの演奏を選ぶ':bass?'ベースの弾き方を選ぶ':'演奏を選ぶ', cats, patOf(kind), v=>{
     const list=listOf(kind), i=list.length-1; if(!B.wasMy && JSON.stringify(list[i])===B.copy && patOf(kind)==='my'+i){ list.pop(); rebuildMy(); }
-    setPatOf(kind,v); if(bass) state.bass=true; save(); renderAll(); ensureSounds();
+    setPatOf(kind,v); if(kind==='bass') state.bass=true; save(); renderAll(); ensureSounds();
     const sl=$('bScroll').scrollLeft; BLKE=null; openBlk(kind, null, '', B.x0, B.x1); if(BLKE){ BLKE.snap=B.snap; requestAnimationFrame(()=>$('bScroll').scrollLeft=sl); } return true; }); };
 // 細かい設定：いままでの編集画面（リズム・タイミングなど）。ここまでの変更はそのまま
 $('blkMore').onclick=()=>{ const B=BLKE; BLKE=null; $('blkEd').hidden=true; $('bScroll').innerHTML=''; PR.scene=B.cur; openPatEditor(B.kind,'edit'); };
