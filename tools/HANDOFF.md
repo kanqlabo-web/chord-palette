@@ -185,3 +185,5 @@
 - groupPick を上書きして、楽器・ドラム音は全部 openPicker 経由。STYLE_CATS がスタイルの分類、patCats(kind) が PRO の演奏パターン分類。
 - 未対応: 「2つ目の楽器」(P2PATS) と PRO ベースのパターンはまだチップ表示。
 - シート(#sheet)は下の「決定」(#sheetOk)で確定。✕・外側・Esc は sheetRestore() で開いた時の state(JSON) に戻す（07-tracks.js 末尾）。シート内で選んでもシートは閉じず openSheet(kind) で描き直す。
+- トラック画面（β, 5.22.008〜）: 横スクロールなし。dawBarW＝4マスで画面幅。メイン画面の #pages を .dtop の .dsp へ移し（tpIn/tpOut）、page と dScroll.scrollLeft を同期（dawPage, renderSlots ラッパー）。再生中は鳴っているページへ切りかえ。
+- 帯タップ＝openBlk(kind,scene,where,x0,x1)：下から出る簡単ピアノロール #blkEd（bindRoll/drawNotes を流用、#proll の id は1つだけにするため patGrid を空にする）。組み込みパターンは開いた時点で newMy コピーに切りかえ、未変更で決定ならコピーを消す。✕/外側＝開いた時の state に戻す。「ほかの弾き方を選ぶ」「細かい設定（従来の編集画面）」あり。編集中の帯は .dblk の枠。
