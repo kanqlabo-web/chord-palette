@@ -186,4 +186,4 @@
 - 未対応: 「2つ目の楽器」(P2PATS) と PRO ベースのパターンはまだチップ表示。
 - シート(#sheet)は下の「決定」(#sheetOk)で確定。✕・外側・Esc は sheetRestore() で開いた時の state(JSON) に戻す（07-tracks.js 末尾）。シート内で選んでもシートは閉じず openSheet(kind) で描き直す。
 - トラック画面（β, 5.22.008〜）: 横スクロールなし。dawBarW＝4マスで画面幅。メイン画面の #pages を .dtop の .dsp へ移し（tpIn/tpOut）、page と dScroll.scrollLeft を同期（dawPage, renderSlots ラッパー）。再生中は鳴っているページへ切りかえ。
-- 帯タップ＝openBlk(kind,scene,where,x0,x1)：下から出る簡単ピアノロール #blkEd（bindRoll/drawNotes を流用、#proll の id は1つだけにするため patGrid を空にする）。組み込みパターンは開いた時点で newMy コピーに切りかえ、未変更で決定ならコピーを消す。✕/外側＝開いた時の state に戻す。「ほかの弾き方を選ぶ」「細かい設定（従来の編集画面）」あり。編集中の帯は .dblk の枠。
+- 帯タップ＝openBlk(kind,scene,where,x0,x1)：全画面ピアノロール #blkEd。曲の全マスを blkSegs()（各コードの位置で sceneAt が返す場面 key と off）で並べ、横スクロール（BSW=18px/16分）。音を触るとその場面（PR.scene）の notes を編集→commitNotes（ラッパーで描き直し）。同じ場面の所はいっしょに変わる。組み込みは開いた時点で newMy コピー、未変更で決定ならコピーを消す。✕＝開いた時の state に戻す。空白のドラッグはスクロール、音のドラッグは移動・長さ（touchstart で preventDefault）。再生中のページ追従は「ページが進んだときだけ」(dawPlayPg)。
