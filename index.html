@@ -707,7 +707,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.187（2026-10-23）</p>
+    <p class="appver">ver 1.188（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -774,7 +774,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.187（2026-10-23）</p>
+  <p class="appver">ver 1.188（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1496,7 +1496,8 @@ function pentaStep(m,dir,cp){ const K=keyObj().pc, P=pentaNow(), pc=x=>(((x-K)%1
   return x; }
 // 「次のコードへペンタでつなぐ」（'nx'）：パターンの中の nx の音に、後ろから 1・2・3…と番号を付ける（e[6]）
 function prepNx(evs){ const xs=(evs||[]).filter(e=>e[5]==='nx').sort((a,b)=>a[0]-b[0]); xs.forEach((e,i)=>{ e[6]=xs.length-i; e[7]=xs[xs.length-1][1][0]; e[8]=xs.length; }); return evs; }   // e[6]：後ろから何番目 e[8]：全部で何音   // e[7]：最後の音の行（目標の高さの基準。みんな同じ目標へ向かう）
-let NX_V=null;   // 次のコード（chordPart が playEvents の前に入れる）
+let NX_V=null;
+const LAST_MEL=[{},{}];   // 直前に弾いたメロディの音（楽器1・楽器2）   // 次のコード（chordPart が playEvents の前に入れる）
 // 今のコードのいちばん上の音から、次のコードのいちばん上の音（声部としていちばん近い次のコードの音）まで、キーのペンタで順につなぐ。
 // N 音のうち後ろから k 番目の音を返す。間のペンタの音が足りないときは、次のコードの上の音へ、今の音の側から1音ずつ近づく
 function nxPitch(k,N,bt){ if(NX_V==null||!bt||!bt.tones) return null;
@@ -3138,9 +3139,9 @@ function playEvents(evs,bt,ct,sd,pat){
     const sh=typeof tr==='number'?tr:0, TN=(tr==='up'&&bt.up)?bt.up:tones;   // 'up'：1つ上の和音の音で弾く／'dn'：1つ下の音階の音（刺繍音）
     const I0=notes.length, NB=NB_SET.has(tr), CP=[...new Set(Object.values(tones).filter(x=>x!=null).map(x=>((x%12)+12)%12))], MO=(pat&&pat.melOct)||0;
     const nxM=tr==='nx'?nxPitch(nxk||1,nxN||1,bt):null;
-    degs.forEach((ix,k)=>{ const m0=degPitch(ix)+sh+MO, m=nxM??m0; if(NB) nbSplit(m,tr,len,CP).forEach(p=>notes.push({ix:3,k,len:p.len,vel,dir,st0:st0+p.d,ev0:st0,top:false,mel:true,m:p.m})); else notes.push({ix:3,k,len,vel,dir,st0,ev0:st0,top:false,mel:true,m}); });   // メロディ行：キーの音階の音
+    degs.forEach((ix,k)=>{ const m0=degPitch(ix)+sh+MO, m=nxM??m0; if(NB) nbSplit(m,tr,len,CP).forEach(p=>notes.push({ix:3,k,len:p.len,vel,dir,st0:st0+p.d,ev0:st0,top:false,mel:true,m:p.m,orig:p.m,row:ix})); else notes.push({ix:3,k,len,vel,dir,st0,ev0:st0,top:false,mel:true,m,orig:m,row:ix}); });   // メロディ行：キーの音階の音
     if(tr==='up' && bt.upV && LHCTX) LHCTX.satb=bt.upV;   // 和声法：次の和音へは、上がったあとの形からつなぐ
-    ns.forEach((ix,k)=>{ const m0=(arp ? (ix<=3 ? bt.ra[ix-1] : bt.ra[ix-6]+12) : TN[ix])+sh, m=nxM??m0; if(NB) nbSplit(m,tr,len,CP).forEach(p=>notes.push({ix,k,len:p.len,vel,dir,st0:st0+p.d,ev0:st0,top:ix===top,m:p.m})); else notes.push({ix,k,len,vel,dir,st0,ev0:st0,top:ix===top, m}); });   // tr＝半音いくつずらすか
+    ns.forEach((ix,k)=>{ const m0=(arp ? (ix<=3 ? bt.ra[ix-1] : bt.ra[ix-6]+12) : TN[ix])+sh, m=nxM??m0; if(NB) nbSplit(m,tr,len,CP).forEach(p=>notes.push({ix,k,len:p.len,vel,dir,st0:st0+p.d,ev0:st0,top:ix===top,m:p.m,orig:p.m,row:ix})); else notes.push({ix,k,len,vel,dir,st0,ev0:st0,top:ix===top, m,orig:m,row:ix}); });   // tr＝半音いくつずらすか
     // フォール（'fall'）：のばした音の終わりで、音程を一気に下げながら抜く（ブラスの「プァー↘」）
     if(tr==='fall') notes.slice(-ns.length).forEach(n=>n.fall=true);
     if(tr==='scoop') notes.slice(I0).forEach(n=>n.scoop=true);   // しゃくり：この音（メロディ行も）を下からずり上げる
@@ -3159,6 +3160,15 @@ function playEvents(evs,bt,ct,sd,pat){
         const mv=(isC(a)&&!isC(b))?b:a; let x=mv.m-1, k=0; while(!core.includes(pc(x))&&k++<12) x--;
         if(mv===b && x<=a.m){ x=b.m+1; k=0; while(!core.includes(pc(x))&&k++<12) x++; }
         mv.m=x; } }
+    // 別の行（別の音）を選んでいるのに、よける処理などで同じ高さになってしまったら、よける前の音に戻す（戻しても同じなら、音階で1つ下へ）
+    { const evN=notes.slice(I0);
+      evN.forEach((n,i)=>{ evN.slice(0,i).forEach(o=>{ if(o.st0===n.st0 && o.row!==n.row && o.m===n.m){ const t=(n.m!==n.orig)?n:(o.m!==o.orig)?o:null;
+        if(t) t.m=t.orig; if(o.m===n.m){ const lo=(String(n.row)<String(o.row))?n:o; lo.m=scaleDown(lo.m); } } }); });
+      // メロディ（1音ずつのフレーズ）：直前の音と別の行なのに同じ高さになったら、よける前の音に戻す
+      const LM=LAST_MEL[PART2?1:0];
+      evN.filter(n=>n.mel||tr==='nx').sort((a,b)=>a.st0-b.st0).forEach(n=>{
+        if(LM.m!=null && LM.row!==n.row && LM.m===n.m && (LM.orig!==n.orig || tr==='nx')){ if(n.m!==n.orig) n.m=n.orig; else if(tr==='nx') n.m=pentaStep(n.m,-1,null); }
+        LM.m=n.m; LM.row=n.row; LM.orig=n.orig; }); }
   });
   if(!notes.length) return;
   // ギターのストローク：同じタイミングの音を、低い弦→高い弦（ダウン）／高い弦→低い弦（アップ）の順に少しずつずらして鳴らす
@@ -3426,7 +3436,7 @@ async function play(){ ensureAudio(); pendingSound=null; if(starting) return; bg
   if(ctx.state!=='running'){ starting=true; await wakeAudio(); starting=false; }
   if(loadingNow()){ starting=true; $('play').setAttribute('aria-label','読み込み中'); $('play').style.opacity=.55;
     await Promise.race([ensureSounds(), new Promise(r=>setTimeout(r,8000))]); starting=false; $('play').style.opacity=''; }
-  ACC_TOP=null; lastR=null; barTones=null; pushedKey=null; lastBassM=null; LHCTX.prev=null; LHCTX.prevB=null; LHCTX.satb=null; resetP2(); playing=true; playedSteps=0; gpos=0; LOOPN=0; ENDED_EARLY=false; lofiNoise(state.inst==='lofi'||state.kit==='lofi');
+  ACC_TOP=null; lastR=null; barTones=null; pushedKey=null; lastBassM=null; LHCTX.prev=null; LHCTX.prevB=null; LHCTX.satb=null; resetP2(); playing=true; playedSteps=0; gpos=0; LOOPN=0; ENDED_EARLY=false; LAST_MEL[0]={}; LAST_MEL[1]={}; lofiNoise(state.inst==='lofi'||state.kit==='lofi');
   if(TUT.on){ TUT.loopLen=state.bars*slotSteps(); TUT.stopping=false; clearTimeout(TUT.stopT); } visQ=[]; cur=null; nextTime=ctx.currentTime+.06; tick(); timer=setInterval(tick,25); if(tickWorker) tickWorker.postMessage(25);
   $('play').innerHTML=STOP_SVG; $('play').setAttribute('aria-label','停止'); }
 function stop(){ lofiNoise(false); if(EXPORT.on && !EXPORT.stopping) setTimeout(()=>endExport(false),0); if(compBus){ compBus.gain.cancelScheduledValues(0); compBus.gain.setValueAtTime(1,ctx.currentTime); } playing=false; clearInterval(timer); if(tickWorker) tickWorker.postMessage(0); bgStop(); visQ=[]; cur=null; dirty=true;
@@ -4395,7 +4405,7 @@ $('saveFile').onchange=async e=>{ const f=e.target.files&&e.target.files[0]; e.t
 let CAPTURE=null;
 function captureSong(){ const C=[]; const sbSv=LHCTX.satb; LHCTX.satb=null; resetP2(); const sv={playedSteps,gpos,LOOPN,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice};
   const lhSv=[LHCTX.prev,LHCTX.prevB]; LHCTX.prev=LHCTX.prevB=null; CAPTURE=C; ACC_TOP=null; lastR=null; barTones=null; pushedKey=null; lastBassM=null; held=[]; bassHeld=[]; lastBassVoice=null; playedSteps=0; gpos=0; LOOPN=0; LOOPN=0;
-  const T=state.bars*slotSteps(), sd=stepDur(); let t=0; const eeSv=ENDED_EARLY; ENDED_EARLY=false; CAP_LEN=T;
+  const T=state.bars*slotSteps(), sd=stepDur(); let t=0; const eeSv=ENDED_EARLY; ENDED_EARLY=false; CAP_LEN=T; LAST_MEL[0]={}; LAST_MEL[1]={};
   try{ for(let n=0;n<T;n++){ scheduleStep(n,t); t+=sd; playedSteps++; } if(!ENDED_EARLY) endHit(t); }
   finally{ CAPTURE=null; CAP_LEN=null; ENDED_EARLY=eeSv; [LHCTX.prev,LHCTX.prevB]=lhSv; LHCTX.satb=sbSv; ({playedSteps,gpos,LOOPN,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice}=sv); if(!playing) visQ=[]; }
   return {ev:C, end:t+sd*16}; }
