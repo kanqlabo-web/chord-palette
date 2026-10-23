@@ -565,7 +565,7 @@ function applyMix(){ if(!ctx||!drumBus) return;
   mixChs().forEach(c=>{ const ch=CHAN[c]; if(!ch) return; const x=mixOf(c);
     // 通常モードは伴奏スタイルの音量バランスとミックス、PRO はトラックごとの設定
     const f = pro ? x : (sfx[c]||{});
-    const g = !pro ? (sm&&sm[c]!=null?sm[c]:1) : solo ? (x.s?x.v:0) : (x.m?0:x.v);
+    const g = !pro ? (sm&&sm[c]!=null?sm[c]:1) : (c==='drum'&&state.drumOff) ? 0 : solo ? (x.s?x.v:0) : (x.m?0:x.v);
     T(ch.vol.gain,g); T(ch.pan.pan,f.pan||0); T(ch.send.gain,f.rev||0); T(ch.esend.gain,(f.echo||0)*.8);
     T(ch.lo.gain,(f.lo||0)*9); T(ch.hi.gain,(f.hi||0)*9);
     const k=f.comp||0; T(ch.comp.threshold,-k*26); T(ch.comp.ratio,1+k*5); T(ch.mk.gain,Math.pow(10,k*7/20)); });

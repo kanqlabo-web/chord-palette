@@ -68,7 +68,7 @@
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 5.22.010（2026-10-24）</p>
+    <p class="appver">ver 5.22.011（2026-10-24）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -136,7 +136,7 @@
   <div class="sec"><h3>リセット</h3>
     <div class="chips"><button class="chip" id="resetSlots">マスを空にする</button><button class="chip" id="resetAll">設定もすべて最初に戻す</button></div>
     <p class="small" style="margin:0">セーブデータとマイパターンは消えません。</p></div>
-  <p class="appver">ver 5.22.010（2026-10-24）</p>
+  <p class="appver">ver 5.22.011（2026-10-24）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -182,7 +182,7 @@
     <p class="small" style="margin:0 0 6px">鍵盤の上の絶対的な範囲（いちばん下の音〜1オクターブ）を選びます。和音はなるべくこの中で弾きます。</p>
     <div class="rangerow" id="rhRow"><b id="rhLab">右手</b><input type="range" id="rhKb" step="1"><output id="rhOut"></output><button class="chip" id="rhReset">標準</button></div>
     <div class="rangerow" id="lhRow"><b>左手</b><input type="range" id="lhKb" step="1"><output id="lhOut"></output><button class="chip" id="lhReset">標準</button></div></div>
-  <div class="sheetsec" id="wideSec" hidden><h3>左右の広がり</h3><div class="chips" id="wideChips"></div><p class="small" style="margin:6px 0 0">弦楽器（バイオリンなど）は、いちばん低い音をまん中に置き、上の音を左・右…と交互に振り分けます（低い音ほど狭く）。鍵盤楽器（ピアノなど）は、低い音ほど左・高い音ほど右に並べます。ほかの楽器はまん中のままです。</p></div>
+  <div class="sheetsec" id="wideSec" hidden><h3>左右の広がり</h3><div class="chips" id="wideChips"></div><p class="small" style="margin:6px 0 0">コードの音を、いちばん低い音はまん中に、上の音を左・右…と交互に振り分けて広げます（低い音ほど狭く）。レトロな電子ピアノ・ローファイ・歪んだギターは変わりません。</p></div>
   <div class="sheetsec" id="part2Sec" hidden><h3>2つ目の楽器（重ねる）</h3><div class="chips" id="p2Pat"></div><div id="p2InstWrap" hidden><h3 style="margin-top:12px">2つ目の楽器の音色</h3><div class="chips" id="p2Inst"></div></div></div>
   <div class="sheetsec" id="kitSec" hidden><h3>ドラムの音</h3><div class="chips" id="kitChips2"></div></div>
   <div class="sheetsec" id="fillSec"><h3>フィルイン（4小節ごとにおかずとシンバル）</h3><div class="chips" id="fillChips"></div><h3>ベース</h3><div class="chips" id="bassSndChips"></div></div>
@@ -190,11 +190,11 @@
 
 <script>window.CP_CONF={"store": "cpbeta-", "snd": "../snd/", "kind": "beta"};</script>
 <script src="core/js/01-music.js?v=c1a8e6aa"></script>
-<script src="core/js/02-mypattern.js?v=6dca8cb3"></script>
-<script src="core/js/03-ui.js?v=629b8829"></script>
+<script src="core/js/02-mypattern.js?v=82dfec7d"></script>
+<script src="core/js/03-ui.js?v=3c8863d1"></script>
 <script src="core/js/04-audio.js?v=4bceae86"></script>
 <script src="../core/js/05-tutorial.js?v=27b01819"></script>
-<script src="core/js/06-save.js?v=563f038e"></script>
-<script src="core/js/07-tracks.js?v=c314e5a5"></script>
+<script src="core/js/06-save.js?v=e86f5879"></script>
+<script src="core/js/07-tracks.js?v=840fe4af"></script>
 </body>
 </html>

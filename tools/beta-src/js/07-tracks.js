@@ -31,7 +31,8 @@ const STYLE_FX={
   14:{arp:{rev:.38,comp:.1}}};
 const FX_KEYS=['pan','rev','echo','comp','hi','lo'];
 // 伴奏スタイルを選んだら、そのミックスもトラックの設定に写す（音量はこれまでどおり st.mix から）
-{ const ss=setStyle; setStyle=function(st){ ss(st); const fx=STYLE_FX[st.id]; if(fx) for(const c in fx){ const x=mixOf(c); FX_KEYS.forEach(k=>{ if(fx[c][k]!=null) x[k]=fx[c][k]; }); } try{ applyMix(); }catch(e){} }; }
+{ const ss=setStyle; setStyle=function(st){ ss(st); state.wide=true; state.drumOff=false;   // 左右の広がりは「広げる」が基本（共有リンクで開いた古い曲は、そのときの設定のまま）
+  const fx=STYLE_FX[st.id]; if(fx) for(const c in fx){ const x=mixOf(c); FX_KEYS.forEach(k=>{ if(fx[c][k]!=null) x[k]=fx[c][k]; }); } try{ applyMix(); }catch(e){} }; }
 
 const TRK_COLORS=['#3567D6','#24946A','#DA6A22','#8A4FD3','#D13F6B','#1F8FA8','#B8860B','#5B6475'];
 const TRK_DEF={arp:['コード',0],arp2:['コード2',3],drum:['ドラム',7],bass:['ベース',2]};
@@ -39,7 +40,7 @@ const TRK_DEF={arp:['コード',0],arp2:['コード2',3],drum:['ドラム',7],ba
 function trackList(){ const L=[{kind:'arp'}];
   if(state.arp2 && ARPS[state.arp2]) L.push({kind:'arp2'});
   (state.xtr||[]).forEach(t=>L.push({kind:'x:'+t.id}));
-  L.push({kind:'drum'}); if(state.bass) L.push({kind:'bass'});
+  if(state.drum!=='none' && !state.drumOff) L.push({kind:'drum'}); if(state.bass) L.push({kind:'bass'});
   return L; }
 const mixKey=kind=>kind.startsWith('x:')?kind.slice(2):kind;
 const tkMeta=kind=>{ const x=xOf(kind); if(x) return x; state.tk=state.tk||{}; return state.tk[kind]=state.tk[kind]||{}; };
@@ -339,7 +340,7 @@ const FX_ROWS=[['comp','コンプレッサー（音の大きさをそろえる�
 const fxTxt=(k,v)=>k==='hi'||k==='lo' ? (Math.abs(v)<.03?'0':(v>0?'+':'−')+Math.round(Math.abs(v)*9)+'dB') : Math.round(v*100);
 let INSP_SND=false;   // ミキサーで音色の一覧を開いているか
 function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=true; INSP_SND=false; return; } p.hidden=false;
-  const x=mixOf(mixKey(kind)), pan=x.pan||0, canDel=kind==='arp2'||kind.startsWith('x:')||kind==='bass', m=tkMeta(kind);
+  const x=mixOf(mixKey(kind)), pan=x.pan||0, canDel=true, m=tkMeta(kind);
   p.style.setProperty('--tc',tkColor(kind));
   const rng=(f,label,min,max,val,txt)=>`<label class="dirow"><span>${label}<output>${txt}</output></span><input type="range" min="${min}" max="${max}" step=".01" value="${val}" data-f="${f}"></label>`;
   const sndName = kind==='drum' ? (KITS[state.kit]||'ドラム') : kind==='bass' ? (BASS_SNDS[state.bassSnd||'bass']||'ベース') : tkInst(kind);
@@ -367,15 +368,29 @@ function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=tru
 addEventListener('resize',()=>{ if(!trk.hidden) renderTracks(); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{ if(!trk.hidden) renderTracks(); });
 // 楽器を足す：コード2が空いていればコード2に、そうでなければ足した楽器（state.xtr）に。足したらパターンを選ぶ画面を開く
-function addTrack(){ if(!state.arp2 || !ARPS[state.arp2]){ state.arp2='whole'; state.inst2='strings3'; save(); renderAll(); ensureSounds(); renderTracks(); openSheet('arp2'); return; }
-  state.xtr=state.xtr||[]; const ids=new Set(state.xtr.map(t=>t.id)); let n=1; while(ids.has('t'+n)) n++;
-  const t={id:'t'+n, arp:'whole', inst:'strings3', rhLo:null, lhLo:null, rhOff:0, lhOff:0, name:'楽器'+(state.xtr.length+3)}; state.xtr.push(t);
-  save(); renderAll(); ensureSounds(); applyMix(); renderTracks(); openSheet('x:'+t.id); }
+// 楽器を足す：選ぶ画面で選んで「決定」したときだけ足す。ドラム・ベースは、ないときだけ選べる
+const FAM_PAT={keys:'piano4',guitar:'strum',strings:'whole',brass:'brassobb',sax:'hornline',synth:'anilead',bells:'glockline',wa:'koto'};
+function addTrack(){ const hasDrum=state.drum!=='none'&&!state.drumOff, cats=()=>{ const c=catsOf(INST_GROUPS,INSTS,k=>INST_ICO[famOfInst(k)]).map(([h,a])=>['コード：'+h,a]);
+    const rb=[]; if(!hasDrum) rb.push({k:'@drum',label:'ドラム',sub:'リズムを刻む',ico:INST_ICO.drum}); if(!state.bass) rb.push({k:'@bass',label:'ベース',sub:'低い音でコードを支える',ico:INST_ICO.bass});
+    if(rb.length) c.unshift(['ドラム・ベース',rb]); return c; };
+  openPicker('楽器を足す', cats, null, v=>{
+    if(v==='@drum'){ state.drumOff=false; if(state.drum==='none') state.drum='pop'; mixOf('drum').m=false; }
+    else if(v==='@bass'){ state.bass=true; state.bassPat=state.bassPat||'auto'; }
+    else { const pat=ARPS[FAM_PAT[famOfInst(v)]]?FAM_PAT[famOfInst(v)]:'whole';
+      if(!state.arp2 || !ARPS[state.arp2]){ state.arp2=pat; state.inst2=v; }
+      else { state.xtr=state.xtr||[]; const ids=new Set(state.xtr.map(t=>t.id)); let n=1; while(ids.has('t'+n)) n++;
+        state.xtr.push({id:'t'+n, arp:pat, inst:v, rhLo:null, lhLo:null, rhOff:0, lhOff:0, name:'楽器'+(state.xtr.length+3)}); } }
+    save(); renderAll(); ensureSounds(); applyMix(); renderTracks(); toast('トラックを足しました'); }, false); }
 function removeTrack(kind){ const x=xOf(kind);
   if(x){ state.xtr=state.xtr.filter(t=>t!==x); if(state.mix) delete state.mix[x.id]; }
   else if(kind==='arp2'){ // コード2をなくすと、足した楽器の1つ目がコード2になる（並びはそのまま）
     const t=(state.xtr||[]).shift(); if(t){ Object.assign(state,{arp2:t.arp, inst2:t.inst, rhLo2:t.rhLo, lhLo2:t.lhLo, rhOff2:t.rhOff||0, lhOff2:t.lhOff||0}); state.mix=state.mix||{}; state.mix.arp2=state.mix[t.id]||{v:1,m:false,s:false}; delete state.mix[t.id]; state.tk=state.tk||{}; state.tk.arp2={name:t.name,color:t.color}; } else state.arp2=''; }
   else if(kind==='bass') state.bass=false;
+  else if(kind==='drum'){ state.drumOff=true; }   // 鳴らさない（ベースの「ドラムに合わせる」はそのまま）
+  else if(kind==='arp'){ // コード（1つ目）をなくすと、コード2が1つ目になる。ほかにコードの楽器がなければなくせない
+    if(!state.arp2 || !ARPS[state.arp2]){ toast('コードの楽器は1つは残してください'); return; }
+    Object.assign(state,{arp:state.arp2, inst:state.inst2||'epiano', rhLo:state.rhLo2??null, lhLo:state.lhLo2??null, rhOff:state.rhOff2||0, lhOff:state.lhOff2||0});
+    state.mix=state.mix||{}; state.mix.arp=state.mix.arp2||{v:1,m:false,s:false}; state.tk=state.tk||{}; state.tk.arp=state.tk.arp2||{}; return removeTrack('arp2'); }
   TRK_SEL=null; applyMix(); save(); renderAll(); renderTracks(); }
 // パターンを直接編集する。いつもの伴奏（組み込みのパターン）は、自分用のコピーを作って開き、何も変えずに閉じたらコピーを消して元に戻す
 let PAT_TMP=null;
@@ -492,7 +507,7 @@ function patCats(kind){ const drum=kind==='drum', src=drum?DRUMS:ARPS, order=dru
   const it=k=>({k, label:patName(src[k]), sub:/^my\d+$/.test(k)?'自分で作ったパターン':used[k]?used[k].join('・')+'で使う':'', cv:cv(k)});
   const my=order.filter(k=>/^my\d+$/.test(k)), rest=order.filter(k=>!/^my\d+$/.test(k));
   const cats=[['自分で作ったもの',my.map(it)], ['伴奏スタイルの演奏',rest.filter(k=>used[k]&&!LAYER_PATS.has(k)).map(it)], ['重ねる上もの',rest.filter(k=>LAYER_PATS.has(k)).map(it)], ['そのほか',rest.filter(k=>!used[k]&&!LAYER_PATS.has(k)).map(it)]];
-  if(p2like) cats.unshift(['なし（使わない）',[{k:'',label:'なし（使わない）',sub:'この楽器を鳴らさない'}]]);
+  if(drum) cats.forEach(c=>c[1]=c[1].filter(x=>x.k!=='none'));   // 「なし」はトラックをなくすことで（PRO）
   return cats; }
 { const os=openSheet; openSheet=function(kind){ sheetSnap(); const r=os.apply(this,arguments); const opts=$('opts');
     if(!state.pro && (kind==='arp'||kind==='drum'||kind==='style')) requestAnimationFrame(()=>{ const st=styleNow();
@@ -504,7 +519,11 @@ function patCats(kind){ const drum=kind==='drum', src=drum?DRUMS:ARPS, order=dru
       pickRow(opts,'演奏（パターン）',k&&src[k]?patName(src[k]):'なし（使わない）','',null, k&&src[k]?c=>{ const g=fit(c), col=colors(); if(drum) drawDrumBar(g,0,0,c.width,c.height,src[k],col); else drawArpBar(g,0,0,c.width,c.height,src[k],col.t,col); }:null,
         ()=>openPicker(drum?'ドラムの演奏を選ぶ':'演奏を選ぶ', ()=>patCats(kind), k, v=>{ setPatOf(kind,v); save(); renderAll(); ensureSounds(); renderTracks(); openSheet(kind); return true; })); });
     else { opts.classList.add('opts'); }
+    $('part2Sec').hidden=true;   // 通常モード：2つ目の楽器は伴奏スタイルにおまかせ
+    if(!state.pro && kind==='arp2'){ opts.hidden=true; opts.previousElementSibling.hidden=true; } else { opts.hidden=false; if(opts.previousElementSibling) opts.previousElementSibling.hidden=false; }
+    const X=xOf(kind), ins=kind==='arp2'?state.inst2:X?X.inst:state.inst; if(kind!=='drum' && kind!=='bass' && NO_WIDE.has(ins)) $('wideSec').hidden=true;
     return r; }; }
+const NO_WIDE=new Set(['epcity','lofi','dist']);   // 左右に広げても変わらない音色
 
 // ---------- シートは「決定」で確定、✕・外側タップはキャンセル（開いたときの状態に戻す） ----------
 let SHEET_SNAP=null;
