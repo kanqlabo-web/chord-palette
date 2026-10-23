@@ -179,3 +179,8 @@
 - 平行移動が続くと、範囲から外れていく
 - フィルは4小節ごとなので、3・5・6小節の進行では切れ目とずれる
 - 2拍ずつ食う進行では、せわしなく聞こえることがある
+
+## 選ぶ画面（β, 5.22.006〜）
+- 07-tracks.js 末尾: twoPane(左カテゴリ/右リスト), pickRow(1行の要約ボタン), openPicker(title,catsFn,cur,onPick)=全画面 #pickScr。onPick が true を返すと閉じる（スタイル・パターン）、false なら開いたまま（音色の聴き比べ）。
+- groupPick を上書きして、楽器・ドラム音は全部 openPicker 経由。STYLE_CATS がスタイルの分類、patCats(kind) が PRO の演奏パターン分類。
+- 未対応: 「2つ目の楽器」(P2PATS) と PRO ベースのパターンはまだチップ表示。
