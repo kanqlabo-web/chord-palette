@@ -126,6 +126,9 @@ body.pro .proedit{display:flex;gap:8px;align-items:center}
 .prn.dr{border-color:var(--ink);background:color-mix(in srgb,var(--ink) calc(20% + var(--v) * 75%),var(--surface));box-shadow:none;margin-left:1px;width:calc(100% / var(--cols) - 2px)!important}
 .prn.dr b{display:none}
 .prn.sel{outline:2px solid var(--d);outline-offset:1px}
+.prrect{position:absolute;border:1.5px dashed var(--d);background:color-mix(in srgb,var(--d) 14%,transparent);border-radius:4px;pointer-events:none;z-index:1}   /* 囲んで選ぶ範囲 */
+.prmode{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px}
+.prmode .sep{flex:1}
 .prn.sl::after{content:'';position:absolute;left:0;top:0;bottom:0;width:9px;background:linear-gradient(to top right,transparent 48%,var(--ink) 50%,transparent 60%);opacity:.8}
 .prvel{position:absolute;width:110px;text-align:center;background:var(--ink);color:var(--bg);font-size:.72rem;font-weight:700;border-radius:999px;padding:4px 0;pointer-events:none;z-index:2}
 .pname{flex:1;min-width:0;font:inherit;font-weight:700;font-size:16px;padding:7px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
@@ -694,7 +697,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.162（2026-10-23）</p>
+    <p class="appver">ver 1.163（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -761,7 +764,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.162（2026-10-23）</p>
+  <p class="appver">ver 1.163（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1401,7 +1404,7 @@ const ARPS = {
   // 2小節目は2拍目の裏で短く「パッ」、そのあと16分のスタッカートで下の方を刻む（コードの音だけで）
   // brass.mid から（ブラスらしく中音域に、4声で厚く）：次のコードを8分食って「プァー↘」（最後にフォール）、2拍目の裏から「テ↑レ↑チャ↑チャ→ラ↓チャ↑」。
   // 2小節目は2拍目の裏で短く「パッ」、そのあと16分のスタッカートで下の方を刻む（コードの音だけで）
-  brassobb:{name:'上もの：パッと合いの手', pro:'上もの：ヒット＋フォール＋オブリ（2小節・8分食い）', legato:true, pushBy:1, rhShift:4, vol:.72,   // vol：パターン全体の大きさ（ほかの楽器に重ねる上ものなので控えめに）
+  brassobb:{name:'上もの：パッと合いの手', pro:'上もの：ヒット＋フォール＋オブリ（2小節・8分食い）', legato:true, pushBy:1, rhShift:4, vol:.72, even:true,   // even：和音のどの音も同じ強さで（マイパターンに取り込んだときと同じ厚い音圧）。vol：パターン全体の大きさ（ほかの楽器に重ねる上ものなので控えめに）
            sit:{bar:[[[0,[1,2,3,6],3.4,.78,null,'fall'],
                        [6,[2],1,.66],[7,[3],1,.68],[8,[3,6],.5,.74],[9,[3,6],.5,.68],[10,[2,3],.5,.66],[11,[3,6],.5,.74]],
                       [[2,[1,2,3,6],.6,.74],[6,[1],.5,.6],[7,[2],.5,.62],[8,[3],.5,.66],[9,[3],.5,.62],[10,[2],.5,.6],[11,[2],.5,.58],[12,[3],.5,.66],[13,[3],.5,.62]]],
@@ -1563,23 +1566,24 @@ function previewRow(r,vel){
       else if(bt.tones[+r]!=null){ const go=()=>keyTone(bt.tones[+r],t,.5,COMP_LEVEL*vel,null); patKind==='arp2'?withPart2(go):go(); } } });
 }
 // ---- ピアノロール：タップで追加・削除／右端をドラッグで長さ／ドラッグで移動／長押ししてから上下でベロシティ
-let PR={lastLen:{arp:2,bass:2}};
+let PR={lastLen:{arp:2,bass:2}, mode:'edit', selSet:new Set()};
+// 選んでいる音（編集・選択のどちらのモードでも、複数選べる）
+const selNotes=()=>{ const a=curNotes(); return a.filter(n=>PR.selSet.has(n)); };
+const selOnly=n=>{ PR.selSet=new Set(n?[n]:[]); };
 function renderPatEditor(){
   const isDrum=patKind==='drum', g=$('patGrid');
   $('patTitle').textContent = isDrum ? 'ドラムのマイパターン' : patKind==='bass' ? 'ベースのマイパターン' : patKind==='arp2' ? 'コード2（楽器2）のマイパターン' : 'コードのマイパターン';
   const nm=$('patName'); nm.value=curMy().name; nm.oninput=()=>{ curMy().name=nm.value||'マイパターン'; rebuildMy(); save(); renderAll(); };
   $('patDel').textContent='このパターンを消す'; $('patDel').dataset.armed='';
-  $('patHelp').textContent = isDrum ? 'タップで追加・削除。ドラッグで移動。長押ししたまま上下に動かすと強さ（ベロシティ）を変えられます。'
-    : 'タップで追加・削除。音の右端をドラッグで長さ、まん中をドラッグで移動。長押ししたまま上下に動かすと強さ（ベロシティ）を変えられます。'
-      + (patKind==='bass' ? 'ほかの音と重ねて置くと、その音へポルタメントですべります（斜線の音）。' : '');
+  updHelp();
   const rows = isDrum ? DRUM_ROWS : patKind==='bass' ? BASS_ROWS : (curMy().melody?[...MEL_ROWS,...KEY_ROWS]:KEY_ROWS);
   const sceneBar = scenesOf(patKind) ? `<div class="scenebar"><div class="chips" id="sceneChips"></div><p class="small" id="sceneNote"></p></div>` : '';
-  g.innerHTML=`${sceneBar}<div class="prwrap"><div class="prlabs">${rows.map(([,l])=>`<span>${l}</span>`).join('')}</div><div class="proll" id="proll" style="--rows:${rows.length};--cols:${sceneN()};${sceneN()<16?`max-width:${sceneN()/16*100}%`:''}"><div class="prnotes"></div><div class="prvel" hidden></div></div></div>${isArpK(patKind)?'<div id="prFall"></div>':''}`;
+  g.innerHTML=`${sceneBar}<div class="prmode" id="prMode"></div><div class="prwrap"><div class="prlabs">${rows.map(([,l])=>`<span>${l}</span>`).join('')}</div><div class="proll" id="proll" style="--rows:${rows.length};--cols:${sceneN()};${sceneN()<16?`max-width:${sceneN()/16*100}%`:''}"><div class="prnotes"></div><div class="prvel" hidden></div></div></div>${isArpK(patKind)?'<div id="prFall"></div>':''}`;
   if(patKind==='drum'){ const sc=curScene(), m=curMy();
-    chips($('sceneChips'), DRUM_SCENES.map(([k,l])=>[k, l+(k!=='bar'&&(m.sitNotes||{})[k]&&m.sitNotes[k].length?' ●':'')]), sc, v=>{ PR.scene=v; PR.sel=null; renderPatEditor(); });
+    chips($('sceneChips'), DRUM_SCENES.map(([k,l])=>[k, l+(k!=='bar'&&(m.sitNotes||{})[k]&&m.sitNotes[k].length?' ●':'')]), sc, v=>{ PR.scene=v; PR.selSet.clear(); renderPatEditor(); });
     $('sceneNote').textContent = sc==='bar' ? '1小節目の叩き方です。2小節目を作らなければ、これをくり返します。' : '2小節目の叩き方です（1・2小節目を交互にくり返します）。空っぽなら1小節目と同じです。'; }
   if(isArpK(patKind)){ const sc=curScene(), m=curMy();
-    chips($('sceneChips'), SCENES.map(([k,l])=>[k, l+(k!=='bar'&&(m.sitNotes||{})[k]&&m.sitNotes[k].length?' ●':'')]), sc, v=>{ PR.scene=v; PR.sel=null; renderPatEditor(); });
+    chips($('sceneChips'), SCENES.map(([k,l])=>[k, l+(k!=='bar'&&(m.sitNotes||{})[k]&&m.sitNotes[k].length?' ●':'')]), sc, v=>{ PR.scene=v; PR.selSet.clear(); renderPatEditor(); });
     $('sceneNote').textContent = sc==='bar' ? '1小節ずっと同じコードのときの弾き方です（ほかの場面を作っていないときも、これを使います）。'
       : sc==='bar2' ? '同じコードが続くときの2小節目の弾き方です（1・2小節目を交互にくり返します）。空っぽなら1小節目と同じです。'
       : sc==='push2' ? '2小節目へ食ったときに先に弾く音です（2小節パターン用）。空っぽなら「食ったとき」と同じです。'
@@ -1626,58 +1630,112 @@ function renderPatEditor(){
       v=>{ curMy().fill=v; rebuildMy(); save(); renderPatEditor(); dirty=true; });
   }
 }
-function fallRow(){ const el=$('prFall'); if(!el) return; const n=PR.sel&&curNotes().includes(PR.sel)?PR.sel:null;
-  if(!n){ el.innerHTML='<p class="small" style="margin:6px 0 0">音を置く・動かすと、その音に「フォール」「1つ上の和音の音へ（転回）」「1つ下の音階の音へ（刺繍音）」を付けられます。</p>'; return; }
-  el.innerHTML='<h3 style="margin:10px 0 6px">選んだ音の弾き方</h3><div class="chips" id="prFallChips"></div>';
-  el.insertAdjacentHTML('beforeend','<h3 style="margin:10px 0 6px">選んだ音の長さ</h3><div class="chips" id="prLenChips"></div>');
-  chips($('prLenChips'),[[1,'1マス'],[.5,'半マス'],[.25,'4分の1マス（スタッカート）']],n.len,v=>{ n.len=v; commitNotes(); drawNotes(); });
-  chips($('prFallChips'),[['','そのまま'],['fall','フォール（最後に一気に下がる）'],['up','1つ上の和音の音へ（転回）'],...NB_KINDS.map(([k,l])=>[k,'刺繍音：'+l])],n.fall?'fall':n.up?'up':(nbKind(n)||''),v=>{ delete n.fall; delete n.up; delete n.dn; if(v==='fall'||v==='up') n[v]=true; else if(v) n.dn=v==='dn'?true:v; commitNotes(); drawNotes(); }); }
+function fallRow(){ const el=$('prFall'); if(!el) return; const ns=selNotes(), n=ns[0]||null;
+  if(!n){ el.innerHTML='<p class="small" style="margin:6px 0 0">音を選ぶと、その音に「フォール」「転回」「刺繍音」や長さを付けられます（複数選ぶと、まとめて変わります）。</p>'; return; }
+  const cnt=ns.length>1?`（${ns.length}個まとめて）`:'';
+  el.innerHTML=`<h3 style="margin:10px 0 6px">選んだ音の弾き方${cnt}</h3><div class="chips" id="prFallChips"></div>`;
+  el.insertAdjacentHTML('beforeend',`<h3 style="margin:10px 0 6px">選んだ音の長さ${cnt}</h3><div class="chips" id="prLenChips"></div>`);
+  chips($('prLenChips'),[[1,'1マス'],[.5,'半マス'],[.25,'4分の1マス（スタッカート）']],n.len,v=>{ ns.forEach(x=>x.len=v); commitNotes(); drawNotes(); });
+  chips($('prFallChips'),[['','そのまま'],['fall','フォール（最後に一気に下がる）'],['up','1つ上の和音の音へ（転回）'],...NB_KINDS.map(([k,l])=>[k,'刺繍音：'+l])],n.fall?'fall':n.up?'up':(nbKind(n)||''),v=>{ ns.forEach(x=>{ delete x.fall; delete x.up; delete x.dn; if(v==='fall'||v==='up') x[v]=true; else if(v) x.dn=v==='dn'?true:v; }); commitNotes(); drawNotes(); }); }
+// 編集モード／選択モードの切りかえと、選んだ音へのまとめ操作
+function modeRow(){ const el=$('prMode'); if(!el) return; const k=selNotes().length;
+  el.innerHTML='<div class="chips" id="prModeChips"></div><span class="sep"></span>'
+    +`<button class="chip" id="prSelAll">すべて選ぶ</button>`+(k?`<button class="chip" id="prSelNone">選択を外す</button><button class="chip" id="prSelDel">選んだ${k}個を消す</button>`:'');
+  chips($('prModeChips'),[['edit','編集'],['sel','選択']],PR.mode,v=>{ PR.mode=v; modeRow(); updHelp(); });
+  $('prSelAll').onclick=()=>{ PR.selSet=new Set(curNotes()); drawNotes(); };
+  if(k){ $('prSelNone').onclick=()=>{ PR.selSet.clear(); drawNotes(); };
+    $('prSelDel').onclick=()=>{ setCurNotes(curNotes().filter(n=>!PR.selSet.has(n))); PR.selSet.clear(); commitNotes(); drawNotes(); }; } }
+function updHelp(){ const h=$('patHelp'); if(!h) return; const isDrum=patKind==='drum';
+  h.textContent = PR.mode==='sel'
+    ? '選択モード：音をタップで選ぶ／外す（いくつでも）。何もない所からドラッグすると、囲んだ音をまとめて選べます。選んだ音をドラッグすると、まとめて動かせます。'
+    : (isDrum ? '編集モード：タップで追加・削除。ドラッグで移動。長押ししたまま上下に動かすと強さ（ベロシティ）。何もない所を長押ししてからドラッグすると、囲んで複数選べます。選んだ音はまとめて動きます。'
+      : '編集モード：タップで追加・削除。音の右端をドラッグで長さ、まん中をドラッグで移動。長押ししたまま上下に動かすと強さ（ベロシティ）。何もない所を長押ししてからドラッグすると、囲んで複数選べます。選んだ音は、移動・長さ・強さがまとめて変わります。'
+        + (patKind==='bass' ? 'ほかの音と重ねて置くと、その音へポルタメントですべります（斜線の音）。' : '')); }
 function drawNotes(){
-  const roll=$('proll'); if(!roll) return; if(isArpK(patKind)) fallRow(); const box=roll.querySelector('.prnotes'), isDrum=patKind==='drum';
+  const roll=$('proll'); if(!roll) return; if(isArpK(patKind)) fallRow(); modeRow(); const box=roll.querySelector('.prnotes'), isDrum=patKind==='drum';
   const rows = isDrum ? DRUM_ROWS : patKind==='bass' ? BASS_ROWS : (curMy().melody?[...MEL_ROWS,...KEY_ROWS]:KEY_ROWS), ri=r=>rows.findIndex(([k])=>String(k)===String(r));
   const N=sceneN();
   box.innerHTML=curNotes().map((n,i)=>{ const y=ri(n.r); if(y<0) return '';
     const sl=patKind==='bass' && !!overlapPrev(curNotes(),n);
-    return `<i class="prn${isDrum?' dr':''}${sl?' sl':''}${n.fall?' fall':''}${n.up?' up':''}${(k=>k?(NB_UP.has(k)?' nu':' dn')+(NB_ORN.has(k)?' orn':''):'')(nbKind(n))}${PR.sel===n?' sel':''}" data-i="${i}" style="left:${n.st/N*100}%;width:${(isDrum?1:n.len)/N*100}%;top:calc(${y} * var(--rh));--v:${n.vel}"><b style="height:${Math.round(n.vel*100)}%"></b></i>`; }).join('');
+    return `<i class="prn${isDrum?' dr':''}${sl?' sl':''}${n.fall?' fall':''}${n.up?' up':''}${(k=>k?(NB_UP.has(k)?' nu':' dn')+(NB_ORN.has(k)?' orn':''):'')(nbKind(n))}${PR.selSet.has(n)?' sel':''}" data-i="${i}" style="left:${n.st/N*100}%;width:${(isDrum?1:n.len)/N*100}%;top:calc(${y} * var(--rh));--v:${n.vel}"><b style="height:${Math.round(n.vel*100)}%"></b></i>`; }).join('');
 }
 function commitNotes(){ const m=curMy(); if(patKind!=='drum') setCurNotes(tidyNotes(curNotes())); else { const seen={}; m.notes=m.notes.filter(n=>{ const k=n.r+':'+n.st; if(seen[k]) return false; seen[k]=1; return true; }); }
   rebuildMy(); save(); dirty=true; }
 function bindRoll(rows){
   const roll=$('proll'), isDrum=patKind==='drum', velEl=roll.querySelector('.prvel');
   const N=sceneN();
+  // iPhone で、すばやく触ったときにページが拡大されないように（この中の操作はすべて自分で扱う）
+  roll.addEventListener('touchstart',e=>{ if(e.cancelable) e.preventDefault(); },{passive:false});
+  roll.addEventListener('touchend',e=>{ if(e.cancelable) e.preventDefault(); },{passive:false});
   const pos=e=>{ const r=roll.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*N, y=Math.floor((e.clientY-r.top)/r.height*rows.length);
-    return {x:Math.max(0,Math.min(N-.001,x)), row:Math.max(0,Math.min(rows.length-1,y)), px:e.clientX-r.left, py:e.clientY-r.top, w:r.width}; };
-  const rkey=y=>String(rows[y][0]);
+    return {x:Math.max(0,Math.min(N-.001,x)), row:Math.max(0,Math.min(rows.length-1,y)), px:e.clientX-r.left, py:e.clientY-r.top, w:r.width, h:r.height}; };
+  const rkey=y=>String(rows[y][0]), ridx=r=>rows.findIndex(([k])=>String(k)===String(r));
+  const nlen=n=>isDrum?1:n.len;
   const nextStart=(n)=>{ const ns=curNotes().filter(x=>x!==n&&x.r===n.r&&x.st>n.st).map(x=>x.st); return Math.min(N,...ns); };
-  const showVel=(n,p)=>{ velEl.hidden=false; velEl.textContent=`ベロシティ ${Math.max(1,Math.round(n.vel*127))}`;
+  const showVel=(n,p,k)=>{ velEl.hidden=false; velEl.textContent=`ベロシティ ${Math.max(1,Math.round(n.vel*127))}`+(k>1?` ほか${k-1}個`:'');
     velEl.style.left=Math.max(0,Math.min(p.w-110,p.px-55))+'px'; velEl.style.top=Math.max(-34,p.py-58)+'px'; };
+  const notesM={get notes(){ return curNotes(); }, set notes(a){ setCurNotes(a); }};
+  const hitAt=p=>notesM.notes.find(n=>String(n.r)===rkey(p.row) && p.x>=n.st && p.x<n.st+nlen(n));
+  // まとめて動かす相手：つかんだ音が選んである音のひとつなら、選んである音すべて。そうでなければその音だけ
+  const groupOf=n=>PR.selSet.has(n)&&PR.selSet.size>1 ? selNotes() : [n];
+  const snap=g=>g.map(n=>({n,st:n.st,ri:ridx(n.r),len:n.len,vel:n.vel}));
+  // 囲んで選ぶ
+  let rectEl=null;
+  const rectSel=(d,p)=>{ const x0=Math.min(d.p0.x,p.x), x1=Math.max(d.p0.x,p.x), y0=Math.min(d.p0.row,p.row), y1=Math.max(d.p0.row,p.row);
+    if(!rectEl){ rectEl=document.createElement('div'); rectEl.className='prrect'; roll.appendChild(rectEl); }
+    Object.assign(rectEl.style,{left:Math.min(d.p0.px,p.px)+'px',top:Math.min(d.p0.py,p.py)+'px',width:Math.abs(p.px-d.p0.px)+'px',height:Math.abs(p.py-d.p0.py)+'px'});
+    const inR=notesM.notes.filter(n=>{ const y=ridx(n.r); return y>=y0&&y<=y1 && n.st<x1 && n.st+nlen(n)>x0; });
+    PR.selSet=new Set([...d.base,...inR]); drawNotes(); };
   let d=null;
   roll.onpointerdown=e=>{
     e.preventDefault(); try{ roll.setPointerCapture(e.pointerId); }catch(_){}
-    const p=pos(e), key=rkey(p.row), m={get notes(){ return curNotes(); }, set notes(a){ setCurNotes(a); }};
-    const hit=m.notes.find(n=>String(n.r)===key && p.x>=n.st && p.x<n.st+(isDrum?1:n.len));
+    const p=pos(e), key=rkey(p.row), hit=hitAt(p);
+    if(PR.mode==='sel'){
+      if(hit) d={mode:'spress', n:hit, p0:p};
+      else d={mode:'rect', p0:p, base:new Set(PR.selSet), moved:false};
+      return;
+    }
     if(hit){
-      const right=(hit.st+(isDrum?1:hit.len))/N*p.w, wpx=(isDrum?1:hit.len)/N*p.w;
-      d={mode:'press', n:hit, p0:p, st0:hit.st, r0:p.row, vel0:hit.vel, edge:!isDrum && p.px>right-Math.max(10,wpx*.45)};
-      PR.sel=hit; drawNotes();
-      d.lp=setTimeout(()=>{ if(d&&d.mode==='press'){ d.mode='vel'; d.p0=p; d.vel0=hit.vel; if(navigator.vibrate) try{ navigator.vibrate(15); }catch(_){} showVel(hit,p); } },430);
+      const right=(hit.st+nlen(hit))/N*p.w, wpx=nlen(hit)/N*p.w;
+      if(!PR.selSet.has(hit)) selOnly(hit);
+      d={mode:'press', n:hit, p0:p, g:snap(groupOf(hit)), edge:!isDrum && p.px>right-Math.max(10,wpx*.45)};
+      drawNotes();
+      d.lp=setTimeout(()=>{ if(d&&d.mode==='press'){ d.mode='vel'; d.p0=p; if(navigator.vibrate) try{ navigator.vibrate(15); }catch(_){} showVel(hit,p,d.g.length); } },430);
     } else {
-      const st=Math.floor(p.x), n={r:key, st, len:1, vel:.8}; m.notes.push(n);
+      const st=Math.floor(p.x), n={r:key, st, len:1, vel:.8}; notesM.notes.push(n);
       if(!isDrum) n.len=Math.max(1,Math.min(PR.lastLen[patKind]||2, nextStart(n)-st));
-      d={mode:'create', n, p0:p, moved:false}; PR.sel=n; drawNotes(); previewRow(key,n.vel);
+      d={mode:'create', n, p0:p, moved:false}; selOnly(n); drawNotes(); previewRow(key,n.vel);
+      // 何もない所を長押し（動かさない）：置いた音を取り消して「囲んで選ぶ」に切りかえる
+      d.lp=setTimeout(()=>{ if(d&&d.mode==='create'&&!d.moved){ notesM.notes=notesM.notes.filter(x=>x!==n); PR.selSet.clear(); d={mode:'rect', p0:p, base:new Set(), moved:false, fromEdit:true};
+        if(navigator.vibrate) try{ navigator.vibrate(15); }catch(_){} drawNotes(); } },430);
     }
   };
   roll.onpointermove=e=>{ if(!d) return; const p=pos(e), dx=p.px-d.p0.px, dy=p.py-d.p0.py, far=Math.hypot(dx,dy)>6;
+    if(d.mode==='rect'){ if(far) d.moved=true; if(d.moved) rectSel(d,p); return; }
+    if(d.mode==='spress' && far){ if(!PR.selSet.has(d.n)) PR.selSet.add(d.n); d.mode='move'; d.g=snap(groupOf(d.n)); }
     if(d.mode==='press' && far){ clearTimeout(d.lp); d.mode=d.edge?'resize':'move'; }
+    if(d.mode==='create' && far) clearTimeout(d.lp);
     const n=d.n;
-    if(d.mode==='vel'){ if(Math.abs(p.py-d.p0.py)>4) d.velMoved=true; n.vel=Math.max(.05,Math.min(1,d.vel0+(d.p0.py-p.py)/140)); showVel(n,p); drawNotes(); }
-    else if(d.mode==='resize' || (d.mode==='create' && !isDrum && far)){ d.moved=true; n.len=Math.max(1,Math.min(Math.ceil(p.x)-n.st, nextStart(n)-n.st)); if(n.len<1) n.len=1; drawNotes(); }
-    else if(d.mode==='move'){ const st=Math.max(0,Math.min(N-(isDrum?1:Math.ceil(n.len)), Math.round(d.st0+dx/p.w*N))); const r=rkey(p.row);
-      if(st!==n.st||r!==n.r){ n.st=st; if(r!==n.r){ n.r=r; previewRow(r,n.vel); } if(!isDrum && n.st+n.len>N) n.len=N-n.st; drawNotes(); } }
+    if(d.mode==='vel'){ const dv=(d.p0.py-p.py)/140; d.g.forEach(o=>o.n.vel=Math.max(.05,Math.min(1,o.vel+dv))); showVel(n,p,d.g.length); drawNotes(); }
+    else if(d.mode==='create' && !isDrum && far){ d.moved=true; n.len=Math.max(1,Math.min(Math.ceil(p.x)-n.st, nextStart(n)-n.st)); drawNotes(); }
+    else if(d.mode==='resize'){ d.moved=true; const o0=d.g.find(o=>o.n===n), dl=Math.max(1,Math.ceil(p.x)-n.st)-o0.len;
+      d.g.forEach(o=>{ const others=d.g.length>1?N:nextStart(o.n); o.n.len=Math.max(o.len<1?o.len:1,Math.min(o.len+dl, others-o.n.st, N-o.n.st)); }); drawNotes(); }
+    else if(d.mode==='move'){ const o0=d.g.find(o=>o.n===n);
+      let ds=Math.round(dx/p.w*N), dr=p.row-o0.ri;
+      const minSt=Math.min(...d.g.map(o=>o.st)), maxEnd=Math.max(...d.g.map(o=>o.st+(isDrum?1:Math.ceil(o.len)))), minR=Math.min(...d.g.map(o=>o.ri)), maxR=Math.max(...d.g.map(o=>o.ri));
+      ds=Math.max(-minSt,Math.min(N-maxEnd,ds)); dr=Math.max(-minR,Math.min(rows.length-1-maxR,dr));
+      if(d.g.some(o=>o.ri<0)) dr=0;
+      const was=n.st+':'+n.r;
+      d.g.forEach(o=>{ o.n.st=o.st+ds; if(o.ri>=0) o.n.r=rkey(o.ri+dr); });
+      if(was!==n.st+':'+n.r){ if(String(n.r)!==was.split(':')[1]) previewRow(n.r,n.vel); drawNotes(); } }
   };
-  const up=e=>{ if(!d) return; clearTimeout(d.lp); const n=d.n, m={get notes(){ return curNotes(); }, set notes(a){ setCurNotes(a); }};
-    if(d.mode==='press'){ m.notes=m.notes.filter(x=>x!==n); PR.sel=null; }         // タップ＝削除
-    else if(d.mode==='move'){ m.notes=m.notes.filter(x=>x===n || !(String(x.r)===String(n.r) && (isDrum ? x.st===n.st : (x.st<n.st+n.len && x.st+x.len>n.st)))); previewRow(n.r,n.vel); }   // 重なった音は上書き
+  const up=e=>{ if(!d) return; clearTimeout(d.lp); const n=d.n;
+    if(rectEl){ rectEl.remove(); rectEl=null; }
+    if(d.mode==='rect'){ if(!d.moved && !d.fromEdit) PR.selSet.clear(); d=null; drawNotes(); return; }
+    if(d.mode==='spress'){ if(PR.selSet.has(n)) PR.selSet.delete(n); else PR.selSet.add(n); d=null; drawNotes(); return; }
+    if(d.mode==='press'){ notesM.notes=notesM.notes.filter(x=>x!==n); PR.selSet.delete(n); }         // タップ＝削除（編集モード）
+    else if(d.mode==='move'){ const G=new Set(d.g.map(o=>o.n));
+      notesM.notes=notesM.notes.filter(x=>G.has(x) || ![...G].some(m=>String(x.r)===String(m.r) && (isDrum ? x.st===m.st : (x.st<m.st+m.len && x.st+x.len>m.st)))); previewRow(n.r,n.vel); }   // 重なった音は上書き
     else if(d.mode==='vel'){ previewRow(n.r,n.vel); }
     if(!isDrum && (d.mode==='resize'||(d.mode==='create'&&d.moved))) PR.lastLen[patKind]=n.len;
     velEl.hidden=true; d=null; commitNotes(); drawNotes(); };
@@ -2456,7 +2514,7 @@ $('patDup').onclick=()=>{ newMy(patKind,state[SK(patKind)]); renderPatEditor(); 
 $('patDel').onclick=()=>{ const b=$('patDel');
   if(!b.dataset.armed){ b.dataset.armed='1'; b.textContent='もう一度押すと消します'; return; }
   const list=listOf(patKind); list.splice(+state[SK(patKind)].slice(2),1); state[SK(patKind)]= patKind==='drum'?'pop':patKind==='bass'?'auto':'piano4'; rebuildMy(); save(); renderAll(); closeAll(); };
-$('patClear').onclick=()=>{ setCurNotes([]); PR.sel=null; commitNotes(); drawNotes(); };
+$('patClear').onclick=()=>{ setCurNotes([]); PR.selSet.clear(); commitNotes(); drawNotes(); };
 
 function bassSndRow(){ chips($('bassSndChips'), [...Object.entries(BASS_SNDS),['none','なし']], state.bass?(state.bassSnd||'bass'):'none', v=>{ if(v==='none'){ state.bass=false; save(); renderAll(); bassSndRow(); return; } state.bass=true; state.bassSnd=v; save(); renderAll(); ensureSounds().then(()=>{ if(!playing) whenRunning(()=>{ const t=ctx.currentTime+.03; [0,7,12].forEach((n,k)=>bassTone(36+n,t+k*.18,.16,.9)); }); }); bassSndRow(); }); }
 function openBassSheet(){
@@ -2999,7 +3057,7 @@ function playEvents(evs,bt,ct,sd,pat){
   }
   order.forEach((n,k)=>{
     const ix=n.ix;
-    let w = n.top ? 1 : ix===0 ? .8 : .66;              // 一番上の音を少し立たせ、内声は控えめ
+    let w = (n.top || (pat&&pat.even)) ? 1 : ix===0 ? .8 : .66;              // 一番上の音を少し立たせ、内声は控えめ（even のパターンは全部同じ強さ）
     if(state.bass && n.m<48 && !(pat&&pat.satb)) w*=.55;   // 和声法のストリングスはチェロ・コントラバスも主役なので下げない
     if(pat&&pat.satb && n.m<48) w*=1.25;              // ベースがいるときは、ピアノ左手の低い音（C3より下）を控えめにして低音が濁らないように
     const hv = 1+(Math.random()-.5)*.14;                 // 人間っぽい揺れ
