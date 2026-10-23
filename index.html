@@ -699,7 +699,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.175（2026-10-23）</p>
+    <p class="appver">ver 1.176（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -766,7 +766,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.175（2026-10-23）</p>
+  <p class="appver">ver 1.176（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1408,8 +1408,8 @@ const ARPS = {
            sit:{bar:[[[0,[1,2,3],3.4,.78,null,'fall'],[6,[2],1,.64,null,'p0'],[7,[2],1,.66,null,'pu'],
                        [8,[2,3],.5,.74],[9,[2,3],.5,.66],[10,[2,3],.5,.68,null,'pd'],[11,[2,3],.5,.72]],
                       [[2,[1,2,3],.6,.76],[10,['d6'],1,.64,null,'nx'],[12,['d8'],1,.68,null,'nx'],[13,['d9'],1,.72,null,'nx']]],   // エレピのフレーズとかけ合い：次のコードの音へペンタで3音つないで、次の小節の食い（プァー↘）へ   // エレピのフレーズ（5 6 1…）とかぶらないよう、その間は休み、終わりに「6 1 2 3」と16分で駆け上がって次の小節の食い（プァー↘）へつなぐ
-                halfA:[[[0,[1,2,3],2,.78],[2,[1,2,3],.6,.74],[6,[2],1,.66],[7,[3],1,.68]]],   // 前半2拍：「チャー・チャッ」（食って入ったときは頭を弾き直さず、1拍目の裏の「チャッ」から）
-                halfB:[[[0,[1,2,3],2,.76]]],   // 3拍目から：8分で「チャッ」
+                halfA:[[[0,[1,2,3],2,.78],[2,[1,2,3],.6,.74]]],   // 前半2拍：「チャー・チャッ」（食って入ったときは頭を弾き直さず、1拍目の裏の「チャッ」から）
+                halfB:[[[0,[1,2,3],2,.76],[2,['d6'],1,.64,null,'nx'],[4,['d8'],1,.68,null,'nx'],[5,['d9'],1,.72,null,'nx']]],   // 3拍目から：8分で「チャッ」、そのあと次のコードへペンタで3音つなぐ
                 beat:[[[0,[1,2,3],2,.74]]],
                 push:[[[0,[1,2,3],3,.82,null,'fall']],[[0,[1,2,3],2,.8]]]}},   // 1小節目へ食う時は「チャーッ↘」（フォール）、2小節目へ食う時は「チャッ」と短く切って2拍目裏の「チャッ」へ
 
@@ -1464,9 +1464,19 @@ function nxPitch(m,k){ if(NX_V==null) return m;
   const sp=specOf(NX_V), K=keyObj().pc, r=(K+sp.o)%12, iv=[...QUAL[sp.q]||[0,4,7], ...(EXT[sp.x]||[])], pcs=[...new Set(iv.map(i=>(r+i)%12))];
   let T=null; for(let x=m-6;x<=m+6;x++) if(pcs.includes(((x%12)+12)%12) && (T==null||Math.abs(x-m)<Math.abs(T-m))) T=x;
   if(T==null) return m;
-  const dir = ((BOWBAR*5 + r) % 3 === 2) ? -1 : 1;   // 1＝下から駆け上がる、-1＝上から降りてくる
-  let x=T; for(let i=0;i<k;i++) x=pentaStep(x,-dir,null);
+  // 形のバリエーション（目標から何ステップ（ペンタで）離れた音か。k=1 が最後の音）。小節・次のコード・何周目かで選ぶ
+  const SH=NX_SHAPES[(BOWBAR*5 + r*7 + LOOPN*3) % NX_SHAPES.length], last=SH[SH.length-1], off= k<=SH.length ? SH[k-1] : last+Math.sign(last)*(k-SH.length);
+  let x=T; for(let i=0;i<Math.abs(off);i++) x=pentaStep(x,Math.sign(off),null);
   return x; }
+const NX_SHAPES=[
+  [-1,-2,-3,-4],   // 下から駆け上がる
+  [1,2,3,4],       // 上から降りてくる
+  [-1,1,-2,-3],    // 下→上→下と挟んで着地（エンクロージャー）
+  [1,-1,2,3],      // 上→下→上と挟んで着地
+  [-1,-2,1,2],     // 上から一度下りて、駆け上がる
+  [1,2,-1,-2],     // 下から一度上がって、降りてくる
+  [-1,-1,-3,-2],   // 同じ音をくり返して着地
+  [1,3,2,4]];      // 跳ねながら降りてくる
 function nbSplit(m,tr,len,cp){
   const one=x=>[{m:x,d:0,len}];
   switch(tr){
@@ -3194,7 +3204,7 @@ function chordPart(g,t,L,s,b,dr,sd,tt){
     if(rel===cell.len-an){
       barTones=chordAt(nx.v, ni*L+nx.off); lastR=barTones.R; choke(ct);
       if(pat.sit){ PUSHCONT=false; pushedKey=nxKey;   // 次のコードの弾き始めを先に弾いて、そのままのばす（タイ）
-        const nStart=((ni*L)%16+nx.off)%16, nb=nStart===0?b+1:b, v=pat.sit.push ? pat.sit.push[nb%pat.sit.push.length] : sitVar(pat, nx.len, nStart, nb);   // 食う先が何小節目かで弾き方を変えられる（2小節パターン）
+        const nStart=((ni*L)%16+nx.off)%16, nb=nStart===0?b+1:b, v=pat.sit.push ? ((nx.len<8 && pat.sit.push.length>1) ? (pat.sit.push.find(x=>!x.evs.some(e=>e[5]==='fall'))||pat.sit.push[nb%pat.sit.push.length]) : pat.sit.push[nb%pat.sit.push.length]) : sitVar(pat, nx.len, nStart, nb);   // 短いコード（1拍など）へ食うときは、のばさない短い方（フォールなし）   // 食う先が何小節目かで弾き方を変えられる（2小節パターン）
         playEvents((v.at[0]||[]).map(e=>[e[0],e[1],pat.sit.push?e[2]:e[2]+an,e[3],e[4],e[5]]), barTones, ct, sd, pat);   // 「食ったとき」の弾き方があれば書いた長さのまま（食った分のばさない）。e[5]＝フォールなども引き継ぐ
         if(state.bass){ const e0=bassOf(b).find(e=>e[0]===0); chokeBass(ct, e0&&e0[4]&&lastBassVoice?lastBassVoice.g:null); playBass(bassOf(b),0,ct,barTones,sd,an+nx.len); } }
       else if(pat.at[pi]){ PUSHCONT=true; pushedKey=null; playEvents(contEvs(pat,pi), barTones, ct, sd, pat);
@@ -3220,7 +3230,10 @@ function chordPart(g,t,L,s,b,dr,sd,tt){
     const startPi=(g-rel+lag+1600)%16;   // このコードが鳴り始める、小節の中の位置
     let pi = g%16, mid = pi!==0 && (cell.off>0 || L<16 || !!pat.at[pi]);
     let evs = pushed ? null : (head && !mid) ? pat.at[0] : pat.at[pi];
-    if(pat.sit){ const v=sitVar(pat, cell.len-lag, startPi, b); evs = (pushed && rel===lag) ? null : (v.at[rel-lag]||null); }   // 場面ごとの演奏
+    if(pat.sit){ let v=sitVar(pat, cell.len-lag, startPi, b);
+      // 1小節の弾き方を、それより短いコード（3拍など）で使うとき：次のコードへつなぐ音（nx）を、そのコードの終わりに合わせて前へずらす（途中で切れて1音だけ鳴るのを防ぐ）
+      const cl=cell.len-lag; if(cl<16 && v.evs && v.evs.some(e=>e[5]==='nx')){ v._sh=v._sh||{}; if(!v._sh[cl]){ const d=16-cl, ev2=prepNx(v.evs.map(e=>e[5]==='nx'?[e[0]-d,...e.slice(1)]:e).filter(e=>e[0]>=0).map(e=>[...e])); v._sh[cl]={evs:ev2,at:atMap(ev2)}; } v=v._sh[cl]; }
+      evs = (pushed && rel===lag) ? null : (v.at[rel-lag]||null); }   // 場面ごとの演奏
     else if(head && mid && !pushed){ const ce=contEvs(pat,pi); evs = ce.length ? ce : pat.at[0]; }
     if(head && !pushed) choke(ct);
     else if(evs && !pat.legato && evs.some(e=>e[1].length>1)) choke(ct);
