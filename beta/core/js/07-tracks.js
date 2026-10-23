@@ -67,7 +67,9 @@ body.pro #drumLane{margin-top:-6px}
 body.pro .lane canvas{height:28px}
 body.pro #sheet .proedit{display:none!important}
 #patSheet .pdirect{display:flex;gap:6px;align-items:center;margin:-4px 0 10px;flex-wrap:wrap}
-#patSheet .pdirect small{color:var(--muted);font-size:.74rem;flex:1;min-width:12em}`;
+#patSheet .pdirect small{color:var(--muted);font-size:.74rem;flex:1;min-width:12em}
+body.pro #accNote{display:none}
+button.badge{font:inherit;font-size:.72rem;cursor:pointer}`;
   const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
   const el=document.createElement('div'); el.id='trk'; el.hidden=true; el.setAttribute('role','dialog'); el.setAttribute('aria-label','トラック');
   el.innerHTML=`<div class="tin"><div class="thead"><h2>トラック</h2><button class="iconbtn" id="trkClose" aria-label="閉じる"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
@@ -173,3 +175,6 @@ $('arpLane').onclick=()=>state.pro?openTracks():openSheet('arp');
 $('drumLane').onclick=()=>state.pro?openTracks():openSheet('drum');
 // シートで選び直したら、トラックの画面も描き直す
 new MutationObserver(()=>{ if(!$('sheet').classList.contains('on')) renderTracks(); }).observe($('sheet'),{attributes:true,attributeFilter:['class']});
+// 右上の「Key」「楽器」の表示は、押すとそれを変える場所が開く
+$('keyBadge').onclick=()=>{ $('menuBtn').click(); setTimeout(()=>$('keyChips').scrollIntoView({block:'center',behavior:'smooth'}),60); };
+$('instBadge').onclick=()=>{ if(!$('arpLane').hidden) $('arpLane').click(); };
