@@ -248,10 +248,10 @@ function renderTracks(){ if(trk.hidden) return; if(!state.pro){ trk.hidden=true;
   const ad=document.createElement('div'); ad.className='drow dadd'; ad.innerHTML=`<div class="dh"><button class="daddb" id="trkAdd" aria-label="楽器を足す">${ICO.plus}</button></div>`; box.appendChild(ad);
   $('trkAdd').onclick=addTrack;
   const hint=document.createElement('p'); hint.className='dhint'; hint.textContent='色の帯（コードごとの弾き方）をタップすると、その場所で使っている弾き方をそのまま編集できます。帯の区切りを左右にドラッグすると、コードの長さ・食い・後ろ倒しを変えられます。楽器の絵をタップするとミキサー（音量・左右・コンプ・エコーなど）、上のコード名をタップするとコードを編集できます。'; box.appendChild(hint);
-  const mo=document.createElement('div'); mo.className='dmore'; mo.innerHTML=`<details id="trkStyleBox"><summary>伴奏スタイルから作り直す</summary><p>選んだスタイルと同じ鳴り方・ミックスのトラックに置きかえます（いまのトラックはなくなります）。</p><div id="trkStyles"></div></details>`; box.appendChild(mo);
-  const sb=$('trkStyles'); let armed=null; const sp=()=>twoPane(sb, styleCats(), null, pickSt); const bx=$('trkStyleBox'); bx.ontoggle=()=>{ TRK_STY=bx.open; if(bx.open) sp(); }; if(TRK_STY){ bx.open=true; }
-  function pickSt(id){ const st=STYLES.find(x=>x.id===id); if(armed!==id){ armed=id; toast('もう一度押すと「'+st.name+'」のトラックに置きかえます'); return; }
-    proFromStyle(st); if(st.bpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; } state.tk={}; applyMix(); save(); renderAll(); ensureSounds(); renderTracks(); toast(st.name+'のトラックにしました'); }
+  const mo=document.createElement('div'); mo.className='dmore'; box.appendChild(mo); let armed=null;
+  pickRow(mo,'トラックをまとめて置きかえる','伴奏スタイルから作り直す','選んだスタイルと同じ鳴り方・ミックスにします（いまのトラックはなくなります）',null,null,
+    ()=>openPicker('伴奏スタイルから作り直す', styleCats, null, id=>{ const st=STYLES.find(x=>x.id===id); if(armed!==id){ armed=id; toast('もう一度押すと「'+st.name+'」のトラックに置きかえます'); return false; }
+      proFromStyle(st); if(st.bpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; } state.tk={}; applyMix(); save(); renderAll(); ensureSounds(); renderTracks(); toast(st.name+'のトラックにしました'); return true; }));
   const hd=document.createElement('div'); hd.className='dhead'; hd.id='dHead'; hd.hidden=true; box.appendChild(hd);
   requestAnimationFrame(()=>{ const bw=dawBarW(); trk.style.setProperty('--dbw',bw+'px');
     box.querySelectorAll('.dtl').forEach(t=>t.style.width=(bw*N)+'px');
@@ -339,8 +339,7 @@ function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=tru
   p.style.setProperty('--tc',tkColor(kind));
   const rng=(f,label,min,max,val,txt)=>`<label class="dirow"><span>${label}<output>${txt}</output></span><input type="range" min="${min}" max="${max}" step=".01" value="${val}" data-f="${f}"></label>`;
   const sndName = kind==='drum' ? (KITS[state.kit]||'ドラム') : kind==='bass' ? (BASS_SNDS[state.bassSnd||'bass']||'ベース') : tkInst(kind);
-  p.innerHTML=`<div class="dititle"><button class="ditb" id="diSnd" aria-expanded="${INSP_SND}"><div class="dipic">${INST_ICO[instFam(kind)]}</div><b>${esc(sndName)}${ICO.chev}</b><small>タップして音色を変える</small></button></div>
-    <div class="dsnd" id="diSndList" ${INSP_SND?'':'hidden'}></div>
+  p.innerHTML=`<div class="dititle"><button class="ditb" id="diSnd" ><div class="dipic">${INST_ICO[instFam(kind)]}</div><b>${esc(sndName)}${ICO.chev}</b><small>タップして楽器を変える</small></button></div>
     <div class="disec"><div class="dib"><button class="dilink" id="diPick"><span>${kind==='drum'?'パターン・フィルインを選ぶ':kind==='bass'?'パターンを選ぶ':'パターン・音域を選ぶ'}</span>${ICO.chev}</button></div></div>
     <div class="disec"><h3>出力</h3><div class="dib">
       ${rng('v','音量',0,1.5,x.v??1,Math.round((x.v??1)*100))}
@@ -350,11 +349,10 @@ function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=tru
     <div class="disec"><h3>トラックの名前と色</h3><div class="dib"><input class="diname2" id="diName" maxlength="16" value="${esc(tkName(kind))}" aria-label="トラックの名前"><div class="tcolors" id="diColors"></div></div></div>
     ${canDel?'<button class="didel" id="diDel">このトラックをなくす</button>':''}`;
   $('diPick').onclick=()=>openSheet(kind);
-  $('diSnd').onclick=()=>{ INSP_SND=!INSP_SND; renderInsp(); };
-  if(INSP_SND){ const box=$('diSndList'), X=xOf(kind), done=()=>{ save(); renderAll(); ensureSounds(); applyMix(); renderTracks(); };
-    if(kind==='bass') chips(box, Object.entries(BASS_SNDS), state.bassSnd||'bass', v=>{ state.bassSnd=v; done(); });
-    else if(kind==='drum') groupPick(box, KIT_GROUPS, KITS, state.kit, v=>{ pickKit(v); done(); });
-    else groupPick(box, INST_GROUPS, INSTS, X?(X.inst||'piano'):kind==='arp2'?(state.inst2||'epiano'):state.inst, v=>{ if(X) X.inst=v; else if(kind==='arp2') state.inst2=v; else { pickInst(v); } done(); }); }
+  $('diSnd').onclick=()=>{ const X=xOf(kind), done=()=>{ save(); renderAll(); ensureSounds(); applyMix(); renderTracks(); return false; };
+    if(kind==='bass') openPicker('ベースの音を選ぶ', ()=>[['ベース',Object.entries(BASS_SNDS).map(([k,l])=>({k,label:l,ico:INST_ICO.bass}))]], state.bassSnd||'bass', v=>{ state.bassSnd=v; return done(); });
+    else if(kind==='drum') openPicker('ドラムの音を選ぶ', ()=>catsOf(KIT_GROUPS,KITS,()=>INST_ICO.drum), state.kit, v=>{ pickKit(v); return done(); });
+    else openPicker('楽器を選ぶ', ()=>catsOf(INST_GROUPS,INSTS,k=>INST_ICO[famOfInst(k)]), X?(X.inst||'piano'):kind==='arp2'?(state.inst2||'epiano'):state.inst, v=>{ if(X) X.inst=v; else if(kind==='arp2') state.inst2=v; else pickInst(v); return done(); }); };
   p.querySelectorAll('.dirow input').forEach(inp=>inp.oninput=()=>{ const f=inp.dataset.f; x[f]=+inp.value; inp.previousElementSibling.querySelector('output').textContent= f==='pan'?panTxt(x.pan):f==='v'?Math.round(x.v*100):fxTxt(f,x[f]); applyMix(); save(); });
   p.querySelectorAll('.dims button').forEach(b=>b.onclick=()=>{ x[b.dataset.k]=!x[b.dataset.k]; applyMix(); save(); renderTracks(); });
   const nm=$('diName'); nm.onchange=()=>{ const v=nm.value.trim(); if(v) m.name=v; else delete m.name; save(); nm.blur(); renderTracks(); renderAll(); }; nm.onkeydown=e=>{ if(e.key==='Enter') nm.blur(); };
@@ -437,18 +435,66 @@ const famOfInst=k=>/^(steel|nylon|eguitar|dist)$/.test(k)?'guitar':/^strings/.te
 const catsOf=(G,names,ico)=>{ const used=new Set(), out=G.map(([h,ks])=>[h,ks.filter(k=>names[k]).map(k=>{ used.add(k); return {k,label:names[k],ico:ico(k)}; })]);
   const rest=Object.keys(names).filter(k=>!used.has(k)); if(rest.length) out.push(['そのほか',rest.map(k=>({k,label:names[k],ico:ico(k)}))]); return out; };
 // これまでの「分類のチップ＋一覧のチップ」（groupPick）を、2段の選ぶ画面に置きかえる（音色・ドラムの音）
-groupPick=function(el,G,names,cur,onPick){ const isKit=names===KITS; twoPane(el, catsOf(G,names,k=>INST_ICO[isKit?'drum':famOfInst(k)]), cur, onPick); };
+groupPick=function(el,G,names,cur,onPick){ const isKit=names===KITS, ico=k=>INST_ICO[isKit?'drum':famOfInst(k)];
+  pickRow(el, isKit?'ドラムの音':'楽器（音色）', cur!=null&&names[cur]?names[cur]:'えらぶ', '', ico(cur), null, ()=>openPicker(isKit?'ドラムの音を選ぶ':'楽器を選ぶ', ()=>catsOf(G,names,ico), cur, v=>{ cur=v; onPick(v); return false; })); };
+
+// 選んでいるものを1行で出し、タップで全画面の選ぶ画面を開く
+function pickRow(el,head,label,sub,ico,cv,open){ el.classList.remove('chips','gpick','tpane','opts'); el.innerHTML='';
+  const b=document.createElement('button'); b.className='prow1'; b.innerHTML=`${cv?'<canvas></canvas>':(ico||'')}<span><small>${esc(head)}</small><b>${esc(label)}</b>${sub?`<em>${esc(sub)}</em>`:''}</span>${ICO.chev}`;
+  b.onclick=open; el.appendChild(b); if(cv) requestAnimationFrame(()=>{ const c=b.querySelector('canvas'); if(c.clientWidth) cv(c); }); }
+// 全画面の選ぶ画面（GarageBand のサウンドライブラリのように）。onPick が true を返したら閉じる
+(function(){ const st=document.createElement('style'); st.textContent=`
+#pickScr{position:fixed;inset:0;z-index:46;background:var(--bg);display:flex;flex-direction:column}
+#pickScr[hidden]{display:none}
+#pickScr .phd{display:flex;align-items:center;gap:8px;padding:max(10px,env(safe-area-inset-top,0px)) 12px 10px;border-bottom:1px solid var(--line)}
+#pickScr .phd h2{flex:1;text-align:center;margin:0;font-family:var(--display);font-weight:900;font-size:1.1rem}
+#pickScr .phd button{min-width:44px;height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:700;cursor:pointer;display:grid;place-items:center;padding:0 12px}
+#pickScr .phd .pok{background:var(--t);border-color:var(--t);color:#fff}
+#pickScr .tpane{flex:1;height:auto;border:0;border-radius:0;margin:0;grid-template-columns:minmax(110px,30%) 1fr;padding-bottom:env(safe-area-inset-bottom,0px)}
+#pickScr .tpane .tpi{padding:14px 16px}
+#pickScr .tpane .tpi canvas{width:96px;height:36px}
+#pickScr .tpane .tpc{padding:16px 12px 16px 16px;font-size:.9rem}
+@media (min-width:760px){ #pickScr .tpane{grid-template-columns:240px 1fr} }
+.prow1{display:flex;align-items:center;gap:12px;width:100%;border:1.5px solid var(--line);border-radius:14px;background:var(--surface);padding:10px 12px;cursor:pointer;text-align:left;font:inherit;color:var(--ink)}
+.prow1>svg:first-child{width:30px;height:30px;color:var(--t);flex:none}
+.prow1 canvas{width:84px;height:34px;flex:none;border-radius:6px;background:var(--bg)}
+.prow1 span{flex:1;min-width:0}
+.prow1 small{display:block;font-size:.68rem;color:var(--muted)}
+.prow1 b{display:block;font-size:.95rem;font-weight:700}
+.prow1 em{display:block;font-style:normal;font-size:.7rem;color:var(--muted)}
+.prow1>svg:last-child{flex:none;color:var(--muted)}`; document.head.appendChild(st);
+  const el=document.createElement('div'); el.id='pickScr'; el.hidden=true; el.setAttribute('role','dialog');
+  el.innerHTML=`<div class="phd"><button id="pickBack" aria-label="もどる">${ICO.close}</button><h2 id="pickTitle"></h2><button class="pok" id="pickOk">決定</button></div><div id="pickBody"></div>`;
+  document.body.appendChild(el); })();
+let PICK=null;
+function openPicker(title,cats,cur,onPick){ PICK={cats,cur,onPick}; $('pickTitle').textContent=title; $('pickScr').hidden=false; delete $('pickBody').dataset.g; drawPicker(); }
+function drawPicker(){ const P=PICK; twoPane($('pickBody'), P.cats(), P.cur, k=>{ P.cur=k; const close=P.onPick(k); if(close) closePicker(); else drawPicker(); }); }
+function closePicker(){ $('pickScr').hidden=true; PICK=null; }
+$('pickBack').onclick=closePicker; $('pickOk').onclick=closePicker;
 
 // 伴奏スタイルの分類
 const STYLE_CATS=[['定番',[0,1,3,2,15]],['しっとり・やさしい',[4,5,16,14]],['おしゃれ',[18,11,12,19,9]],['おどれる・はねる',[10,8,13]],['特別な雰囲気',[17,20]]];
 const styleSub=st=>[INSTS[st.inst], st.arp2&&st.inst2?INSTS[st.inst2]:null, st.drum==='none'?'ドラムなし':KITS[st.kit], st.bass===false?null:'ベース'].filter(Boolean).join('・');
 const styleCats=()=>STYLE_CATS.map(([h,ids])=>[h, ids.map(id=>STYLES.find(s=>s.id===id)).filter(Boolean).map(st=>({k:st.id, label:st.name, sub:styleSub(st),
   cv:cv=>{ const g=fit(cv), col=colors(), H=cv.height; drawArpBar(g,0,0,cv.width,H*.55,ARPS[st.arp],col.t,col); if(DRUMS[st.drum]) drawDrumBar(g,0,H*.58,cv.width,H*.42,DRUMS[st.drum],col); }}))]);
-// 通常モードの「伴奏スタイル」：選び方はこれまでと同じ（音色・テンポをそのままにする設定も）
-{ const os=openSheet; openSheet=function(kind){ const r=os.apply(this,arguments);
-    if(!state.pro && (kind==='arp'||kind==='drum'||kind==='style')) requestAnimationFrame(()=>{ const opts=$('opts'); opts.classList.remove('opts');
-      twoPane(opts, styleCats(), (styleNow()||{}).id, id=>{ const st=STYLES.find(s=>s.id===id); const keep={inst:state.inst,arp2:state.arp2,inst2:state.inst2,kit:state.kit,bass:state.bass,bassSnd:state.bassSnd};
-        setStyle(st); if(state.keepInst) Object.assign(state,keep); else pickInst(st.inst); renderAll(); save();
-        if(st.bpm && !state.keepBpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; save(); } closeAll(); }); });
-    else { $('opts').classList.remove('tpane'); $('opts').classList.add('opts'); delete $('opts').dataset.g; }
+// 演奏のパターンの分類（PRO）：自分で作ったもの／伴奏スタイルで使うもの／重ねる上もの／そのほか
+const LAYER_PATS=new Set(['glockline','brassobb','brasshit','hornline','anilead']);
+function patCats(kind){ const drum=kind==='drum', src=drum?DRUMS:ARPS, order=drum?drumOrder():arpOrder(), X=xOf(kind), p2like=kind==='arp2'||!!X;
+  const used={}; STYLES.forEach(st=>{ const k=drum?st.drum:st.arp; (used[k]=used[k]||[]).push(st.name); if(!drum&&st.arp2) (used[st.arp2]=used[st.arp2]||[]).push(st.name+'の上もの'); });
+  const col=colors(), cv=k=>c=>{ const g=fit(c); if(drum) drawDrumBar(g,0,0,c.width,c.height,DRUMS[k],col); else drawArpBar(g,0,0,c.width,c.height,ARPS[k],col.t,col); };
+  const it=k=>({k, label:patName(src[k]), sub:/^my\d+$/.test(k)?'自分で作ったパターン':used[k]?used[k].join('・')+'で使う':'', cv:cv(k)});
+  const my=order.filter(k=>/^my\d+$/.test(k)), rest=order.filter(k=>!/^my\d+$/.test(k));
+  const cats=[['自分で作ったもの',my.map(it)], ['伴奏スタイルの演奏',rest.filter(k=>used[k]&&!LAYER_PATS.has(k)).map(it)], ['重ねる上もの',rest.filter(k=>LAYER_PATS.has(k)).map(it)], ['そのほか',rest.filter(k=>!used[k]&&!LAYER_PATS.has(k)).map(it)]];
+  if(p2like) cats.unshift(['なし（使わない）',[{k:'',label:'なし（使わない）',sub:'この楽器を鳴らさない'}]]);
+  return cats; }
+{ const os=openSheet; openSheet=function(kind){ const r=os.apply(this,arguments); const opts=$('opts');
+    if(!state.pro && (kind==='arp'||kind==='drum'||kind==='style')) requestAnimationFrame(()=>{ const st=styleNow();
+      pickRow(opts,'伴奏スタイル',st?st.name:'（組み合わせ中）',st?styleSub(st):'',null, st?c=>{ const g=fit(c), col=colors(), H=c.height; drawArpBar(g,0,0,c.width,H*.55,ARPS[st.arp],col.t,col); if(DRUMS[st.drum]) drawDrumBar(g,0,H*.58,c.width,H*.42,DRUMS[st.drum],col); }:null,
+        ()=>openPicker('伴奏スタイルを選ぶ', styleCats, st&&st.id, id=>{ const st=STYLES.find(s=>s.id===id); const keep={inst:state.inst,arp2:state.arp2,inst2:state.inst2,kit:state.kit,bass:state.bass,bassSnd:state.bassSnd};
+          setStyle(st); if(state.keepInst) Object.assign(state,keep); else pickInst(st.inst); renderAll(); save();
+          if(st.bpm && !state.keepBpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; save(); } closeAll(); return true; })); });
+    else if(state.pro && kind!=='bass' && kind!=='style') requestAnimationFrame(()=>{ if(sheetKind!==kind) return; const k=patOf(kind)||'', drum=kind==='drum', src=drum?DRUMS:ARPS;
+      pickRow(opts,'演奏（パターン）',k&&src[k]?patName(src[k]):'なし（使わない）','',null, k&&src[k]?c=>{ const g=fit(c), col=colors(); if(drum) drawDrumBar(g,0,0,c.width,c.height,src[k],col); else drawArpBar(g,0,0,c.width,c.height,src[k],col.t,col); }:null,
+        ()=>openPicker(drum?'ドラムの演奏を選ぶ':'演奏を選ぶ', ()=>patCats(kind), k, v=>{ setPatOf(kind,v); save(); renderAll(); ensureSounds(); renderTracks(); closeAll(); return true; })); });
+    else { opts.classList.add('opts'); }
     return r; }; }
