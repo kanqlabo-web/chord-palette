@@ -130,7 +130,8 @@ body.pro .proedit{display:flex;gap:8px;align-items:center}
 .prn.orn{border-style:dashed}   /* 飾り（元の音へ戻る刺繍・装飾音・トリル）は点線のふち */
 .prn.up::after{content:'';position:absolute;right:5px;top:3px;width:0;height:0;border:5px solid transparent;border-bottom:7px solid var(--ink);border-top:0}   /* 上へ転回の印（上向きの三角） */
 .prn.scoop::before{content:'';position:absolute;left:4px;bottom:4px;width:9px;height:2.5px;background:var(--ink);transform:rotate(-40deg);border-radius:1px}   /* しゃくりの印（左下からずり上がる線） */
-.prn.nx{border-style:dotted;border-width:2.5px}   /* 次のコードへつなぐ音（点線） */
+.prn.nx,.prn.nt{border-style:dotted;border-width:2.5px}   /* 次のコードへつなぐ音・次のコードの上の音を先に弾く音（点線） */
+.prn.ocd::before,.prn.ocu::before{position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:9px;line-height:1;font-weight:700;color:var(--ink)}.prn.ocd::before{content:'↓'}.prn.ocu::before{content:'↑'}   /* 1オクターブ下・上の印 */
 .prn.fall::after{content:'';position:absolute;right:4px;top:35%;width:12px;height:2.5px;background:var(--ink);transform:rotate(40deg);border-radius:1px}   /* フォールの印（右下へ下がる線） */
 .prn b{position:absolute;left:2px;bottom:2px;width:3px;border-radius:2px;background:var(--ink);opacity:.7;max-height:calc(100% - 4px)}
 .prn.dr{border-color:var(--ink);background:color-mix(in srgb,var(--ink) calc(20% + var(--v) * 75%),var(--surface));box-shadow:none;margin-left:1px;width:calc(100% / var(--cols) - 2px)!important}
@@ -975,7 +976,7 @@ const plainLabel=v=>nameOf(v,state.label,false).replace('-5','⁻⁵');
 const LABELS={num:'数字',roman:'ローマ数字',alpha:'アルファベット'};
 // ボイシング：左手はルート（分数コードならその音）、右手は前の和音から近い形を選ぶ（なめらかなボイスリーディング）
 // 音の番号: 0=左手 1〜3=右手（低→高） 4=左手5度 5=左手オクターブ 6〜8=右手のオクターブ上 9,10=右手4音目
-function voiceFor(pcs,prev,minLo=56,accTop=null){
+function voiceFor(pcs,prev,minLo=56,accTop=null,mid=64){   // mid：好む高さの中心（平均がここから離れるほど選ばれにくい）
   const n=Math.min(pcs.length,4), cands=[];
   const hiLo = accTop!=null ? Math.max(minLo+12, accTop) : minLo+12;   // アクセントのあとは、上へつなげられるよう高い形も候補に入れる
   for(let lo=minLo-4;lo<=hiLo+3;lo++){ if(!pcs.includes(lo%12)) continue;   // 右手の一番下の音：ふだんは A♭3〜A♭4（範囲の外は、全部の声が2度以内で動けるときだけ）
@@ -984,7 +985,7 @@ function voiceFor(pcs,prev,minLo=56,accTop=null){
   // 前の和音に近い形を選ぶ。ただし真ん中の音域（平均E4付近）から離れすぎないように罰点をつける
   // （近さだけで選ぶと、Am→Bm-5→C→Em のような進行で1周ごとに少しずつ上がり続けてしまう）
   const ref=prev||[58,63,67,70], dist=a=>a.reduce((s,m,i)=>s+Math.abs(m-(ref[i]??ref[ref.length-1]+3)),0)
-    + 2*Math.max(0,Math.abs(a.reduce((s,m)=>s+m,0)/a.length-64)-2.5)*a.length;
+    + 2*Math.max(0,Math.abs(a.reduce((s,m)=>s+m,0)/a.length-mid)-2.5)*a.length;
   // 音域の外の形：全部の声が前の和音から2度以内（なめらか）に動けるなら少しの罰点、そうでなければ大きな罰点
   const step=a=>prev&&prev.length>=a.length&&a.every((m,i)=>Math.abs(m-prev[i])<=2), outP=a=>{ const o=Math.max(0,minLo-a[0])+Math.max(0,a[0]-(minLo+12)); return o?(step(a)?o*.5:1000+o):0; };
   const dist0=dist; const distO=a=>dist0(a)+outP(a);
@@ -1114,7 +1115,7 @@ function chordNotes(v,prev){
   // ・決めた音域から大きくはみ出さない
   if(LHCTX.use) L=leadTo(L, bpc, lo, LHCTX.prev, 6);
   // 左手のオクターブも弾くパターンでは、右手のいちばん下の音を左手オクターブより短3度以上上にして、音がぶつからないようにする
-  const pat=ARPS[state.arp], R0=voiceFor(pcs,prev, (pat&&pat.rhAbove ? Math.max(56,L+12+3) : 56)+rhOff+((pat&&pat.rhShift)||0), LHCTX.use?LHCTX.accTop:null);   // rhShift：パターンごとの高さ（ブラスは少し上）   // 右手：A♭3から上
+  const pat=ARPS[state.arp], R0=voiceFor(pcs,prev, (pat&&pat.rhAbove ? Math.max(56,L+12+3) : 56)+rhOff+((pat&&pat.rhShift)||0), LHCTX.use?LHCTX.accTop:null, 64+((pat&&pat.rhMid)||0));   // rhMid：右手の和音を置く高さの好み   // rhShift：パターンごとの高さ（ブラスは少し上）   // 右手：A♭3から上
   // 平行移動：同じ形のコードが半音・全音で動くとき（Cm7→Bm7→B♭m7 など）は、前の和音の形をそのまま滑らせる（ブラスのセクションのように）
   let R=R0; if(prev&&prev.length===R0.length){ const want=[...pcs].map(x=>((x%12)+12)%12).sort((a,b)=>a-b).join();
     if(pcs.length===prev.length) for(const d of [-1,1,-2,2]){ const sh=prev.map(x=>x+d); if([...sh].map(x=>((x%12)+12)%12).sort((a,b)=>a-b).join()===want){ R=sh; break; } } }
@@ -1267,8 +1268,9 @@ const DRUMS = {
   half:   {name:'どっしり', pro:'ゆっくりに聞こえる8ビート', v:{k:'x.....x...x.....', s:'........X.......', h:'o.g.o.g.o.g.o.g.'},
            vB:{k:'x.....x.......x.', s:'........X.....g.', h:'o.g.o.g.o.g.o.o.'}, fill:'halfp',   // スネアは3拍目だけ。ハイハットは8分のままで「半分の速さ」に聴こえる
            bass:[[0,0,6,1],[6,0,4,.8],[10,0,4,.75],[14,'ap',2,.7]]},
-  ballad: {name:'バラード', v:{k:'o.......g.......', x:'....o.......o...', h:'g.g.g.g.g.g.g.g.'}, vB:{k:'o.........g.....', x:'....o.......o...', h:'g.g.g.g.g.g.g.g.'}, fill:'ballad',   // キックは1拍目にそっと（3拍目はごく弱く）、2・4拍目はリム、ハイハットは弱い8分
-           bass:[[0,0,13.5,.82],[14,0,1.8,.55]]},   // ベースは白玉（全音符）で支える
+  // ピアノ（強さ 平均 60/127 くらい）に合わせて、ドラムとベースも控えめに
+  ballad: {name:'バラード', v:{k:M16({0:50,8:24}), x:M16({4:44,12:44}), h:M16({0:26,2:20,4:24,6:20,8:26,10:20,12:24,14:20})}, vB:{k:M16({0:50,10:24}), x:M16({4:44,12:44}), h:M16({0:26,2:20,4:24,6:20,8:26,10:20,12:24,14:20})}, fill:'ballad',   // キックは1拍目にそっと（3拍目はごく弱く）、2・4拍目はリム、ハイハットは弱い8分
+           bass:[[0,0,13.5,.6],[14,0,1.8,.42]]},   // ベースは白玉（全音符）で支える
   shuffle:{name:'スキップ風', pro:'はねるリズム（シャッフル）', v:{k:'x.....o.......g.', s:'.g..Xg.g.g..Xg.g', r:'o...o...o...o...', h:'..g...g...g...g.'}, swing:true, fill:'shuf',
            bass:[[0,0,2,1],[2,'3',2,.7],[4,'5',2,.85],[6,'6',2,.7],[8,12,2,.9],[10,'6',2,.7],[12,'5',2,.85],[14,'3',2,.7]]},
   sixteen:{name:'ファンキー', pro:'16ビート', v:{k:'X..x....X.X..x..', s:'....X..g.g..X..g', h:'o.g.o.g.o.g.o.g.'}, fill:'funk',
@@ -1353,13 +1355,19 @@ const ARPS = {
            ev:[[0,[0],8,.72],[0,RH,8,.7],[2,[1],6,.5],[4,[2],4,.52],[6,[3],2,.55],[8,[0],6,.74],[8,RH,6,.72],[10,[1],4,.48],[12,[2],2,.5]]},   // 長さはペダル（8と14で踏みかえ）
   // ballade.mid から：左手はルートをのばし、右手は1拍目に和音、そのあと8分で下から1音ずつ重ねていく（ペダルでのばしたまま）
   // バラード：1拍目に和音、2拍目から下・中・上と重ね、3拍目でアクセント（いちばん上の音）を鳴らす
-  pballad:{name:'ピアノバラード', pro:'バラード（右手の分散和音）', legato:true, accLink:true,
-           // 1小節：左手はルート＋オクターブをのばす。右手は上が 1拍目・2拍目裏・4拍目、中が 1拍目・2拍目・4拍目裏、下は1拍目裏から。3拍目からアクセント
-           sit:{bar:[[[0,[0],16,.66],[0,[5],16,.5],[0,[3],6,.6],[0,[2],4,.56],[2,[1],14,.44],[4,[2],10,.47],[6,[3],6,.5],[8,[6],8,.62],[12,[3],4,.5],[14,[2],2,.42]],
-                      [[0,[0],16,.66],[0,[5],16,.5],[0,[3],6,.6],[0,[2],4,.56],[2,[1],14,.44],[4,[2],10,.47],[6,[3],6,.5],[8,[6],2,.6],[10,[3],2,.48,null,'nx'],[12,[3],2,.5,null,'nx'],[14,[3],2,.53,null,'nx']]],   // 2小節目：3拍目裏から8分で、右手の高さのまま次のコードへ流れる
-                halfA:[[[0,[0],8,.66],[0,[5],8,.5],[0,[3],6,.6],[0,[2],4,.56],[2,[1],6,.44],[4,[2],4,.47],[6,[3],2,.5]]],
-                halfB:[[[0,[0],8,.64],[0,[3],4,.6],[0,[2],8,.56],[0,[1],8,.56],[4,[3],4,.5],[6,[6],2,.6]]],
-                beat:[[[0,[0],4,.64],[0,[3],4,.6],[0,[2],4,.56],[0,[1],4,.56]]]}},
+  // ピアノバラード（ballade.mid から）：左手はベースの音を1つのばす。右手は1拍目に和音をまとめて弾き、1拍裏から同じ音を下から8分で弾き直して小節の終わりまでのばす。
+  // 4拍目の裏で、次のコードのいちばん上の音を先に弾き、その1つ下の音階を通って次の小節の頭へ。4小節目だけ、右手の音を1オクターブ下（左手の音域）で上がっていく
+  pballad:{name:'ピアノバラード', pro:'バラード（和音＋8分の分散、4小節目で変化）', legato:true, lhFull:true, rhMid:-1,
+           // 同じ行の音は重ねない（PRO の編集画面でも同じ形に書けるように）
+           sit:{bar:[[[0,[0],16,.5],[0,[1],2,.5],[0,[2],4,.45],[0,[3],6,.43],[0,[9],8,.52],[2,[1],14,.48],[4,[2],12,.47],[6,[3],8,.47],[8,[9],8,.5],[14,[3],1,.53,null,'nt'],[15,[3],1,.5,null,'ntd']],
+                      [[0,[0],16,.5],[0,[1],2,.5],[0,[2],4,.45],[0,[3],6,.43],[0,[9],8,.52],[2,[1],14,.48],[4,[2],12,.47],[6,[3],8,.47],[8,[9],8,.5],[14,[3],1,.53,null,'nt'],[15,[3],1,.5,null,'ntd']],
+                      [[0,[0],16,.5],[0,[1],2,.5],[0,[2],4,.45],[0,[3],6,.43],[0,[9],8,.52],[2,[1],14,.48],[4,[2],12,.47],[6,[3],8,.47],[8,[9],8,.5],[14,[3],1,.53,null,'nt'],[15,[3],1,.5,null,'ntd']],
+                      // 4小節目：左手は1オクターブ下のベース。右手の和音のあと、同じ音を1オクターブ下（左手の音域）で8分で上がり、上で 右手 中・アクセント・右手 上
+                      [[0,[0],16,.25,null,null,null,null,null,-12],[0,[1],2,.43],[0,[2],4,.48],[0,[9],8,.57],[2,[1],14,.39,null,null,null,null,null,-12],[4,[2],6,.42,null,null,null,null,null,-12],[6,[3],8,.51,null,null,null,null,null,-12],[8,[9],8,.54,null,null,null,null,null,-12],[10,[2],6,.39],[12,[6],4,.39],[14,[3],2,.39]]],
+                bar3:[[[0,[0],12,.5],[0,[1],2,.5],[0,[2],4,.45],[0,[3],6,.43],[0,[9],8,.52],[2,[1],10,.48],[4,[2],8,.47],[6,[3],4,.47],[8,[9],4,.5],[10,[3],1,.53,null,'nt'],[11,[3],1,.5,null,'ntd']]],
+                halfA:[[[0,[0],8,.51],[0,[1],2,.54],[0,[2],4,.42],[0,[3],6,.43],[0,[9],8,.41],[2,[1],6,.45],[4,[2],4,.3],[6,[3],2,.46]]],
+                halfB:[[[0,[0],6,.34],[0,[1],8,.47],[0,[2],8,.45],[0,[3],4,.51],[0,[9],8,.45],[4,[3],2,.53],[6,[3],1,.5,null,'nt'],[7,[3],1,.49,null,'ntd']]],
+                beat:[[[0,[0],4,.37],[0,[1],4,.45],[0,[2],4,.46],[0,[3],4,.53],[0,[9],4,.5]]]}},
   sync:   {name:'リズミカル', pro:'リズムをずらす（付点8分）', ev:[[0,ALL,3,.8],[3,RH,.7,.72],[6,ALL,2,.78],[10,RH,2,.72],[14,ALL,2,.86]]},
   shuffle:{name:'スキップ風（ピアノ）', pro:'はねるリズム（ピアノ）', swing:true, ev:[[0,ALL,1.5,.8],[2,RH,1,.52],[4,[0],1.5,.68],[6,RH,1,.6],[8,ALL,1.5,.76],[10,RH,1,.52],[12,[0],1.5,.68],[14,RH,1,.62]]},
   stacc:  {name:'ポンポン短く', pro:'4分で短く切る', ev:each([0,4,8,12],ALL,1.1,(s,i)=>i%2?.7:.8)},
@@ -1535,6 +1543,12 @@ function pentaStep(m,dir,cp){ const K=keyObj().pc, P=pentaNow(), pc=x=>(((x-K)%1
 // 「次のコードへペンタでつなぐ」（'nx'）：パターンの中の nx の音に、後ろから 1・2・3…と番号を付ける（e[6]）
 function prepNx(evs){ const xs=(evs||[]).filter(e=>e[5]==='nx').sort((a,b)=>a[0]-b[0]); xs.forEach((e,i)=>{ e[6]=xs.length-i; e[7]=xs[xs.length-1][1][0]; e[8]=xs.length; }); return evs; }   // e[6]：後ろから何番目 e[8]：全部で何音   // e[7]：最後の音の行（目標の高さの基準。みんな同じ目標へ向かう）
 let NX_V=null;
+// 4音目の行（9）を使うパターンか
+function usesR4(pat){ if(!pat) return false; if(pat._r4!==undefined) return pat._r4; let f=false; const scan=evs=>(evs||[]).forEach(e=>{ if(e[1].includes(9)) f=true; });
+  scan(pat.ev); if(pat.sit) for(const k in pat.sit) pat.sit[k].forEach(v=>scan(v.evs||v)); return pat._r4=f; }
+// 次のコードのいちばん上の音（右手の4音すべての中で。次の小節で実際に弾く形）
+// below：その1つ下の音階（次のコードの音階で。次の小節へ向かう音なので）
+function nextTop(bt,below){ if(NX_V==null||!bt) return null; const sv=SC_BORROW; try{ const nb=chordNotes(NX_V,bt.R), R=(nb.R||[]).filter(x=>x!=null); if(!R.length) return null; const T=Math.max(...R); return below?scaleDown(T):T; }catch(e){ return null; } finally{ SC_BORROW=sv; } }
 const LAST_MEL=[{},{}];   // 直前に弾いたメロディの音（楽器1・楽器2）   // 次のコード（chordPart が playEvents の前に入れる）
 // 今のコードのいちばん上の音から、次のコードのいちばん上の音（声部としていちばん近い次のコードの音）まで、キーのペンタで順につなぐ。
 // N 音のうち後ろから k 番目の音を返す。間のペンタの音が足りないときは、次のコードの上の音へ、今の音の側から1音ずつ近づく
@@ -1564,7 +1578,7 @@ function nbSplit(m,tr,len,cp){
     case 'trl': { const u=scaleUp(m), q=.5, out=[]; let k=0; for(let d=0; d<len-1e-6; d+=q,k++) out.push({m:k%2?u:m,d,len:Math.min(q,len-d)}); return out; }
   }
   return one(m); }
-const KEY_ROWS=[[8,'アクセント 上'],[7,'アクセント 中'],[6,'アクセント'],[3,'右手 上'],[2,'右手 中'],[1,'右手 下'],[5,'左手 8度'],[4,'左手 5度'],[0,'左手 根音']];
+const KEY_ROWS=[[8,'アクセント 上'],[7,'アクセント 中'],[6,'アクセント'],[9,'右手 4音目'],[3,'右手 上'],[2,'右手 中'],[1,'右手 下'],[5,'左手 8度'],[4,'左手 5度'],[0,'左手 根音']];
 const LV=[0,.5,.75,1], CH=['.','o','x','X'];
 const lvOf=v=>v>=.95?3:v>=.65?2:v>0?1:0;
 // マイパターンは何個でも作れる：DRUMS.my0, my1… / ARPS.my0, my1…
@@ -1593,13 +1607,17 @@ function rebuildMy(){
     if(d.fill){ d.F=parseVoices(FILLS[d.fill].big); d.FS=parseVoices(FILLS[d.fill].small); } else { d.F=null; d.FS=null; }
   });
   (state.myArps||[]).forEach((m,i)=>{ migrateMy(m,'arp');
-    const toEv=ns=>prepNx((ns||[]).map(n=>{ const r=isDeg(n.r)?n.r:+n.r, fx=n.fall?'fall':n.up?'up':n.scoop?'scoop':n.nx?'nx':nbKind(n); return fx?[n.st,[r],n.len,n.vel,null,fx]:[n.st,[r],n.len,n.vel]; }).sort((a,b)=>a[0]-b[0]));
+    const toEv=ns=>prepNx((ns||[]).map(n=>{ const r=isDeg(n.r)?n.r:+n.r, fx=n.fall?'fall':n.up?'up':n.scoop?'scoop':n.nx?'nx':n.nt?n.nt:nbKind(n); const e=fx?[n.st,[r],n.len,n.vel,null,fx]:[n.st,[r],n.len,n.vel]; if(n.oc){ e[4]=e[4]??null; e[5]=e[5]??null; e[9]=n.oc; } return e; }).sort((a,b)=>a[0]-b[0]));
     const ev=toEv(m.notes);
-    const a=ARPS['my'+i]={name:m.name||`マイパターン${i+1}`, legato:m.legato!==false, ev, swing:m.swing==='swing', swing16:m.swing==='swing16', loose:!!m.loose, pushKeepLH:!!m.pushKeepLH, bossaV:!!m.bossaV, tie:!!m.tie, noRoot:!!m.noRoot, melOct:m.melOct||0, push2nd:!!m.push2nd, accLink:!!m.accLink, rhAbove:!!m.rhAbove, pluck:!!m.pluck, satb:!!m.satb, shell:!!m.shell, avoid:m.avoid!==false, rhShift:m.rhShift||0, vol:m.vol||1}; a.at=atMap(ev);
+    const a=ARPS['my'+i]={name:m.name||`マイパターン${i+1}`, legato:m.legato!==false, ev, swing:m.swing==='swing', swing16:m.swing==='swing16', loose:!!m.loose, pushKeepLH:!!m.pushKeepLH, bossaV:!!m.bossaV, tie:!!m.tie, lhFull:!!m.lhFull, rhMid:m.rhMid||0, noRoot:!!m.noRoot, melOct:m.melOct||0, push2nd:!!m.push2nd, accLink:!!m.accLink, rhAbove:!!m.rhAbove, pluck:!!m.pluck, satb:!!m.satb, shell:!!m.shell, avoid:m.avoid!==false, rhShift:m.rhShift||0, vol:m.vol||1}; a.at=atMap(ev);
     // 場面ごとの弾き方（作ってある場面だけ。ない場面は1小節の弾き方などで代わりに弾く）
     const sn=m.sitNotes||{}, kinds=['halfA','halfB','beat','bar3'].filter(k=>(sn[k]||[]).length);
-    if(kinds.length || (sn.push||[]).length || (sn.bar2||[]).length || (sn.bar32||[]).length || m.pushBy){ a.sit={bar:[{evs:ev,at:a.at}]}; kinds.forEach(k=>{ const e=toEv(sn[k]); a.sit[k]=[{evs:e,at:atMap(e)}]; });
+    if(kinds.length || (sn.push||[]).length || (sn.bar2||[]).length || (sn.bar3rd||[]).length || (sn.bar4th||[]).length || (sn.bar32||[]).length || m.pushBy){ a.sit={bar:[{evs:ev,at:a.at}]}; kinds.forEach(k=>{ const e=toEv(sn[k]); a.sit[k]=[{evs:e,at:atMap(e)}]; });
       if((sn.bar2||[]).length){ const e=toEv(sn.bar2); a.sit.bar.push({evs:e,at:atMap(e)}); }   // 2小節目（1・2小節目を交互に）
+      // 3・4小節目（4小節ひとまとまり）。ない小節は、3小節目＝1小節目、4小節目＝2小節目で埋める
+      if((sn.bar3rd||[]).length || (sn.bar4th||[]).length){ const B=a.sit.bar, b1=B[0], b2=B[1]||B[0];
+        const e3=(sn.bar3rd||[]).length?toEv(sn.bar3rd):null, e4=(sn.bar4th||[]).length?toEv(sn.bar4th):null;
+        a.sit.bar=[b1, b2, e3?{evs:e3,at:atMap(e3)}:b1, e4?{evs:e4,at:atMap(e4)}:b2]; }
       if(a.sit.bar3 && (sn.bar32||[]).length){ const e=toEv(sn.bar32); a.sit.bar3.push({evs:e,at:atMap(e)}); }   // 3拍・2小節目
       if((sn.push||[]).length){ const e=toEv(sn.push); a.sit.push=[{evs:e,at:atMap(e)}]; if((sn.push2||[]).length){ const e2=toEv(sn.push2); a.sit.push.push({evs:e2,at:atMap(e2)}); } } }
     if(m.pushBy) a.pushBy=m.pushBy;
@@ -1633,11 +1651,11 @@ function newMy(kind,from){        // from: もとにするパターンのキー�
       extra={swing:d.swing?'swing':d.swing16?'swing16':'', duck:!!d.duck, bass:d.bass, dyn:d.dyn||0}; if(d.crash0===false) extra.crash0=false; } }
     else if(kind==='bass'){ const src=from==='auto'||!BASSES[from] ? DRUMS[state.drum].bass : BASSES[from].v;
       (src||[]).forEach(([st,iv,len,vel])=>{ const r=String(iv===7?'5':iv); if(BASS_ROWS.some(([k])=>k===r)&&st<16) notes.push({r,st,len:Math.max(1,Math.min(Math.round(len*2)/2,16-st)),vel}); }); }
-    else { const a=ARPS[from]; let usesMel=false; const conv=(evs,N)=>{ const out=[]; evs.forEach(e=>{ const [st0,ns,len,vel]=e; const st=Math.round(st0); ns.forEach(r=>{ const rr=r; if((isDeg(rr)||KEY_ROWS.some(([k])=>k===rr))&&st<N){ const n={r:String(rr),st,len:Math.max(.5,Math.min(len,N-st)),vel}; if(isDeg(rr)) usesMel=true; if(e[5]==='fall') n.fall=true; if(e[5]==='scoop') n.scoop=true; if(e[5]==='nx') n.nx=true; if(e[5]==='up') n.up=true; if(e[5]==='dn'||e[5]===-2) n.dn=true; else if(e[5]===-1) n.dn='cd'; else if(NB_SET.has(e[5])) n.dn=e[5]; out.push(n); } }); }); return tidyNotes(out); };
+    else { const a=ARPS[from]; let usesMel=false; const conv=(evs,N)=>{ const out=[]; evs.forEach(e=>{ const [st0,ns,len,vel]=e; const st=Math.round(st0); ns.forEach(r=>{ const rr=r; if((isDeg(rr)||KEY_ROWS.some(([k])=>k===rr))&&st<N){ const n={r:String(rr),st,len:Math.max(.5,Math.min(len,N-st)),vel}; if(isDeg(rr)) usesMel=true; if(e[5]==='fall') n.fall=true; if(e[5]==='scoop') n.scoop=true; if(e[5]==='nx') n.nx=true; if(e[5]==='nt'||e[5]==='ntd') n.nt=e[5]; if(e[9]) n.oc=e[9]; if(e[5]==='up') n.up=true; if(e[5]==='dn'||e[5]===-2) n.dn=true; else if(e[5]===-1) n.dn='cd'; else if(NB_SET.has(e[5])) n.dn=e[5]; out.push(n); } }); }); return tidyNotes(out); };
       if(a){ notes=conv(a.ev,16);
-        if(a.sit){ sit={}; [['halfA',8],['halfB',8],['beat',4],['push',4],['bar3',12]].forEach(([k,N])=>{ if(a.sit[k]) sit[k]=conv(a.sit[k][0].evs,N); }); if(a.sit.bar3&&a.sit.bar3[1]) sit.bar32=conv(a.sit.bar3[1].evs,12); if(a.sit.bar&&a.sit.bar[1]) sit.bar2=conv(a.sit.bar[1].evs,16); if(a.sit.push&&a.sit.push[1]) sit.push2=conv(a.sit.push[1].evs,4); }
+        if(a.sit){ sit={}; [['halfA',8],['halfB',8],['beat',4],['push',4],['bar3',12]].forEach(([k,N])=>{ if(a.sit[k]) sit[k]=conv(a.sit[k][0].evs,N); }); if(a.sit.bar3&&a.sit.bar3[1]) sit.bar32=conv(a.sit.bar3[1].evs,12); if(a.sit.bar&&a.sit.bar[1]) sit.bar2=conv(a.sit.bar[1].evs,16); if(a.sit.bar&&a.sit.bar.length===4){ sit.bar3rd=conv(a.sit.bar[2].evs,16); sit.bar4th=conv(a.sit.bar[3].evs,16); } if(a.sit.push&&a.sit.push[1]) sit.push2=conv(a.sit.push[1].evs,4); }
         if(a.pushBy) pushBy=a.pushBy;
-        extra={swing:a.swing?'swing':a.swing16?'swing16':'', loose:!!a.loose, pushKeepLH:!!a.pushKeepLH, bossaV:!!a.bossaV, tie:!!a.tie, noRoot:!!a.noRoot, melOct:a.melOct||0, push2nd:!!a.push2nd, accLink:!!a.accLink, rhAbove:!!a.rhAbove, pluck:!!a.pluck, legato:!!a.legato, satb:!!a.satb, shell:!!a.shell, rhShift:a.rhShift||0, vol:a.vol||1}; if(a.avoid===false) extra.avoid=false; } }
+        extra={swing:a.swing?'swing':a.swing16?'swing16':'', loose:!!a.loose, pushKeepLH:!!a.pushKeepLH, bossaV:!!a.bossaV, tie:!!a.tie, lhFull:!!a.lhFull, rhMid:a.rhMid||0, noRoot:!!a.noRoot, melOct:a.melOct||0, push2nd:!!a.push2nd, accLink:!!a.accLink, rhAbove:!!a.rhAbove, pluck:!!a.pluck, legato:!!a.legato, satb:!!a.satb, shell:!!a.shell, rhShift:a.rhShift||0, vol:a.vol||1}; if(a.avoid===false) extra.avoid=false; } }
   }
   const m={...extra, name, notes:kind==='drum'?notes:tidyNotes(notes)}; if(kind==='drum') m.fill=fill??null; if(sit) m.sitNotes=sit; if(pushBy) m.pushBy=pushBy;
   list.push(m);
@@ -1647,7 +1665,7 @@ function newMy(kind,from){        // from: もとにするパターンのキー�
 let patKind='drum';
 const curMy=()=>listOf(patKind)[+state[SK(patKind)].slice(2)];
 // コードのマイパターンは「場面」ごとに弾き方を作れる（bar=1小節同じコード、halfA=前半2拍、halfB=3拍目から、beat=1拍だけ、push=食ったとき）
-const SCENES=[['bar','1小節',16],['bar2','2小節目',16],['bar3','3拍（4拍目で変わる）',12],['bar32','3拍・2小節目',12],['halfA','前半（2拍）',8],['halfB','3拍目から',8],['beat','1拍だけ',4],['push','先に弾いたとき',4],['push2','2小節目を先に弾いたとき',4]];
+const SCENES=[['bar','1小節',16],['bar2','2小節目',16],['bar3rd','3小節目',16],['bar4th','4小節目',16],['bar3','3拍（4拍目で変わる）',12],['bar32','3拍・2小節目',12],['halfA','前半（2拍）',8],['halfB','3拍目から',8],['beat','1拍だけ',4],['push','先に弾いたとき',4],['push2','2小節目を先に弾いたとき',4]];
 const DRUM_SCENES=[['bar','1小節目',16],['B','2小節目',16]];   // ドラムは2小節で1セット（2小節目を作らなければ1小節目をくり返す）
 const isArpK=k=>k==='arp'||k==='arp2';
 const scenesOf=k=>isArpK(k)?SCENES:k==='drum'?DRUM_SCENES:null;
@@ -1671,7 +1689,7 @@ function previewRow(r,vel){
     else { const v=state.slots[page*4]??0, bt=chordNotes(v,null);
       if(patKind==='bass'){ const n={'0':0,'12':12,'5':bt.fifth,'3':bt.third,'6':sixthOf(bt),'7':bt.seventh,'ap':bt.fifth,'-5':bt.fifth-12,'-12':-12}[r]; bassTone(bt.bass+n,t,.4,vel); }
       else if(isDeg(r)){ const go=()=>keyTone(degPitch(r),t,.5,COMP_LEVEL*vel,null); patKind==='arp2'?withPart2(go):go(); }
-      else if(bt.tones[+r]!=null){ const go=()=>keyTone(bt.tones[+r],t,.5,COMP_LEVEL*vel,null); patKind==='arp2'?withPart2(go):go(); } } });
+      else { const T=bt.tones[+r]??(+r===9&&bt.tones[1]!=null?bt.tones[1]+12:null); if(T!=null){ const go=()=>keyTone(T,t,.5,COMP_LEVEL*vel,null); patKind==='arp2'?withPart2(go):go(); } } } });   // 4音目：3音のコードは右手 下の1オクターブ上
 }
 // ---- ピアノロール：タップで追加・削除／右端をドラッグで長さ／ドラッグで移動／長押ししてから上下でベロシティ
 let PR={lastLen:{arp:2,bass:2}, mode:'edit', selSet:new Set()};
@@ -1693,7 +1711,9 @@ function renderPatEditor(){
   if(isArpK(patKind)){ const sc=curScene(), m=curMy();
     chips($('sceneChips'), SCENES.map(([k,l])=>[k, l+(k!=='bar'&&(m.sitNotes||{})[k]&&m.sitNotes[k].length?' ●':'')]), sc, v=>{ PR.scene=v; PR.selSet.clear(); renderPatEditor(); });
     $('sceneNote').textContent = sc==='bar' ? '1小節ずっと同じコードのときの弾き方です（ほかの場面を作っていないときも、これを使います）。'
-      : sc==='bar2' ? '同じコードが続くときの2小節目の弾き方です（1・2小節目を交互にくり返します）。空っぽなら1小節目と同じです。'
+      : sc==='bar2' ? '2小節目の弾き方です（1・2小節目を交互にくり返します）。空っぽなら1小節目と同じです。'
+      : sc==='bar3rd' ? '4小節ひとまとまりの3小節目の弾き方です。空っぽなら1小節目と同じです（3・4小節目を作ると、4小節ごとにくり返します）。'
+      : sc==='bar4th' ? '4小節ひとまとまりの4小節目の弾き方です。空っぽなら2小節目（なければ1小節目）と同じです。'
       : sc==='push2' ? '2小節目のコードを先に弾くとき（2小節パターン用）に、先に弾く音です。空っぽなら「先に弾いたとき」と同じです。'
       : sc==='bar3' ? 'コードが3拍だけ（4拍目で次のコードに変わる）のときの弾き方です。空っぽなら、1小節の弾き方を途中まで使います。'
       : sc==='bar32' ? '3拍だけのコードの、2小節目の弾き方です（2小節パターン用）。空っぽなら「3拍」と同じです。'
@@ -1713,6 +1733,8 @@ function renderPatEditor(){
     optRow('次のコードを先に弾く所',[[false,'コードが変わるたび'],[true,'2小節目に入るときだけ（2小節ひとまとまり）']],!!curMy().push2nd,v=>curMy().push2nd=v);
     optRow('先に弾いたあとの小節の1拍目',[[false,'弾かない（先に弾いた和音をのばすだけ）'],[true,'低い音（根音・5度）だけ弾く']],!!curMy().pushKeepLH,v=>curMy().pushKeepLH=v);
     optRow('音ののばし方',[[true,'ペダルでのばす'],[false,'コードが変わったら切る']],curMy().legato!==false,v=>curMy().legato=v);
+    optRow('右手の和音を置く高さの好み',[[-4,'低め'],[-2,'少し低め'],[0,'ふつう'],[2,'少し高め'],[4,'高め']],curMy().rhMid||0,v=>curMy().rhMid=v);
+    optRow('ベースと重なる左手の低い音',[[false,'少し弱める'],[true,'弱めない']],!!curMy().lhFull,v=>curMy().lhFull=v);
     optRow('同じ高さの音が続くとき',[[false,'弾き直す'],[true,'つなげて1つの音にする（管楽器向け）']],!!curMy().tie,v=>curMy().tie=v);
     optRow('右手の高さ（このパターンだけ）',[[-5,'低め'],[0,'ふつう'],[4,'高め'],[7,'もっと高め']],curMy().rhShift||0,v=>curMy().rhShift=v);
     optRow('メロディ行（コードに関係なくキーの音階で弾く）',[[false,'隠す'],[true,'表示する']],!!curMy().melody,v=>curMy().melody=v);
@@ -1748,12 +1770,14 @@ function renderPatEditor(){
   }
 }
 function fallRow(){ const el=$('prFall'); if(!el) return; const ns=selNotes(), n=ns[0]||null;
-  if(!n){ el.innerHTML='<p class="small" style="margin:6px 0 0">音を選ぶと、その音に「フォール」「転回」「刺繍音」や長さを付けられます（複数選ぶと、まとめて変わります）。</p>'; return; }
+  if(!n){ el.innerHTML='<p class="small" style="margin:6px 0 0">音を選ぶと、その音に「フォール」「転回」などの飾りや、長さ・高さを付けられます（複数選ぶと、まとめて変わります）。</p>'; return; }
   const cnt=ns.length>1?`（${ns.length}個まとめて）`:'';
   el.innerHTML=`<h3 style="margin:10px 0 6px">選んだ音の弾き方${cnt}</h3><div class="chips" id="prFallChips"></div>`;
   el.insertAdjacentHTML('beforeend',`<h3 style="margin:10px 0 6px">選んだ音の長さ${cnt}</h3><div class="chips" id="prLenChips"></div>`);
   chips($('prLenChips'),[[1,'1マス'],[.5,'半マス'],[.25,'4分の1マス（スタッカート）']],n.len,v=>{ ns.forEach(x=>x.len=v); commitNotes(); drawNotes(); });
-  chips($('prFallChips'),[['','そのまま'],['fall','フォール（最後に一気に下がる）'],['up','1つ上の和音の音へ（転回）'],['scoop','しゃくり（下からずり上げる）'],['nx','次のコードへ音階でつなぐ'],...NB_KINDS.map(([k,l])=>[k,'飾り：'+l])],n.fall?'fall':n.up?'up':n.scoop?'scoop':n.nx?'nx':(nbKind(n)||''),v=>{ ns.forEach(x=>{ delete x.fall; delete x.up; delete x.dn; delete x.scoop; delete x.nx; if(v==='fall'||v==='up'||v==='scoop'||v==='nx') x[v]=true; else if(v) x.dn=v==='dn'?true:v; }); commitNotes(); drawNotes(); }); }
+  if(patKind!=='bass'){ el.insertAdjacentHTML('beforeend',`<h3 style="margin:10px 0 6px">選んだ音の高さ${cnt}</h3><div class="chips" id="prOctChips"></div>`);
+    chips($('prOctChips'),[[-12,'1オクターブ下'],[0,'そのまま'],[12,'1オクターブ上']],n.oc||0,v=>{ ns.forEach(x=>{ if(v) x.oc=v; else delete x.oc; }); commitNotes(); drawNotes(); }); }
+  chips($('prFallChips'),[['','そのまま'],['fall','フォール（最後に一気に下がる）'],['up','1つ上の和音の音へ（転回）'],['scoop','しゃくり（下からずり上げる）'],['nx','次のコードへ音階でつなぐ'],['nt','次のコードの上の音を先に弾く'],['ntd','次のコードの上の音の1つ下の音階'],...NB_KINDS.map(([k,l])=>[k,'飾り：'+l])],n.fall?'fall':n.up?'up':n.scoop?'scoop':n.nx?'nx':n.nt?n.nt:(nbKind(n)||''),v=>{ ns.forEach(x=>{ delete x.fall; delete x.up; delete x.dn; delete x.scoop; delete x.nx; delete x.nt; if(v==='fall'||v==='up'||v==='scoop'||v==='nx') x[v]=true; else if(v==='nt'||v==='ntd') x.nt=v; else if(v) x.dn=v==='dn'?true:v; }); commitNotes(); drawNotes(); }); }
 // 編集モード／選択モードの切りかえと、選んだ音へのまとめ操作
 function modeRow(){ const el=$('prMode'); if(!el) return; const k=selNotes().length;
   el.innerHTML='<div class="chips" id="prModeChips"></div><span class="sep"></span>'
@@ -1774,7 +1798,7 @@ function drawNotes(){
   const N=sceneN();
   box.innerHTML=curNotes().map((n,i)=>{ const y=ri(n.r); if(y<0) return '';
     const sl=patKind==='bass' && !!overlapPrev(curNotes(),n);
-    return `<i class="prn${isDrum?' dr':''}${sl?' sl':''}${n.fall?' fall':''}${n.up?' up':''}${n.scoop?' scoop':''}${n.nx?' nx':''}${(k=>k?(NB_UP.has(k)?' nu':' dn')+(NB_ORN.has(k)?' orn':''):'')(nbKind(n))}${PR.selSet.has(n)?' sel':''}" data-i="${i}" style="left:${n.st/N*100}%;width:${(isDrum?1:n.len)/N*100}%;top:calc(${y} * var(--rh));--v:${n.vel}"><b style="height:${Math.round(n.vel*100)}%"></b></i>`; }).join('');
+    return `<i class="prn${isDrum?' dr':''}${sl?' sl':''}${n.fall?' fall':''}${n.up?' up':''}${n.scoop?' scoop':''}${n.nx?' nx':''}${n.nt?' nt':''}${n.oc<0?' ocd':n.oc>0?' ocu':''}${(k=>k?(NB_UP.has(k)?' nu':' dn')+(NB_ORN.has(k)?' orn':''):'')(nbKind(n))}${PR.selSet.has(n)?' sel':''}" data-i="${i}" style="left:${n.st/N*100}%;width:${(isDrum?1:n.len)/N*100}%;top:calc(${y} * var(--rh));--v:${n.vel}"><b style="height:${Math.round(n.vel*100)}%"></b></i>`; }).join('');
 }
 function commitNotes(){ const m=curMy(); if(patKind!=='drum') setCurNotes(tidyNotes(curNotes())); else { const seen={}; m.notes=m.notes.filter(n=>{ const k=n.r+':'+n.st; if(seen[k]) return false; seen[k]=1; return true; }); }
   rebuildMy(); save(); dirty=true; }
@@ -1870,7 +1894,7 @@ const STYLES=[
   {id:2, name:'ロック', bpm:132, drum:'hard', arp:'hardrock', inst:'dist', kit:'power', bass:true},
   {id:3, name:'ギターポップ', bpm:120, drum:'rride', arp:'strum', inst:'eguitar', kit:'room', bass:true},
   {id:16, name:'弾き語り', bpm:92, drum:'none', arp:'strum', inst:'steel', kit:'std', bass:false},
-  {id:4, name:'バラード', bpm:82, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true, mix:{arp:.78,drum:.72,bass:.78}},
+  {id:4, name:'バラード', bpm:80, lhOff:3, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true, mix:{arp:.78,drum:.72,bass:.78}},
   {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
   {id:17, name:'壮大', bpm:110, wide:true, drum:'epic', arp:'epic', inst:'strings3', arp2:'hornline', inst2:'horn', mix:{arp:1,arp2:1.1,drum:.25,bass:.75}, kit:'orch', bass:true, bassSnd:'ubass'},
   {id:18, name:'シティポップ', bpm:100, rhOff:-3, lhOff:-3, rhOff2:-3, drum:'city', arp:'cityep', inst:'epcity', arp2:'brassobb', inst2:'brass3', kit:'city', bass:true, bassSnd:'slap3'},
@@ -3175,19 +3199,21 @@ function playEvents(evs,bt,ct,sd,pat){
   if(bt&&bt.ivs&&bt.rpc!=null) setScaleFor([...bt.ivs.map(i=>(bt.rpc+i)%12), ...(bt.bpc!=null?[bt.bpc]:[])]);
   const tones=bt.tones, notes=[];
   if(evs.length) ACC_TOP = pat&&pat.accLink && evs.some(e=>e[1].includes(6)) && tones[6]!=null ? tones[6] : null;   // 「アクセントのあと上げてつなぐ」パターンだけ
-  const RHS=new Set([1,2,3,6,7,8]);
-  evs.forEach(([st0,ns0,len,vel,dir,tr,nxk,nxr,nxN])=>{   // tr：数字＝半音ずらす、'fall'＝最後にフォール
+  const RHS=new Set([1,2,3,6,7,8,9]);
+  // 4音目の行：4音のコードは4つ目の音。3音のコードでは、同じタイミングで「右手 下」を弾いていないとき（分散）だけ、右手 下の1オクターブ上で鳴らす
+  const BLK=new Set(evs.filter(e=>e[1].includes(1)).map(e=>e[0]));
+  evs.forEach(([st0,ns0,len,vel,dir,tr,nxk,nxr,nxN,oc])=>{   // tr：数字＝半音ずらす、'fall'＝最後にフォール
     let ns=ns0; const degs=ns.filter(isDeg); ns=ns.filter(ix=>!isDeg(ix));   // メロディ行（d1〜d8）は別に鳴らす
     // 右手を1〜2音ずつ弾く（分散和音）ときは、4音のコードでも色の音（3度・7度・9度）が抜けないように ra を使う
-    const arp = bt.ra && ns.length<3 && ns.every(ix=>RHS.has(ix));
-    if(!arp && tones[9]!=null){ if(ns.includes(1)&&ns.includes(2)&&ns.includes(3)) ns=[...ns,9]; if(ns.includes(6)&&ns.includes(7)&&ns.includes(8)) ns=[...ns,10]; }
+    const arp = bt.ra && !usesR4(pat) && ns.length<3 && ns.every(ix=>RHS.has(ix));
+    if(!arp && tones[9]!=null){ if(ns.includes(1)&&ns.includes(2)&&ns.includes(3)&&!ns.includes(9)) ns=[...ns,9]; if(ns.includes(6)&&ns.includes(7)&&ns.includes(8)) ns=[...ns,10]; }
     // ストリングスは開離配置：右手の真ん中の音を1オクターブ上げ、左手に5度を足して、広い音域で鳴らす（弓で弾くように立ち上がりもゆっくり）
     if(!arp && !(pat&&pat.satb) && /^strings/.test(state.inst) && ns.includes(1)&&ns.includes(2)&&ns.includes(3)){ ns=ns.map(ix=>ix===2?7:ix); if(ns.includes(0)&&!ns.includes(4)) ns=[...ns,4]; ns=[...new Set(ns)]; }
-    ns=ns.filter(ix=>tones[ix]!=null);                    // ギターの4・5弦のコードなど、ない弦は鳴らさない
+    ns=ns.filter(ix=>tones[ix]!=null || (ix===9 && tones[1]!=null && !BLK.has(st0)));   // ギターの4・5弦のコードなど、ない弦は鳴らさない（4音目は3音のコードでも鳴らす）
     const top=dir==='u'?ns[0]:ns[ns.length-1];
-    const sh=typeof tr==='number'?tr:0, TN=(tr==='up'&&bt.up)?bt.up:tones;   // 'up'：1つ上の和音の音で弾く／'dn'：1つ下の音階の音（刺繍音）
+    const sh=(typeof tr==='number'?tr:0)+(oc||0), TN0=(tr==='up'&&bt.up)?bt.up:tones, TN=TN0[9]!=null||TN0[1]==null?TN0:Object.assign([...TN0],{9:TN0[1]+12});   // oc：1オクターブ上・下   // 'up'：1つ上の和音の音で弾く／'dn'：1つ下の音階の音（刺繍音）
     const I0=notes.length, NB=NB_SET.has(tr), CP=[...new Set(Object.values(tones).filter(x=>x!=null).map(x=>((x%12)+12)%12))], MO=(pat&&pat.melOct)||0;
-    const nxM0=tr==='nx'?nxPitch(nxk||1,nxN||1,bt):null, nxM=nxM0!=null&&[6,7,8].includes(+nxr)?nxM0+12:nxM0;   // アクセント行（1オクターブ上）でつなぐときは、その高さで
+    const NT=(tr==='nt'||tr==='ntd')?nextTop(bt,tr==='ntd'):null, nxM0=tr==='nx'?nxPitch(nxk||1,nxN||1,bt):NT, nxM=nxM0!=null&&[6,7,8].includes(+nxr)?nxM0+12:nxM0;   // アクセント行（1オクターブ上）でつなぐときは、その高さで
     degs.forEach((ix,k)=>{ const m0=degPitch(ix)+sh+MO, m=nxM??m0; if(NB) nbSplit(m,tr,len,CP).forEach(p=>notes.push({ix:3,k,len:p.len,vel,dir,st0:st0+p.d,ev0:st0,top:false,mel:true,m:p.m,orig:p.m,row:ix})); else notes.push({ix:3,k,len,vel,dir,st0,ev0:st0,top:false,mel:true,m,orig:m,row:ix}); });   // メロディ行：キーの音階の音
     if(tr==='up' && bt.upV && LHCTX) LHCTX.satb=bt.upV;   // 和声法：次の和音へは、上がったあとの形からつなぐ
     ns.forEach((ix,k)=>{ const m0=(arp ? (ix<=3 ? bt.ra[ix-1] : bt.ra[ix-6]+12) : TN[ix])+sh, m=nxM??m0; if(NB) nbSplit(m,tr,len,CP).forEach(p=>notes.push({ix,k,len:p.len,vel,dir,st0:st0+p.d,ev0:st0,top:ix===top,m:p.m,orig:p.m,row:ix})); else notes.push({ix,k,len,vel,dir,st0,ev0:st0,top:ix===top, m,orig:m,row:ix}); });   // tr＝半音いくつずらすか
@@ -3233,7 +3259,7 @@ function playEvents(evs,bt,ct,sd,pat){
   order.forEach((n,k)=>{
     const ix=n.ix;
     let w = 1;   // 和音のどの音も同じ強さ（内声を弱めない）
-    if(state.bass && n.m<48 && !(pat&&(pat.satb||pat.bossaV))) w*=.55;   // ボサノバのギターの親指（ルート・5度）は下げない   // 和声法のストリングスはチェロ・コントラバスも主役なので下げない
+    if(state.bass && n.m<48 && !(pat&&(pat.satb||pat.bossaV||pat.lhFull))) w*=.55;   // ボサノバのギターの親指（ルート・5度）は下げない   // 和声法のストリングスはチェロ・コントラバスも主役なので下げない
     if(pat&&pat.satb && ix===4) w=.85;   // 和声法：コントラバス（バスのオクターブ下）だけ少し控えめ
     const hv = 1+(Math.random()-.5)*.14;                 // 人間っぽい揺れ
     const ht = (pat&&pat.loose) ? (Math.random()-.4)*.016 : n.st0%4===0 ? 0 : (Math.random()-.5)*.004;   // 拍の頭はジャストで（loose：人間っぽく前後に揺らす。少し後ろ寄り）
@@ -3530,12 +3556,12 @@ function drawDrumBar(g,x,y,w,h,dr,col,fill,from=0,n=16){
   g.globalAlpha=1;
 }
 function drawArpBar(g,x,y,w,h,a,c,col,n=16){
-  const sw=w/n, rh=h/9, r=devicePixelRatio||1, ROW={0:0,4:1,5:2,1:3,2:4,3:5,6:6,7:7,8:8};
+  const sw=w/n, rh=h/10, r=devicePixelRatio||1, ROW={0:0,4:1,5:2,1:3,2:4,3:5,9:6,6:7,7:8,8:9};
   g.fillStyle=col.line; for(let i=4;i<n;i+=4) g.fillRect(x+i*sw,y+2*r,1*r,h-4*r);
   g.fillStyle=c;
   a.ev.forEach(([st,ns,len,vel])=>{ if(st>=n) return; ns.forEach(ix=>{
     const l=Math.min(len,n-st); g.globalAlpha=.35+.65*vel;
-    rr(g,x+st*sw+r*.5,y+(8-(ROW[ix]??8))*rh+rh*.12,Math.max(l*sw-1*r,1.5*r),rh*.76,1.2*r); g.fill(); }); });
+    rr(g,x+st*sw+r*.5,y+(9-(ROW[ix]??9))*rh+rh*.12,Math.max(l*sw-1*r,1.5*r),rh*.76,1.2*r); g.fill(); }); });
   g.globalAlpha=1;
 }
 // ベースの帯：横＝タイミング、縦＝音の高さ（下がルート、上がオクターブ）
