@@ -707,7 +707,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.182（2026-10-23）</p>
+    <p class="appver">ver 1.183（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -774,7 +774,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.182（2026-10-23）</p>
+  <p class="appver">ver 1.183（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1117,6 +1117,10 @@ function chordNotes(v,prev){
     if(pcs.length===prev.length) for(const d of [-1,1,-2,2]){ const sh=prev.map(x=>x+d); if([...sh].map(x=>((x%12)+12)%12).sort((a,b)=>a-b).join()===want){ R=sh; break; } } }
   // shell：右手を「ルート・3度・7度」（7度がなければ5度）の3音で、ルートを G3〜F♯4 に置く（citypop.mid の電子ピアノの形）
   if(pat&&pat.shell){ const lo2=55+rhOff+((pat.rhShift)||0), r0=lo2+(((rpc-lo2)%12)+12)%12, i3=[4,3,5,2].find(i=>ivs.includes(i))??4, i7=[11,10,9].find(i=>ivs.includes(i))??7;
+    // 平行移動（shell の形でも）：前の3音（ルート・3度・7度）を同じ形のまま半音・全音ずらすと今のコードになるなら、そのまま滑らせる
+    const want=[0,i3,i7].map(i=>(rpc+i)%12).sort((a,b)=>a-b).join(); let slid=null;
+    if(prev&&prev.length===3) for(const d of [-1,1,-2,2]){ const sh=prev.map(x=>x+d); if(sh.map(x=>((x%12)+12)%12).sort((a,b)=>a-b).join()===want){ slid=sh; break; } }
+    if(slid) R.splice(0,R.length,...slid); else {
     const C=[[0,i3,i7],[i3,i7,12],[i7,12,12+i3]].map(v=>{ const b=lo2-1+((((rpc+v[0])-(lo2-1))%12)+12)%12; return v.map(x=>b+x-v[0]); }).filter(v=>v[0]>=lo2-1&&v[0]<=lo2+11);
     const ml=pat.avoid===false?null:melLow(pat);
     if(ml!=null){ const cap=degPitch('d'+ml)+(pat.melOct||0), mp=melPcs(pat);
@@ -1127,7 +1131,7 @@ function chordNotes(v,prev){
       // 和音の中で半音（短2度）がぶつからない形のうち、フレーズのいちばん低い音をギリギリ超えない（半音以上離れた）いちばん高い形
       const ok=all.filter(v=>v[2]<=cap-2&&v[0]>=48&&v[1]-v[0]>=2&&v[2]-v[1]>=2).sort((a,b)=>b[2]-a[2]); if(ok.length) C.splice(0,C.length,ok[0]); }
     else C.sort((a,b)=>Math.abs((a[0]+a[1]+a[2])/3-63)-Math.abs((b[0]+b[1]+b[2])/3-63));
-    R.splice(0,R.length,...(C[0]||[r0,r0+i3,r0+i7])); }   // 原曲の高さに近い形
+    R.splice(0,R.length,...(C[0]||[r0,r0+i3,r0+i7])); } }   // 原曲の高さに近い形
   // メロディをよける（ふつうの和音の形でも）：メロディ行があるパターンでは、
   // ①メロディの音と半音でぶつかる和音の音を、ぶつからないコードの音（5度・ルート・3度・6度）に替え、②和音をメロディのいちばん低い音より下（全音以上離す）に収める
   else if(pat && pat.avoid!==false && melLow(pat)!=null){ const cap=degPitch('d'+melLow(pat))+(pat.melOct||0), mp=melPcs(pat);
