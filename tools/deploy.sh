@@ -3,7 +3,7 @@
 set -e
 S=/tmp/claude-0/-home-claude/cb90b389-4cb1-5166-985c-0cf20ec415ab/scratchpad
 cd /home/claude/chord-palette
-N=$(( $(git rev-list --count HEAD) + 1 )); D=$(TZ=Asia/Tokyo date +%Y-%m-%d)
+N=$(( $(grep -o "ver 1\.[0-9]*" index.html | head -1 | cut -d. -f2) + 1 ));   # 今の版数＋1（浅いクローンでもずれないように） D=$(TZ=Asia/Tokyo date +%Y-%m-%d)
 sed -i -E "s/ver 1\.[0-9]+（[0-9-]+）/ver 1.$N（$D）/g" /home/claude/chord-palette.html
 { cat $S/hdr.txt; cat /home/claude/chord-palette.html; printf '\n</body>\n</html>'; } > index.html
 # 試作版も同じ中身で作り直し、ソースも tools/ に残す
