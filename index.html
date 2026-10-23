@@ -711,7 +711,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.205（2026-10-24）</p>
+    <p class="appver">ver 1.206（2026-10-24）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -778,7 +778,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.205（2026-10-24）</p>
+  <p class="appver">ver 1.206（2026-10-24）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -2950,7 +2950,7 @@ function playZone(zones,m,t,dur,vel,rel,cutoff,loop,atk){
 const INST_FX={piano:{gain:3.6,rel:.2,hold:1.15},nylon:{gain:3.6,rel:.2,hold:1.3},
   // 音量は元の音源の大きさに合わせてそろえた（ピアノと同じくらいに聞こえるように）
   epiano:{gain:1.0,rel:.3,hold:1.1},clav:{gain:1.15,rel:.08,hold:1,loop:true},
-  steel:{gain:3.2,rel:.2,hold:1.25},strings3:{gain:2.15,rel:.45,hold:1,loop:true,atk:.09,cutMin:7000},   // クラビネット：はじいて短く止める鍵盤（ファンク・シティポップ）。下の行：アコギ・弦楽器
+  steel:{gain:3.2,rel:.2,hold:1.25},strings3:{gain:2.15,rel:.45,hold:1,loop:true,atk:.09,cutMin:7000},   // この行：アコギ・弦楽器（クラビネットは上の行：はじいて短く止める鍵盤。ファンク・シティポップ）
   brass3:{gain:2.6,rel:.1,hold:1,loop:true,cutMin:8000},sbrass:{gain:1.5,rel:.12,hold:1,loop:true,cutMin:9000},trumpet:{gain:2.3,rel:.1,hold:1,loop:true},trombone:{gain:1.8,rel:.1,hold:1,loop:true},sax:{gain:1.7,rel:.12,hold:1,loop:true},
   horn:{gain:1.5,rel:.2,hold:1,loop:true,atk:.035},glock:{gain:2.4,rel:.8,hold:1.6},
   koto:{gain:3.4,rel:.3,hold:1.4},shami:{gain:3.0,rel:.15,hold:1.1},

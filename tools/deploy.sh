@@ -5,6 +5,7 @@
 set -e
 R=$(cd "$(dirname "$0")/.." && pwd); T=$R/tools; SRC=$T/chord-palette.src.html
 cd "$R"
+git pull -q --rebase --autostash   # ほかのセッションの変更を先に取り込む
 N=$(( $(grep -o "ver 1\.[0-9]*" index.html | head -1 | cut -d. -f2) + 1 ))   # 今の版数＋1（浅いクローンでもずれないように）
 D=$(TZ=Asia/Tokyo date +%Y-%m-%d)
 sed -i -E "s/ver 1\.[0-9]+（[0-9-]*）/ver 1.$N（$D）/g" "$SRC"
