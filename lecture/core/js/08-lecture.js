@@ -46,13 +46,13 @@ function lecLocalMembers(f){ lecGet(lecPath()).then(d=>{ const m={}; for(let i=0
 #lecStart .lcard span{color:var(--muted);font-size:.82rem;line-height:1.6}
 #lecStart .ljoin{display:none;gap:8px;margin-top:10px}
 #lecStart .ljoin.on{display:flex;flex-wrap:wrap}
-#lecStart input{font-size:16px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);flex:1;min-width:7em}
+#lecStart input{font-size:16px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);flex:1;min-width:7em;background:var(--surface);color:var(--ink)}
 #lecStart .lwarn{font-size:.78rem;color:var(--d);margin:4px 0 12px;line-height:1.6}
-#lecBar{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:45;background:var(--ink);color:#fff;border-radius:14px;padding:8px 12px;font-size:.8rem;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#lecBar{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:45;background:var(--ink);color:var(--bg);border-radius:14px;padding:8px 12px;font-size:.8rem;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 #lecBar .lrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #lecBar b{font-family:var(--display);font-size:.92rem}
-#lecBar button{border:0;border-radius:999px;padding:7px 12px;font-weight:700;font-size:.8rem;cursor:pointer;background:#fff;color:var(--ink)}
-#lecBar button.alt{background:rgba(255,255,255,.14);color:#fff}
+#lecBar button{border:0;border-radius:999px;padding:7px 12px;font-weight:700;font-size:.8rem;cursor:pointer;background:var(--bg);color:var(--ink)}
+#lecBar button.alt{background:color-mix(in srgb,var(--bg) 16%,transparent);color:var(--bg)}
 #lecBar .lsp{flex:1}
 #lecBar .lmore{display:none;margin-top:8px;gap:10px;flex-direction:column}
 #lecBar.open .lmore{display:flex}
@@ -69,8 +69,8 @@ body.lec-child #toTitle{display:none}`;
     <p class="lsub">先生が解説しながら「次のレベルを開放」すると、<br>受講者の画面にも、そのレベルの機能が増えていきます。</p>
     <p class="lwarn" id="lecWarn" hidden>Firebase の設定がまだなので、この端末の中だけで試せます（同じブラウザの別のタブで受講者のリンクを開いてください）。</p>
     <button class="lcard" id="lecTeacher"><b>先生として部屋を作る</b><span>部屋番号とパスワードを作り、受講者に配るリンクと QR コードを出します。</span></button>
-    <button class="lcard" id="lecChildBtn"><b>受講者として参加する</b><span>先生から聞いた部屋番号とパスワードを入れます（配られたリンクを開いた人は、そのまま参加しています）。</span>
-      <div class="ljoin" id="lecJoin"><input id="lecRoom" inputmode="numeric" maxlength="4" placeholder="部屋番号（4けた）" autocomplete="off"><input id="lecPw" maxlength="8" placeholder="パスワード" autocomplete="off"><button class="chip main" id="lecGo">参加する</button></div></button>
+    <div class="lcard" id="lecChildBtn" role="button" tabindex="0"><b>受講者として参加する</b><span>先生から聞いた部屋番号とパスワードを入れます（配られたリンクを開いた人は、そのまま参加しています）。</span>
+      <div class="ljoin" id="lecJoin"><input id="lecRoom" inputmode="numeric" maxlength="4" placeholder="部屋番号（4けた）" autocomplete="off"><input id="lecPw" maxlength="8" placeholder="パスワード" autocomplete="off"><button class="chip main" id="lecGo">参加する</button></div></div>
   </div>`;
   document.body.appendChild(s);
   const b=document.createElement('div'); b.id='lecBar'; b.hidden=true; document.body.appendChild(b);

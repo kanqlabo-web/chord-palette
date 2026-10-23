@@ -4,27 +4,38 @@ const PIANOISH=new Set(['piano','spiano','epiano','epcity','lofi','organ','clav'
 let ctx=null, master, masterOut=null, noiseBuf, compBus=null, compVol=null, compBus2=null, compVol2=null, drumBus=null, bassBus=null, OUT=null, PART2=false;
 // PARTN：いま鳴らしているコード楽器（0＝コード、1＝コード2、2〜＝PRO で足した楽器 state.xtr[PARTN-2]）。PART2 は「コード以外のコード楽器」
 let PARTN=0, REVERB=null;
-const CHAN={};   // 楽器ごとの出口（音量→左右→マスター、リバーブへの送り）。キーは mix の名前（arp・arp2・drum・bass・足した楽器の id）
-// 出口を作る：音量（2ch にそろえる）→ 左右（パン）→ マスター。パンが 0 なら音は変わらない
-function mkChan(c){ if(CHAN[c]) return CHAN[c]; const vol=ctx.createGain(); vol.channelCount=2; vol.channelCountMode='explicit'; vol.channelInterpretation='speakers';
-  const pan=ctx.createStereoPanner(), send=ctx.createGain(); send.gain.value=0; vol.connect(pan); pan.connect(master); pan.connect(send); send.connect(REVERB);
-  return CHAN[c]={vol,pan,send}; }
+const CHAN={};   // 楽器ごとの出口。キーは mix の名前（arp・arp2・drum・bass・足した楽器の id）
+// 出口を作る：入口 → 低音・高音（EQ）→ コンプ → 音量（2ch にそろえる）→ 左右（パン）→ マスター。音量のあとからリバーブ・エコーへ送る
+// どの効果も 0 なら音は変わらない（EQ は 0dB、コンプは素通し）
+function mkChan(c){ if(CHAN[c]) return CHAN[c];
+  const inp=ctx.createGain(), lo=ctx.createBiquadFilter(), hi=ctx.createBiquadFilter(), comp=ctx.createDynamicsCompressor(), mk=ctx.createGain();
+  lo.type='lowshelf'; lo.frequency.value=220; lo.gain.value=0; hi.type='highshelf'; hi.frequency.value=3200; hi.gain.value=0;
+  comp.threshold.value=0; comp.ratio.value=1; comp.knee.value=10; comp.attack.value=.006; comp.release.value=.18;
+  const vol=ctx.createGain(); vol.channelCount=2; vol.channelCountMode='explicit'; vol.channelInterpretation='speakers';
+  const pan=ctx.createStereoPanner(), send=ctx.createGain(), esend=ctx.createGain(); send.gain.value=0; esend.gain.value=0;
+  inp.connect(lo); lo.connect(hi); hi.connect(comp); comp.connect(mk); mk.connect(vol); vol.connect(pan); pan.connect(master); pan.connect(send); send.connect(REVERB); pan.connect(esend); esend.connect(ECHO.in);
+  return CHAN[c]={inp,lo,hi,comp,mk,vol,pan,send,esend}; }
+// エコー：付点8分（テンポに合わせる）で、だんだん小さく・こもっていく
+let ECHO=null;
+function mkEcho(){ const inp=ctx.createGain(), d=ctx.createDelay(2), fb=ctx.createGain(), lp=ctx.createBiquadFilter(), hp=ctx.createBiquadFilter(), out=ctx.createGain();
+  lp.type='lowpass'; lp.frequency.value=2600; hp.type='highpass'; hp.frequency.value=280; fb.gain.value=.34; out.gain.value=.7; d.delayTime.value=.45;
+  inp.connect(hp); hp.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(out); out.connect(master); return {in:inp,d}; }
 // リバーブ：部屋の響き（ノイズを少しずつ小さくした響きを、左右で少し変えて作る）
 function mkReverb(){ const sr=ctx.sampleRate, n=Math.floor(sr*2.4), ir=ctx.createBuffer(2,n,sr);
   for(let c=0;c<2;c++){ const d=ir.getChannelData(c); for(let i=0;i<n;i++){ const x=i/sr; d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.2)*Math.exp(-x*1.6)*(x<.012?x/.012:1); } }
   const cv=ctx.createConvolver(); cv.buffer=ir; const g=ctx.createGain(); g.gain.value=.8; cv.connect(g); g.connect(master); return cv; }
 // 足した楽器の音の入口（なければ作る）
 const XB={}; function xBus(k){ const t=(state.xtr||[])[k-2]; if(!t) return compBus2; const c=CHAN[t.id]||mkChan(t.id);
-  if(!XB[t.id]){ XB[t.id]=ctx.createGain(); XB[t.id].connect(c.vol); applyMix(); } return XB[t.id]; }
+  if(!XB[t.id]){ XB[t.id]=ctx.createGain(); XB[t.id].connect(c.inp); applyMix(); } return XB[t.id]; }
 function ensureAudio(noResume){
   if(ctx && ctx.state==='closed') ctx=null;
   if(!ctx){
     ctx=new (window.AudioContext||window.webkitAudioContext)();
     const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=4;
     master=ctx.createGain(); master.gain.value=.85; master.connect(comp); comp.connect(ctx.destination); masterOut=comp;
-    REVERB=mkReverb(); for(const k in CHAN) delete CHAN[k]; for(const k in XB) delete XB[k];
-    compVol=mkChan('arp').vol; drumBus=mkChan('drum').vol; bassBus=mkChan('bass').vol;
-    compVol2=mkChan('arp2').vol; compBus2=ctx.createGain(); compBus2.connect(compVol2);   // 楽器2（PRO）
+    REVERB=mkReverb(); ECHO=mkEcho(); for(const k in CHAN) delete CHAN[k]; for(const k in XB) delete XB[k];
+    compVol=mkChan('arp').inp; drumBus=mkChan('drum').inp; bassBus=mkChan('bass').inp;
+    compVol2=mkChan('arp2').inp; compBus2=ctx.createGain(); compBus2.connect(compVol2);   // 楽器2（PRO）
     compBus=ctx.createGain(); compBus.connect(compVol); applyMix();   // 伴奏（コード）だけを通す道。ダンスではキックに合わせて音量を沈める（サイドチェイン風）
     noiseBuf=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);
     const ch=noiseBuf.getChannelData(0); for(let i=0;i<ch.length;i++) ch[i]=Math.random()*2-1;

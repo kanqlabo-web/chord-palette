@@ -559,10 +559,16 @@ const isSynthInst=()=>state.inst in SYNTH_INST;
 const MIX_CH0=['arp','arp2','drum','bass'], mixChs=()=>[...MIX_CH0, ...(state.pro?(state.xtr||[]).map(t=>t.id):[])];
 function mixOf(ch){ if(!state.mix) state.mix={}; return state.mix[ch]||(state.mix[ch]={v:1,m:false,s:false}); }
 function applyMix(){ if(!ctx||!drumBus) return;
-  const pro=!!state.pro, solo=pro&&mixChs().some(c=>mixOf(c).s), t=ctx.currentTime;
+  const pro=!!state.pro, solo=pro&&mixChs().some(c=>mixOf(c).s), t=ctx.currentTime, T=(p,v)=>p.setTargetAtTime(v,t,.03);
+  const st=styleNow()||{}, sm=st.mix, sfx=(typeof STYLE_FX!=='undefined'&&STYLE_FX[st.id])||{};
+  if(ECHO) T(ECHO.d.delayTime, Math.min(1.5,60/state.bpm*.75));   // エコーは付点8分
   mixChs().forEach(c=>{ const ch=CHAN[c]; if(!ch) return; const x=mixOf(c);
-    const sm=(styleNow()||{}).mix, g = !pro ? (sm&&sm[c]!=null?sm[c]:1) : solo ? (x.s?x.v:0) : (x.m?0:x.v);   // 通常モードは伴奏スタイルの音量バランス
-    ch.vol.gain.setTargetAtTime(g,t,.03); ch.pan.pan.setTargetAtTime(pro?(x.pan||0):0,t,.03); ch.send.gain.setTargetAtTime(pro?(x.rev||0):0,t,.03); });   // パン・リバーブは PRO だけ
+    // 通常モードは伴奏スタイルの音量バランスとミックス、PRO はトラックごとの設定
+    const f = pro ? x : (sfx[c]||{});
+    const g = !pro ? (sm&&sm[c]!=null?sm[c]:1) : solo ? (x.s?x.v:0) : (x.m?0:x.v);
+    T(ch.vol.gain,g); T(ch.pan.pan,f.pan||0); T(ch.send.gain,f.rev||0); T(ch.esend.gain,(f.echo||0)*.8);
+    T(ch.lo.gain,(f.lo||0)*9); T(ch.hi.gain,(f.hi||0)*9);
+    const k=f.comp||0; T(ch.comp.threshold,-k*26); T(ch.comp.ratio,1+k*5); T(ch.mk.gain,Math.pow(10,k*7/20)); });
   document.querySelectorAll('.mix').forEach(el=>{ const x=mixOf(el.dataset.ch);
     el.querySelector('[data-k="m"]').setAttribute('aria-pressed',x.m); el.querySelector('[data-k="s"]').setAttribute('aria-pressed',x.s);
     el.querySelector('input').value=x.v; el.closest('.lane').classList.toggle('silent', pro && (solo?!x.s:x.m)); });

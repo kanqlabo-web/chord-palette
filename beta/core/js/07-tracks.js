@@ -7,6 +7,32 @@
 function proFromStyle(st){ setStyle(st); const o=sOffOf(st);
   Object.assign(state,{rhLo:null,lhLo:null,rhLo2:null,lhLo2:null,bassLo:null, rhOff:o.rh, lhOff:o.lh, rhOff2:o.rh2, lhOff2:o.lh2, bassOff:o.bass, xtr:[]}); }
 
+// 伴奏スタイルごとのミックス（左右・リバーブ・エコー・コンプ・高音・低音）。通常モードでもこのまま鳴り、PRO に読み込むとトラックの設定になる
+// rev・echo・comp は 0〜1、pan・hi・lo は −1〜1（hi・lo は ±9dB）
+const STYLE_FX={
+  0:{arp:{rev:.22,comp:.3,hi:.1}, drum:{rev:.12,comp:.35}, bass:{comp:.5,lo:.1}},
+  1:{arp:{pan:-.1,rev:.18,comp:.35,hi:.15}, drum:{rev:.1,comp:.45}, bass:{comp:.5}},
+  15:{arp:{rev:.2,echo:.12,comp:.4,hi:.15}, drum:{rev:.08,comp:.5,hi:.1}, bass:{comp:.55,lo:.15}},
+  2:{arp:{pan:-.15,rev:.12,comp:.3,lo:-.15}, drum:{rev:.15,comp:.55}, bass:{comp:.6,lo:.15}},
+  3:{arp:{pan:.15,rev:.2,echo:.1,comp:.3}, drum:{rev:.18,comp:.4}, bass:{comp:.5}},
+  16:{arp:{rev:.25,comp:.35,hi:.1}},
+  4:{arp:{rev:.35,comp:.2}, drum:{rev:.3,comp:.25}, bass:{rev:.08,comp:.4}},
+  5:{arp:{rev:.35,echo:.08,comp:.2}, drum:{pan:.1,rev:.3}},
+  17:{arp:{rev:.45,comp:.15}, arp2:{pan:.2,rev:.5,comp:.15}, drum:{rev:.4}, bass:{rev:.2,comp:.3}},
+  18:{arp:{pan:-.2,rev:.22,echo:.08,comp:.3,hi:.1}, arp2:{pan:.25,rev:.25,comp:.35,hi:.1}, drum:{rev:.12,comp:.4}, bass:{comp:.55,hi:.1}},
+  9:{arp:{pan:-.25,rev:.1,comp:.4,hi:.1}, arp2:{pan:.2,rev:.2,comp:.35}, drum:{rev:.08,comp:.5}, bass:{comp:.6}},
+  11:{arp:{rev:.28,comp:.2,hi:-.1}, drum:{rev:.2,comp:.25}, bass:{rev:.05,comp:.35}},
+  19:{arp:{rev:.25,echo:.15,comp:.45,hi:-.35}, drum:{rev:.1,comp:.5,hi:-.3}, bass:{comp:.4,hi:-.2}},
+  8:{arp:{rev:.2,comp:.25}, drum:{rev:.15,comp:.35}, bass:{comp:.45}},
+  10:{arp:{rev:.25,echo:.2,comp:.4,hi:.15}, drum:{rev:.05,comp:.6,lo:.15}, bass:{comp:.6,lo:.1}},
+  12:{arp:{pan:-.1,rev:.25,comp:.25}, drum:{pan:.15,rev:.2,comp:.2}, bass:{rev:.05,comp:.35}},
+  13:{arp:{pan:.15,rev:.2,echo:.18,comp:.3}, drum:{rev:.12,comp:.4}, bass:{comp:.5,lo:.15,hi:-.15}},
+  20:{arp:{rev:.35,echo:.12,comp:.2}, drum:{rev:.3,comp:.25}, bass:{rev:.1,comp:.35}},
+  14:{arp:{rev:.38,comp:.1}}};
+const FX_KEYS=['pan','rev','echo','comp','hi','lo'];
+// 伴奏スタイルを選んだら、そのミックスもトラックの設定に写す（音量はこれまでどおり st.mix から）
+{ const ss=setStyle; setStyle=function(st){ ss(st); const fx=STYLE_FX[st.id]; if(fx) for(const c in fx){ const x=mixOf(c); FX_KEYS.forEach(k=>{ if(fx[c][k]!=null) x[k]=fx[c][k]; }); } try{ applyMix(); }catch(e){} }; }
+
 const TRK_COLORS=['#3567D6','#24946A','#DA6A22','#8A4FD3','#D13F6B','#1F8FA8','#B8860B','#5B6475'];
 const TRK_DEF={arp:['コード',0],arp2:['コード2',3],drum:['ドラム',7],bass:['ベース',2]};
 // トラックの一覧（いま鳴らすもの）。kind：arp・arp2・x:ID・drum・bass
@@ -25,120 +51,120 @@ const tkPatName=kind=>{ if(kind==='drum') return patName(DRUMS[state.drum]||{nam
 function trackSummary(){ const L=trackList(); return L.length+'つ ・ '+L.filter(t=>t.kind!=='drum'&&t.kind!=='bass').map(t=>tkInst(t.kind)).join('＋'); }
 
 // ---- 画面（DAW 風。部品とスタイルは、このファイルの中で作る） ----
-// 上：道具の列（パレットへ・ミキサー・停止・再生・テンポ・元に戻す・やり直す・設定）
-// 左：トラックの頭（名前・ミュート・ソロ・音量）。右：小節の目盛りと、パターンの帯（タップで編集）
-// トラックの頭をタップすると、そのトラックの設定（音量・左右・響き・名前と色など）が開く
+// 上：ミキサー・戻す・やり直す・テンポ・閉じる。下：再生
+// 左：トラックの頭（M・S と楽器の絵）。右：小節の目盛り（コード名つき）と、コードごとに色分けした帯
+// 帯をタップすると、その場所で実際に使っている弾き方（場面）を開く。楽器の絵をタップすると、そのトラックのミキサーが左から出る
+// 色は画面の明るさ（ライト・ダーク）に合わせて、アプリの色をそのまま使う
 const ICO={
-  pal:'<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="2" y="3" width="8" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="12" y="3" width="8" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="2" y="12" width="8" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="12" y="12" width="8" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>',
-  mix:'<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M5 3v16M11 3v16M17 3v16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="2.5" y="11" width="5" height="3.4" rx="1.2" fill="#2B2C30" stroke="currentColor" stroke-width="1.6"/><rect x="8.5" y="5" width="5" height="3.4" rx="1.2" fill="#2B2C30" stroke="currentColor" stroke-width="1.6"/><rect x="14.5" y="13" width="5" height="3.4" rx="1.2" fill="#2B2C30" stroke="currentColor" stroke-width="1.6"/></svg>',
-  stop:'<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="3" width="12" height="12" rx="1.5" fill="currentColor"/></svg>',
-  play:'<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l12 7-12 7z" fill="currentColor"/></svg>',
+  mix:'<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M5 3v16M11 3v16M17 3v16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="2.5" y="11" width="5" height="3.4" rx="1.2" fill="var(--surface)" stroke="currentColor" stroke-width="1.6"/><rect x="8.5" y="5" width="5" height="3.4" rx="1.2" fill="var(--surface)" stroke="currentColor" stroke-width="1.6"/><rect x="14.5" y="13" width="5" height="3.4" rx="1.2" fill="var(--surface)" stroke="currentColor" stroke-width="1.6"/></svg>',
+  play:'<svg width="26" height="26" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3.5l11 6.5-11 6.5z" fill="currentColor"/></svg>',
+  stop:'<svg width="22" height="22" viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="3" width="12" height="12" rx="2" fill="currentColor"/></svg>',
   undo:'<svg width="20" height="20" viewBox="0 0 18 18" aria-hidden="true"><path d="M6.5 4L3 7.5 6.5 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 7.5h7a4 4 0 0 1 0 8H8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   redo:'<svg width="20" height="20" viewBox="0 0 18 18" aria-hidden="true" style="transform:scaleX(-1)"><path d="M6.5 4L3 7.5 6.5 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 7.5h7a4 4 0 0 1 0 8H8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
-  gear:'<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="3.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M11 2.5v3M11 16.5v3M2.5 11h3M16.5 11h3M5 5l2.1 2.1M14.9 14.9L17 17M5 17l2.1-2.1M14.9 7.1L17 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
-  mute:'<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M10.5 5.5l4 5M14.5 5.5l-4 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
-  solo:'<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 10V8.5a5.5 5.5 0 0 1 11 0V10" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="9" width="3" height="5" rx="1.2" fill="currentColor"/><rect x="11" y="9" width="3" height="5" rx="1.2" fill="currentColor"/></svg>',
   close:'<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-  plus:'<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 4v22M4 15h22" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  plus:'<svg width="28" height="28" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 4v22M4 15h22" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
   chev:'<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 3l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'};
-
+// 楽器の絵（線で描く）。音色の種類ごと
+const INST_ICO=(()=>{ const S=(d,w=28)=>`<svg width="${w}" height="${w}" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  return {
+    keys:S('<rect x="3" y="6" width="22" height="16" rx="2"/><path d="M8.5 6v16M14 6v16M19.5 6v16"/><path d="M6.8 6v9M10.2 6v9M17.8 6v9M21.2 6v9" stroke-width="2.6"/>'),
+    guitar:S('<path d="M17 11l7-7M21.5 3.5l3 3"/><path d="M15.5 9.5c-2-1-4.5-.5-5.5 1.5-.6 1.2-2 1-3.2 1.4C4 13.3 3 16.5 5 19.5l3.5 3.5c3 2 6.2 1 7.1-1.8.4-1.2.2-2.6 1.4-3.2 2-1 2.5-3.5 1.5-5.5z"/><circle cx="11.5" cy="16.5" r="1.8"/>'),
+    strings:S('<path d="M20 4l4 4M17.5 6.5l4 4"/><path d="M14 9c-1.6-1-3.8-.6-4.6 1-.5 1-1.6 1-2.6 1.3-2.3.6-3 3.4-1.3 5.9l3.3 3.3c2.5 1.7 5.3 1 5.9-1.3.3-1 .3-2.1 1.3-2.6 1.6-.8 2-3 1-4.6"/><path d="M4 24l9-9"/>'),
+    brass:S('<path d="M3 13h13M3 16h13"/><path d="M16 11.5l8-5v15l-8-5z"/><path d="M7 13v-3h2v3M11 13v-3h2v3"/>'),
+    sax:S('<path d="M17 3v13a5.5 5.5 0 0 1-11 0v-2"/><path d="M6 14c-1.5 0-2.5 1-2.5 2.5"/><path d="M17 3l4-1M13.5 8h2M13.5 11.5h2"/>'),
+    synth:S('<rect x="3" y="6" width="22" height="16" rx="2"/><path d="M6 15c1.5-5 3-5 4 0s2.5 5 4 0 2.5-5 4 0 2 4 4 0"/>'),
+    bells:S('<path d="M4 8l20 3M4 13l20 3M4 18l20 3"/><path d="M8 4v20M16 6v18" stroke-width="1.2"/>'),
+    wa:S('<path d="M4 22L22 4"/><path d="M8 24l16-8M4 18l14-12"/><path d="M6 20l4-1M10 16l4-1M14 12l4-1" stroke-width="1.3"/>'),
+    drum:S('<ellipse cx="14" cy="11" rx="10" ry="3.5"/><path d="M4 11v8c0 2 4.5 3.5 10 3.5s10-1.5 10-3.5v-8"/><path d="M9 14.2v7M19 14.2v7"/><path d="M7 3l5 6M23 4l-5 5"/>'),
+    bass:S('<path d="M18 10l7-7M22 2.5l3 3"/><path d="M16.5 8.5c-2.4-1-5-.3-6 2-.5 1-1.7 1-3 1.5-3 1-4 5-1.5 8l2 2c3 2.5 7 1.5 8-1.5.5-1.3.5-2.5 1.5-3 2.3-1 3-3.6 2-6"/><path d="M10 15l4 4" stroke-width="1.3"/>')}; })();
+const instFam=kind=>{ if(kind==='drum') return 'drum'; if(kind==='bass') return 'bass'; const x=xOf(kind), k=x?x.inst:kind==='arp2'?(state.inst2||'epiano'):state.inst;
+  if(/^(steel|nylon|eguitar|dist)$/.test(k)) return 'guitar'; if(/^strings/.test(k)) return 'strings'; if(/^(brass|sbrass|trumpet|trombone|horn)/.test(k)) return 'brass';
+  if(k==='sax') return 'sax'; if(/^(synth|pad)$/.test(k)) return 'synth'; if(k==='glock') return 'bells'; if(/^(koto|shami)$/.test(k)) return 'wa'; return 'keys'; };
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
 const panTxt=p=>Math.abs(p)<.03?'中':p<0?'左'+Math.round(-p*100):'右'+Math.round(p*100);
 (function(){
   const css=`
-#trk{position:fixed;inset:0;z-index:29;background:#1E1F22;color:#E9E9EC;display:flex;flex-direction:column;font-family:var(--body);
-  --dpanel:#2B2C30;--dpanel2:#35363B;--dline:#3E3F45;--dmuted:#9C9DA3;--dhw:clamp(124px,34vw,270px);--dbw:96px;--drh:76px}
+#trk{position:fixed;inset:0;z-index:29;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;--dhw:116px;--dbw:96px;--drh:84px}
 #trk[hidden]{display:none}
 #trk button{font:inherit;color:inherit}
-#trk .dtool{display:flex;align-items:center;gap:6px;padding:max(8px,env(safe-area-inset-top,0px)) 8px 8px;background:#18191B;border-bottom:1px solid #000;overflow-x:auto;scrollbar-width:none;flex:none}
-#trk .dtool::-webkit-scrollbar{display:none}
-#trk .dgrp{display:flex;background:var(--dpanel);border-radius:10px;overflow:hidden;flex:none}
-#trk .dgrp+.dgrp{margin-left:2px}
-#trk .dtb{width:44px;height:44px;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0;color:#E9E9EC}
-#trk .dtb+.dtb{border-left:1px solid #1E1F22}
-#trk .dtb small{font-size:.56rem;color:var(--dmuted);line-height:1}
-#trk .dtb[aria-pressed=true]{color:#3FA2FF}
+#trk .dtop{display:flex;align-items:center;gap:8px;padding:max(10px,env(safe-area-inset-top,0px)) 12px 8px;flex:none}
+#trk .dtop h2{font-family:var(--display);font-weight:900;font-size:1.05rem;margin:0 4px;white-space:nowrap}
+#trk .dsp{flex:1}
+#trk .dtb{width:42px;height:42px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;display:grid;place-items:center;padding:0;flex:none}
+#trk .dtb[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#trk .dtb[aria-pressed=true] svg rect{fill:var(--ink)}
 #trk .dtb:disabled{opacity:.35}
-#trk .dtb.dplay{width:52px;background:#1D3A22;color:#3BD15A}
-#trk .dtb.dplay.on{background:#3BD15A;color:#10331A}
-#trk .dtsp{flex:1;min-width:0}
-@media (max-width:420px){ #trk .dtool{gap:4px;padding-left:6px;padding-right:6px} #trk .dtb{width:39px} #trk .dtb.dplay{width:46px} #trk .dbpm{min-width:44px;padding:0 6px} }
-#trk .dbpm{height:44px;border:0;border-radius:10px;background:var(--dpanel);padding:0 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;min-width:52px}
-#trk .dbpm b{font-variant-numeric:tabular-nums;font-size:1rem}
-#trk .dbpm small{font-size:.56rem;color:var(--dmuted)}
-#trk .dbpmpop{position:absolute;z-index:6;background:var(--dpanel2);border:1px solid var(--dline);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
-#trk .dbpmpop input{width:180px;accent-color:#3FA2FF}
-#trk .dbody{flex:1;display:flex;min-height:0;position:relative}
-#trk .dscroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;position:relative}
-#trk .dgrid{position:relative;min-width:100%;width:max-content;padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))}
-#trk .drow{display:flex;border-bottom:1px solid #141517}
-#trk .dh{position:sticky;left:0;z-index:2;width:var(--dhw);flex:none;background:var(--dpanel);border-right:1px solid #141517;box-sizing:border-box}
+#trk .dtb.dx{border-radius:50%;width:44px;height:44px}
+#trk .dbpm{height:42px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:0 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}
+#trk .dbpm b{font-variant-numeric:tabular-nums;font-size:.95rem;line-height:1.1}
+#trk .dbpm small{font-size:.58rem;color:var(--muted)}
+#trk .dbpmpop{position:absolute;z-index:9;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+#trk .dbpmpop input{width:180px;accent-color:var(--ink)}
+#trk .dbody{flex:1;display:flex;min-height:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+#trk .dscroll{flex:1;min-width:0;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;position:relative}
+#trk .dgrid{position:relative;min-width:100%;width:max-content}
+#trk .drow{display:flex}
+#trk .dh{position:sticky;left:0;z-index:2;width:var(--dhw);flex:none;background:var(--bg);border-right:1px solid var(--line);box-sizing:border-box}
 #trk .dtl{position:relative;flex:none}
-#trk .druler{position:sticky;top:0;z-index:4;background:#232427}
-#trk .druler .dh{background:#232427;z-index:5;display:flex;align-items:center;padding:0 10px;font-size:.66rem;color:var(--dmuted)}
-#trk .druler .dtl{display:flex;height:26px}
-#trk .druler .dtl span{flex:none;width:var(--dbw);box-sizing:border-box;border-left:1px solid #4A4B51;font-size:.7rem;color:var(--dmuted);padding:3px 0 0 4px}
-#trk .druler .dtl span.now{color:#fff;font-weight:700}
-#trk .dchord .dh{display:flex;align-items:center;gap:8px;padding:0 10px;height:46px;font-weight:700;font-size:.82rem}
-#trk .dchord .dh i{width:10px;height:10px;border-radius:3px;background:linear-gradient(135deg,var(--t),var(--s),var(--d));flex:none}
-#trk .dchord .dtl{display:flex;height:46px;background:#202124}
-#trk .dcbar{flex:none;width:var(--dbw);box-sizing:border-box;padding:5px 2px;display:flex;gap:2px;border-left:1px solid #2C2D31}
-#trk .dcell{flex:1;min-width:0;border:0;border-radius:7px;cursor:pointer;font-weight:700;font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;background:#2E3036;color:var(--dmuted)}
-#trk .dcell.T{background:color-mix(in srgb,var(--t) 40%,#1E1F22);color:#fff}
-#trk .dcell.S{background:color-mix(in srgb,var(--s) 40%,#1E1F22);color:#fff}
-#trk .dcell.D{background:color-mix(in srgb,var(--d) 40%,#1E1F22);color:#fff}
-#trk .dcell.X{background:#45464C;color:#fff}
-#trk .dtrack .dh{height:var(--drh);display:flex;flex-direction:column;justify-content:center;gap:4px;padding:6px 8px 6px 14px;cursor:pointer}
-#trk .dtrack .dh::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--tc)}
-#trk .dtrack.sel .dh{background:#3A3C42}
-#trk .dtop{display:flex;align-items:center;gap:6px;min-width:0}
-#trk .dname{font-weight:700;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
-#trk .dinst{font-size:.66rem;color:var(--dmuted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#trk .dctl{display:flex;align-items:center;gap:6px}
-#trk .dms{width:30px;height:26px;border:0;border-radius:7px;background:#232427;cursor:pointer;display:grid;place-items:center;flex:none;color:#C9CACF;padding:0}
-#trk .dms[data-k=m][aria-pressed=true]{background:#5B6BFF;color:#fff}
-#trk .dms[data-k=s][aria-pressed=true]{background:#3A3412;color:#FFD21F}
-#trk input[type=range]{accent-color:#3FA2FF}
-#trk .dctl input[type=range]{flex:1;min-width:0;height:18px}
-#trk .dtrack .dtl{height:var(--drh);background:#202124;cursor:pointer}
+#trk .druler{position:sticky;top:0;z-index:4;background:var(--bg);border-bottom:1px solid var(--line)}
+#trk .druler .dh{z-index:5;height:34px}
+#trk .druler .dtl{height:34px}
+#trk .dbn{position:absolute;top:2px;font-size:.66rem;color:var(--muted);padding-left:4px;border-left:1px solid var(--line);height:30px;box-sizing:border-box}
+#trk .dbn.now{color:var(--ink);font-weight:700}
+#trk .dcn{position:absolute;bottom:3px;border:0;background:none;padding:0 4px;cursor:pointer;font-weight:700;font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+#trk .dtrack .dh{height:var(--drh);display:flex;align-items:center;gap:6px;padding:0 6px 0 10px;border-bottom:1px solid var(--line)}
+#trk .dtrack .dh::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:0 3px 3px 0;background:var(--tc)}
+#trk .dms2{display:flex;border:1.5px solid var(--line);border-radius:9px;overflow:hidden;flex:none}
+#trk .dms2 button{width:24px;height:30px;border:0;background:var(--surface);cursor:pointer;font-weight:900;font-size:.78rem;padding:0}
+#trk .dms2 button+button{border-left:1.5px solid var(--line)}
+#trk .dms2 button[data-k=m][aria-pressed=true]{background:var(--ink);color:var(--bg)}
+#trk .dms2 button[data-k=s][aria-pressed=true]{background:var(--warn);color:#1B2230}
+#trk .dico{flex:1;min-width:0;height:66px;border:0;border-radius:12px;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0 2px}
+#trk .dico span{font-size:.62rem;color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#trk .dtrack.sel .dico{background:var(--surface);box-shadow:0 0 0 1.5px var(--tc) inset}
+#trk .dtrack .dtl{height:var(--drh);border-bottom:1px solid var(--line);cursor:pointer}
 #trk .dtrack .dtl canvas{position:absolute;left:0;top:0;width:100%;height:100%}
 #trk .dtrack.silent .dtl canvas{opacity:.35}
-#trk .dadd .dh{display:flex;align-items:center;justify-content:center;height:64px;background:none;border-right:0}
-#trk .daddb{width:48px;height:48px;border:0;background:none;cursor:pointer;color:#E9E9EC;display:grid;place-items:center}
-#trk .dmore{position:sticky;left:0;width:min(100vw,640px);box-sizing:border-box;padding:14px 12px 0}
-#trk .dmore details{background:var(--dpanel);border-radius:12px;padding:10px 12px}
+#trk .dadd .dh{display:flex;align-items:center;justify-content:center;height:70px;border-right:1px solid var(--line)}
+#trk .daddb{width:52px;height:52px;border:0;background:none;cursor:pointer;color:var(--ink);display:grid;place-items:center}
+#trk .dfill{flex:1}
+#trk .dfill .dh{height:100%}
+#trk .dhead{position:absolute;top:0;width:2px;background:var(--ink);z-index:3;pointer-events:none}
+#trk .dhead::before{content:"";position:absolute;top:0;left:-6px;border:7px solid transparent;border-top:9px solid var(--ink);border-bottom:0}
+#trk .dfoot{flex:none;display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 12px max(12px,env(safe-area-inset-bottom,0px))}
+#trk .dplay{width:66px;height:66px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);cursor:pointer;display:grid;place-items:center}
+#trk .dplay svg{margin-left:3px}
+#trk .dplay.on svg{margin-left:0}
+#trk .dhint{font-size:.72rem;color:var(--muted);line-height:1.6;margin:0;padding:10px 12px;position:sticky;left:0;width:min(100vw,600px);box-sizing:border-box}
+#trk .dmore{position:sticky;left:0;width:min(100vw,600px);box-sizing:border-box;padding:0 12px 24px}
+#trk .dmore details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 #trk .dmore summary{font-weight:700;font-size:.84rem;cursor:pointer}
-#trk .dmore p{font-size:.74rem;color:var(--dmuted);margin:8px 0}
-#trk .dmore .tstyles{display:flex;flex-wrap:wrap;gap:6px}
-#trk .dchip{border:1px solid var(--dline);background:var(--dpanel2);border-radius:999px;padding:7px 12px;cursor:pointer;font-size:.8rem;font-weight:700}
-#trk .dhead{position:absolute;top:0;bottom:0;width:2px;background:#fff;z-index:3;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
-#trk .dhead::before{content:"";position:absolute;top:0;left:-6px;border:7px solid transparent;border-top:9px solid #fff;border-bottom:0}
-#trk .dhint{position:sticky;left:0;width:min(100vw,640px);box-sizing:border-box;font-size:.72rem;color:var(--dmuted);padding:10px 12px 0;line-height:1.6;margin:0}
-/* トラックの設定（せまい画面は下から、広い画面は左に並べる） */
-#trk .dinsp{position:absolute;z-index:8;left:0;right:0;bottom:0;max-height:72%;overflow-y:auto;background:#252629;border-top:1px solid #000;border-radius:16px 16px 0 0;padding:6px 14px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(0,0,0,.45);overscroll-behavior:contain}
+#trk .dmore p{font-size:.74rem;color:var(--muted);margin:8px 0}
+#trk .tstyles{display:flex;flex-wrap:wrap;gap:6px}
+/* ミキサー（左から出る。トラックは右へずれる） */
+#trk .dinsp{width:min(340px,68vw);flex:none;overflow-y:auto;overscroll-behavior:contain;background:var(--surface);border-right:1px solid var(--line);padding:0 12px 24px;box-sizing:border-box}
 #trk .dinsp[hidden]{display:none}
-@media (min-width:900px),(orientation:landscape) and (min-width:600px){ #trk .dinsp{position:relative;max-height:none;width:min(320px,38vw);flex:none;border-radius:0;border-top:0;border-right:1px solid #000;box-shadow:none;order:-1} }
-#trk .dititle{display:flex;align-items:center;gap:8px;position:sticky;top:-6px;background:#252629;padding:10px 0 8px;z-index:1}
-#trk .dititle b{flex:1;text-align:center;color:#3FA2FF;font-size:1.15rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#trk .dititle button{width:36px;height:36px;border:0;background:none;cursor:pointer;display:grid;place-items:center;flex:none}
-#trk .disec{background:var(--dpanel);border-radius:12px;margin-top:10px;overflow:hidden}
-#trk .disec h3{margin:0;padding:10px 14px;font-size:.82rem;font-weight:700;text-align:center;background:var(--dpanel2);color:#D8D9DD}
-#trk .disec .dib{padding:10px 14px 12px;display:flex;flex-direction:column;gap:10px}
-#trk .dirow{display:grid;grid-template-columns:5.5em 1fr 2.8em;align-items:center;gap:8px;font-size:.8rem}
-#trk .dirow output{text-align:right;font-variant-numeric:tabular-nums;color:var(--dmuted)}
+#trk .dititle{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 0 6px;position:relative}
+#trk .dipic{width:84px;height:64px;border-radius:14px;background:var(--bg);display:grid;place-items:center;color:var(--tc)}
+#trk .dipic svg{width:44px;height:44px}
+#trk .diname{border:0;background:none;text-align:center;font-family:var(--display);font-weight:900;font-size:1.2rem;color:var(--t);width:100%;padding:2px 0;border-bottom:1.5px dashed transparent}
+#trk .diname:focus{outline:0;border-bottom-color:var(--line)}
+#trk .disec{background:var(--bg);border-radius:12px;margin-top:10px;overflow:hidden}
+#trk .disec h3{margin:0;padding:9px 12px;font-size:.8rem;font-weight:700;text-align:center;color:var(--muted);border-bottom:1px solid var(--line)}
+#trk .dib{padding:10px 12px 12px;display:flex;flex-direction:column;gap:10px}
+#trk .dirow{display:flex;flex-direction:column;gap:2px;font-size:.8rem}
+#trk .dirow span{display:flex;justify-content:space-between}
+#trk .dirow output{font-variant-numeric:tabular-nums;color:var(--muted)}
+#trk .dirow input{width:100%;accent-color:var(--t)}
 #trk .dims{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-#trk .dims button{height:44px;border:0;border-radius:10px;background:#232427;cursor:pointer;display:grid;place-items:center}
-#trk .dims button[data-k=m][aria-pressed=true]{background:#5B6BFF}
-#trk .dims button[data-k=s][aria-pressed=true]{background:#3A3412;color:#FFD21F}
-#trk .dipat{display:flex;align-items:center;gap:8px;border:0;border-radius:10px;background:#232427;padding:8px 10px;cursor:pointer;text-align:left;width:100%}
-#trk .dipat canvas{width:40%;height:26px;flex:none;border-radius:6px}
-#trk .dipat span{font-weight:700;font-size:.82rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#trk .dilink{display:flex;align-items:center;justify-content:space-between;border:0;background:#232427;border-radius:10px;padding:11px 12px;cursor:pointer;font-size:.82rem;font-weight:700;width:100%}
-#trk .diname{width:100%;box-sizing:border-box;background:#18191B;border:1px solid var(--dline);border-radius:10px;padding:9px 10px;color:#fff;font:inherit;font-size:.9rem}
+#trk .dims button{height:40px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;font-weight:900}
+#trk .dims button[data-k=m][aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#trk .dims button[data-k=s][aria-pressed=true]{background:var(--warn);color:#1B2230;border-color:var(--warn)}
+#trk .dilink{display:flex;align-items:center;gap:8px;justify-content:space-between;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;cursor:pointer;font-size:.8rem;font-weight:700;width:100%;text-align:left}
 #trk .tcolors{display:flex;gap:8px;flex-wrap:wrap}
 #trk .tcolors button{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
-#trk .tcolors button[aria-pressed=true]{border-color:#fff}
-#trk .didel{border:1px solid #6B2B2B;background:none;color:#FF8A8A;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:.82rem;margin-top:12px;width:100%}
+#trk .tcolors button[aria-pressed=true]{box-shadow:0 0 0 2px var(--surface) inset;border-color:var(--ink)}
+#trk .didel{border:1.5px solid var(--line);background:none;color:var(--d);border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:.82rem;margin-top:12px;width:100%}
 body.pro #arp2Lane,body.pro #bassLane{display:none}
 body.pro .mix{display:none}
 body.pro #drumLane .lanehead{display:none}
@@ -148,19 +174,18 @@ body.pro #sheet .proedit{display:none!important}
 #patSheet .pdirect{display:flex;gap:6px;align-items:center;margin:-4px 0 10px;flex-wrap:wrap}
 #patSheet .pdirect small{color:var(--muted);font-size:.74rem;flex:1;min-width:12em}
 body.pro #accNote{display:none}
-button.badge{font:inherit;font-size:.72rem;cursor:pointer}`;
+button.badge{font:inherit;font-size:.72rem;cursor:pointer}
+@media (max-height:500px){ #trk{--drh:66px} #trk .dico{height:56px} #trk .dfoot{padding-top:6px;padding-bottom:max(6px,env(safe-area-inset-bottom,0px))} #trk .dplay{width:50px;height:50px} #trk .dtop{padding-top:max(6px,env(safe-area-inset-top,0px));padding-bottom:6px} }`;
   const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
   const el=document.createElement('div'); el.id='trk'; el.hidden=true; el.setAttribute('role','dialog'); el.setAttribute('aria-label','トラック');
-  const tb=(id,ico,label,cls='')=>`<button class="dtb ${cls}" id="${id}" aria-label="${label}">${ico}<small>${label}</small></button>`;
-  el.innerHTML=`<div class="dtool">
-      <div class="dgrp">${tb('dPal',ICO.pal,'パレット')}${tb('dMix',ICO.mix,'ミキサー')}</div>
-      <div class="dgrp">${tb('dStop',ICO.stop,'停止')}${tb('dPlay',ICO.play,'再生','dplay')}</div>
+  el.innerHTML=`<div class="dtop">
+      <button class="dtb" id="dMix" aria-label="ミキサー" aria-pressed="false">${ICO.mix}</button>
+      <button class="dtb" id="dUndo" aria-label="元に戻す">${ICO.undo}</button><button class="dtb" id="dRedo" aria-label="やり直す">${ICO.redo}</button>
+      <span class="dsp"></span>
       <button class="dbpm" id="dBpm" aria-label="テンポ"><b id="dBpmV"></b><small>テンポ</small></button>
-      <span class="dtsp"></span>
-      <div class="dgrp">${tb('dUndo',ICO.undo,'戻す')}${tb('dRedo',ICO.redo,'やり直す')}</div>
-      <div class="dgrp">${tb('dSet',ICO.gear,'設定')}</div>
-    </div>
-    <div class="dbody"><div class="dinsp" id="dInsp" hidden></div><div class="dscroll" id="dScroll"><div class="dgrid" id="trkList"></div></div></div>`;
+      <button class="dtb dx" id="dClose" aria-label="閉じる">${ICO.close}</button></div>
+    <div class="dbody"><div class="dinsp" id="dInsp" hidden></div><div class="dscroll" id="dScroll"><div class="dgrid" id="trkList"></div></div></div>
+    <div class="dfoot"><button class="dplay" id="dPlay" aria-label="再生">${ICO.play}</button></div>`;
   document.body.appendChild(el);
   // 編集画面の上に「別のパターンを選ぶ」
   const pd=document.createElement('div'); pd.className='pdirect'; pd.id='patDirect'; pd.hidden=true;
@@ -168,118 +193,132 @@ button.badge{font:inherit;font-size:.72rem;cursor:pointer}`;
   const ps=$('patSheet'); ps.insertBefore(pd, ps.children[1]);
 })();
 const trk=$('trk');
-let TRK_SEL=null;   // 設定を開いているトラック
+let TRK_SEL=null;   // ミキサーを開いているトラック
 function openTracks(){ trk.hidden=false; renderTracks(); requestAnimationFrame(dawFrame); }
 function closeTracks(){ trk.hidden=true; TRK_SEL=null; $('dInsp').hidden=true; renderAll(); }
-$('dPal').onclick=closeTracks;
-$('dMix').onclick=()=>{ if(TRK_SEL){ TRK_SEL=null; } else TRK_SEL=trackList()[0].kind; renderTracks(); };
-$('dPlay').onclick=()=>{ if(!playing) $('play').click(); };
-$('dStop').onclick=()=>{ if(playing) $('play').click(); };
+$('dClose').onclick=closeTracks;
+$('dMix').onclick=()=>{ TRK_SEL = TRK_SEL ? null : trackList()[0].kind; renderTracks(); };
+$('dPlay').onclick=()=>$('play').click();
 $('dUndo').onclick=()=>$('undoBtn').click();
 $('dRedo').onclick=()=>$('redoBtn').click();
-$('dSet').onclick=()=>$('menuBtn').click();
-$('dBpm').onclick=e=>{ const old=trk.querySelector('.dbpmpop'); if(old){ old.remove(); return; }
+$('dBpm').onclick=()=>{ const old=trk.querySelector('.dbpmpop'); if(old){ old.remove(); return; }
   const r=$('dBpm').getBoundingClientRect(), p=document.createElement('div'); p.className='dbpmpop';
-  p.style.left=Math.max(8,Math.min(innerWidth-260,r.left-60))+'px'; p.style.top=(r.bottom+6)+'px';
+  p.style.left=Math.max(8,Math.min(innerWidth-260,r.left-120))+'px'; p.style.top=(r.bottom+6)+'px';
   const src=$('bpm'); p.innerHTML=`<input type="range" min="${src.min}" max="${src.max}" step="${src.step||1}" value="${state.bpm}" aria-label="テンポ"><b>${state.bpm}</b>`;
-  const inp=p.querySelector('input'); inp.oninput=()=>{ src.value=inp.value; src.dispatchEvent(new Event('input',{bubbles:true})); p.querySelector('b').textContent=state.bpm; $('dBpmV').textContent=state.bpm; };
-  trk.appendChild(p); setTimeout(()=>document.addEventListener('pointerdown',function f(ev){ if(!p.contains(ev.target)&&ev.target!==$('dBpm')&&!$('dBpm').contains(ev.target)){ p.remove(); document.removeEventListener('pointerdown',f); } }),0); };
+  const inp=p.querySelector('input'); inp.oninput=()=>{ src.value=inp.value; src.dispatchEvent(new Event('input',{bubbles:true})); p.querySelector('b').textContent=state.bpm; $('dBpmV').textContent=state.bpm; applyMix(); };
+  trk.appendChild(p); setTimeout(()=>document.addEventListener('pointerdown',function f(ev){ if(!p.contains(ev.target)&&!$('dBpm').contains(ev.target)){ p.remove(); document.removeEventListener('pointerdown',f); } }),0); };
+$('bpm').addEventListener('input',()=>applyMix());   // エコーの間隔をテンポに合わせる
 
-// 1マスの幅：画面に収まるなら広げる。せまいときは横にスクロール
-function dawBarW(){ const sc=$('dScroll'), hw=trk.querySelector('.dh')?.offsetWidth||Math.min(270,Math.max(148,innerWidth*.4));
-  return Math.max(state.bars<=4?56:64, Math.floor(((sc.clientWidth||innerWidth)-hw-2)/state.bars)); }
-function renderTracks(){ if(trk.hidden) return; if(!state.pro){ trk.hidden=true; TRK_SEL=null; return; } const box=$('trkList'); box.innerHTML='';
-  const L=trackList(), solo=L.some(t=>mixOf(mixKey(t.kind)).s), N=state.bars;
+// ---- その場所で実際に使っている弾き方（場面）を調べる。鳴らすときの選び方（sitVar）と同じ
+const SIT_KEYS={bar:['bar','bar2','bar3rd','bar4th'], bar3:['bar3','bar32']};
+function sceneAt(kind,b,cell){ const L=slotSteps(), has=cell.v!==null&&cell.v!==undefined;
+  const lag=has?Math.min(Math.max(0,-shiftOf(b,cell.h)),cell.len-1):0, g0=b*L+cell.off+lag, bar=Math.floor(g0/16), startPi=g0%16, len=cell.len-lag;
+  if(kind==='drum'){ const dr=DRUMS[state.drum]||{}; return {key:(bar%2===1&&dr.VB)?'B':'bar', bar}; }
+  const pat=ARPS[patOf(kind)]; if(!pat) return null;
+  if(!pat.sit){ const ev=(pat.ev||[]).filter(e=>e[0]>=startPi&&e[0]<startPi+len).map(e=>[e[0]-startPi,...e.slice(1)]); return {key:'bar', evs:ev, len, bar}; }
+  const S=pat.sit; let k=len>=16?'bar':len>=12?((S.bar3&&startPi===0)?'bar3':'bar'):len>=6?(startPi===0?'halfA':'halfB'):'beat';
+  // その場面がなければ、鳴らすときと同じように近い場面を使う
+  const fb={beat:S.halfB?'halfB':'halfA', halfB:'halfA', halfA:'bar', bar3:'bar'};
+  while(!S[k] && fb[k]) k=fb[k]; if(!S[k]) k='bar';
+  const list=S[k], i=bar%list.length, key=(SIT_KEYS[k]||[k])[i]||k;
+  return {key, evs:list[i].evs, len, bar}; }
+const SCENE_NAME=k=>((typeof SCENES!=='undefined'?SCENES:[]).concat(typeof DRUM_SCENES!=='undefined'?DRUM_SCENES:[]).find(x=>x[0]===k)||[k,k])[1];
+
+// 1マスの幅：4マスまでは画面に収め、それより多いときは横にスクロール
+function dawBarW(){ const sc=$('dScroll'), hw=trk.querySelector('.dh')?.offsetWidth||116;
+  return Math.max(state.bars<=4?56:72, Math.floor(((sc.clientWidth||innerWidth)-hw-2)/Math.min(state.bars,8))); }
+const roleCol=(col,r)=>r==='X'?col.muted:col[r.toLowerCase()];
+function renderTracks(){ if(trk.hidden) return; if(!state.pro){ trk.hidden=true; TRK_SEL=null; return; }
+  const box=$('trkList'); box.innerHTML='';
+  const L=trackList(), solo=L.some(t=>mixOf(mixKey(t.kind)).s), N=state.bars, col=colors();
   if(TRK_SEL && !L.some(t=>t.kind===TRK_SEL)) TRK_SEL=null;
   $('dBpmV').textContent=state.bpm; $('dMix').setAttribute('aria-pressed',!!TRK_SEL);
   $('dUndo').disabled=$('undoBtn').disabled; $('dRedo').disabled=$('redoBtn').disabled;
-  // 目盛り
-  const ru=document.createElement('div'); ru.className='drow druler'; ru.innerHTML=`<div class="dh">${state.len<4?'マス':'小節'}</div><div class="dtl">${Array.from({length:N},(_,i)=>`<span data-b="${i}">${i+1}</span>`).join('')}</div>`; box.appendChild(ru);
-  // コード進行の行（タップでそのコードを編集）
-  const ch=document.createElement('div'); ch.className='drow dchord';
-  ch.innerHTML=`<div class="dh"><i></i>コード進行</div><div class="dtl">${Array.from({length:N},(_,b)=>`<div class="dcbar">${cellsOf(b).map(c=>{ const e=c.v===null||c.v===undefined;
-    return `<button class="dcell ${e?'':roleAt(b,c.h,c.v)}" data-b="${b}" data-h="${c.h}" style="flex:${c.len}">${e?'—':esc(chordText(c.v))}</button>`; }).join('')}</div>`).join('')}</div>`;
-  ch.querySelectorAll('.dcell').forEach(b=>b.onclick=()=>openEditor(+b.dataset.b,+b.dataset.h));
-  box.appendChild(ch);
-  // 楽器の行
+  // 目盛り：小節の番号と、そこで鳴るコード（タップでコードを編集）
+  const ru=document.createElement('div'); ru.className='drow druler'; ru.innerHTML=`<div class="dh"></div><div class="dtl"></div>`; box.appendChild(ru);
   L.forEach(({kind})=>{ const mk=mixKey(kind), x=mixOf(mk), row=document.createElement('div');
     row.className='drow dtrack'+(TRK_SEL===kind?' sel':''); row.classList.toggle('silent', solo?!x.s:!!x.m); row.style.setProperty('--tc',tkColor(kind));
-    row.innerHTML=`<div class="dh" role="button" tabindex="0" aria-label="${esc(tkName(kind))}の設定"><div class="dtop"><span class="dname">${esc(tkName(kind))}</span></div><span class="dinst">${esc(tkInst(kind))}</span>
-      <div class="dctl"><button class="dms" data-k="m" aria-pressed="${!!x.m}" aria-label="ミュート">${ICO.mute}</button><button class="dms" data-k="s" aria-pressed="${!!x.s}" aria-label="ソロ">${ICO.solo}</button><input type="range" min="0" max="1.5" step=".01" value="${x.v??1}" aria-label="音量"></div></div>
-      <div class="dtl" role="button" aria-label="${esc(tkPatName(kind))}を編集"><canvas></canvas></div>`;
+    row.innerHTML=`<div class="dh"><div class="dms2"><button data-k="m" aria-pressed="${!!x.m}" aria-label="ミュート">M</button><button data-k="s" aria-pressed="${!!x.s}" aria-label="ソロ">S</button></div>
+      <button class="dico" aria-label="${esc(tkName(kind))}のミキサー">${INST_ICO[instFam(kind)]}<span>${esc(tkName(kind))}</span></button></div>
+      <div class="dtl"><canvas></canvas></div>`;
     box.appendChild(row);
-    const h=row.querySelector('.dh');
-    h.onclick=e=>{ if(e.target.closest('button,input')) return; TRK_SEL = TRK_SEL===kind ? null : kind; renderTracks(); };
-    row.querySelectorAll('.dms').forEach(b=>b.onclick=()=>{ x[b.dataset.k]=!x[b.dataset.k]; applyMix(); save(); renderTracks(); });
-    const vol=row.querySelector('.dctl input'); vol.oninput=()=>{ x.v=+vol.value; applyMix(); save(); const o=$('dInsp').querySelector('[data-f=v]'); if(o&&TRK_SEL===kind){ o.value=vol.value; o.nextElementSibling.textContent=Math.round(x.v*100); } };
-    row.querySelector('.dtl').onclick=()=>editTrackPattern(kind); });
-  // 楽器を足す・伴奏スタイルから作り直す
-  const ad=document.createElement('div'); ad.className='drow dadd'; ad.style.borderBottom='0'; ad.innerHTML=`<div class="dh"><button class="daddb" id="trkAdd" aria-label="楽器を足す">${ICO.plus}</button></div>`; box.appendChild(ad);
+    row.querySelectorAll('.dms2 button').forEach(b=>b.onclick=()=>{ x[b.dataset.k]=!x[b.dataset.k]; applyMix(); save(); renderTracks(); });
+    row.querySelector('.dico').onclick=()=>{ TRK_SEL = TRK_SEL===kind ? null : kind; renderTracks(); };
+    row.querySelector('.dtl').onclick=e=>tapRegion(kind,e); });
+  const ad=document.createElement('div'); ad.className='drow dadd'; ad.innerHTML=`<div class="dh"><button class="daddb" id="trkAdd" aria-label="楽器を足す">${ICO.plus}</button></div>`; box.appendChild(ad);
   $('trkAdd').onclick=addTrack;
-  const hint=document.createElement('p'); hint.className='dhint'; hint.textContent='帯をタップするとパターンを編集、左の名前をタップするとそのトラックの設定（音量・左右・響き・名前と色）が開きます。コードをタップするとコードを編集できます。'; box.appendChild(hint);
-  const mo=document.createElement('div'); mo.className='dmore'; mo.innerHTML=`<details id="trkStyleBox"><summary>伴奏スタイルから作り直す</summary><p>選んだスタイルと同じ鳴り方のトラックに置きかえます（いまのトラックはなくなります）。</p><div class="tstyles" id="trkStyles"></div></details>`; box.appendChild(mo);
-  const sb=$('trkStyles'); STYLES.forEach(st=>{ const b=document.createElement('button'); b.className='dchip'; b.textContent=st.name;
+  const hint=document.createElement('p'); hint.className='dhint'; hint.textContent='色の帯（コードごとの弾き方）をタップすると、その場所で使っている弾き方をそのまま編集できます。楽器の絵をタップするとミキサー（音量・左右・コンプ・エコーなど）、上のコード名をタップするとコードを編集できます。'; box.appendChild(hint);
+  const mo=document.createElement('div'); mo.className='dmore'; mo.innerHTML=`<details id="trkStyleBox"><summary>伴奏スタイルから作り直す</summary><p>選んだスタイルと同じ鳴り方・ミックスのトラックに置きかえます（いまのトラックはなくなります）。</p><div class="tstyles" id="trkStyles"></div></details>`; box.appendChild(mo);
+  const sb=$('trkStyles'); STYLES.forEach(st=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=st.name;
     b.onclick=()=>{ if(!b.dataset.armed){ sb.querySelectorAll('[data-armed]').forEach(o=>{ delete o.dataset.armed; o.textContent=o.dataset.n; }); b.dataset.n=st.name; b.dataset.armed='1'; b.textContent=st.name+'（もう一度押すと置きかえ）'; return; }
       proFromStyle(st); if(st.bpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; } state.tk={}; applyMix(); save(); renderAll(); ensureSounds(); renderTracks(); toast(st.name+'のトラックにしました'); };
     sb.appendChild(b); });
   const hd=document.createElement('div'); hd.className='dhead'; hd.id='dHead'; hd.hidden=true; box.appendChild(hd);
-  // 幅を決めてから帯を描く
   requestAnimationFrame(()=>{ const bw=dawBarW(); trk.style.setProperty('--dbw',bw+'px');
     box.querySelectorAll('.dtl').forEach(t=>t.style.width=(bw*N)+'px');
-    box.querySelectorAll('.dtrack').forEach((row,i)=>drawRegion(row.querySelector('canvas'),L[i].kind,bw));
-    const last=[...box.querySelectorAll('.dtrack')].pop(); if(last){ hd.style.bottom='auto'; hd.style.height=(last.offsetTop+last.offsetHeight)+'px'; } });
+    // 目盛り
+    const rt=ru.querySelector('.dtl'); let h='';
+    for(let b=0;b<N;b++){ h+=`<span class="dbn" data-b="${b}" style="left:${b*bw}px">${b+1}</span>`;
+      cellsOf(b).forEach(c=>{ const e=c.v===null||c.v===undefined, L2=slotSteps();
+        h+=`<button class="dcn" data-b="${b}" data-h="${c.h}" style="left:${b*bw+c.off/L2*bw}px;max-width:${c.len/L2*bw}px;color:${e?col.muted:roleCol(col,roleAt(b,c.h,c.v))}">${e?'—':esc(chordText(c.v))}</button>`; }); }
+    rt.innerHTML=h; rt.querySelectorAll('.dcn').forEach(x=>x.onclick=()=>openEditor(+x.dataset.b,+x.dataset.h));
+    box.querySelectorAll('.dtrack').forEach((row,i)=>drawRegion(row.querySelector('canvas'),L[i].kind,bw,col));
+    const last=[...box.querySelectorAll('.dtrack')].pop(); if(last){ hd.style.height=(last.offsetTop+last.offsetHeight)+'px'; } });
   renderInsp(); }
-// トラックの帯：トラックの色の帯に、実際に鳴るコードの長さでパターンを白く描く（GarageBand のリージョンのように）
-function drawRegion(cv,kind,bw){ if(!cv.clientWidth) return; const g=fit(cv), W=cv.width, H=cv.height, r=devicePixelRatio||1, N=state.bars, L=slotSteps(), c=tkColor(kind);
-  g.clearRect(0,0,W,H); const w=bw*r, top=18*r, py=top, ph=H-top-5*r;
-  const col={ink:'#fff',muted:'rgba(255,255,255,.62)',line:'rgba(0,0,0,.16)',surface:c,lane:c,t:'#fff',s:'#fff',d:'#FFE3A3'};
-  g.fillStyle=c; rr(g,1*r,2*r,W-2*r,H-4*r,6*r); g.fill();
-  g.fillStyle='rgba(255,255,255,.95)'; g.font=`700 ${11*r}px ${getComputedStyle(document.body).fontFamily}`; g.textBaseline='top'; g.fillText(tkPatName(kind),7*r,5*r);
-  for(let b=0;b<N;b++){ const x=b*w, px=x+4*r, pw=w-8*r, start=b*L;
-    if(b>0){ g.fillStyle='rgba(0,0,0,.22)'; g.fillRect(x,top-2*r,1*r,H-top); }
-    if(kind==='drum'){ const dr=DRUMS[state.drum]; if(!dr) continue; const db=Math.floor(start/16); drawDrumBar(g,px,py,pw,ph,(db%2===1&&dr.VB)?{...dr,V:dr.VB}:dr,col,fillModeOf(db,dr),start%16,L); continue; }
-    cellsOf(b).forEach(cl=>{ if(cl.v===null||cl.v===undefined) return; const cx=px+cl.off/L*pw, cw=cl.len/L*pw;
-      if(kind==='bass') drawBassBar(g,cx,py,cw,ph,(bassList(DRUMS[state.drum])||[]).filter(e=>e[0]<cl.len),'#fff',col,cl.len);
-      else { const a=ARPS[patOf(kind)]; if(a) drawArpBar(g,cx,py,cw,ph,a,'#fff',col,cl.len); } }); } }
-// 再生中の位置（白い線）と、再生ボタンの表示
-function dawFrame(){ if(trk.hidden) return; const hd=$('dHead'), on=!!playing;
-  $('dPlay').classList.toggle('on',on); $('dPlay').setAttribute('aria-pressed',on);
+// 帯：コードごとに区切り、役割の色（T・S・D）でぬって、その場所で鳴る弾き方を描く。ドラムは1本の帯
+function drawRegion(cv,kind,bw,col){ if(!cv.clientWidth) return; const g=fit(cv), W=cv.width, H=cv.height, r=devicePixelRatio||1, N=state.bars, L=slotSteps();
+  g.clearRect(0,0,W,H); const w=bw*r, pad=5*r, ty=pad+3*r, th=H-2*pad-6*r;
+  const box=(x,y,ww,hh,c,a)=>{ g.globalAlpha=a; g.fillStyle=c; rr(g,x,y,ww,hh,7*r); g.fill(); g.globalAlpha=1; g.strokeStyle=c; g.lineWidth=1.2*r; rr(g,x,y,ww,hh,7*r); g.stroke(); };
+  if(kind==='drum'){ const dr=DRUMS[state.drum]; box(1.5*r,pad,W-3*r,H-2*pad,col.muted,.14); if(!dr) return;
+    for(let b=0;b<N;b++){ const start=b*L, db=Math.floor(start/16); drawDrumBar(g,b*w+5*r,ty,w-10*r,th,(db%2===1&&dr.VB)?{...dr,V:dr.VB}:dr,col,fillModeOf(db,dr),start%16,L); } return; }
+  for(let b=0;b<N;b++) cellsOf(b).forEach(cl=>{ if(cl.v===null||cl.v===undefined) return;
+    const c=roleCol(col,roleAt(b,cl.h,cl.v)), x=b*w+cl.off/L*w+2*r, ww=cl.len/L*w-4*r; box(x,pad,ww,H-2*pad,c,.2);
+    if(kind==='bass') drawBassBar(g,x+3*r,ty,ww-6*r,th,(bassList(DRUMS[state.drum])||[]).filter(e=>e[0]<cl.len),c,col,cl.len);
+    else { const sc=sceneAt(kind,b,cl); if(sc) drawArpBar(g,x+3*r,ty,ww-6*r,th,{ev:sc.evs},c,col,Math.max(1,sc.len)); } }); }
+// 帯をタップ：その場所のコード（ドラムは小節）で使っている弾き方を開く
+function tapRegion(kind,e){ const bw=parseFloat(trk.style.getPropertyValue('--dbw'))||96, x=e.clientX-e.currentTarget.getBoundingClientRect().left, L=slotSteps();
+  const b=Math.max(0,Math.min(state.bars-1,Math.floor(x/bw))), off=(x/bw-b)*L, cells=cellsOf(b), cell=cells.find(c=>off>=c.off&&off<c.off+c.len)||cells[0];
+  if(kind!=='drum' && kind!=='bass' && (cell.v===null||cell.v===undefined)){ toast('ここにはコードがありません'); return; }
+  const sc=kind==='bass'?null:sceneAt(kind,b,cell);
+  const where=`${b+1}${state.len<4?'マス目':'小節目'}${cell.off?`の${cell.off/4+1}拍目から`:''}`;
+  editTrackPattern(kind, sc&&sc.key, where); }
+// 再生中の位置（線）と、再生ボタン
+function dawFrame(){ if(trk.hidden) return; const hd=$('dHead'), on=!!playing, pb=$('dPlay');
+  if(pb.classList.contains('on')!==on){ pb.classList.toggle('on',on); pb.innerHTML=on?ICO.stop:ICO.play; pb.setAttribute('aria-label',on?'停止':'再生'); }
   if(hd){ if(on&&cur&&ctx){ const bw=parseFloat(trk.style.getPropertyValue('--dbw'))||96, frac=Math.min(1,(ctx.currentTime-cur.t)/stepDur()), hw=trk.querySelector('.dh').offsetWidth;
-      hd.hidden=false; const hx=hw+(cur.b+(cur.s+frac)/(cur.L||16))*bw; hd.style.left=hx+'px';
+      const hx=hw+(cur.b+(cur.s+frac)/(cur.L||16))*bw; hd.hidden=false; hd.style.left=hx+'px';
       const sc=$('dScroll'); if(hx>sc.scrollLeft+sc.clientWidth-24 || hx<sc.scrollLeft+hw) sc.scrollLeft=Math.max(0,hx-hw-8);
-      trk.querySelectorAll('.druler span').forEach(s=>s.classList.toggle('now',+s.dataset.b===cur.b)); }
-    else if(!hd.hidden){ hd.hidden=true; trk.querySelectorAll('.druler span.now').forEach(s=>s.classList.remove('now')); } }
+      trk.querySelectorAll('.dbn').forEach(s=>s.classList.toggle('now',+s.dataset.b===cur.b)); }
+    else if(!hd.hidden){ hd.hidden=true; trk.querySelectorAll('.dbn.now').forEach(s=>s.classList.remove('now')); } }
   requestAnimationFrame(dawFrame); }
-// トラックの設定（ミキサー）
+// ミキサー（GarageBand の「トラック設定」のように左から出る）
+const FX_ROWS=[['comp','コンプレッサー（音の大きさをそろえる）',0,1],['hi','高音（トレブル）',-1,1],['lo','低音（ベース）',-1,1],['echo','エコー（やまびこ）',0,1],['rev','リバーブ（部屋の響き）',0,1]];
+const fxTxt=(k,v)=>k==='hi'||k==='lo' ? (Math.abs(v)<.03?'0':(v>0?'+':'−')+Math.round(Math.abs(v)*9)+'dB') : Math.round(v*100);
 function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=true; return; } p.hidden=false;
-  const x=mixOf(mixKey(kind)), pan=x.pan||0, rev=x.rev||0, canDel=kind==='arp2'||kind.startsWith('x:')||kind==='bass', m=tkMeta(kind);
-  p.innerHTML=`<div class="dititle"><span style="width:36px"></span><b>${esc(tkName(kind))}</b><button id="diClose" aria-label="閉じる">${ICO.close}</button></div>
+  const x=mixOf(mixKey(kind)), pan=x.pan||0, canDel=kind==='arp2'||kind.startsWith('x:')||kind==='bass', m=tkMeta(kind);
+  p.style.setProperty('--tc',tkColor(kind));
+  const rng=(f,label,min,max,val,txt)=>`<label class="dirow"><span>${label}<output>${txt}</output></span><input type="range" min="${min}" max="${max}" step=".01" value="${val}" data-f="${f}"></label>`;
+  p.innerHTML=`<div class="dititle"><div class="dipic">${INST_ICO[instFam(kind)]}</div><input class="diname" id="diName" maxlength="16" value="${esc(tkName(kind))}" aria-label="トラックの名前"></div>
     <div class="disec"><h3>パターンと音色</h3><div class="dib">
-      <button class="dipat" id="diPat"><canvas></canvas><span>${esc(tkPatName(kind))}</span>${ICO.chev}</button>
+      <button class="dilink" id="diPat"><span>${esc(tkPatName(kind))}を編集</span>${ICO.chev}</button>
       <button class="dilink" id="diPick"><span>パターン・音色・音域を選ぶ（${esc(tkInst(kind))}）</span>${ICO.chev}</button></div></div>
     <div class="disec"><h3>出力</h3><div class="dib">
-      <label class="dirow">音量<input type="range" min="0" max="1.5" step=".01" value="${x.v??1}" data-f="v"><output>${Math.round((x.v??1)*100)}</output></label>
-      <label class="dirow">左右<input type="range" min="-1" max="1" step=".05" value="${pan}" data-f="pan"><output>${panTxt(pan)}</output></label>
-      <label class="dirow">響き<input type="range" min="0" max="1" step=".05" value="${rev}" data-f="rev"><output>${Math.round(rev*100)}</output></label>
-      <div class="dims"><button data-k="m" aria-pressed="${!!x.m}" aria-label="ミュート">${ICO.mute}</button><button data-k="s" aria-pressed="${!!x.s}" aria-label="ソロ">${ICO.solo}</button></div></div></div>
-    <div class="disec"><h3>名前と色</h3><div class="dib"><input class="diname" id="diName" maxlength="16" value="${esc(tkName(kind))}" aria-label="トラックの名前"><div class="tcolors" id="diColors"></div></div></div>
+      ${rng('v','音量',0,1.5,x.v??1,Math.round((x.v??1)*100))}
+      ${rng('pan','左右（パン）',-1,1,pan,panTxt(pan))}
+      <div class="dims"><button data-k="m" aria-pressed="${!!x.m}">ミュート</button><button data-k="s" aria-pressed="${!!x.s}">ソロ</button></div></div></div>
+    <div class="disec"><h3>エフェクト</h3><div class="dib">${FX_ROWS.map(([f,l,a,b])=>rng(f,l,a,b,x[f]||0,fxTxt(f,x[f]||0))).join('')}</div></div>
+    <div class="disec"><h3>色</h3><div class="dib"><div class="tcolors" id="diColors"></div></div></div>
     ${canDel?'<button class="didel" id="diDel">このトラックをなくす</button>':''}`;
-  $('diClose').onclick=()=>{ TRK_SEL=null; renderTracks(); };
   $('diPat').onclick=()=>editTrackPattern(kind); $('diPick').onclick=()=>openSheet(kind);
-  p.querySelectorAll('.dirow input').forEach(inp=>inp.oninput=()=>{ const f=inp.dataset.f; x[f]=+inp.value; inp.nextElementSibling.textContent= f==='pan'?panTxt(x.pan):Math.round(x[f]*100); applyMix(); save();
-    if(f==='v'){ const i=trackList().findIndex(t=>t.kind===kind), r=$('trkList').querySelectorAll('.dtrack')[i]; if(r) r.querySelector('.dctl input').value=inp.value; } });
+  p.querySelectorAll('.dirow input').forEach(inp=>inp.oninput=()=>{ const f=inp.dataset.f; x[f]=+inp.value; inp.previousElementSibling.querySelector('output').textContent= f==='pan'?panTxt(x.pan):f==='v'?Math.round(x.v*100):fxTxt(f,x[f]); applyMix(); save(); });
   p.querySelectorAll('.dims button').forEach(b=>b.onclick=()=>{ x[b.dataset.k]=!x[b.dataset.k]; applyMix(); save(); renderTracks(); });
-  const nm=$('diName'), setName=()=>{ const v=nm.value.trim(); if(v) m.name=v; else delete m.name; save(); renderTracks(); renderAll(); };
-  nm.onchange=setName; nm.onkeydown=e=>{ if(e.key==='Enter') nm.blur(); };
+  const nm=$('diName'); nm.onchange=()=>{ const v=nm.value.trim(); if(v) m.name=v; else delete m.name; save(); nm.blur(); renderTracks(); renderAll(); }; nm.onkeydown=e=>{ if(e.key==='Enter') nm.blur(); };
   const cl=$('diColors'); TRK_COLORS.forEach(c=>{ const b=document.createElement('button'); b.style.background=c; b.setAttribute('aria-label','色'); b.setAttribute('aria-pressed',tkColor(kind)===c); b.onclick=()=>{ m.color=c; save(); renderTracks(); }; cl.appendChild(b); });
-  const del=$('diDel'); if(del) del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed='1'; del.textContent='もう一度押すとなくします'; return; } removeTrack(kind); };
-  requestAnimationFrame(()=>{ const cv=p.querySelector('.dipat canvas'); if(!cv||!cv.clientWidth) return; const g=fit(cv), c=tkColor(kind), col={...colors(),ink:'#fff',muted:'rgba(255,255,255,.6)',line:'#3E3F45'};
-    if(kind==='drum') drawDrumBar(g,0,0,cv.width,cv.height,DRUMS[state.drum],col);
-    else if(kind==='bass') drawBassBar(g,0,0,cv.width,cv.height,bassList(DRUMS[state.drum])||[],c,col);
-    else { const a=ARPS[patOf(kind)]; if(a) drawArpBar(g,0,0,cv.width,cv.height,a,c,col); } }); }
-// メイン画面が描き直されたら、トラックの画面も合わせる
+  const del=$('diDel'); if(del) del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed='1'; del.textContent='もう一度押すとなくします'; return; } removeTrack(kind); }; }
+// メイン画面が描き直されたら、トラックの画面も合わせる（ミキサーで入力しているあいだは描き直さない）
 { const ra=renderAll; renderAll=function(){ const r=ra.apply(this,arguments); if(typeof trk!=='undefined' && !trk.hidden && !document.activeElement?.closest?.('#dInsp')) renderTracks(); return r; }; }
 addEventListener('resize',()=>{ if(!trk.hidden) renderTracks(); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{ if(!trk.hidden) renderTracks(); });
 // 楽器を足す：コード2が空いていればコード2に、そうでなければ足した楽器（state.xtr）に。足したらパターンを選ぶ画面を開く
 function addTrack(){ if(!state.arp2 || !ARPS[state.arp2]){ state.arp2='whole'; state.inst2='strings3'; save(); renderAll(); ensureSounds(); renderTracks(); openSheet('arp2'); return; }
   state.xtr=state.xtr||[]; const ids=new Set(state.xtr.map(t=>t.id)); let n=1; while(ids.has('t'+n)) n++;
@@ -293,12 +332,14 @@ function removeTrack(kind){ const x=xOf(kind);
   TRK_SEL=null; applyMix(); save(); renderAll(); renderTracks(); }
 // パターンを直接編集する。いつもの伴奏（組み込みのパターン）は、自分用のコピーを作って開き、何も変えずに閉じたらコピーを消して元に戻す
 let PAT_TMP=null;
-function editTrackPattern(kind){ const k=patOf(kind);
+function editTrackPattern(kind,scene,where){ const k=patOf(kind);
   if((kind==='arp2'||xOf(kind)) && (!k || !ARPS[k])) return openSheet(kind);
   const wasMy=/^my\d+$/.test(k||''), nm=tkPatName(kind);
+  if(scene) PR.scene=scene;
   openPatEditor(kind,'edit');
   PAT_TMP = wasMy ? null : {kind, prev:k, list:listOf(kind), snap:JSON.stringify(curMy())};
-  $('patDirect').hidden=false; $('patDirectNote').textContent = wasMy ? '' : '「'+nm+'」と同じ鳴り方のコピーです。変えると自分用のパターンとして残ります';
+  const here = scene&&where ? `${where}で使っている「${SCENE_NAME(curScene())}」の弾き方です。` : '';
+  $('patDirect').hidden=false; $('patDirectNote').textContent = here + (wasMy ? '' : '「'+nm+'」と同じ鳴り方のコピーです。変えると自分用のパターンとして残ります');
 }
 $('patPick').onclick=()=>{ const kind=patKind; closePatTmp(); closeAll(); openSheet(kind); };
 // 編集画面を閉じたとき：コピーに何も変えていなければ、コピーを消して元のパターンに戻す
