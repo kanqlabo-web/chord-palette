@@ -541,9 +541,10 @@ const ensureArp2=()=>{ if(/^acc_/.test(state.arp2||'')) accOnly(state.arp2.slice
 const SYNTH_INST={spiano:'piano',synth:'synth'};
 const instShort=()=>INSTS[state.inst]+(!state.pro&&state.arp2&&ARPS[state.arp2]?'＋'+INSTS[state.inst2||'epiano']:'');
 // 音色・ドラムの音のジャンル分け（選ぶ画面で見出しをつけて並べる）
-const INST_GROUPS=[['ピアノ',['piano','epiano','epcity','clav','lofi','spiano','organ']],['ギター',['steel','nylon','eguitar','dist']],
-  ['オーケストラ',['strings3','horn','glock']],['管楽器',['brass3','sbrass','trumpet','trombone','sax']],['電子音',['synth','pad']],['和楽器',['koto','shami']]];
-const KIT_GROUPS=[['バンド',['std','room','power','brush']],['シティポップ',['city']],['電子',['elec','tr808','synth']],['そのほか',['orch','lofi']]];
+// 音色の分類（1つしか入らない分類は作らない）
+const INST_GROUPS=[['ピアノ・鍵盤',['piano','epiano','epcity','clav','lofi','organ']],['ギター',['steel','nylon','eguitar','dist']],
+  ['オーケストラ',['strings3','horn','trumpet','trombone','brass3','sax','glock']],['電子音',['synth','pad','sbrass','spiano']],['和楽器',['koto','shami']]];
+const KIT_GROUPS=[['生ドラム',['std','room','power','brush','city','lofi','orch']],['電子ドラム',['elec','tr808','synth']]];
 // 場所を取らないよう、まずジャンルを選び、その中の音色だけを並べる（いま選んでいる音色のジャンルに印）
 function groupPick(el, G, names, cur, onPick){
   const gs=G.map(([h,ks])=>[h,ks.filter(k=>names[k])]).filter(g=>g[1].length), used=new Set(gs.flatMap(g=>g[1]));
