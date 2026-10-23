@@ -709,7 +709,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.190（2026-10-23）</p>
+    <p class="appver">ver 1.192（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -776,7 +776,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.190（2026-10-23）</p>
+  <p class="appver">ver 1.192（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1162,7 +1162,7 @@ function chordNotes(v,prev){
   // ボサノバの指弾きの形（bossaV）：5弦（か6弦）のルート＋3度・7度・9度（なければ6度・5度、3度の1オクターブ上）
   if(pat&&pat.bossaV){ const r=43+(((bpc-43)%12)+12)%12, t3=[4,3,5,2].find(i=>ivs.includes(i))??4, mid=[10,11,9].find(i=>ivs.includes(i))??7,
       top=[14,13,15].find(i=>ivs.includes(i))??(ivs.includes(21)?21:ivs.includes(17)?17:t3+12), v=[r+t3,r+mid,r+top].sort((a,b)=>a-b);
-    const T=[r,...v,r+fifth,r+12,...v.map(x=>x+12),null,null]; return {up:T, tones:T, R:v, ra:v, bass, slash, fifth, third, seventh, rpc, bpc, ivs, q:sp.q}; }
+    const T=[r,...v,(r+fifth-12>=40?r+fifth-12:r+fifth),r+12,...v.map(x=>x+12),null,null]; return {up:T, tones:T, R:v, ra:v, bass, slash, fifth, third, seventh, rpc, bpc, ivs, q:sp.q}; }
   // ギターの音色：実際のギターで押さえる形（ローコード、なければバレーコード）で鳴らす
   if(GUITARS.has(state.inst)){ const gs=guitarShape(ivs.map(i=>(rpc+i)%12), bpc, (rpc+fifth)%12);
     if(gs){ const n=gs.length, top=gs.slice(n-3), mid=gs.slice(1,n-3);
@@ -1232,6 +1232,8 @@ const FILLS={
   // citypop.mid の4小節目をそのまま：12マス目のハイハット（78）→ スネア2発（96・96）→ 最後の16分でキック＋クラッシュ（96）
   cityend:{big:  {h:M16({8:78,9:46,10:25,11:24,12:78}), k:M16({10:87,15:96}), s:M16({13:96,14:96}), c:M16({15:96})},
            small:{h:M16({12:78}), s:M16({13:96,14:96}), k:M16({15:96}), c:M16({15:96})}},
+  epic2:{big:  {t3:'........X...X...', k:'..............xX', c:'...............x'},
+         small:{t3:'............X..X', k:'...............X'}},
   orch: {big:  {k:'........ggooxxXX', t3:'........ggooxxXX'},
          small:{k:'............ooxX', t3:'............ooxX'}},
   halfp:{big:  {k:'........x.x....X', s:'............x...', x:'....X...........', o:'..........o.....'},
@@ -1270,8 +1272,8 @@ const DRUMS = {
            bass:[[0,0,2,1],[3,12,1,.7],[6,0,1,.7],[7,0,1,.5],[8,0,2,.9],[10,12,1,.7],[11,'5',1,.6],[13,0,1,.7],[14,'ap',2,.8]]},
   dance:  {name:'ダンス', pro:'4つ打ち（クラブ）', duck:true, v:{k:'X...X...X...X...', s:'....X.......X...', h:'..o...o...o...o.'}, fill:'dance',
            bass:[[2,0,1.5,.9],[6,12,1.5,.8],[10,0,4.5,.9],[14,12,1.5,.8]]},   // 4つ目の裏はオクターブ上へすべり上がる（前の音と重ねる＝ポルタメント）
-  bossa:  {name:'ボサノバ', v:{k:'X..xX..xX..xX..x', x:'X..X..X...X..X..', h:'g.g.g.g.g.g.g.g.'}, fill:null,
-           bass:[[0,0,3,1],[3,'5',1,.6],[4,'5',4,.9],[8,0,3,1],[11,'5',1,.6],[12,'5',4,.9]]},
+  bossa:  {name:'ボサノバ', pro:'ボサノバ（8分のハイハット・1拍目キック・3拍目スネア、ごく弱く）', v:{k:M16({0:52}), s:M16({8:42}), h:M16({0:30,2:24,4:28,6:24,8:30,10:24,12:28,14:24})}, fill:null,
+           bass:[[0,0,6,1],[6,'5',2,.6],[8,'5',8,.9]]},   // ベースは前の形を半分のテンポで（1小節で1回）
   reggae: {name:'レゲエ', v:{k:'........X.......', x:'........X.......', h:'g.g.g.g.g.g.g.g.'}, fill:'soft',
            bass:[[0,0,3,1],[6,0,2,.8],[8,'5',2,.8],[10,'3',2,.75],[12,0,3,.9]]},
   // ゆったり跳ねるネオソウル風：16分を少し後ろに引きずる。キックはシンコペ、スネアは2・4拍目＋ゴースト
@@ -1303,8 +1305,8 @@ const DRUMS = {
   // 壮大：オーケストラのマーチングドラム（オーケストラ・キット）。okesutora.mid（テンポ132として）の大太鼓・和太鼓をそのまま：
   // 1小節目は頭と4拍目の裏、2小節目は頭だけ。スネアはアクセントをはっきり、間はごく弱いゴースト（dyn で強弱の差を広げる）
   epic:   {name:'壮大', pro:'マーチングドラム（オーケストラ）', dyn:1.8,
-           v:{s:'XggoXgogXgoXgoXg', k:'X.............x.', t3:'X.............x.'},
-           vB:{s:'ggogXgoxXgoXgXXX', k:'X...............', t3:'X...............'}, fill:'march',
+           v:{s:'....x.......x...', k:'X.......o.......', t3:'X...........x.x.'},
+           vB:{s:'....x.......x...', k:'X.......o.......', t3:'X.......X.......'}, fill:'epic2',   // 16分の連打はやめて、大太鼓とティンパニ風のタムで「ドン・ドドン」
            bass:[[0,0,15.8,.95]]},   // チューバ・コントラバスのように全音符でのばす
   // 和風：和太鼓のように低いタムで「ドン・ドドン」、リムで鉦（かね）のような合いの手
   wa:     {name:'和風', pro:'和太鼓風（タム）', v:{k:'X.......X.......', t3:'X.....x.X...x.x.', x:'....x.......x...'},
@@ -1371,10 +1373,11 @@ const ARPS = {
   // ボサノバの指弾き（2小節）：親指＝5弦のルート、人差し指＝4弦（3度）、中・薬指＝3弦と2弦（7度と9度）。Dm7(9) なら D3・F3・C4・E4
   // 1小節目「ラー・メン・パ・ニー・ニ」、2小節目「パ・ニー・ニ・ラー・メン」
   bossa:  {name:'ボサノバ', pro:'ボサノバの指弾き（親指＋3本指、2小節）', pluck:true, legato:true, bossaV:true,
-           sit:{bar:[[[0,[0],4,.7],[0,[1,2,3],4,.62],[4,[2,3],2,.58],[6,[1],2,.55],[8,[0],2,.66],[10,[2,3],4,.6],[14,[1],2,.55]],
-                      [[0,[0],2,.68],[2,[2,3],4,.6],[6,[1],2,.55],[8,[0],4,.68],[8,[2,3],4,.6],[12,[2,3],2,.58],[14,[1],2,.55]]],
-                halfA:[[[0,[0],4,.7],[0,[1,2,3],4,.62],[4,[2,3],2,.58],[6,[1],2,.55]]], halfB:[[[0,[0],2,.66],[2,[2,3],4,.6],[6,[1],2,.55]]],
-                beat:[[[0,[0],4,.7],[0,[1,2,3],4,.62]]]}},
+           // 親指（左手根音の行）は1拍目＝ルート、3拍目＝5度（ギターは自動で5度に）。1小節目「ラー・メン・パ・ニー・ニ」、2小節目はスケッチどおり
+           sit:{bar:[[[0,[0],4,.66],[0,[1,2,3],4,.58],[4,[2,3],2,.54],[6,[1],2,.5],[8,[0],2,.62],[10,[2,3],4,.56],[14,[1],2,.5]],
+                      [[0,[0],4,.64],[2,[2,3],6,.56],[6,[1],2,.5],[8,[0],4,.62],[8,[2,3],4,.56],[12,[2,3],4,.54],[14,[1],2,.5]]],
+                halfA:[[[0,[0],4,.66],[0,[1,2,3],4,.58],[4,[2,3],2,.54],[6,[1],2,.5]]], halfB:[[[0,[0],4,.64],[2,[2,3],4,.56],[6,[1],2,.5]]],
+                beat:[[[0,[0],4,.66],[0,[1,2,3],4,.58]]]}},
   // 疾走系：右手は8分で刻み、左手はオクターブで1拍ずつ。いちばん上（アクセント）は「キラッ」と重ねる音色で
   drive:  {name:'疾走ピアノ', pro:'8分刻み＋左手オクターブ（8分食い）', legato:true, pushBy:2,
            // 右手は8分で和音を刻み、左手はオクターブで4分。次のコードへは8分食う
@@ -1443,11 +1446,21 @@ const ARPS = {
   // ===== 上もの（ほかのパターンの上に「コード2」で重ねるフレーズ）。どの音色・どのパターンとも組み合わせられる =====
   // キラキラ：「タン・タ・ターン」と、和音の音を高い所で短く（グロッケン・ベル向き）
   // アニソン：シンセの16分アルペジオ（上の3音を「下・中・上・中」で回す）。2小節目の最後の拍で次のコードへ駆け上がる
+  // アニソンの上もの：シンセのリードで、シンコペーションのある2小節のフレーズ。2小節目は最後に次のコードへ駆け上がる
+  anilead:{name:'上もの：シンセのリード', pro:'上もの：シンセリードのフレーズ（2小節・シンコペーション）', legato:true,
+           sit:{bar:[[[0,[8],3,.62],[3,[7],3,.56],[6,[8],2,.6,null,'su'],[8,[8],4,.62],[12,[7],2,.56],[14,[6],2,.54]],
+                      [[0,[7],3,.6],[3,[8],3,.62],[6,[8],2,.64,null,'su'],[8,[8],3,.62],[11,[7],1,.5,null,'nx'],[12,[7],1,.52,null,'nx'],[13,[7],1,.54,null,'nx'],[14,[7],2,.58,null,'nx']]],
+                halfA:[[[0,[8],3,.62],[3,[7],3,.56],[6,[8],2,.6,null,'su']]], halfB:[[[0,[8],4,.62],[4,[7],2,.56],[6,[6],2,.54]]], beat:[[[0,[8],4,.6]]]}},
   synarp: {name:'上もの：シンセのアルペジオ', pro:'上もの：16分のシンセアルペジオ（2小節）', legato:false,
            sit:{bar:[each([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44),
                      [...each([0,1,2,3,4,5,6,7,8,9,10,11],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44),[12,[8],1,.5,null,'nx'],[13,[8],1,.54,null,'nx'],[14,[8],1,.58,null,'nx'],[15,[8],1,.62,null,'nx']]],
                 halfA:[each([0,1,2,3,4,5,6,7],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44)], halfB:[each([0,1,2,3,4,5,6,7],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44)],
                 beat:[each([0,1,2,3],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44)]}},
+  // ボサノバの上もの（ピアノ）：中高音域で長くのばし、3連符の回り込みでつなぐ（イパネマの娘のような、のびやかな線）
+  ipanema:{name:'上もの：のびやかなピアノ', pro:'上もの：中高音域の伸ばし＋3連符の回り込み（2小節）', legato:true, rhShift:8, avoid:false,
+           sit:{bar:[[[0,[3],7.5,.5],[8,[3],1.33,.44,null,'su'],[9.33,[3],1.33,.42],[10.67,[2],1.33,.44],[12,[2],4,.48]],
+                      [[2,[2],1.33,.44,null,'su'],[3.33,[2],1.33,.42],[4.67,[1],5.33,.46],[12,[2],1.33,.42,null,'nx'],[13.33,[2],1.33,.44,null,'nx'],[14.67,[2],1.33,.46,null,'nx']]],
+                halfA:[[[0,[3],4,.5],[4,[3],1.33,.44,null,'su'],[5.33,[3],1.33,.42],[6.67,[2],1.33,.44]]], halfB:[[[0,[2],8,.48]]], beat:[[[0,[2],4,.46]]]}},
   glockline:{name:'上もの：高い音でキラキラ', pro:'上もの：高音の短いフレーズ（2小節目は次のコードへつなぐ）', legato:true,
            sit:{bar:[[[0,[6],6,.5],[6,[7],2,.44],[8,[8],8,.48]],[[0,[6],6,.5],[6,[7],2,.44],[8,[8],4,.48],[12,[8],1,.44,null,'nx'],[13,[8],1,.46,null,'nx'],[14,[8],2,.5,null,'nx']]],
                 halfA:[[[0,[6],6,.5],[6,[7],2,.44]]], halfB:[[[0,[8],8,.48]]], beat:[[[0,[6],4,.46]]]}},
@@ -1477,9 +1490,9 @@ const ARPS = {
   skank:   {name:'レゲエのオルガン', pro:'オルガンのバブル（裏拍の刻み＋16分の跳ね）', legato:false,
            ev:[[1,[0],.35,.36],[2,RH,.55,.72],[3,[4],.35,.34],[5,[0],.35,.36],[6,RH,.55,.68],[7,[4],.35,.34],
                [9,[0],.35,.36],[10,RH,.55,.72],[11,[4],.35,.34],[13,[0],.35,.36],[14,RH,.55,.68],[15,[4],.35,.34]]},
-  hornline:{name:'上もの：上がっていくメロディ', pro:'上もの：付点4分×2＋4分で上行（中音域・2小節目は次のコードへつなぐ）', legato:true, rhShift:-9,
+  hornline:{name:'上もの：上がっていくメロディ', pro:'上もの：付点4分×2＋4分で上行（中音域・2小節目は次のコードへつなぐ）', legato:true, rhShift:-9, vol:1.7,
            // ホルンらしい中音域（いちばん上でも F4 くらい）：右手の 下→中→上 と上がり、2小節目は上→中のあと次のコードへつなぐ
-           sit:{bar:[[[0,[1],6,.58],[6,[2],6,.56],[12,[3],4,.6]],[[0,[3],6,.58],[6,[2],4,.56],[12,[2],1,.5,null,'nx'],[13,[2],1,.52,null,'nx'],[14,[2],2,.56,null,'nx']]],
+           sit:{bar:[[[0,[1],6,.58],[6,[2],6,.56],[12,[3],4,.6]],[[0,[3],6,.58],[6,[2],4,.56],[10,[2],2,.54,null,'nx'],[12,[2],2,.56,null,'nx'],[14,[2],2,.58,null,'nx']]],
                 halfA:[[[0,[1],6,.58],[6,[2],2,.54]]], halfB:[[[0,[2],4,.56],[4,[3],4,.58]]], beat:[[[0,[1],4,.56]]]}},
   // クラシック風：左手はルートを2分音符で支え、右手は「下・上・中・上」の分散和音。テンションのあるコードでも3度と7度・9度を残す（ra）
   alberti:{name:'クラシック風', pro:'アルベルティ（左手ルート）', ev:[[0,[0],8,.55],[8,[0],8,.5],...each([0,2,4,6,8,10,12,14],[[1],[3],[2],[3]],2,(s,i)=>i%4===0?.62:.46)]},
@@ -1847,7 +1860,7 @@ function bindRoll(rows){
     velEl.hidden=true; d=null; commitNotes(); drawNotes(); };
   roll.onpointerup=up; roll.onpointercancel=up;
 }
-const ARP_ORDER=['piano4','popanti','drive','pballad','whole','epic','hardrock','strum','garp','citypop','cityep','clavfunk','rhodes','lofi','sync','offbeat','stacc','shuffle','house','bossa','koto','alberti','glockline','brassobb','brasshit','hornline','skank','synarp'];
+const ARP_ORDER=['piano4','popanti','drive','pballad','whole','epic','hardrock','strum','garp','citypop','cityep','clavfunk','rhodes','lofi','sync','offbeat','stacc','shuffle','house','bossa','koto','alberti','glockline','brassobb','brasshit','hornline','skank','synarp','anilead','ipanema'];
 // まとめて消したパターン（保存データ・共有リンクは近いものに置きかえる）
 const ARP_ALIAS={ballad:'pballad',sync16:'sync',shuff2:'shuffle',rock8:'hardrock',eighth:'drive'};
 // 通常モードの「伴奏スタイル」：ドラムとコードパターンの組み合わせ
@@ -1855,20 +1868,20 @@ const ARP_ALIAS={ballad:'pballad',sync16:'sync',shuff2:'shuffle',rock8:'hardrock
 const STYLES=[
   {id:0, name:'ポップス（定番）', bpm:96, drum:'pop', arp:'piano4', inst:'piano', kit:'std', bass:true},
   {id:1, name:'ポップス（ノリノリ）', bpm:128, drum:'dpop', arp:'popanti', inst:'piano', kit:'std', bass:true},
-  {id:15, name:'疾走系（アニソン）', bpm:172, drum:'run', arp:'drive', inst:'piano', arp2:'synarp', inst2:'synth', kit:'power', bass:true},
+  {id:15, name:'疾走系（アニソン）', bpm:172, drum:'run', arp:'drive', inst:'sbrass', arp2:'anilead', inst2:'synth', kit:'power', bass:true},
   {id:2, name:'ロック', bpm:132, drum:'hard', arp:'hardrock', inst:'dist', kit:'power', bass:true},
   {id:3, name:'ギターポップ', bpm:120, drum:'rride', arp:'strum', inst:'eguitar', kit:'room', bass:true},
   {id:16, name:'弾き語り', bpm:92, drum:'none', arp:'strum', inst:'steel', kit:'std', bass:false},
-  {id:4, name:'バラード', bpm:72, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true},
+  {id:4, name:'バラード', bpm:82, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true, mix:{arp:.78,drum:.72,bass:.78}},
   {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
-  {id:17, name:'壮大', bpm:110, wide:true, drum:'epic', arp:'epic', inst:'strings3', arp2:'hornline', inst2:'horn', kit:'orch', bass:true, bassSnd:'ubass'},
+  {id:17, name:'壮大', bpm:110, wide:true, drum:'epic', arp:'epic', inst:'strings3', arp2:'hornline', inst2:'horn', mix:{arp2:1.6}, kit:'orch', bass:true, bassSnd:'ubass'},
   {id:18, name:'シティポップ', bpm:100, rhOff:-3, lhOff:-3, rhOff2:-3, drum:'city', arp:'cityep', inst:'epcity', arp2:'brassobb', inst2:'brass3', kit:'city', bass:true, bassSnd:'slap3'},
   {id:9, name:'ファンキー', bpm:104, drum:'sixteen', arp:'clavfunk', inst:'clav', arp2:'brasshit', inst2:'brass3', kit:'std', bass:true},
   {id:11, name:'ジャジー', bpm:100, drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
   {id:19, name:'ローファイ', bpm:80, drum:'lofi', arp:'lofi', inst:'lofi', kit:'lofi', bass:true, bassSnd:'ubass'},
   {id:8, name:'スキップ風', bpm:108, drum:'shuffle', arp:'shuffle', inst:'piano', kit:'std', bass:true},
   {id:10, name:'ダンス', bpm:124, drum:'dance', arp:'house', inst:'synth', kit:'elec', bass:true, bassSnd:'sbass'},
-  {id:12, name:'ボサノバ', bpm:112, drum:'bossa', arp:'bossa', inst:'nylon', kit:'brush', bass:true, bassSnd:'ubass'},
+  {id:12, name:'ボサノバ', bpm:112, drum:'bossa', arp:'bossa', inst:'nylon', arp2:'ipanema', inst2:'piano', kit:'brush', bass:true, bassSnd:'ubass'},
   {id:13, name:'レゲエ', bpm:80, drum:'reggae', arp:'skank', inst:'organ', kit:'std', bass:true},
   {id:20, name:'和風', bpm:88, drum:'wa', arp:'koto', inst:'koto', kit:'room', bass:true, bassSnd:'ubass'},
   {id:14, name:'クラシック風', bpm:100, drum:'none', arp:'alberti', inst:'piano', kit:'std', bass:false},
@@ -2562,8 +2575,8 @@ function openSheet(kind){
   // 通常モード：2つ目の楽器（コード2）を重ねる。弾き方と音色を選ぶ
   $('part2Sec').hidden = kind!=='style';
   if(kind==='style'){
-    const P2PATS=[['','なし'],[state.arp,'伴奏と同じ弾き方'],['glockline','高い音でキラキラ'],['brassobb','パッと合いの手'],['brasshit','ブラスのキメ'],['synarp','シンセのアルペジオ'],['hornline','上がっていくメロディ'],['whole','長くのばす'],['epic','オーケストラ風の和音'],['alberti','ポロンポロン（クラシック風）'],['garp','ギターのつま弾き'],['strum','ギターのジャカジャカ']];
-    const P2DEF={glockline:'glock',brassobb:'brass3',brasshit:'brass3',hornline:'horn',synarp:'synth',whole:'strings3',epic:'strings3',alberti:'piano',garp:'nylon',strum:'steel'};
+    const P2PATS=[['','なし'],[state.arp,'伴奏と同じ弾き方'],['glockline','高い音でキラキラ'],['brassobb','パッと合いの手'],['brasshit','ブラスのキメ'],['anilead','シンセのリード'],['synarp','シンセのアルペジオ'],['ipanema','のびやかなピアノ'],['hornline','上がっていくメロディ'],['whole','長くのばす'],['epic','オーケストラ風の和音'],['alberti','ポロンポロン（クラシック風）'],['garp','ギターのつま弾き'],['strum','ギターのジャカジャカ']];
+    const P2DEF={glockline:'glock',brassobb:'brass3',brasshit:'brass3',hornline:'horn',synarp:'synth',anilead:'synth',ipanema:'piano',whole:'strings3',epic:'strings3',alberti:'piano',garp:'nylon',strum:'steel'};
     const p2Row=()=>{ chips($('p2Pat'), P2PATS, state.arp2||'', v=>{ state.arp2=v; if(v) state.inst2=P2DEF[v]||'epiano'; save(); renderAll(); ensureSounds(); p2Row(); });
       $('p2InstWrap').hidden=!state.arp2;
       groupPick($('p2Inst'), INST_GROUPS, INSTS, state.inst2||'epiano', v=>{ state.inst2=v; save(); renderAll(); ensureSounds(); p2Row(); }); };
@@ -3177,7 +3190,8 @@ function playEvents(evs,bt,ct,sd,pat){
     const nxM0=tr==='nx'?nxPitch(nxk||1,nxN||1,bt):null, nxM=nxM0!=null&&[6,7,8].includes(+nxr)?nxM0+12:nxM0;   // アクセント行（1オクターブ上）でつなぐときは、その高さで
     degs.forEach((ix,k)=>{ const m0=degPitch(ix)+sh+MO, m=nxM??m0; if(NB) nbSplit(m,tr,len,CP).forEach(p=>notes.push({ix:3,k,len:p.len,vel,dir,st0:st0+p.d,ev0:st0,top:false,mel:true,m:p.m,orig:p.m,row:ix})); else notes.push({ix:3,k,len,vel,dir,st0,ev0:st0,top:false,mel:true,m,orig:m,row:ix}); });   // メロディ行：キーの音階の音
     if(tr==='up' && bt.upV && LHCTX) LHCTX.satb=bt.upV;   // 和声法：次の和音へは、上がったあとの形からつなぐ
-    ns.forEach((ix,k)=>{ const m0=(arp ? (ix<=3 ? bt.ra[ix-1] : bt.ra[ix-6]+12) : TN[ix])+sh, m=nxM??m0; if(NB) nbSplit(m,tr,len,CP).forEach(p=>notes.push({ix,k,len:p.len,vel,dir,st0:st0+p.d,ev0:st0,top:ix===top,m:p.m,orig:p.m,row:ix})); else notes.push({ix,k,len,vel,dir,st0,ev0:st0,top:ix===top, m,orig:m,row:ix}); });   // tr＝半音いくつずらすか
+    const thumb5 = GUITARS.has(state.inst) && ns.length===1 && ns[0]===0 && ((st0%16)===8) && bt.fifth!=null;   // ギター：親指のベースは1拍目ルート・3拍目5度
+    ns.forEach((ix,k)=>{ const m0=(thumb5 ? ((TN[0]+bt.fifth-12>=40)?TN[0]+bt.fifth-12:TN[0]+bt.fifth) : arp ? (ix<=3 ? bt.ra[ix-1] : bt.ra[ix-6]+12) : TN[ix])+sh, m=nxM??m0; if(NB) nbSplit(m,tr,len,CP).forEach(p=>notes.push({ix,k,len:p.len,vel,dir,st0:st0+p.d,ev0:st0,top:ix===top,m:p.m,orig:p.m,row:ix})); else notes.push({ix,k,len,vel,dir,st0,ev0:st0,top:ix===top, m,orig:m,row:ix}); });   // tr＝半音いくつずらすか
     // フォール（'fall'）：のばした音の終わりで、音程を一気に下げながら抜く（ブラスの「プァー↘」）
     if(tr==='fall') notes.slice(-ns.length).forEach(n=>n.fall=true);
     if(tr==='scoop') notes.slice(I0).forEach(n=>n.scoop=true);   // しゃくり：この音（メロディ行も）を下からずり上げる
