@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 S=/tmp/claude-0/-home-claude/cb90b389-4cb1-5166-985c-0cf20ec415ab/scratchpad
-cp /home/claude/chord-palette.html $S/beta.html && python3 $S/beta_patch.py $S/beta.html >/dev/null && python3 $S/beta_patch2.py $S/beta.html >/dev/null && python3 $S/beta_patch3.py $S/beta.html
+cp /home/claude/chord-palette.html $S/beta.html   # 試作版＝いつもの版と同じ中身（保存データのキーと音源の場所だけ分ける）。試作の変更はここで beta.html に当てる
 python3 - <<'PY'
 S='/tmp/claude-0/-home-claude/cb90b389-4cb1-5166-985c-0cf20ec415ab/scratchpad'
 p=S+'/beta.html'; s=open(p).read()

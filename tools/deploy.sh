@@ -6,6 +6,9 @@ cd /home/claude/chord-palette
 N=$(( $(git rev-list --count HEAD) + 1 )); D=$(TZ=Asia/Tokyo date +%Y-%m-%d)
 sed -i -E "s/ver 1\.[0-9]+（[0-9-]+）/ver 1.$N（$D）/g" /home/claude/chord-palette.html
 { cat $S/hdr.txt; cat /home/claude/chord-palette.html; printf '\n</body>\n</html>'; } > index.html
+# 試作版も同じ中身で作り直し、ソースも tools/ に残す
+bash $S/build_beta.sh >/dev/null && cp $S/site/beta/index.html beta/index.html
+cp /home/claude/chord-palette.html tools/chord-palette.src.html; cp $S/build_beta.sh $S/deploy.sh tools/
 git add -A && git commit -qm "$1（ver 1.$N）
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
