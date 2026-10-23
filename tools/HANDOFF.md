@@ -6,28 +6,40 @@
 - GitHub: `kanqlabo-web/chord-palette`（GitHub Pages で公開）
   - いつもの版: https://kanqlabo-web.github.io/chord-palette/ （`index.html`）
   - 試作版: https://kanqlabo-web.github.io/chord-palette/beta/ （`beta/index.html`）
-- 本体のソース: `tools/chord-palette.src.html`
-  - `index.html` は「`tools/hdr.txt` ＋ ソース ＋ 閉じタグ」で作る。**直すのはソースだけ**（index.html を直接直さない）
+  - 講義版: https://kanqlabo-web.github.io/chord-palette/lecture/ （`lecture/index.html`）
+  - 3つの版を選ぶページ: https://kanqlabo-web.github.io/chord-palette/select/ （`select/index.html`、手書き）
+- 更新情報の一覧: `CHANGELOG.md`（直下）。版数は `X.XX.XXX`（左=とても大きな改革、真ん中=中くらいの更新、右=細かい修正。一覧に右はのせない）
 - 音源: `snd/*.json`（WebAudioFont の音を mp3 にして base64 で入れたもの）
   - 楽器は `{ "音の高さ": [ {lo,hi,op,ct,ft,ls,le,sr,f} ] }`、ドラムキットは MIDI のノート番号ごと
   - 足りない音は `git clone --filter=blob:none --no-checkout --depth 1 https://github.com/surikov/webaudiofontdata` → `git checkout HEAD -- sound/<ファイル>` で1つずつ取れる（raw.githubusercontent.com は使えないことが多い）
 
+## ソースの置き場所（ver 5.21 でファイルを分けた）
+- `tools/src/` が本体: `head.html`・`style.css`・`body.html`・`js/01-music.js` 〜 `js/06-save.js`
+  - JS はふつうの `<script>` を順に読む形。トップレベルの変数は共有されるが、**関数の巻き上げはファイルをまたがない**（後のファイルの関数を、前のファイルの読み込み中に呼ばない）
+  - 保存データのキーは `STK('chord-palette-v3')` のように書く（版ごとに `''`・`cpbeta-`・`cplec-` が前に付く）。音源の場所は `CP.snd`
+- `tools/beta-src/`: 試作版で**差しかえるファイルだけ**を置く（同じ名前のファイルが本体の代わりになる。新しいファイル `js/07-tracks.js` は試作版だけ）
+- `tools/lecture-src/`: 講義版で足すファイル（`js/08-lecture.js`）。本体＋これ
+- `tools/build.py` が、`index.html`＋`core/`、`beta/index.html`＋`beta/core/`（差しかえ分だけ）、`lecture/` を作る。`window.CP_CONF={store,snd,kind}` で版を見分ける。最後に JS をつなげて `node --check` する
+- **直すのは tools/ の中だけ**（index.html や core/ を直接直さない）
+- 試作版の変更を本体へ移すときは、`beta-src` のファイルを `src` へ移して、`beta-src` から消す（ユーザーの OK が出てから）
+
 ## 作業の流れ
 1. clone: `git clone --depth 1 https://github.com/kanqlabo-web/chord-palette`
-2. 手元で確認: リポジトリの直下で `python3 -m http.server 8765` → Playwright（`tools/t*.js`）で `http://localhost:8765/`（試作版は `/beta/`）を開く
+2. 手元で確認: リポジトリの直下で `python3 -m http.server 8765` → Playwright（`NODE_PATH=$(npm root -g) node tools/t*.js`）で `http://localhost:8765/`（`/beta/`・`/lecture/`）を開く
    - サーバーはターンをまたぐと止まることがある。止まっていたら起動し直す
-3. 公開: `bash tools/deploy.sh "コミットメッセージ"`
-   - 版数を1つ上げて日付を入れ、index.html と beta/index.html を作り、構文チェックして push する
-   - コミットに付ける行は `COMMIT_TRAILER="..." bash tools/deploy.sh "..."` で渡す
-   - 版数は index.html の今の版数＋1（浅いクローンでもずれない）
+3. 公開: `bash tools/deploy.sh [patch|minor|major] "コミットメッセージ"`
+   - `tools/VERSION`（1行目が版数、2行目が日付）を上げて build.py で作り、commit・push する。省略時は patch
+   - minor・major のときは `CHANGELOG.md` に1行足してから
+   - コミットに付ける行は `COMMIT_TRAILER="..." bash tools/deploy.sh ...` で渡す
    - gh のログインはできないことが多いので、Pages の完了待ちはしない。github.io もこの環境からは開けないことが多い
-4. 試作版だけ変えたいとき: `tools/build_beta.sh` の中で beta.html に変更を当てる（保存データのキーは `cpbeta-`、音源は `../snd/`）。OK が出たらソースへ移す
+4. **公開の前に `node tools/tparall.js` で「ALL SAME」を確かめる**（全19スタイルを、通常モードと「PRO に取り込んだもの」で鳴らし比べる。試作版が対象）
 
 ## 確認用の道具（tools/）
 - `mid.py` / `nd.py` / `dr.py`: MIDI の中身を小節ごとに書き出す（`python3 tools/nd.py ファイル.mid`）
 - `tsty.js`: 全スタイルを鳴らしてエラーがないか
 - `tallsty.js`: 全スタイルの音を JSON に書き出す（変更前後の比較用。ギター系・ロックなどは毎回少しランダムに変わる）
 - `tbal.js`: バラード（ballade.mid と同じコード）を小節ごとに書き出す
+- `tparall.js`: 全スタイルで、通常モードと PRO に取り込んだものが同じ音になるか（公開前に必ず）
 - `tpar.js`: 通常モードのバラードと、PRO でマイパターンに取り込んだものが同じ音になるか
 - `torn.js` / `trand.js`: 飾りの出方（いろいろな進行・ランダムな進行）、飾りが2音同時に鳴らないか
 - `tvoic.js`: 右手の和音のはしが半音でぶつかる形がないか
@@ -36,9 +48,11 @@
 - `terr.js`: 開いたときのエラーだけ見る
 
 ## 決まりごと（ユーザーとの約束）
+- **基本の考え**: 音楽にまったく触れてこなかった人が、作曲の第一歩を踏み出すためのアプリ（「うさぎの絵ならだれでも描ける」ように）。下手な曲をたくさん作ってほしい。たくさんの機能は基本ぜんぶおまけで、初心者がいちばん先
+- 大きな変更は、まず試作版（beta）に作る
 - 返事は丁寧語（です・ます）。短い前置き＋見出し付きの箇条書き。絵文字は使わない（アプリの UI もベクターのアイコン）
 - アーティファクトは作らない。GitHub への push は確認なしでよい
-- **通常モードでできることは、必ず PRO（マイパターン）でも同じものを作れるようにする**（取り込むと鳴り方が同じになること。`tpar.js` のように確かめる）
+- **通常モードでできることは、必ず PRO（マイパターン）でも同じものを作れるようにする**（取り込むと鳴り方が同じになること。`tparall.js` で確かめる）。マイパターンの形は壊れてもよいが、今までの演奏が新しいしくみで完全に再現できないなら NG
 - **独自の機能を足すときは、先にユーザーに申請する**（ユーザーが「実装してかまわない」と言った範囲は除く）
 - 名前・説明は、楽器にくわしくない一般の人にわかる言葉で（作業用の名前や MIDI のファイル名を画面に出さない）
 - 使わなくなったもの・わかりにくくなったものは整理する（聴き比べ用の候補などを残さない。古い保存データは別名で置きかえる）
@@ -80,8 +94,23 @@
 - 壮大: 弦楽器の合奏＋ホルン（同じ音はつなぐ）。音量は コード1・コード2 1.1・ドラム0.25・ベース0.75
 - アニソン: 上もの（コード2）なし
 
+## 試作版（beta）だけにあるもの
+- **複数の楽器（パート）**: `PARTN`（0=コード、1=コード2、2〜=`state.xtr[n-2]`）、`withPart(k,f)` でパートごとの状態（`PS`）を切りかえて鳴らす。チャンネルごとに 音量→左右（StereoPanner）→出力、響き（convolver）への送り。`state.mix[ch]={v,m,s,pan,rev}`
+- トラックの種類: `'arp'`・`'arp2'`・`'x:ID'`・`'drum'`・`'bass'`。`xOf`・`patOf`・`setPatOf`・`partOf` で読み書きする
+- **PRO のトラック画面**（`07-tracks.js`）: 伴奏の帯をタップすると開く。行ごとに M/S、パターン（タップでそのまま編集。いつもの伴奏は自分用のコピーを作り、何も変えずに閉じたら消す）、横スワイプで音量・左右・響き、名前と色、楽器の追加・削除、「伴奏スタイルから作り直す」
+- **PRO への取り込みは損失なし**: マイパターンの音に、元の和音のまとまり（`g`）・順番（`k`）・飾りの生の値・`oc`・`when`・小数の長さを持たせる。小節の場面が違うものは `contNotes`。`tparall.js` で確かめる
+- 見直し（ver 5.22.001）: 設定の並び（レベル→曲の設定→表示→ライブラリ→PRO→書き出し・セーブ→リセット）、右上の「Key」「楽器」を押せるように、パターン編集の再生ボタンを上へ・細かい設定を折りたたみ
+
+## 講義版（lecture）
+- 先生の端末で「部屋を作る」→ 部屋番号（4けた）とパスワード。受講者は `lecture/#r=部屋&p=パスワード` のリンク（QR）を開くとすぐ参加。先生が「LEVEL n を開放」すると受講者の `LVL` が上がる（アンロックの案内が出る）
+- Firebase Realtime Database の REST＋EventSource。先生だけ匿名ログイン。データは `lectures/{部屋}-{パスワード}`（`lv`・`owner`・`m/{受講者}`=最後に見えた時刻）
+- 設定は `tools/lecture-src/js/08-lecture.js` 先頭の `LECTURE_FB` だけ。空のあいだは BroadcastChannel で同じブラウザ内だけ動く。手順は `tools/LECTURE_FIREBASE.md`
+
 ## 保留中・これからのこと
-- **PRO 画面の整理（ユーザーが一時中止）**: メイン画面は通常モードと同じく伴奏を1行にまとめ、タップで DAW 風の画面（楽器ごとの行、横スワイプで音量・M/S・パン・リバーブ）を開く案。楽器の複数追加・パン・リバーブ・名前と色の変更も入れる予定だった。再開するときはユーザーに確認してから
+- 試作版の PRO トラック画面・見直しを、いつもの版へ移すか（ユーザーの OK 待ち）
+- 講義版の Firebase の設定（ユーザーが設定する。apiKey とアドレスをもらえれば貼って公開）
+- 楽器をまたいだ同じ高さの音（シティポップの電子ピアノとブラス、壮大の弦とホルンなど）は、重ねる意図の音として残している
+- PRO のメイン画面で、マスの上の行（進行名・「コードを編集」）が狭いと2行になる
 - バラード: 3小節目（B♭/D）などで、和音の形が MIDI と違う（MIDI はベースの音を右手のいちばん下に重ねる）。そのため出る飾りも MIDI と変わる小節がある
 - ギターの押さえ方（guitarShape）では、まれにはしが半音でぶつかる形が残る（Bm(M7) など）
 
