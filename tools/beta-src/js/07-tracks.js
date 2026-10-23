@@ -199,7 +199,7 @@ button.badge{font:inherit;font-size:.72rem;cursor:pointer}
   const ps=$('patSheet'); ps.insertBefore(pd, ps.children[1]);
 })();
 const trk=$('trk');
-let TRK_SEL=null;   // ミキサーを開いているトラック
+let TRK_SEL=null, TRK_STY=false;   // ミキサーを開いているトラック
 // 再生ボタン・テンポ（メイン画面の .transport）を、開いているあいだはこちらの下へ移す
 const TP=document.querySelector('.app>.transport'), TP_MARK=document.createComment('transport');
 function tpIn(){ if(TP && TP.parentNode!==$('dFoot')){ TP.parentNode.insertBefore(TP_MARK,TP); $('dFoot').appendChild(TP); } }
@@ -248,11 +248,10 @@ function renderTracks(){ if(trk.hidden) return; if(!state.pro){ trk.hidden=true;
   const ad=document.createElement('div'); ad.className='drow dadd'; ad.innerHTML=`<div class="dh"><button class="daddb" id="trkAdd" aria-label="楽器を足す">${ICO.plus}</button></div>`; box.appendChild(ad);
   $('trkAdd').onclick=addTrack;
   const hint=document.createElement('p'); hint.className='dhint'; hint.textContent='色の帯（コードごとの弾き方）をタップすると、その場所で使っている弾き方をそのまま編集できます。帯の区切りを左右にドラッグすると、コードの長さ・食い・後ろ倒しを変えられます。楽器の絵をタップするとミキサー（音量・左右・コンプ・エコーなど）、上のコード名をタップするとコードを編集できます。'; box.appendChild(hint);
-  const mo=document.createElement('div'); mo.className='dmore'; mo.innerHTML=`<details id="trkStyleBox"><summary>伴奏スタイルから作り直す</summary><p>選んだスタイルと同じ鳴り方・ミックスのトラックに置きかえます（いまのトラックはなくなります）。</p><div class="tstyles" id="trkStyles"></div></details>`; box.appendChild(mo);
-  const sb=$('trkStyles'); STYLES.forEach(st=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=st.name;
-    b.onclick=()=>{ if(!b.dataset.armed){ sb.querySelectorAll('[data-armed]').forEach(o=>{ delete o.dataset.armed; o.textContent=o.dataset.n; }); b.dataset.n=st.name; b.dataset.armed='1'; b.textContent=st.name+'（もう一度押すと置きかえ）'; return; }
-      proFromStyle(st); if(st.bpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; } state.tk={}; applyMix(); save(); renderAll(); ensureSounds(); renderTracks(); toast(st.name+'のトラックにしました'); };
-    sb.appendChild(b); });
+  const mo=document.createElement('div'); mo.className='dmore'; mo.innerHTML=`<details id="trkStyleBox"><summary>伴奏スタイルから作り直す</summary><p>選んだスタイルと同じ鳴り方・ミックスのトラックに置きかえます（いまのトラックはなくなります）。</p><div id="trkStyles"></div></details>`; box.appendChild(mo);
+  const sb=$('trkStyles'); let armed=null; const sp=()=>twoPane(sb, styleCats(), null, pickSt); const bx=$('trkStyleBox'); bx.ontoggle=()=>{ TRK_STY=bx.open; if(bx.open) sp(); }; if(TRK_STY){ bx.open=true; }
+  function pickSt(id){ const st=STYLES.find(x=>x.id===id); if(armed!==id){ armed=id; toast('もう一度押すと「'+st.name+'」のトラックに置きかえます'); return; }
+    proFromStyle(st); if(st.bpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; } state.tk={}; applyMix(); save(); renderAll(); ensureSounds(); renderTracks(); toast(st.name+'のトラックにしました'); }
   const hd=document.createElement('div'); hd.className='dhead'; hd.id='dHead'; hd.hidden=true; box.appendChild(hd);
   requestAnimationFrame(()=>{ const bw=dawBarW(); trk.style.setProperty('--dbw',bw+'px');
     box.querySelectorAll('.dtl').forEach(t=>t.style.width=(bw*N)+'px');
@@ -400,3 +399,56 @@ $('drumLane').onclick=()=>state.pro?openTracks():openSheet('drum');
 // 右上の「Key」「楽器」の表示は、押すとそれを変える場所が開く
 $('keyBadge').onclick=()=>{ $('menuBtn').click(); setTimeout(()=>$('keyChips').scrollIntoView({block:'center',behavior:'smooth'}),60); };
 $('instBadge').onclick=()=>{ if(!$('arpLane').hidden) $('arpLane').click(); };
+
+// ---------- 選ぶ画面を「分類 → 一覧」の2段に（GarageBand の音色ライブラリのように） ----------
+// 左に分類、右にその分類の一覧（絵・名前・説明）。いま選んでいるものがある分類には印がつく
+(function(){ const st=document.createElement('style'); st.textContent=`
+.tpane{display:grid;grid-template-columns:minmax(92px,32%) 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface);height:min(48vh,360px);margin:2px 0}
+.tpane .tpl{overflow-y:auto;background:var(--bg);border-right:1px solid var(--line);overscroll-behavior:contain}
+.tpane .tpr{overflow-y:auto;overscroll-behavior:contain}
+.tpane .tpc{display:flex;justify-content:space-between;align-items:center;gap:6px;width:100%;border:0;border-bottom:1px solid var(--line);background:none;padding:13px 10px 13px 12px;font:inherit;font-size:.82rem;font-weight:700;color:var(--ink);text-align:left;cursor:pointer}
+.tpane .tpc[aria-pressed=true]{background:var(--surface);box-shadow:inset 3px 0 0 var(--t)}
+.tpane .tpc i{width:7px;height:7px;border-radius:50%;background:var(--t);flex:none}
+.tpane .tpc svg{flex:none;color:var(--muted)}
+.tpane .tpi{display:flex;align-items:center;gap:10px;width:100%;border:0;border-bottom:1px solid var(--line);background:none;padding:10px 12px;cursor:pointer;text-align:left;font:inherit;color:var(--ink)}
+.tpane .tpi[aria-pressed=true]{background:color-mix(in srgb,var(--t) 16%,var(--surface))}
+.tpane .tpi>svg{flex:none;color:var(--muted);width:26px;height:26px}
+.tpane .tpi[aria-pressed=true]>svg{color:var(--t)}
+.tpane .tpi span{flex:1;min-width:0}
+.tpane .tpi b{display:block;font-size:.86rem;font-weight:700;line-height:1.35}
+.tpane .tpi small{display:block;color:var(--muted);font-size:.7rem;line-height:1.4;margin-top:1px}
+.tpane .tpi canvas{width:70px;height:30px;flex:none;border-radius:6px;background:var(--bg)}
+.tpane .tpi .tck{flex:none;color:var(--t)}`; document.head.appendChild(st); })();
+const ICO_CK='<svg class="tck" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+// cats：[[分類の名前, [{k, label, sub, ico（svg）か cv（キャンバスに描く関数）}]]]
+function twoPane(el, cats, cur, onPick){ cats=cats.filter(c=>c[1].length);
+  const has=c=>c[1].some(i=>i.k===cur), g=(cats.find(c=>c[0]===el.dataset.g)||cats.find(has)||cats[0])[0];
+  el.innerHTML=''; el.classList.add('tpane'); el.classList.remove('chips','gpick');
+  const L=document.createElement('div'), R=document.createElement('div'); L.className='tpl'; R.className='tpr'; el.append(L,R);
+  cats.forEach(c=>{ const b=document.createElement('button'); b.className='tpc'; b.setAttribute('aria-pressed',c[0]===g);
+    b.innerHTML=`<span>${esc(c[0])}</span>${has(c)?'<i aria-label="選んでいるものがあります"></i>':ICO.chev}`; b.onclick=()=>{ el.dataset.g=c[0]; twoPane(el,cats,cur,onPick); }; L.appendChild(b); });
+  const draws=[]; cats.find(c=>c[0]===g)[1].forEach(it=>{ const b=document.createElement('button'); b.className='tpi'; b.setAttribute('aria-pressed',it.k===cur);
+    b.innerHTML=`${it.cv?'<canvas></canvas>':(it.ico||'')}<span><b>${esc(it.label)}</b>${it.sub?`<small>${esc(it.sub)}</small>`:''}</span>${it.k===cur?ICO_CK:''}`;
+    b.onclick=()=>onPick(it.k); R.appendChild(b); if(it.cv) draws.push([b.querySelector('canvas'),it.cv]); });
+  const sel=R.querySelector('[aria-pressed=true]'); if(sel) requestAnimationFrame(()=>{ R.scrollTop=Math.max(0,sel.offsetTop-R.clientHeight/3); });
+  if(draws.length) requestAnimationFrame(()=>draws.forEach(([cv,f])=>{ if(cv.clientWidth) f(cv); })); }
+// 音色の絵
+const famOfInst=k=>/^(steel|nylon|eguitar|dist)$/.test(k)?'guitar':/^strings/.test(k)?'strings':/^(brass|sbrass|trumpet|trombone|horn)/.test(k)?'brass':k==='sax'?'sax':/^(synth|pad)$/.test(k)?'synth':k==='glock'?'bells':/^(koto|shami)$/.test(k)?'wa':'keys';
+const catsOf=(G,names,ico)=>{ const used=new Set(), out=G.map(([h,ks])=>[h,ks.filter(k=>names[k]).map(k=>{ used.add(k); return {k,label:names[k],ico:ico(k)}; })]);
+  const rest=Object.keys(names).filter(k=>!used.has(k)); if(rest.length) out.push(['そのほか',rest.map(k=>({k,label:names[k],ico:ico(k)}))]); return out; };
+// これまでの「分類のチップ＋一覧のチップ」（groupPick）を、2段の選ぶ画面に置きかえる（音色・ドラムの音）
+groupPick=function(el,G,names,cur,onPick){ const isKit=names===KITS; twoPane(el, catsOf(G,names,k=>INST_ICO[isKit?'drum':famOfInst(k)]), cur, onPick); };
+
+// 伴奏スタイルの分類
+const STYLE_CATS=[['定番',[0,1,3,2,15]],['しっとり・やさしい',[4,5,16,14]],['おしゃれ',[18,11,12,19,9]],['おどれる・はねる',[10,8,13]],['特別な雰囲気',[17,20]]];
+const styleSub=st=>[INSTS[st.inst], st.arp2&&st.inst2?INSTS[st.inst2]:null, st.drum==='none'?'ドラムなし':KITS[st.kit], st.bass===false?null:'ベース'].filter(Boolean).join('・');
+const styleCats=()=>STYLE_CATS.map(([h,ids])=>[h, ids.map(id=>STYLES.find(s=>s.id===id)).filter(Boolean).map(st=>({k:st.id, label:st.name, sub:styleSub(st),
+  cv:cv=>{ const g=fit(cv), col=colors(), H=cv.height; drawArpBar(g,0,0,cv.width,H*.55,ARPS[st.arp],col.t,col); if(DRUMS[st.drum]) drawDrumBar(g,0,H*.58,cv.width,H*.42,DRUMS[st.drum],col); }}))]);
+// 通常モードの「伴奏スタイル」：選び方はこれまでと同じ（音色・テンポをそのままにする設定も）
+{ const os=openSheet; openSheet=function(kind){ const r=os.apply(this,arguments);
+    if(!state.pro && (kind==='arp'||kind==='drum'||kind==='style')) requestAnimationFrame(()=>{ const opts=$('opts'); opts.classList.remove('opts');
+      twoPane(opts, styleCats(), (styleNow()||{}).id, id=>{ const st=STYLES.find(s=>s.id===id); const keep={inst:state.inst,arp2:state.arp2,inst2:state.inst2,kit:state.kit,bass:state.bass,bassSnd:state.bassSnd};
+        setStyle(st); if(state.keepInst) Object.assign(state,keep); else pickInst(st.inst); renderAll(); save();
+        if(st.bpm && !state.keepBpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; save(); } closeAll(); }); });
+    else { $('opts').classList.remove('tpane'); $('opts').classList.add('opts'); delete $('opts').dataset.g; }
+    return r; }; }
