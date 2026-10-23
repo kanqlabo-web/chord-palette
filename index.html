@@ -54,8 +54,8 @@ h1{flex:none}
 .badge{font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 9px;white-space:nowrap;background:var(--surface)}
 
 /* palette */
-.palette{display:grid;grid-template-columns:repeat(3,minmax(0,auto));grid-template-rows:repeat(3,minmax(0,min(24vw,130px)));justify-content:center;align-content:center;gap:var(--gap) 10px;min-height:0}
-.palette .tile{height:min(100%,24vw,130px);aspect-ratio:1/.82;align-self:center;justify-self:center}
+.palette{display:grid;grid-template-columns:repeat(3,minmax(0,auto));grid-template-rows:repeat(3,minmax(0,min(26vw,150px)));justify-content:center;align-content:center;gap:var(--gap) 10px;min-height:0}
+.palette .tile{height:min(100%,26vw,150px);aspect-ratio:1/.88;align-self:center;justify-self:center}   /* パレットを大きめに（横幅いっぱいまで） */
 .palette .tile:nth-child(7){grid-column:2}
 .tile{--fn:var(--t);position:relative;border-radius:16px;border:2px solid color-mix(in srgb,var(--fn) 40%,var(--line));
   background:color-mix(in srgb,var(--fn) 10%,var(--surface));display:flex;align-items:center;justify-content:center;
@@ -253,8 +253,10 @@ body.pro .lane canvas{height:20px}
 body.pro .lane canvas#bassCv{height:16px}
 body.pro .lane{gap:2px}
 body.pro .app{gap:7px}
+body.pro .slots .slot{aspect-ratio:auto;height:min(12vh,110px);max-height:none}   /* PRO：下の4マスを少し低くして、そのぶんパレットを大きく */
 body.pro .play{width:52px;height:52px}
-body.pro .transport{gap:3px}
+body.pro .transport{gap:12px;flex-direction:row}   /* PRO：再生ボタンとBPMを1行にまとめて、パレットの場所を広く */
+body.pro .playrow{gap:10px}body.pro .bpm{flex:1;width:auto}body.pro .hbtn{width:36px;height:36px}
 .opt canvas.half{height:17px!important}
 
 /* page strip (8/16 bars) */
@@ -534,7 +536,7 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .opsl{display:flex;flex-direction:column;gap:8px;width:100%;text-align:left}
 .opsl div{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);font-size:.82rem}
 .opsl b{font-family:var(--display);font-weight:900}
-.lvbig{grid-column:3;grid-row:3;align-self:center;justify-self:center;height:min(100%,24vw,130px);aspect-ratio:1/.82;min-width:0;overflow:hidden;border:0;border-radius:18px;
+.lvbig{grid-column:3;grid-row:3;align-self:center;justify-self:center;height:min(100%,26vw,150px);aspect-ratio:1/.88;min-width:0;overflow:hidden;border:0;border-radius:18px;
   background:var(--ink);color:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px;font:inherit;cursor:pointer;text-align:center;transition:transform .1s}
 .lvbig:active{transform:scale(.97)}
 .lvbig small{font-size:.6rem;font-weight:700;letter-spacing:.12em;opacity:.7}
@@ -707,7 +709,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.189（2026-10-23）</p>
+    <p class="appver">ver 1.190（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -774,7 +776,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.189（2026-10-23）</p>
+  <p class="appver">ver 1.190（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
