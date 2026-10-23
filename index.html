@@ -697,7 +697,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.164（2026-10-23）</p>
+    <p class="appver">ver 1.165（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -764,7 +764,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.164（2026-10-23）</p>
+  <p class="appver">ver 1.165（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1399,17 +1399,17 @@ const ARPS = {
   glockline:{name:'上もの：高い音でキラキラ', pro:'上もの：高音の短いフレーズ', legato:true,
            sit:{bar:[[[0,[6],6,.5],[6,[7],2,.44],[8,[8],8,.48]]],
                 halfA:[[[0,[6],6,.5],[6,[7],2,.44]]], halfB:[[[0,[8],8,.48]]], beat:[[[0,[6],4,.46]]]}},
-  // brass2.mid から（2小節ひとまとまり）。16分食い・16分でハネる・タイミングは人間っぽく揺らす
+  // brass2.mid から（2小節ひとまとまり）。16分食い。頭の「プァー↘」（長さ3.4マス＋フォール）は前の合いの手のまま
   // 1小節目：頭で上3音「パッ」→ 真ん中の音からペンタで1つ上へ「タ・タ」→ 上2音を16分で刻み、3つ目だけペンタで1つ下（ぶつかれば和音の音）
   // 2小節目：食って入った和音を2マス目で「パッ」と弾き直し、低い所でキーの「5 6 1 1 6 6 1 1 6」（メロディ行を1オクターブ下げて）
-  brassobb:{name:'上もの：パッと合いの手', pro:'上もの：ヒット＋ペンタのオブリ（2小節・16分食い・ハネ）', legato:true, pushBy:1, push2nd:true, swing16:true, loose:true, melOct:-12, avoid:false, noRoot:true, rhShift:13, vol:.72, even:true,
-           sit:{bar:[[[0,[1,2,3],.6,.78],[6,[2],1,.64],[7,[2],1,.66,null,'pu'],
+  brassobb:{name:'上もの：パッと合いの手', pro:'上もの：ヒット＋フォール＋ペンタのオブリ（2小節・16分食い）', legato:true, pushBy:1, push2nd:true, melOct:-12, avoid:false, noRoot:true, rhShift:13, vol:.72, even:true,
+           sit:{bar:[[[0,[1,2,3],3.4,.78,null,'fall'],[6,[2],1,.64],[7,[2],1,.66,null,'pu'],
                        [8,[2,3],.5,.74],[9,[2,3],.5,.66],[10,[2,3],.5,.68,null,'pd'],[11,[2,3],.5,.72]],
                       [[2,[1,2,3],.6,.76],[6,['d5'],1,.62],[7,['d6'],1,.64],[8,['d8'],.5,.68],[9,['d8'],.5,.6],[10,['d6'],.5,.64],[11,['d6'],.5,.58],
                        [12,['d8'],.5,.66],[13,['d8'],.5,.6],[14,['d6'],1,.64]]],
-                halfA:[[[0,[1,2,3],.6,.78],[6,[2],1,.64],[7,[2],1,.66,null,'pu']]],   // 前半2拍：「パッ」＋「タ・タ」
-                halfB:[[[0,[1,2,3],.6,.76],[1,[2,3],.5,.66],[2,[2,3],.5,.68,null,'pd'],[3,[2,3],.5,.72]]],   // 3拍目から：「パッ」＋16分の刻み
-                beat:[[[0,[1,2,3],.6,.74]]],
+                halfA:[[[0,[1,2,3],2,.78],[6,[2],1,.64],[7,[2],1,.66,null,'pu']]],   // 前半2拍：「パッ」＋「タ・タ」
+                halfB:[[[0,[1,2,3],2,.76],[2,[2,3],.5,.68,null,'pd'],[3,[2,3],.5,.72]]],   // 3拍目から：「チャッ」＋16分の刻み
+                beat:[[[0,[1,2,3],2,.74]]],
                 push:[[[0,[1,2,3],2.6,.8]]]}},   // 2小節目へ16分食って入り、2マス目の「パッ」の直前までのばす
 
   // メロディ：高い所で「タン・タン・タ」（3+3+2）と上がっていく（ホルン・ストリングス向き）
