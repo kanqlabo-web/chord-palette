@@ -1159,6 +1159,10 @@ function chordNotes(v,prev){
   const seventh = ivs.includes(10)?10 : ivs.includes(11)?11 : (ivs.includes(9)&&sp.q==='dim')?9 : [0,2,4,5,7,9,11].includes((sp.o+11)%12)?11 : 10;
   // ベース：E1〜E♭2 が基本。再生中は左手と同じ考え方で、前の音からつながる高さを選ぶ
   const bLo=BASS_DEF+BOFF(), bass=leadTo(bLo+(((bpc-bLo)%12)+12)%12, bpc, bLo, LHCTX.use?LHCTX.prevB:null, 0);   // ベースの音域（いちばん下の音から1オクターブの中）
+  // ボサノバの指弾きの形（bossaV）：5弦（か6弦）のルート＋3度・7度・9度（なければ6度・5度、3度の1オクターブ上）
+  if(pat&&pat.bossaV){ const r=43+(((bpc-43)%12)+12)%12, t3=[4,3,5,2].find(i=>ivs.includes(i))??4, mid=[10,11,9].find(i=>ivs.includes(i))??7,
+      top=[14,13,15].find(i=>ivs.includes(i))??(ivs.includes(21)?21:ivs.includes(17)?17:t3+12), v=[r+t3,r+mid,r+top].sort((a,b)=>a-b);
+    const T=[r,...v,r+fifth,r+12,...v.map(x=>x+12),null,null]; return {up:T, tones:T, R:v, ra:v, bass, slash, fifth, third, seventh, rpc, bpc, ivs, q:sp.q}; }
   // ギターの音色：実際のギターで押さえる形（ローコード、なければバレーコード）で鳴らす
   if(GUITARS.has(state.inst)){ const gs=guitarShape(ivs.map(i=>(rpc+i)%12), bpc, (rpc+fifth)%12);
     if(gs){ const n=gs.length, top=gs.slice(n-3), mid=gs.slice(1,n-3);
@@ -1324,9 +1328,8 @@ const ARPS = {
   hardrock:{name:'ロック（刻み）', pro:'8分刻み（ブリッジミュート）', rhAbove:true, ev:[[0,[0,4,5,1,2,3],3.5,.95,'d'],[4,[0,4,5,1,2,3],.7,.5,'d'],[6,[0,4,5,1,2,3],1.8,.88,'d'],[8,[0,4,5,1,2,3],.7,.55,'d'],[10,[0,4,5,1,2,3],.7,.5,'d'],[12,[0,4,5,1,2,3],1.8,.88,'d'],[14,[0,4,5,1,2,3],1.8,.84,'d']]},
   // キー名 rhodes は保存データとの互換のため（中身はネオソウル風のピアノ）
   // ジャジー：1小節同じコードなら「ジャー・ジャー・ジャカ｜ン・チャ・ン・ッチャー」、3拍目から変わったら左手が拍の頭・右手が16分あと
-  rhodes: {name:'ジャジー', pro:'ネオソウル・コンピング（16分・3度7度の形、2小節目は次のコードへつなぐ）', legato:true, shell:true,
-           sit:{bar:[[[0,RH,4,.72],[0,[0],6,.7],[4,RH,2,.6],[6,[0],2,.55],[7,RH,1,.56],[8,[0],2,.62],[9,RH,1,.6],[10,[0],4,.58],[12,RH,4,.68],[14,[0],2,.55]],
-                      [[0,RH,4,.72],[0,[0],6,.7],[4,RH,2,.6],[6,[0],2,.55],[7,RH,1,.56],[8,[0],2,.62],[9,RH,1,.6],[10,[0],4,.58],[12,RH,1,.62],[13,[3],1,.56,null,'nx'],[14,[3],1,.6,null,'nx'],[15,[3],1,.64,null,'nx']]],
+  rhodes: {name:'ジャジー', pro:'ネオソウル・コンピング（16分）', legato:true,
+           sit:{bar:[[[0,RH,4,.72],[0,[0],6,.7],[4,RH,2,.6],[6,[0],2,.55],[7,RH,1,.56],[8,[0],2,.62],[9,RH,1,.6],[10,[0],4,.58],[12,RH,4,.68],[14,[0],2,.55]]],
                 halfA:[[[0,RH,4,.72],[0,[0],6,.7],[4,RH,2,.6],[6,[0],2,.55],[7,RH,1,.56]]],
                 halfB:[[[0,[0],2,.66],[1,RH,1,.62],[2,[0],4,.6],[4,RH,4,.68],[6,[0],2,.55]]],
                 beat:[[[0,[0],2,.66],[1,RH,1,.62],[2,[0],2,.58]]]}},
@@ -1348,7 +1351,7 @@ const ARPS = {
   pballad:{name:'ピアノバラード', pro:'バラード（右手の分散和音）', legato:true, accLink:true,
            // 1小節：左手はルート＋オクターブをのばす。右手は上が 1拍目・2拍目裏・4拍目、中が 1拍目・2拍目・4拍目裏、下は1拍目裏から。3拍目からアクセント
            sit:{bar:[[[0,[0],16,.66],[0,[5],16,.5],[0,[3],6,.6],[0,[2],4,.56],[2,[1],14,.44],[4,[2],10,.47],[6,[3],6,.5],[8,[6],8,.62],[12,[3],4,.5],[14,[2],2,.42]],
-                      [[0,[0],16,.66],[0,[5],16,.5],[0,[3],6,.6],[0,[2],4,.56],[2,[1],14,.44],[4,[2],10,.47],[6,[3],6,.5],[8,[6],4,.6],[12,[6],1,.48,null,'nx'],[13,[6],1,.5,null,'nx'],[14,[6],1,.52,null,'nx'],[15,[6],1,.55,null,'nx']]],   // 2小節目：最後の1拍で次のコードへ16分で流れる
+                      [[0,[0],16,.66],[0,[5],16,.5],[0,[3],6,.6],[0,[2],4,.56],[2,[1],14,.44],[4,[2],10,.47],[6,[3],6,.5],[8,[6],2,.6],[10,[3],2,.48,null,'nx'],[12,[3],2,.5,null,'nx'],[14,[3],2,.53,null,'nx']]],   // 2小節目：3拍目裏から8分で、右手の高さのまま次のコードへ流れる
                 halfA:[[[0,[0],8,.66],[0,[5],8,.5],[0,[3],6,.6],[0,[2],4,.56],[2,[1],6,.44],[4,[2],4,.47],[6,[3],2,.5]]],
                 halfB:[[[0,[0],8,.64],[0,[3],4,.6],[0,[2],8,.56],[0,[1],8,.56],[4,[3],4,.5],[6,[6],2,.6]]],
                 beat:[[[0,[0],4,.64],[0,[3],4,.6],[0,[2],4,.56],[0,[1],4,.56]]]}},
@@ -1365,9 +1368,13 @@ const ARPS = {
                 halfB:[[[0,[0,4,5,1,2,3],4.5,.8,'d'],[4,[0,4,5,1,2,3],4,.76,'d'],[6,[3,2,1],2,.74,'u']]],
                 beat:[[[0,[0,4,5,1,2,3],2,.78,'d'],[2,[3,2,1],2,.7,'u']]]}},
 
-  bossa:  {name:'ボサノバ', pro:'ボサノバ（2小節のクラーベ・3度7度の形）', pluck:true, shell:true, legato:true,
-           sit:{bar:[each([0,3,6,10,13],RH,2,(s,i)=>i===0?.72:.6), each([2,6,8,12],RH,2,(s,i)=>i===2?.66:.6)],
-                halfA:[each([0,3,6],RH,2,(s,i)=>i===0?.72:.6)], halfB:[each([0,2,5],RH,2,(s,i)=>i===0?.7:.6)], beat:[each([0,3],RH,1.5,.66)]}},
+  // ボサノバの指弾き（2小節）：親指＝5弦のルート、人差し指＝4弦（3度）、中・薬指＝3弦と2弦（7度と9度）。Dm7(9) なら D3・F3・C4・E4
+  // 1小節目「ラー・メン・パ・ニー・ニ」、2小節目「パ・ニー・ニ・ラー・メン」
+  bossa:  {name:'ボサノバ', pro:'ボサノバの指弾き（親指＋3本指、2小節）', pluck:true, legato:true, bossaV:true,
+           sit:{bar:[[[0,[0],4,.7],[0,[1,2,3],4,.62],[4,[2,3],2,.58],[6,[1],2,.55],[8,[0],2,.66],[10,[2,3],4,.6],[14,[1],2,.55]],
+                      [[0,[0],2,.68],[2,[2,3],4,.6],[6,[1],2,.55],[8,[0],4,.68],[8,[2,3],4,.6],[12,[2,3],2,.58],[14,[1],2,.55]]],
+                halfA:[[[0,[0],4,.7],[0,[1,2,3],4,.62],[4,[2,3],2,.58],[6,[1],2,.55]]], halfB:[[[0,[0],2,.66],[2,[2,3],4,.6],[6,[1],2,.55]]],
+                beat:[[[0,[0],4,.7],[0,[1,2,3],4,.62]]]}},
   // 疾走系：右手は8分で刻み、左手はオクターブで1拍ずつ。いちばん上（アクセント）は「キラッ」と重ねる音色で
   drive:  {name:'疾走ピアノ', pro:'8分刻み＋左手オクターブ（8分食い）', legato:true, pushBy:2,
            // 右手は8分で和音を刻み、左手はオクターブで4分。次のコードへは8分食う
@@ -1435,6 +1442,12 @@ const ARPS = {
 
   // ===== 上もの（ほかのパターンの上に「コード2」で重ねるフレーズ）。どの音色・どのパターンとも組み合わせられる =====
   // キラキラ：「タン・タ・ターン」と、和音の音を高い所で短く（グロッケン・ベル向き）
+  // アニソン：シンセの16分アルペジオ（上の3音を「下・中・上・中」で回す）。2小節目の最後の拍で次のコードへ駆け上がる
+  synarp: {name:'上もの：シンセのアルペジオ', pro:'上もの：16分のシンセアルペジオ（2小節）', legato:false,
+           sit:{bar:[each([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44),
+                     [...each([0,1,2,3,4,5,6,7,8,9,10,11],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44),[12,[8],1,.5,null,'nx'],[13,[8],1,.54,null,'nx'],[14,[8],1,.58,null,'nx'],[15,[8],1,.62,null,'nx']]],
+                halfA:[each([0,1,2,3,4,5,6,7],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44)], halfB:[each([0,1,2,3,4,5,6,7],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44)],
+                beat:[each([0,1,2,3],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44)]}},
   glockline:{name:'上もの：高い音でキラキラ', pro:'上もの：高音の短いフレーズ（2小節目は次のコードへつなぐ）', legato:true,
            sit:{bar:[[[0,[6],6,.5],[6,[7],2,.44],[8,[8],8,.48]],[[0,[6],6,.5],[6,[7],2,.44],[8,[8],4,.48],[12,[8],1,.44,null,'nx'],[13,[8],1,.46,null,'nx'],[14,[8],2,.5,null,'nx']]],
                 halfA:[[[0,[6],6,.5],[6,[7],2,.44]]], halfB:[[[0,[8],8,.48]]], beat:[[[0,[6],4,.46]]]}},
@@ -1464,9 +1477,10 @@ const ARPS = {
   skank:   {name:'レゲエのオルガン', pro:'オルガンのバブル（裏拍の刻み＋16分の跳ね）', legato:false,
            ev:[[1,[0],.35,.36],[2,RH,.55,.72],[3,[4],.35,.34],[5,[0],.35,.36],[6,RH,.55,.68],[7,[4],.35,.34],
                [9,[0],.35,.36],[10,RH,.55,.72],[11,[4],.35,.34],[13,[0],.35,.36],[14,RH,.55,.68],[15,[4],.35,.34]]},
-  hornline:{name:'上もの：上がっていくメロディ', pro:'上もの：付点4分×2＋4分で上行（2小節目は次のコードへつなぐ）', legato:true,
-           sit:{bar:[[[0,[6],6,.56],[6,[7],6,.54],[12,[8],4,.58]],[[0,[6],6,.56],[6,[7],4,.54],[12,[7],1,.5,null,'nx'],[13,[7],1,.52,null,'nx'],[14,[7],2,.56,null,'nx']]],
-                halfA:[[[0,[6],6,.56],[6,[7],2,.5]]], halfB:[[[0,[7],4,.54],[4,[8],4,.56]]], beat:[[[0,[6],4,.52]]]}},
+  hornline:{name:'上もの：上がっていくメロディ', pro:'上もの：付点4分×2＋4分で上行（中音域・2小節目は次のコードへつなぐ）', legato:true, rhShift:-9,
+           // ホルンらしい中音域（いちばん上でも F4 くらい）：右手の 下→中→上 と上がり、2小節目は上→中のあと次のコードへつなぐ
+           sit:{bar:[[[0,[1],6,.58],[6,[2],6,.56],[12,[3],4,.6]],[[0,[3],6,.58],[6,[2],4,.56],[12,[2],1,.5,null,'nx'],[13,[2],1,.52,null,'nx'],[14,[2],2,.56,null,'nx']]],
+                halfA:[[[0,[1],6,.58],[6,[2],2,.54]]], halfB:[[[0,[2],4,.56],[4,[3],4,.58]]], beat:[[[0,[1],4,.56]]]}},
   // クラシック風：左手はルートを2分音符で支え、右手は「下・上・中・上」の分散和音。テンションのあるコードでも3度と7度・9度を残す（ra）
   alberti:{name:'クラシック風', pro:'アルベルティ（左手ルート）', ev:[[0,[0],8,.55],[8,[0],8,.5],...each([0,2,4,6,8,10,12,14],[[1],[3],[2],[3]],2,(s,i)=>i%4===0?.62:.46)]},
 };
@@ -1833,7 +1847,7 @@ function bindRoll(rows){
     velEl.hidden=true; d=null; commitNotes(); drawNotes(); };
   roll.onpointerup=up; roll.onpointercancel=up;
 }
-const ARP_ORDER=['piano4','popanti','drive','pballad','whole','epic','hardrock','strum','garp','citypop','cityep','clavfunk','rhodes','lofi','sync','offbeat','stacc','shuffle','house','bossa','koto','alberti','glockline','brassobb','brasshit','hornline','skank'];
+const ARP_ORDER=['piano4','popanti','drive','pballad','whole','epic','hardrock','strum','garp','citypop','cityep','clavfunk','rhodes','lofi','sync','offbeat','stacc','shuffle','house','bossa','koto','alberti','glockline','brassobb','brasshit','hornline','skank','synarp'];
 // まとめて消したパターン（保存データ・共有リンクは近いものに置きかえる）
 const ARP_ALIAS={ballad:'pballad',sync16:'sync',shuff2:'shuffle',rock8:'hardrock',eighth:'drive'};
 // 通常モードの「伴奏スタイル」：ドラムとコードパターンの組み合わせ
@@ -1841,7 +1855,7 @@ const ARP_ALIAS={ballad:'pballad',sync16:'sync',shuff2:'shuffle',rock8:'hardrock
 const STYLES=[
   {id:0, name:'ポップス（定番）', bpm:96, drum:'pop', arp:'piano4', inst:'piano', kit:'std', bass:true},
   {id:1, name:'ポップス（ノリノリ）', bpm:128, drum:'dpop', arp:'popanti', inst:'piano', kit:'std', bass:true},
-  {id:15, name:'疾走系（アニソン）', bpm:172, drum:'run', arp:'drive', inst:'piano', arp2:'glockline', inst2:'glock', kit:'power', bass:true},
+  {id:15, name:'疾走系（アニソン）', bpm:172, drum:'run', arp:'drive', inst:'piano', arp2:'synarp', inst2:'synth', kit:'power', bass:true},
   {id:2, name:'ロック', bpm:132, drum:'hard', arp:'hardrock', inst:'dist', kit:'power', bass:true},
   {id:3, name:'ギターポップ', bpm:120, drum:'rride', arp:'strum', inst:'eguitar', kit:'room', bass:true},
   {id:16, name:'弾き語り', bpm:92, drum:'none', arp:'strum', inst:'steel', kit:'std', bass:false},
@@ -2060,7 +2074,6 @@ function progLabel(){
 let state={slots:Array(16).fill(null), bars:4, key:'C', label:'num', inst:'piano', arp2:'', inst2:'epiano', kit:'std', drum:'pop', arp:'piano4', bassPat:'auto', bassSnd:'bass', fill:false, bass:true, pro:false, guide:true, myDrums:[], myArps:[], ant:Array(16).fill(null), segs:Array.from({length:16},()=>[]), len:4, bpm:96, ver:7};
 const DEFAULT_STATE=JSON.parse(JSON.stringify(state));   // リセット用の初期設定
 let FIRST_RUN=true;
-// 試作版：はじめて開いたときは、いつもの版の保存データ（進行・レベルなど）を写して使う（いつもの版のデータは変えない）
 try{ if(localStorage.getItem('cpbeta-chord-palette-v3')==null){ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.startsWith('chord-palette')) localStorage.setItem('cpbeta-'+k, localStorage.getItem(k)); } } }catch(e){}
 try{ const s=JSON.parse(localStorage.getItem('cpbeta-chord-palette-v3')); if(s) FIRST_RUN=false; if(s&&Array.isArray(s.slots)&&s.slots.length===16) state={...state,...s}; if(!s.ver||s.ver<6){ state.bass=true; } if(!s.ver||s.ver<7){ state.drum='pop'; state.fill=false; state.ver=7; } if(!s.ver||s.ver<4){ state.inst='spiano'; state.kit='synth'; } state.inst=fixInst(state.inst); state.inst2=fixInst(state.inst2); if(!INSTS[state.inst]) state.inst='piano'; state.kit=fixKit(state.kit); if(!KITS[state.kit]) state.kit='std'; }catch(e){}
 if(!Array.isArray(state.segs)) state.segs=Array.from({length:16},(_,i)=>state.split&&state.split[i]?[state.split[i]]:[]);
@@ -2549,8 +2562,8 @@ function openSheet(kind){
   // 通常モード：2つ目の楽器（コード2）を重ねる。弾き方と音色を選ぶ
   $('part2Sec').hidden = kind!=='style';
   if(kind==='style'){
-    const P2PATS=[['','なし'],[state.arp,'伴奏と同じ弾き方'],['glockline','高い音でキラキラ'],['brassobb','パッと合いの手'],['brasshit','ブラスのキメ'],['hornline','上がっていくメロディ'],['whole','長くのばす'],['epic','オーケストラ風の和音'],['alberti','ポロンポロン（クラシック風）'],['garp','ギターのつま弾き'],['strum','ギターのジャカジャカ']];
-    const P2DEF={glockline:'glock',brassobb:'brass3',brasshit:'brass3',hornline:'horn',whole:'strings3',epic:'strings3',alberti:'piano',garp:'nylon',strum:'steel'};
+    const P2PATS=[['','なし'],[state.arp,'伴奏と同じ弾き方'],['glockline','高い音でキラキラ'],['brassobb','パッと合いの手'],['brasshit','ブラスのキメ'],['synarp','シンセのアルペジオ'],['hornline','上がっていくメロディ'],['whole','長くのばす'],['epic','オーケストラ風の和音'],['alberti','ポロンポロン（クラシック風）'],['garp','ギターのつま弾き'],['strum','ギターのジャカジャカ']];
+    const P2DEF={glockline:'glock',brassobb:'brass3',brasshit:'brass3',hornline:'horn',synarp:'synth',whole:'strings3',epic:'strings3',alberti:'piano',garp:'nylon',strum:'steel'};
     const p2Row=()=>{ chips($('p2Pat'), P2PATS, state.arp2||'', v=>{ state.arp2=v; if(v) state.inst2=P2DEF[v]||'epiano'; save(); renderAll(); ensureSounds(); p2Row(); });
       $('p2InstWrap').hidden=!state.arp2;
       groupPick($('p2Inst'), INST_GROUPS, INSTS, state.inst2||'epiano', v=>{ state.inst2=v; save(); renderAll(); ensureSounds(); p2Row(); }); };
