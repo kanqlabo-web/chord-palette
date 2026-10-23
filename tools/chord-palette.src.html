@@ -703,7 +703,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.206（2026-10-24）</p>
+    <p class="appver">ver 1.207（2026-10-24）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -770,7 +770,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.206（2026-10-24）</p>
+  <p class="appver">ver 1.207（2026-10-24）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1125,7 +1125,7 @@ function chordNotes(v,prev){
     if(slid) R.splice(0,R.length,...slid); else {
     const C=[[0,i3,i7],[i3,i7,12],[i7,12,12+i3]].map(v=>{ const b=lo2-1+((((rpc+v[0])-(lo2-1))%12)+12)%12; return v.map(x=>b+x-v[0]); }).filter(v=>v[0]>=lo2-1&&v[0]<=lo2+11);
     const ml=pat.avoid===false?null:melLow(pat);
-    if(ml!=null){ const cap=degPitch('d'+ml)+(pat.melOct||0), mp=melPcs(pat);
+    if(ml!=null){ const cap=degPitch('d'+ml)+(pat.melOct||0), mp=melPcs(pat).map(pc=>melNote(60+pc,{rpc,ivs,bpc})%12);
       // フレーズの音と半音でぶつかる和音の音（例：E のコードの D♯ とフレーズの E）は、7度→5度、それでもぶつかれば6度に替える
       const clash=iv=>mp.some(pc=>{ const d=(((rpc+iv-pc)%12)+12)%12; return d===1||d===11; });
       // 替える音は、キーの中の音（かコードの音）だけ。ぶつからない5度・6度がなければ、ルートの1オクターブ上（Em の 6度＝C♯ のようなキーの外の音は使わない）
@@ -1138,7 +1138,7 @@ function chordNotes(v,prev){
     R.splice(0,R.length,...(C[0]||[r0,r0+i3,r0+i7])); } }   // 原曲の高さに近い形
   // メロディをよける（ふつうの和音の形でも）：メロディ行があるパターンでは、
   // ①メロディの音と半音でぶつかる和音の音を、ぶつからないコードの音（5度・ルート・3度・6度）に替え、②和音をメロディのいちばん低い音より下（全音以上離す）に収める
-  else if(pat && pat.avoid!==false && melLow(pat)!=null){ const cap=degPitch('d'+melLow(pat))+(pat.melOct||0), mp=melPcs(pat);
+  else if(pat && pat.avoid!==false && melLow(pat)!=null){ const cap=degPitch('d'+melLow(pat))+(pat.melOct||0), mp=melPcs(pat).map(pc=>melNote(60+pc,{rpc,ivs,bpc})%12);   // メロディの音は、このコードの音階に合わせたあとの音で
     const clashPc=pc=>mp.some(q=>{ const d=(((pc-q)%12)+12)%12; return d===1||d===11; });
     const f5=ivs.includes(7)?7:ivs.includes(6)?6:ivs.includes(8)?8:7, t3=[4,3,5,2].find(i=>ivs.includes(i))??4;
     const used=new Set(R.filter(m=>!clashPc(m%12)).map(m=>m%12));
@@ -1161,11 +1161,11 @@ function chordNotes(v,prev){
   // ベース：E1〜E♭2 が基本。再生中は左手と同じ考え方で、前の音からつながる高さを選ぶ
   const bLo=BASS_DEF+BOFF(), bass=leadTo(bLo+(((bpc-bLo)%12)+12)%12, bpc, bLo, LHCTX.use?LHCTX.prevB:null, 0);   // ベースの音域（いちばん下の音から1オクターブの中）
   // ボサノバの指弾きの形（bossaV）：5弦（か6弦）のルート＋3度・7度・9度（なければ6度・5度、3度の1オクターブ上）
-  if(pat&&pat.bossaV){ const r=40+(((bpc-40)%12)+12)%12, t3=[4,3,5,2].find(i=>ivs.includes(i))??4, mid=[10,11,9].find(i=>ivs.includes(i))??(t3===3?10:9),
+  if(pat&&pat.bossaV){ const r=43+(((bpc-43)%12)+12)%12, t3=[4,3,5,2].find(i=>ivs.includes(i))??4, mid=[10,11,9].find(i=>ivs.includes(i))??(t3===3?10:9),
       top=[14,13,15].find(i=>ivs.includes(i))??(ivs.includes(21)?21:ivs.includes(17)?17:t3+12), v=[r+t3,r+mid,r+top].sort((a,b)=>a-b);
-    // バレーコードの形：ルートが6弦（E〜G♯）なら 6弦ルート・5弦5度・4弦7度・3弦3度・2弦13度（♭13・5度）。5弦（A〜E♭）なら 5弦ルート・6弦5度・4弦3度・3弦7度・2弦9度
-    const s6=r<=44, f5=s6?r+fifth:r+fifth-12, has=i=>ivs.includes(i), dom=has(10)&&t3===4;
-    const s4=s6?r+mid:r+t3, s3=s6?r+12+t3:r+mid, s2=s6?r+(has(20)?20:(has(21)||dom)?21:(fifth+12)):r+([13,15,14].find(i=>has(i))??(has(20)?20:(sp.q==='dim'||sp.q==='m-5'?fifth+12:14))), s1=s2+5;
+    // 2〜5弦の3〜9フレットあたりで押さえる高さ（親指のルートは G2〜F♯3）。バレーコードの形：ルートが6弦（G〜B）なら 6弦ルート・5弦5度・4弦7度・3弦3度・2弦13度（♭13・5度）。5弦（C〜F♯）なら 5弦ルート・6弦5度・4弦5度・3弦7度・2弦3度（x3535x の形。音が低いところで固まらないように）。9度があるコードだけ 4弦3度・2弦9度
+    const s6=r<=47, f5=s6?r+fifth:r+fifth-12, has=i=>ivs.includes(i), dom=has(10)&&t3===4;
+    const t9=[13,15,14].find(i=>has(i)), s4=s6?r+mid:t9!=null?r+t3:r+fifth, s3=s6?r+12+t3:r+mid, s2=s6?r+(has(20)?20:(has(21)||dom)?21:(fifth+12)):t9!=null?r+t9:r+12+t3, s1=s2+5;
     const T=[r,s3,s2,s1,f5,s4,s3+12,s2+12,s1+12,null,null], vv=[s3,s2,s1]; return {up:T, tones:T, R:vv, ra:vv, bass, slash, fifth, third, seventh, rpc, bpc, ivs, q:sp.q}; }
   // ギターの音色：実際のギターで押さえる形（ローコード、なければバレーコード）で鳴らす
   if(GUITARS.has(state.inst)){ const gs=guitarShape(ivs.map(i=>(rpc+i)%12), bpc, (rpc+fifth)%12);
@@ -1543,6 +1543,16 @@ function chordScaleOf(bt){ if(!bt||bt.rpc==null||!bt.ivs) return null; if(bt._sc
   let S=cands.find(all);
   if(!S){ S=mk(K,SC_MAJ); pcs.forEach(pc=>{ if(S.has(pc)) return; [1,11].forEach(d=>{ const q=(pc+d)%12; if(S.has(q)&&!pcs.includes(q)) S.delete(q); }); S.add(pc); }); }
   return bt._sc=S; }
+// メロディの音を今のコードの音階に合わせる（キーの中のコードではそのまま。E7→Am の上なら G を G♯ にするなど）
+//  音階にない音は半音となりの音階の音へ。両方あれば、コードの音の方（どちらもコードの音でなければ下）
+function melFix(m,bt){ const S=chordScaleOf(bt); if(!S) return m; const pc=x=>((x%12)+12)%12; if(S.has(pc(m))) return m;
+  const CT=new Set([...(bt.ivs||[]).map(i=>(bt.rpc+i)%12), ...(bt.bpc!=null?[bt.bpc]:[])]), a=m+1, b=m-1, okA=S.has(pc(a)), okB=S.has(pc(b));
+  return okA&&okB ? (CT.has(pc(a))&&!CT.has(pc(b))?a:b) : okA ? a : okB ? b : m; }
+// メロディの音の決め方：①今のコードの音階に合わせる（melFix）②キーの外のコードでは、ルート以外のコードの音の半音上（アボイドノート。E7 の上の A など）は、そのコードの音へ下ろす
+function melNote(m,bt){ if(!bt||bt.rpc==null||!bt.ivs) return m; let x=melFix(m,bt); const pc=v=>((v%12)+12)%12, K=keyObj().pc,
+    CT=[...new Set([...bt.ivs.map(i=>(bt.rpc+i)%12), ...(bt.bpc!=null?[bt.bpc]:[])])], inK=S=>CT.every(q=>S.includes(pc(q-K)));
+  if(inK(SC_MAJ)||inK(SC_MIN)) return x;
+  if(CT.some(q=>q!==bt.rpc && q===pc(x-1))) x-=1; return x; }
 // 飾りの音（次のコードのいちばん上の音 T へつなぐ）：nt＝T、ntd＝T の1つ下、ntu＝T の1つ上。どれも今のコードの音階の中から選ぶ
 //  ・T が今の音階にない（次のコードがキーの外の音）ときは、nt を今の音階の隣の音（上から入るのを優先）に替える
 //  ・隣の音まで3半音以上ある（増2度になる）ときは、不自然なので弾かない
@@ -3231,7 +3241,7 @@ const shiftOf=(i,h)=>{ if(!state.pro&&!SHARE_VIEW) return 0; if(!h) return antOf
 const shiftMark=a=>a>0?'←食':a<0?'後→':'';
 // 最後に鳴らした音がアクセント（いちばん上の音）だったら、その高さを覚えておき、次のコードのいちばん上の音をそこへつなげる
 let ACC_TOP=null;
-const TIE_LAST=[null,null];   // パートごとの直前の音（同じ高さが続いたらつなぐため）
+const TIE_LAST=[null,null], SOUNDING=[[],[]], LAST_SOLO=[null,null];   // SOUNDING：パートごとの同じタイミングの音、LAST_SOLO：直前に1音だけで弾いた音（同じ高さにならないように）   // パートごとの直前の音（同じ高さが続いたらつなぐため）
 function playEvents(evs,bt,ct,sd,pat){
   if(bt&&bt.ivs&&bt.rpc!=null) setScaleFor([...bt.ivs.map(i=>(bt.rpc+i)%12), ...(bt.bpc!=null?[bt.bpc]:[])]);
   const tones=bt.tones, notes=[];
@@ -3264,12 +3274,8 @@ function playEvents(evs,bt,ct,sd,pat){
     // 和音の音を2音だけ同時に鳴らすとき（刻み・2声のオブリ）は、半音（短2度・長7度）でぶつからないようにする。
     // ぶつかったら、テンション（9度など）の方を、すぐ下の和音の基本の音（ルート・3度・5度・7度）へ替える。3音以上の「パー」はテンションごとそのまま
     // メロディ行・次のコードへつなぐ音（1音ずつのフレーズ）：和音の音の半音上（濁る音）に当たったら、その和音の音へよける
-    const FP=(bt.ivs&&bt.rpc!=null)?[...new Set([...CP,...bt.ivs.map(i=>(bt.rpc+i)%12),...(bt.bpc!=null?[bt.bpc]:[])])]:CP;   // コードの全部の音（弾いていない5度なども）
-    // ただし調の中のコード（ダイアトニック。借りてきたコードもその調の中として）はそのまま。
-    // 調の外の音を含むコード（3(7) など）で、その「調の外の音」と半音でぶつかるとき（極端に濁るとき）だけ、その音へ寄せる
-    { const K=keyObj().pc, sc=scaleNow(), inKey=pc=>sc.includes((((pc-K)%12)+12)%12), chrom=FP.filter(pc=>!inKey(pc));
-      if(chrom.length) notes.slice(I0).forEach(n=>{ if(!(n.mel||tr==='nx')) return; const pc=((n.m%12)+12)%12; if(FP.includes(pc)) return;
-        const up=chrom.includes((pc+1)%12), dn=chrom.includes((pc+11)%12); if(dn) n.m-=1; else if(up) n.m+=1; }); }
+    // メロディ行・つなぎの音は、今のコードの音階に合わせる（キーの中のコードはそのまま。キーの外のコードでは、その部分転調の音階で）
+    if(bt) notes.slice(I0).forEach(n=>{ if(n.mel||tr==='nx') n.m=melNote(n.m,bt); });
     if((tr==='nx'||NB) && bt){ const S=chordScaleOf(bt); if(S) notes.slice(I0).forEach(n=>{ if(n.mel) return; const pc=((n.m%12)+12)%12; if(S.has(pc)) return;
         const a=n.m+1, b=n.m-1, ca=CP.includes(((a%12)+12)%12), cb=CP.includes(((b%12)+12)%12);   // 半音となりの音階の音へ（コードの音を優先、なければ下へ）
         const okA=S.has(((a%12)+12)%12), okB=S.has(((b%12)+12)%12); n.m = okA&&okB ? (ca&&!cb?a:b) : okA ? a : okB ? b : n.m; }); }
@@ -3290,6 +3296,20 @@ function playEvents(evs,bt,ct,sd,pat){
         LM.m=n.m; LM.row=n.row; LM.orig=n.orig; }); }
   });
   if(!notes.length) return;
+  // 別の行（別の音のつもり）なのに同じ高さになったら、ずらす（同じ行の弾き直し・メロディ行・ペダルでのばした和音の音を分散で弾き直すのはそのまま）
+  //  ・同じタイミングで、別の行の音と同じ高さ（左手の8度と右手のいちばん下など）
+  //  ・1音ずつの分散で、直前の1音（別の行）と同じ高さ（Gsus4 で D・D と続くなど）
+  //  ・左手でのばしている音と同じ高さを右手で弾く（その逆も）
+  // 右手は上の和音の音へ、左手は下の和音の音へ。置き場所がなければ、その音は弾かない
+  { const pk=PART2?1:0, S=SOUNDING[pk]=SOUNDING[pk].filter(x=>x.bt===bt && x.end>ct+.001), CPs=new Set(Object.values(tones).filter(x=>x!=null).map(x=>((x%12)+12)%12)), drop=new Set(), LS=LAST_SOLO[pk];
+    const LHR=new Set([0,4,5]), T0=n=>ct+(n.st0-Math.floor(n.ev0??n.st0))*sd, solo=n=>!n.mel && notes.filter(o=>!o.mel && o.st0===n.st0).length===1;
+    notes.forEach(n=>{ const t0=T0(n), busy=m=>S.some(x=>x.m===m && Math.abs(x.start-t0)<.001) || notes.some(o=>o!==n && !drop.has(o) && o.m===m && o.st0===n.st0) || (solo(n) && LS && LS.bt===bt && LS.m===m);
+      const hit=S.find(x=>x.m===n.m && x.row!==n.row && (Math.abs(x.start-t0)<.001 || (x.end>t0+.001 && LHR.has(x.row)!==LHR.has(n.row)))) || (solo(n) && LS && LS.bt===bt && LS.m===n.m && LS.row!==n.row && LS.t<t0-.001);
+      if(hit && !n.mel && n.row!=null && !(pat&&pat.satb)){ const lh=LHR.has(n.row), dir=lh?-1:1; let x=n.m+dir, k=0;
+        while(k++<24 && (!CPs.has(((x%12)+12)%12) || busy(x))) x+=dir;
+        if(k<24 && x>=28) n.m=x; else drop.add(n); }
+      if(!drop.has(n)){ S.push({m:n.m,row:n.row,start:t0,end:t0+n.len*sd,bt}); if(solo(n)) LAST_SOLO[pk]={m:n.m,row:n.row,t:t0,bt}; } });
+    if(drop.size){ for(let i=notes.length-1;i>=0;i--) if(drop.has(notes[i])) notes.splice(i,1); if(!notes.length) return; } }
   // ギターのストローク：同じタイミングの音を、低い弦→高い弦（ダウン）／高い弦→低い弦（アップ）の順に少しずつずらして鳴らす
   // ストロークのズレはギターの音色のときだけ（どのパターンでも3音以上を同時に鳴らすところ）。ピアノなどではギターのパターンでもずらさない
   const strum = GUITARS.has(state.inst) && notes.length>=3;
@@ -3448,7 +3468,7 @@ function chordPart(g,t,L,s,b,dr,sd,tt){
   return {i,off};
 }
 const P2={barTones:null,lastR:null,pushedKey:null,PUSHCONT:false,held:[],ACC:null,prev:null,prevB:null,satb:null};
-function resetP2(){ TIE_LAST[0]=TIE_LAST[1]=null; Object.assign(P2,{barTones:null,lastR:null,pushedKey:null,PUSHCONT:false,held:[],ACC:null,prev:null,prevB:null,satb:null}); }
+function resetP2(){ TIE_LAST[0]=TIE_LAST[1]=null; SOUNDING[0]=[]; SOUNDING[1]=[]; LAST_SOLO[0]=LAST_SOLO[1]=null; Object.assign(P2,{barTones:null,lastR:null,pushedKey:null,PUSHCONT:false,held:[],ACC:null,prev:null,prevB:null,satb:null}); }
 function withPart2(f){
   const sv={barTones,lastR,pushedKey,PUSHCONT,held,ACC:ACC_TOP,prev:LHCTX.prev,prevB:LHCTX.prevB,satb:LHCTX.satb,arp:state.arp,inst:state.inst,bass:state.bass};
   ({barTones,lastR,pushedKey,PUSHCONT,held}=P2); ACC_TOP=P2.ACC; LHCTX.prev=P2.prev; LHCTX.prevB=P2.prevB; LHCTX.satb=P2.satb;
