@@ -1,7 +1,7 @@
 #!/bin/bash
 # 使い方: deploy.sh "コミットメッセージ"   — バージョンを自動で上げて、index.html を作り、push して、リモートと一致するか確認する
 set -e
-S=/tmp/claude-0/-home-claude/52072b9f-f344-5d3e-b0b9-e04f06b37d29/scratchpad
+S=/tmp/claude-0/-home-claude/cb90b389-4cb1-5166-985c-0cf20ec415ab/scratchpad
 cd /home/claude/chord-palette
 N=$(( $(git rev-list --count HEAD) + 1 )); D=$(TZ=Asia/Tokyo date +%Y-%m-%d)
 sed -i -E "s/ver 1\.[0-9]+（[0-9-]+）/ver 1.$N（$D）/g" /home/claude/chord-palette.html
@@ -9,7 +9,7 @@ sed -i -E "s/ver 1\.[0-9]+（[0-9-]+）/ver 1.$N（$D）/g" /home/claude/chord-p
 git add -A && git commit -qm "$1（ver 1.$N）
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01JhWzTyrVJoDBepjoc6LJWK"
+Claude-Session: https://claude.ai/code/session_01Lc8ncBESE1t4zMTwrtxnnQ"
 git push -q
 L=$(git rev-parse HEAD); R=$(git ls-remote origin refs/heads/main | cut -f1)
 [ "$L" = "$R" ] && echo "PUSHED ver 1.$N ${L:0:7}" || echo "PUSH MISMATCH local $L remote $R"

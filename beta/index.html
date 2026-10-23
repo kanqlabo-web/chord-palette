@@ -709,7 +709,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.195（2026-10-23）</p>
+    <p class="appver">ver 1.198（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -776,7 +776,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.195（2026-10-23）</p>
+  <p class="appver">ver 1.198（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1191,7 +1191,7 @@ const VEL={X:1,x:.75,o:.5,g:.25};
 const velOf=c=>typeof c==='number'?c:(VEL[c]||0);   // 数字はそのままの強さ（MIDIから取り込んだ細かい強弱）
 // MIDI の強さ（0〜127）を、そのまま16分×16マスの並びにする。{マス:強さ} → [0..1]（110 を最大として割る）
 const M16=m=>{ const a=Array(16).fill(0); for(const k in m) a[k]=Math.min(1,m[k]/110); return a; };
-const VOICE={k:36,s:38,x:37,h:42,f:44,o:46,r:51,c:49,t1:50,t2:47,t3:45};   // f＝フットハイハット（ペダルで閉じる「チッ」）
+const VOICE={k:36,s:38,x:37,cl:75,h:42,f:44,o:46,r:51,c:49,t1:50,t2:47,t3:45};   // f＝フットハイハット（ペダルで閉じる「チッ」）
 // フィル：4小節目は「小フィル」（4拍目だけ）、8小節目は「大フィル」（3〜4拍目）。big/small とも16分16個の書き方で、使う所だけ読む
 const FILLS={
   tom:  {big:  {k:'........X......X', s:'........XxXx....', t1:'............Xx..', t3:'..............XX'},
@@ -1273,7 +1273,7 @@ const DRUMS = {
            bass:[[0,0,2,1],[3,12,1,.7],[6,0,1,.7],[7,0,1,.5],[8,0,2,.9],[10,12,1,.7],[11,'5',1,.6],[13,0,1,.7],[14,'ap',2,.8]]},
   dance:  {name:'ダンス', pro:'4つ打ち（クラブ）', duck:true, v:{k:'X...X...X...X...', s:'....X.......X...', h:'..o...o...o...o.'}, fill:'dance',
            bass:[[2,0,1.5,.9],[6,12,1.5,.8],[10,0,4.5,.9],[14,12,1.5,.8]]},   // 4つ目の裏はオクターブ上へすべり上がる（前の音と重ねる＝ポルタメント）
-  bossa:  {name:'ボサノバ', pro:'ボサノバ（リムの「ポクポク」＋8分のハイハット、ごく弱く）', v:{k:M16({0:52,8:40}), x:M16({0:50,3:46,6:48,10:50,13:46}), h:M16({0:30,2:24,4:28,6:24,8:30,10:24,12:28,14:24})}, vB:{k:M16({0:52,8:40}), x:M16({2:48,6:46,10:50,13:46}), h:M16({0:30,2:24,4:28,6:24,8:30,10:24,12:28,14:24})}, fill:null,
+  bossa:  {name:'ボサノバ', pro:'ボサノバ（クラベスの「ポクポク」＋8分のハイハット、ごく弱く）', v:{k:M16({0:52,8:40}), cl:M16({4:58,10:54}), h:M16({0:30,2:24,4:28,6:24,8:30,10:24,12:28,14:24})}, vB:{k:M16({0:52,8:40}), cl:M16({0:58,6:54,12:56}), h:M16({0:30,2:24,4:28,6:24,8:30,10:24,12:28,14:24})}, fill:null,
            bass:[[0,0,6,1],[6,'5',2,.6],[8,'5',8,.9]]},   // ベースは前の形を半分のテンポで（1小節で1回）
   reggae: {name:'レゲエ', v:{k:'........X.......', x:'........X.......', h:'g.g.g.g.g.g.g.g.'}, fill:'soft',
            bass:[[0,0,3,1],[6,0,2,.8],[8,'5',2,.8],[10,'3',2,.75],[12,0,3,.9]]},
@@ -1504,7 +1504,7 @@ const ARPS = {
   alberti:{name:'クラシック風', pro:'アルベルティ（左手ルート）', ev:[[0,[0],8,.55],[8,[0],8,.5],...each([0,2,4,6,8,10,12,14],[[1],[3],[2],[3]],2,(s,i)=>i%4===0?.62:.46)]},
 };
 // ---- PROモード：マイパターン（ドラムとコードを自分で打ち込む）
-const DRUM_ROWS=[['c','クラッシュ'],['r','ライド'],['o','オープンHH'],['h','ハイハット'],['f','フットHH'],['t1','タム高'],['t2','タム中'],['t3','フロア'],['s','スネア'],['x','リム'],['k','キック']];
+const DRUM_ROWS=[['c','クラッシュ'],['r','ライド'],['o','オープンHH'],['h','ハイハット'],['f','フットHH'],['t1','タム高'],['t2','タム中'],['t3','フロア'],['s','スネア'],['x','リム'],['cl','クラベス'],['k','キック']];
 const BASS_ROWS=[['12','オクターブ上'],['7','7度'],['6','6度'],['5','5度'],['3','3度'],['ap','つなぎ'],['0','ルート'],['-5','5度下'],['-12','オクターブ下']];
 const SK=kind=>kind==='bass'?'bassPat':kind;   // arp2 は「楽器2」のコードパターン（マイパターンはコードと共通）   // そのパターンが入っている設定の名前
 // メロディ行（d1〜d8）：コードに関係なく、キーの音階の音で弾く（1＝主音、8＝1オクターブ上の主音）。主音は E4〜E♭5 の間に置く
@@ -3017,7 +3017,7 @@ function legatoVoice(lv,m,t,dur){
   if(lv.onLegato) lv.onLegato(t,dur,m);
   lv.end=t+dur;
 }
-const DRUM_VOL={36:1.15,37:.75,38:.9,42:.3,44:.3,46:.22,49:.28,51:.26,50:.8,47:.8,45:.85};
+const DRUM_VOL={36:1.15,37:.75,75:.5,38:.9,42:.3,44:.3,46:.22,49:.28,51:.26,50:.8,47:.8,45:.85};
 function drum(note,t,vel=1){ if(CAPTURE){ CAPTURE.push({k:'drum',n:note,t,d:.1,v:vel}); return; } OUT=playing?drumBus:null; drumIn(note,t,vel); OUT=null; }
 // ドラムの音ごとの大きさの調整（ほかのキットとそろえる）。シティポップのドラムは JCLive の音源で、キックとスネアが大きめなので下げる
 const KIT_GAIN={cityD:{36:.67,38:.95,42:1.7,46:1.4},city:{36:.62,38:.75,42:.55,44:.6,46:.5,49:.3,51:.4}};
@@ -3050,7 +3050,7 @@ function drumIn(note,t,vel=1){
     const dur = city ? (note===36?.16:note===38?.13:note===42?.07:note===44?.07:note===46?.22:note===49?3:note===51?2:.35) : (note===49?2.5:1.2);   // シティポップは短く締める（シンバルは最後まで鳴らす）
     const ok=playZone(kit[note],note,t,dur,DRUM_VOL[note]*vel*(lofi?.9:1),city?(note===49||note===51?.8:.04):.25); OUT=sv; if(ok) return; }
   const f={36:kick,37:rim,38:snare,42:t=>hat(t,vel>.7),44:t=>hat(t,false),46:ohat,49:t=>noise(t,'highpass',6000,1.2,.1*vel),51:t=>noise(t,'bandpass',6500,.4,.07*vel,2),
-    50:t=>tom(t,220),47:t=>tom(t,160),45:t=>tom(t,115)}[note]; if(f) f(t);
+    50:t=>tom(t,220),47:t=>tom(t,160),45:t=>tom(t,115),75:clave}[note]; if(f) f(t);
 }
 function tom(t,f){ const g=ctx.createGain(); g.connect(OUT||master); const o=osc('sine',f,t,t+.4,g); o.frequency.exponentialRampToValueAtTime(f*.6,t+.3);
   g.gain.setValueAtTime(.7,t); g.gain.exponentialRampToValueAtTime(.0001,t+.35); }
@@ -3135,6 +3135,8 @@ function snare(t){ noise(t,'bandpass',1900,.17,.5,.7); const g=ctx.createGain();
 const hat=(t,a)=>noise(t,'highpass',8000,.035,a?.1:.055);
 const ohat=t=>noise(t,'highpass',7500,.18,.07);
 const rim=t=>noise(t,'bandpass',3200,.03,.4,4);
+// クラベス（音源がないとき）：2.5kHz 付近の短い木の響き
+const clave=t=>{ const g=ctx.createGain(); g.connect(OUT||master); osc('sine',2500,t,t+.12,g); g.gain.setValueAtTime(.35,t); g.gain.exponentialRampToValueAtTime(.0001,t+.1); };
 
 // 音が止まっている（スマホで音の準備ができていない）間に試し弾きをためこまない。
 // 準備ができてから、最後の1回分だけ鳴らす
@@ -3519,7 +3521,7 @@ function rr(g,x,y,w,h,r){ g.beginPath(); if(g.roundRect) g.roundRect(x,y,w,h,r);
 function drawDrumBar(g,x,y,w,h,dr,col,fill,from=0,n=16){
   const sw=w/n, rh=h/3, r=devicePixelRatio||1;
   g.fillStyle=col.line; for(let i=4;i<n;i+=4) g.fillRect(x+i*sw,y+2*r,1*r,h-4*r);
-  const rows=[[[42,51],[46,49],col.muted],[[38,50,47,45],[37],col.ink],[[36],[],col.ink]];
+  const rows=[[[42,51],[46,49],col.muted],[[38,50,47,45],[37,75],col.ink],[[36],[],col.ink]];
   for(let i=from;i<from+n;i++){
     const fs=fill==='big'?8:12, inF=fill&&dr.F&&i>=fs, V=inF?(fill==='big'?dr.F:dr.FS):dr.V, xi=x+(i-from)*sw;
     rows.forEach(([main,alt,c],ri)=>{

@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
-S=/tmp/claude-0/-home-claude/52072b9f-f344-5d3e-b0b9-e04f06b37d29/scratchpad
-cp /home/claude/chord-palette.html $S/beta.html && python3 $S/beta_patch.py $S/beta.html >/dev/null && python3 $S/beta_patch2.py $S/beta.html >/dev/null
+S=/tmp/claude-0/-home-claude/cb90b389-4cb1-5166-985c-0cf20ec415ab/scratchpad
+cp /home/claude/chord-palette.html $S/beta.html && python3 $S/beta_patch.py $S/beta.html >/dev/null && python3 $S/beta_patch2.py $S/beta.html >/dev/null && python3 $S/beta_patch3.py $S/beta.html
 python3 - <<'PY'
-S='/tmp/claude-0/-home-claude/52072b9f-f344-5d3e-b0b9-e04f06b37d29/scratchpad'
+S='/tmp/claude-0/-home-claude/cb90b389-4cb1-5166-985c-0cf20ec415ab/scratchpad'
 p=S+'/beta.html'; s=open(p).read()
 s=s.replace("'chord-palette","'cpbeta-chord-palette").replace("fetch(`snd/${name}.json`)","fetch(`../snd/${name}.json`)")
 s=s.replace("<title>コード進行パレット</title>","<title>コード進行パレット β</title>",1)
