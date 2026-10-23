@@ -699,7 +699,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.172（2026-10-23）</p>
+    <p class="appver">ver 1.173（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -766,7 +766,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.172（2026-10-23）</p>
+  <p class="appver">ver 1.173（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -2733,7 +2733,11 @@ function loadSet(name){
     if(!ctx) ensureAudio(true);
     SETS[name]=fetch(`snd/${name}.json`).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(async data=>{
       const zones=Array.isArray(data)?data:Object.values(data).flat();
-      await Promise.all(zones.map(decZone)); LOADED[name]=data; return data;
+      await Promise.all(zones.map(decZone));
+      // 弦楽器：音源の音域ごとの大きさの差（3〜4dB 小さい音域がある）をそろえて、内声だけ引っこまないように
+      if(/^strings/.test(name)) zones.forEach(z=>{ if(!z.buf) return; const d=z.buf.getChannelData(0), N=Math.min(d.length,Math.floor(z.buf.sampleRate*.8)), a=Math.floor(N*.25); let q=0; for(let i=a;i<N;i++) q+=d[i]*d[i];
+        const db=20*Math.log10(Math.sqrt(q/Math.max(1,N-a))||1e-6); z.gn=Math.max(.7,Math.min(1.8,Math.pow(10,(-11.5-db)/20))); });
+      LOADED[name]=data; return data;
     }).catch(e=>{ FAILED[name]=true; console.warn('sound load failed',name,e); });
     SETS[name].finally(()=>{ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中…':''); });
   }
@@ -2752,6 +2756,7 @@ function playZone(zones,m,t,dur,vel,rel,cutoff,loop,atk){
   const base=z.op-100*z.ct-z.ft, rate=Math.pow(2,(100*m-base)/1200); s.playbackRate.value=rate;
   if(GLIDE){ s.playbackRate.setValueAtTime(rate*GLIDE.ratio,t); s.playbackRate.exponentialRampToValueAtTime(rate,t+GLIDE.time); }   // ポルタメント
   if(loop&&z.ls>1&&z.le>z.ls+10){ s.loop=true; s.loopStart=z.ls/z.sr; s.loopEnd=z.le/z.sr; }
+  if(z.gn) vel*=z.gn;   // 音域ごとの大きさをそろえた分
   const g=ctx.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel,t+(atk||.004));
   g.gain.setValueAtTime(vel,t+dur); g.gain.setTargetAtTime(0,t+dur,rel);
   if(cutoff){ const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=cutoff; lp.Q.value=.5; s.connect(lp); lp.connect(g); }
@@ -3099,7 +3104,7 @@ function playEvents(evs,bt,ct,sd,pat){
     const ix=n.ix;
     let w = (n.top || n.mel || (pat&&pat.even)) ? 1 : ix===0 ? .8 : .66;              // 一番上の音を少し立たせ、内声は控えめ（even のパターンは全部同じ強さ）
     if(state.bass && n.m<48 && !(pat&&pat.satb)) w*=.55;   // 和声法のストリングスはチェロ・コントラバスも主役なので下げない
-    if(pat&&pat.satb && n.m<48) w*=1.25;              // ベースがいるときは、ピアノ左手の低い音（C3より下）を控えめにして低音が濁らないように
+    if(pat&&pat.satb) w = ix===4 ? .85 : ix===0 ? 1 : 1.12;   // 和声法（弦の4声）：内声（テノール・アルト）も主役。外声と同じかそれ以上に鳴らして、薄くならないように（コントラバスだけ少し控えめ）              // ベースがいるときは、ピアノ左手の低い音（C3より下）を控えめにして低音が濁らないように
     const hv = 1+(Math.random()-.5)*.14;                 // 人間っぽい揺れ
     const ht = (pat&&pat.loose) ? (Math.random()-.4)*.016 : n.st0%4===0 ? 0 : (Math.random()-.5)*.004;   // 拍の頭はジャストで（loose：人間っぽく前後に揺らす。少し後ろ寄り）
     const off = (strum ? k*spd : n.k*.0015) + (n.st0-Math.floor(n.ev0??n.st0))*sd;   // 16分のあいだの音・フォールは、その分だけ遅らせて鳴らす   // 16分のあいだの音（32分・3連符）は、その分だけ遅らせて鳴らす
