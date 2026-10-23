@@ -691,7 +691,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.155（2026-10-23）</p>
+    <p class="appver">ver 1.156（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -758,7 +758,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.155（2026-10-23）</p>
+  <p class="appver">ver 1.156（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1081,6 +1081,9 @@ function chordNotes(v,prev){
   if(LHCTX.use) L=leadTo(L, bpc, lo, LHCTX.prev, 6);
   // 左手のオクターブも弾くパターンでは、右手のいちばん下の音を左手オクターブより短3度以上上にして、音がぶつからないようにする
   const pat=ARPS[state.arp], R=voiceFor(pcs,prev, (pat&&pat.rhAbove ? Math.max(56,L+12+3) : 56)+rhOff+((pat&&pat.rhShift)||0), LHCTX.use?LHCTX.accTop:null);   // rhShift：パターンごとの高さ（ブラスは少し上）   // 右手：A♭3から上
+  // shell：右手を「ルート・3度・7度」（7度がなければ5度）の3音で、ルートを G3〜F♯4 に置く（citypop.mid の電子ピアノの形）
+  if(pat&&pat.shell){ const lo2=55+rhOff+((pat.rhShift)||0), r0=lo2+(((rpc-lo2)%12)+12)%12, i3=[4,3,5,2].find(i=>ivs.includes(i))??4, i7=[11,10,9].find(i=>ivs.includes(i))??7;
+    R.splice(0,R.length,r0,r0+i3,r0+i7); }
   const r=[R[0],R[1]??R[0]+12,R[2]??(R[1]??R[0])+12];               // 2音（パワーコード）でも3つの役割を埋める
   // 5度はそのコードの本当の5度（m-5なら減5度、augなら増5度）。左手やベースが和音とぶつからないように
   const fifth = ivs.includes(7)?7 : ivs.includes(6)?6 : ivs.includes(8)?8 : 12;
@@ -1150,6 +1153,9 @@ const FILLS={
   // マーチ：スネアの16分を弱→強に盛り上げ、大太鼓とティンパニで締める
   march:{big:  {k:'........ggooxxXX', t3:'........ggooxxXX', s:'........XgoXgoXX'},   // 大太鼓をだんだん強く連打（クレッシェンド）
          small:{k:'..............xx', t3:'..............xx', s:'............XgXX'}},
+  // シティポップ（citypop.mid）：4拍目のハイハットを止めて「タタッ」とスネア2発、最後の16分でキック＋クラッシュ
+  cityend:{big:  {h:'........xoggx...', k:'..........x....x', s:'.............xx.', c:'...............x'},
+           small:{h:'............x...', s:'.............xx.', k:'...............x', c:'...............x'}},
   orch: {big:  {k:'........ggooxxXX', t3:'........ggooxxXX'},
          small:{k:'............ooxX', t3:'............ooxX'}},
   halfp:{big:  {k:'........x.x....X', s:'............x...', x:'....X...........', o:'..........o.....'},
@@ -1205,11 +1211,11 @@ const DRUMS = {
            vB:{k:'X.x.....X.x...x.', s:'....X.......X..g', h:'x...x...x...x...', o:'..o...o...o.....', c:'X...............'}, fill:'tom',
            bass:[[0,0,1.7,1],[2,12,1.7,.72],[4,0,1.7,.88],[6,12,1.7,.72],[8,0,1.7,.95],[10,12,1.7,.72],[12,0,1.7,.88],[14,'ap',1.7,.8]]},   // オクターブで走るベース
   // シティポップ：16分のハイハットにキックのシンコペ。ベースはオクターブで跳ねる（スラップ）
-  // シティポップ（Louis Cole・星野源のような軽いグルーヴ）：全体に弱めに叩き、スネアのゴーストとキックの細かい合いの手、
-  // 2・4拍目のフットハイハット（ペダルの「チッ」）で16分の揺れを出す。ハイハットは8分でそっと
-  city:   {name:'シティポップ', pro:'16ビート（ゴースト＋フットHH）', dyn:1.3,
-           v:{k:'x.....g...x..g..', s:'.g..x..g.gg.x..g', h:'o.g.o.g.o.g.o.g.', f:'....o.......o...'},
-           vB:{k:'x......g..x..g..', s:'.g..x..g.gg.x.gx', h:'o.g.o.g.o.g.o...', f:'....o.......o...', o:'..............g.'}, fill:'funk',
+  // citypop.mid から：ハイハットは16分で「強・中・弱・弱」（1・3拍目が強い）、スネアは2・4拍目。
+  // キックは頭を外して「1拍目の裏・3拍目の裏・4拍目の最後の16分（次の小節へ食う）」。4小節目の終わりはスネア2発＋クラッシュで次へ
+  city:   {name:'シティポップ', pro:'16ビート（キック食い・16分HHの強弱）',
+           v:{k:'..x.......x....x', s:'....X.......X...', h:'Xogg.oggxogg.ogg'},
+           vB:{k:'..x.......x....x', s:'....X.......X...', h:'xogg.oggxogg.ogg'}, fill:'cityend',
            bass:[[0,0,2,1],[2,12,1,.7],[3,0,1,.55],[6,0,1,.8],[7,12,1,.65],[8,0,2,.92],[10,12,1,.7],[11,'5',1,.6],[12,0,1,.75],[14,'ap',2,.8]]},
   // ローファイ：ゆるくハネたブーンバップ。キックはもたつかせ、スネアは2・4拍目
   lofi:   {name:'ローファイ', pro:'ブーンバップ（ハネ）', swing16:true, v:{k:'x.....x...x.....', s:'....X.......X...', h:'o.go.go.o.go.go.'},
@@ -1302,6 +1308,19 @@ const ARPS = {
                 beat:[[[0,[0],3,.6],[0,RH,2,.7]]],
                 push:[[[0,RH,2,.72],[0,[0],2,.6]]]}},
 
+  // citypop.mid の電子ピアノから：コードは16分食って入り、左手は「ルート・5度・5度」と動いて、右手は8分・16分で和音を刻む。
+  // 2拍目の裏はいちばん上の音を一段下げて（G♯→F♯ のような動き）、すぐ下の音を「ッ」と短く強く。
+  // 2小節目（同じコードの続き）は、上で「タ・タ・ター・タ・ター・ター・タ」と高い音のフレーズを足す
+  cityep: {name:'シティポップの電子ピアノ', pro:'16分食い＋8分の刻み＋上のフレーズ（citypop.mid）', legato:true, pushBy:1, shell:true,
+           sit:{bar:[[[0,[0],1.6,.73],[0,RH,2.3,.7],[1,[4],1,.67],[2,RH,.85,.55],[3,[4],1.3,.7],[4,RH,.6,.64],[6,[0],.35,.71],[6,[1,2],.55,.6],[6,[3],.7,.62,null,-2],[7,[1],.12,.86],
+                       [8,[0],.5,.72],[8,RH,.65,.7],[12,[0],1.34,.71],[13,RH,.75,.65]],
+                      [[0,[0],1.6,.73],[0,RH,2.3,.7],[1,[4],1,.67],[2,RH,.85,.55],[3,[4],1.3,.7],[4,RH,.6,.64],[6,[0],.35,.71],[6,[1,2],.55,.6],[6,[3],.7,.62,null,-2],[7,[1],.12,.86],
+                       [8,[0],.5,.72],[8,RH,.65,.7],[12,[0],1.34,.71],[13,RH,.75,.65],
+                       [1,[6],.95,.61],[2,[7],.38,.46],[4,[8],.37,.62],[6,[7],.36,.51],[8,[8],1.15,.56],[9,[8],.86,.51,null,'up'],[11,[8],.34,.6]]],
+                halfA:[[[0,[0],1.6,.73],[0,RH,2.3,.7],[1,[4],1,.67],[2,RH,.85,.55],[3,[4],1.3,.7],[4,RH,.6,.64],[6,[0],.35,.71],[6,[1,2],.55,.6],[6,[3],.7,.62,null,-2],[7,[1],.12,.86]]],
+                halfB:[[[0,[0],1.6,.73],[0,RH,2.3,.7],[1,[4],1,.67],[2,RH,.85,.55],[3,[4],1.3,.7],[4,RH,.6,.64],[6,[0],.35,.71],[6,[1,2],.55,.6],[6,[3],.7,.62,null,-2],[7,[1],.12,.86]]],
+                beat:[[[0,[0],1.6,.73],[0,RH,2.3,.7],[2,RH,.85,.55],[3,[4],1,.68]]],
+                push:[[[0,[0],1.6,.73],[0,RH,2.3,.7]]]}},
   // クラビネットの刻み（山下達郎風のシティポップ）：16分を止めずに、和音の「チャッ」とミュートした「ッ」（弦を押さえて止めた短い音）を混ぜる。
   // 2拍目裏・4拍目（の裏）にアクセント、次のコードへは8分食う
   clavfunk:{name:'クラビネットの刻み', pro:'16分カッティング（ミュート混じり・8分食い）', legato:false, pushBy:2,
@@ -1397,7 +1416,7 @@ function rebuildMy(){
   (state.myArps||[]).forEach((m,i)=>{ migrateMy(m,'arp');
     const toEv=ns=>(ns||[]).map(n=>n.fall?[n.st,[+n.r],n.len,n.vel,null,'fall']:n.up?[n.st,[+n.r],n.len,n.vel,null,'up']:[n.st,[+n.r],n.len,n.vel]);
     const ev=toEv(m.notes);
-    const a=ARPS['my'+i]={name:m.name||`マイパターン${i+1}`, legato:m.legato!==false, ev, swing:m.swing==='swing', accLink:!!m.accLink, rhAbove:!!m.rhAbove, pluck:!!m.pluck, satb:!!m.satb, rhShift:m.rhShift||0, vol:m.vol||1}; a.at=atMap(ev);
+    const a=ARPS['my'+i]={name:m.name||`マイパターン${i+1}`, legato:m.legato!==false, ev, swing:m.swing==='swing', accLink:!!m.accLink, rhAbove:!!m.rhAbove, pluck:!!m.pluck, satb:!!m.satb, shell:!!m.shell, rhShift:m.rhShift||0, vol:m.vol||1}; a.at=atMap(ev);
     // 場面ごとの弾き方（作ってある場面だけ。ない場面は1小節の弾き方などで代わりに弾く）
     const sn=m.sitNotes||{}, kinds=['halfA','halfB','beat'].filter(k=>(sn[k]||[]).length);
     if(kinds.length || (sn.push||[]).length || (sn.bar2||[]).length || m.pushBy){ a.sit={bar:[{evs:ev,at:a.at}]}; kinds.forEach(k=>{ const e=toEv(sn[k]); a.sit[k]=[{evs:e,at:atMap(e)}]; });
@@ -1438,7 +1457,7 @@ function newMy(kind,from){        // from: もとにするパターンのキー�
       if(a){ notes=conv(a.ev,16);
         if(a.sit){ sit={}; [['halfA',8],['halfB',8],['beat',4],['push',4]].forEach(([k,N])=>{ if(a.sit[k]) sit[k]=conv(a.sit[k][0].evs,N); }); if(a.sit.bar&&a.sit.bar[1]) sit.bar2=conv(a.sit.bar[1].evs,16); if(a.sit.push&&a.sit.push[1]) sit.push2=conv(a.sit.push[1].evs,4); }
         if(a.pushBy) pushBy=a.pushBy;
-        extra={swing:a.swing?'swing':'', accLink:!!a.accLink, rhAbove:!!a.rhAbove, pluck:!!a.pluck, legato:!!a.legato, satb:!!a.satb, rhShift:a.rhShift||0, vol:a.vol||1}; } }
+        extra={swing:a.swing?'swing':'', accLink:!!a.accLink, rhAbove:!!a.rhAbove, pluck:!!a.pluck, legato:!!a.legato, satb:!!a.satb, shell:!!a.shell, rhShift:a.rhShift||0, vol:a.vol||1}; } }
   }
   const m={...extra, name, notes:kind==='drum'?notes:tidyNotes(notes)}; if(kind==='drum') m.fill=fill??null; if(sit) m.sitNotes=sit; if(pushBy) m.pushBy=pushBy;
   list.push(m);
@@ -1508,6 +1527,7 @@ function renderPatEditor(){
     optRow('リズム',[['','まっすぐ'],['swing','ハネる（シャッフル）']],curMy().swing||'',v=>curMy().swing=v);
     optRow('音ののばし方',[[true,'ペダルでのばす'],[false,'コードが変わったら切る']],curMy().legato!==false,v=>curMy().legato=v);
     optRow('右手の高さ（このパターンだけ）',[[-5,'低め'],[0,'ふつう'],[4,'高め'],[7,'もっと高め']],curMy().rhShift||0,v=>curMy().rhShift=v);
+    optRow('右手の和音の形',[[false,'ふつう'],[true,'ルート・3度・7度（すっきり）']],!!curMy().shell,v=>curMy().shell=v);
     optRow('和声法（4声体＋コントラバス）',[[false,'使わない'],[true,'使う：開離配置で声部をつなぐ']],!!curMy().satb,v=>curMy().satb=v);
     optRow('アクセントで終わったとき',[[false,'そのまま'],[true,'次のコードの上の音を上げてつなぐ']],!!curMy().accLink,v=>curMy().accLink=v);
   }
@@ -1588,7 +1608,7 @@ function bindRoll(rows){
     velEl.hidden=true; d=null; commitNotes(); drawNotes(); };
   roll.onpointerup=up; roll.onpointercancel=up;
 }
-const ARP_ORDER=['piano4','popanti','drive','pballad','whole','epic','hardrock','strum','garp','citypop','clavfunk','rhodes','lofi','sync','offbeat','stacc','shuffle','house','bossa','koto','alberti','glockline','brassobb','hornline'];
+const ARP_ORDER=['piano4','popanti','drive','pballad','whole','epic','hardrock','strum','garp','citypop','cityep','clavfunk','rhodes','lofi','sync','offbeat','stacc','shuffle','house','bossa','koto','alberti','glockline','brassobb','hornline'];
 // まとめて消したパターン（保存データ・共有リンクは近いものに置きかえる）
 const ARP_ALIAS={ballad:'pballad',sync16:'sync',shuff2:'shuffle',rock8:'hardrock',eighth:'drive'};
 // 通常モードの「伴奏スタイル」：ドラムとコードパターンの組み合わせ
@@ -1603,7 +1623,7 @@ const STYLES=[
   {id:4, name:'バラード', bpm:72, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true},
   {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
   {id:17, name:'壮大', bpm:110, wide:true, drum:'epic', arp:'epic', inst:'strings3', arp2:'alberti', inst2:'piano', kit:'orch', bass:true, bassSnd:'ubass'},
-  {id:18, name:'シティポップ', bpm:108, drum:'city', arp:'clavfunk', inst:'clav', arp2:'brassobb', inst2:'brass3', kit:'city', bass:true, bassSnd:'slap3'},
+  {id:18, name:'シティポップ', bpm:100, drum:'city', arp:'cityep', inst:'epcity', arp2:'brassobb', inst2:'brass3', kit:'city', bass:true, bassSnd:'slap3'},
   {id:9, name:'ファンキー', bpm:104, drum:'sixteen', arp:'offbeat', inst:'eguitar', kit:'std', bass:true},
   {id:11, name:'ジャジー', bpm:100, drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
   {id:19, name:'ローファイ', bpm:80, drum:'lofi', arp:'lofi', inst:'lofi', kit:'lofi', bass:true, bassSnd:'ubass'},
