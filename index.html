@@ -709,7 +709,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.195（2026-10-23）</p>
+    <p class="appver">ver 1.198（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -776,7 +776,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.195（2026-10-23）</p>
+  <p class="appver">ver 1.198（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -1569,7 +1569,7 @@ function rebuildMy(){
   (state.myArps||[]).forEach((m,i)=>{ migrateMy(m,'arp');
     const toEv=ns=>prepNx((ns||[]).map(n=>{ const r=isDeg(n.r)?n.r:+n.r, fx=n.fall?'fall':n.up?'up':n.scoop?'scoop':n.nx?'nx':nbKind(n); return fx?[n.st,[r],n.len,n.vel,null,fx]:[n.st,[r],n.len,n.vel]; }).sort((a,b)=>a[0]-b[0]));
     const ev=toEv(m.notes);
-    const a=ARPS['my'+i]={name:m.name||`マイパターン${i+1}`, legato:m.legato!==false, ev, swing:m.swing==='swing', swing16:m.swing==='swing16', loose:!!m.loose, noRoot:!!m.noRoot, melOct:m.melOct||0, push2nd:!!m.push2nd, accLink:!!m.accLink, rhAbove:!!m.rhAbove, pluck:!!m.pluck, satb:!!m.satb, shell:!!m.shell, avoid:m.avoid!==false, rhShift:m.rhShift||0, vol:m.vol||1}; a.at=atMap(ev);
+    const a=ARPS['my'+i]={name:m.name||`マイパターン${i+1}`, legato:m.legato!==false, ev, swing:m.swing==='swing', swing16:m.swing==='swing16', loose:!!m.loose, pushKeepLH:!!m.pushKeepLH, noRoot:!!m.noRoot, melOct:m.melOct||0, push2nd:!!m.push2nd, accLink:!!m.accLink, rhAbove:!!m.rhAbove, pluck:!!m.pluck, satb:!!m.satb, shell:!!m.shell, avoid:m.avoid!==false, rhShift:m.rhShift||0, vol:m.vol||1}; a.at=atMap(ev);
     // 場面ごとの弾き方（作ってある場面だけ。ない場面は1小節の弾き方などで代わりに弾く）
     const sn=m.sitNotes||{}, kinds=['halfA','halfB','beat','bar3'].filter(k=>(sn[k]||[]).length);
     if(kinds.length || (sn.push||[]).length || (sn.bar2||[]).length || (sn.bar32||[]).length || m.pushBy){ a.sit={bar:[{evs:ev,at:a.at}]}; kinds.forEach(k=>{ const e=toEv(sn[k]); a.sit[k]=[{evs:e,at:atMap(e)}]; });
@@ -1611,7 +1611,7 @@ function newMy(kind,from){        // from: もとにするパターンのキー�
       if(a){ notes=conv(a.ev,16);
         if(a.sit){ sit={}; [['halfA',8],['halfB',8],['beat',4],['push',4],['bar3',12]].forEach(([k,N])=>{ if(a.sit[k]) sit[k]=conv(a.sit[k][0].evs,N); }); if(a.sit.bar3&&a.sit.bar3[1]) sit.bar32=conv(a.sit.bar3[1].evs,12); if(a.sit.bar&&a.sit.bar[1]) sit.bar2=conv(a.sit.bar[1].evs,16); if(a.sit.push&&a.sit.push[1]) sit.push2=conv(a.sit.push[1].evs,4); }
         if(a.pushBy) pushBy=a.pushBy;
-        extra={swing:a.swing?'swing':a.swing16?'swing16':'', loose:!!a.loose, noRoot:!!a.noRoot, melOct:a.melOct||0, push2nd:!!a.push2nd, accLink:!!a.accLink, rhAbove:!!a.rhAbove, pluck:!!a.pluck, legato:!!a.legato, satb:!!a.satb, shell:!!a.shell, rhShift:a.rhShift||0, vol:a.vol||1}; if(a.avoid===false) extra.avoid=false; } }
+        extra={swing:a.swing?'swing':a.swing16?'swing16':'', loose:!!a.loose, pushKeepLH:!!a.pushKeepLH, noRoot:!!a.noRoot, melOct:a.melOct||0, push2nd:!!a.push2nd, accLink:!!a.accLink, rhAbove:!!a.rhAbove, pluck:!!a.pluck, legato:!!a.legato, satb:!!a.satb, shell:!!a.shell, rhShift:a.rhShift||0, vol:a.vol||1}; if(a.avoid===false) extra.avoid=false; } }
   }
   const m={...extra, name, notes:kind==='drum'?notes:tidyNotes(notes)}; if(kind==='drum') m.fill=fill??null; if(sit) m.sitNotes=sit; if(pushBy) m.pushBy=pushBy;
   list.push(m);
@@ -1685,6 +1685,7 @@ function renderPatEditor(){
     optRow('リズム',[['','まっすぐ'],['swing','ハネる（シャッフル）'],['swing16','16分で軽くハネる']],curMy().swing||'',v=>curMy().swing=v);
     optRow('タイミング',[[false,'ぴったり'],[true,'人間っぽく揺らす']],!!curMy().loose,v=>curMy().loose=v);
     optRow('食う小節',[[false,'コードが変わるたび'],[true,'2小節目に入る時だけ（2小節ひとまとまり）']],!!curMy().push2nd,v=>curMy().push2nd=v);
+    optRow('食って入った小節の頭',[[false,'弾かない（先に弾いた和音をのばすだけ）'],[true,'左手の根音・5度だけ弾く（ボサノバの親指）']],!!curMy().pushKeepLH,v=>curMy().pushKeepLH=v);
     optRow('音ののばし方',[[true,'ペダルでのばす'],[false,'コードが変わったら切る']],curMy().legato!==false,v=>curMy().legato=v);
     optRow('右手の高さ（このパターンだけ）',[[-5,'低め'],[0,'ふつう'],[4,'高め'],[7,'もっと高め']],curMy().rhShift||0,v=>curMy().rhShift=v);
     optRow('メロディ行（コードに関係なくキーの音階で弾く）',[[false,'隠す'],[true,'表示する']],!!curMy().melody,v=>curMy().melody=v);
@@ -3316,7 +3317,7 @@ function chordPart(g,t,L,s,b,dr,sd,tt){
     if(pat.sit){ let v=sitVar(pat, cell.len-lag, startPi, b);
       // 1小節の弾き方を、それより短いコード（3拍など）で使うとき：次のコードへつなぐ音（nx）を、そのコードの終わりに合わせて前へずらす（途中で切れて1音だけ鳴るのを防ぐ）
       const cl=cell.len-lag; if(cl<16 && v.evs && v.evs.some(e=>e[5]==='nx') && Math.max(...v.evs.filter(e=>e[5]==='nx').map(e=>e[0]+e[2]))>cl-2){ v._sh=v._sh||{}; if(!v._sh[cl]){ const nxs=v.evs.filter(e=>e[5]==='nx'), d=Math.max(0,Math.max(...nxs.map(e=>e[0]+e[2]))-(cl-2)), ev2=prepNx(v.evs.map(e=>e[5]==='nx'?[e[0]-d,...e.slice(1)]:e).filter(e=>e[0]>=0).map(e=>[...e])); v._sh[cl]={evs:ev2,at:atMap(ev2)}; } v=v._sh[cl]; }
-      evs = (pushed && rel===lag) ? null : (v.at[rel-lag]||null); }   // 場面ごとの演奏
+      evs = (pushed && rel===lag) ? (pat.pushKeepLH ? ((v.at[0]||[]).filter(e=>e[1].every(r=>r===0||r===4)).length ? (v.at[0]||[]).filter(e=>e[1].every(r=>r===0||r===4)) : null) : null) : (v.at[rel-lag]||null); }   // pushKeepLH：食って入った小節でも、頭の左手（根音・5度）だけは弾く（ボサノバの親指）   // 場面ごとの演奏
     else if(head && mid && !pushed){ const ce=contEvs(pat,pi); evs = ce.length ? ce : pat.at[0]; }
     if(head && !pushed) choke(ct);
     else if(evs && !pat.legato && evs.some(e=>e[1].length>1)) choke(ct);
