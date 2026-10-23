@@ -699,7 +699,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.171（2026-10-23）</p>
+    <p class="appver">ver 1.172（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -766,7 +766,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.171（2026-10-23）</p>
+  <p class="appver">ver 1.172（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -3034,7 +3034,10 @@ let lastR=null, barTones=null;
 // 次の和音を弾くとき、前の和音を自然に離す（音が重なって濁るのを防ぐ）
 let held=[];
 function choke(t){ held=held.filter(h=>{ if(h.end>t){ try{ h.g.gain.cancelScheduledValues(t); h.g.gain.setTargetAtTime(0,t,.025); }catch(e){} } return false; }); }
-let playedSteps=0, gpos=0, LOOPN=0;   // LOOPN：進行を何周したか（フィルの位置を進行の頭にそろえるため）
+let playedSteps=0, gpos=0, LOOPN=0, ENDED_EARLY=false;   // ENDED_EARLY：1周で止めるとき、最後の小節で次（頭のコード）を食う所で締めの「ジャーン」を鳴らした
+// 1周だけ鳴らして止める再生か（コード一覧の試し聴き・音声の書き出し・最初の1周）
+let CAP_LEN=null;
+const oneLen=()=> CAPTURE ? CAP_LEN : (EXPORT&&EXPORT.on) ? EXPORT.len : LIB.bk ? state.bars*slotSteps() : TUT.on ? TUT.loopLen : MOODPOP.pending ? state.bars*slotSteps() : null;   // LOOPN：進行を何周したか（フィルの位置を進行の頭にそろえるため）
 const totalBars=()=>state.bars*slotSteps()/16;
 const isFillBar=b=>b%4===3;
 const fillModeOf=(b,dr)=> state.fill && dr.F && isFillBar(b) ? (b%8===7?'big':'small') : null;   // フィルは再生を始めてから4小節ごと（コードの切り替えやマスの数とは関係なし）
@@ -3177,6 +3180,8 @@ function chordPart(g,t,L,s,b,dr,sd,tt){
   const lag = has(cell) ? Math.min(Math.max(0,-shiftOf(i,cell.h)), cell.len-1) : 0;     // このコードの入りを遅らせる長さ
   const nLag= has(nx)   ? Math.min(Math.max(0,-shiftOf(ni,nh)), nx.len-1) : 0;          // 次のコードが遅れる分、このコードを伸ばす
   if(an>0 && rel>=cell.len-an){
+    // 1周で止めるときの最後の小節：頭のコードへ食う所で、そのまま締めの「ジャーン」（食ったタイミングで終わる）
+    { const L1=oneLen(), left=L1!=null?L1-playedSteps:null; if(left!=null && left>0 && left<=an && ni===0 && nh===0){ if(!ENDED_EARLY){ ENDED_EARLY=true; endHit(ct); } return {i,off}; } }
     // 次のコードを「食って」先に鳴らす。
     // パターンにその位置で弾く音があれば、パターンはそのまま続けてコードだけ先に変える（16ビート系）。
     // なければ、これまでどおり次のコードを先に弾いて、小節の頭までのばす（タイ）
@@ -3234,6 +3239,7 @@ function withPart2(f){
     Object.assign(state,{arp:sv.arp,inst:sv.inst,bass:sv.bass}); } }
 function scheduleStep(g,t){
   const L=slotSteps(), s=g%16, b=LOOPN*(L*state.bars/16)+Math.floor(g/16);     // b = 進行の頭から数えて何小節目か（ドラム用。途中で長さを変えてもずれない）
+  if(ENDED_EARLY){ if(!document.hidden) visQ.push({t,b:Math.floor(g/L),s:g%L,L,beat:g%4===0,abs:playedSteps,g,ln:LOOPN}); return; }   // 締めたあとは何も鳴らさない
   const dr=DRUMS[state.drum], sd=stepDur(), fm=fillModeOf(b,dr), inFill=fm && s>=(fm==='big'?8:12);
   // シャッフルのフィルは3連符：拍の中の 0・1・2 番目を 1/3 ずつ並べる
   const tt = dr.swing&&inFill ? t+[0,1/3,2/3,0][s%4]*sd : t+(dr.swing&&s%4===2?sd*.34:0)+(dr.swing16&&s%2===1?sd*.3:0);
@@ -3257,25 +3263,25 @@ function endHit(t){ const c=cellsOf(0)[0], v=c&&c.v; if(v==null) return;
 function tick(){
   // 音声の書き出し：1周したら最初のコードで締めて、余韻まで録音してから止める
   if(EXPORT.on && playedSteps>=EXPORT.len){
-    if(!EXPORT.stopping){ EXPORT.stopping=true; endHit(nextTime); const ms=Math.max(0,(nextTime-ctx.currentTime)*1000);
+    if(!EXPORT.stopping){ EXPORT.stopping=true; if(!ENDED_EARLY) endHit(nextTime); const ms=Math.max(0,(nextTime-ctx.currentTime)*1000);
       setTimeout(()=>{ if(playing){ playing=false; stop(); } setTimeout(()=>endExport(true),2600); },ms+100); }
     return;
   }
   // コード一覧の試し聴きは、1周したら最初のコードで締めて止める
   if(LIB.bk && playedSteps>=state.bars*slotSteps()){
-    if(!LIB.stopping){ LIB.stopping=true; endHit(nextTime); const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+1600;
+    if(!LIB.stopping){ LIB.stopping=true; if(!ENDED_EARLY) endHit(nextTime); const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+1600;
       LIB.endT=setTimeout(()=>{ if(LIB.bk) libStop(); },ms); }
     return;
   }
   // 最初のチュートリアルのあと、はじめて1周聴き終わったら止めて「雰囲気のつくり方」の案内を出す
   if(!TUT.on && MOODPOP.pending && playedSteps>=state.bars*slotSteps()){
-    if(!MOODPOP.stopping){ MOODPOP.stopping=true; endHit(nextTime); const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+900;
+    if(!MOODPOP.stopping){ MOODPOP.stopping=true; if(!ENDED_EARLY) endHit(nextTime); const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+900;
       setTimeout(()=>{ MOODPOP.stopping=false; MOODPOP.pending=false; if(playing) stop(); showMoodPop(); },ms); }
     return;
   }
   // チュートリアル中は、進行を1周したら止める
   if(TUT.on && playedSteps>=TUT.loopLen){
-    if(!TUT.stopping){ TUT.stopping=true; endHit(nextTime); const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+900;
+    if(!TUT.stopping){ TUT.stopping=true; if(!ENDED_EARLY) endHit(nextTime); const ms=Math.max(0,(nextTime-ctx.currentTime)*1000)+900;
       TUT.stopT=setTimeout(()=>{ TUT.stopping=false; if(playing) stop(); const f=TUT.onLoopEnd; TUT.onLoopEnd=null; if(f) f(); },ms); }
     return;
   }
@@ -3341,7 +3347,7 @@ async function play(){ ensureAudio(); pendingSound=null; if(starting) return; bg
   if(ctx.state!=='running'){ starting=true; await wakeAudio(); starting=false; }
   if(loadingNow()){ starting=true; $('play').setAttribute('aria-label','読み込み中'); $('play').style.opacity=.55;
     await Promise.race([ensureSounds(), new Promise(r=>setTimeout(r,8000))]); starting=false; $('play').style.opacity=''; }
-  ACC_TOP=null; lastR=null; barTones=null; pushedKey=null; lastBassM=null; LHCTX.prev=null; LHCTX.prevB=null; LHCTX.satb=null; resetP2(); playing=true; playedSteps=0; gpos=0; LOOPN=0; lofiNoise(state.inst==='lofi'||state.kit==='lofi');
+  ACC_TOP=null; lastR=null; barTones=null; pushedKey=null; lastBassM=null; LHCTX.prev=null; LHCTX.prevB=null; LHCTX.satb=null; resetP2(); playing=true; playedSteps=0; gpos=0; LOOPN=0; ENDED_EARLY=false; lofiNoise(state.inst==='lofi'||state.kit==='lofi');
   if(TUT.on){ TUT.loopLen=state.bars*slotSteps(); TUT.stopping=false; clearTimeout(TUT.stopT); } visQ=[]; cur=null; nextTime=ctx.currentTime+.06; tick(); timer=setInterval(tick,25); if(tickWorker) tickWorker.postMessage(25);
   $('play').innerHTML=STOP_SVG; $('play').setAttribute('aria-label','停止'); }
 function stop(){ lofiNoise(false); if(EXPORT.on && !EXPORT.stopping) setTimeout(()=>endExport(false),0); if(compBus){ compBus.gain.cancelScheduledValues(0); compBus.gain.setValueAtTime(1,ctx.currentTime); } playing=false; clearInterval(timer); if(tickWorker) tickWorker.postMessage(0); bgStop(); visQ=[]; cur=null; dirty=true;
@@ -4307,9 +4313,9 @@ $('saveFile').onchange=async e=>{ const f=e.target.files&&e.target.files[0]; e.t
 let CAPTURE=null;
 function captureSong(){ const C=[]; const sbSv=LHCTX.satb; LHCTX.satb=null; resetP2(); const sv={playedSteps,gpos,LOOPN,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice};
   const lhSv=[LHCTX.prev,LHCTX.prevB]; LHCTX.prev=LHCTX.prevB=null; CAPTURE=C; ACC_TOP=null; lastR=null; barTones=null; pushedKey=null; lastBassM=null; held=[]; bassHeld=[]; lastBassVoice=null; playedSteps=0; gpos=0; LOOPN=0; LOOPN=0;
-  const T=state.bars*slotSteps(), sd=stepDur(); let t=0;
-  try{ for(let n=0;n<T;n++){ scheduleStep(n,t); t+=sd; playedSteps++; } endHit(t); }
-  finally{ CAPTURE=null; [LHCTX.prev,LHCTX.prevB]=lhSv; LHCTX.satb=sbSv; ({playedSteps,gpos,LOOPN,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice}=sv); if(!playing) visQ=[]; }
+  const T=state.bars*slotSteps(), sd=stepDur(); let t=0; const eeSv=ENDED_EARLY; ENDED_EARLY=false; CAP_LEN=T;
+  try{ for(let n=0;n<T;n++){ scheduleStep(n,t); t+=sd; playedSteps++; } if(!ENDED_EARLY) endHit(t); }
+  finally{ CAPTURE=null; CAP_LEN=null; ENDED_EARLY=eeSv; [LHCTX.prev,LHCTX.prevB]=lhSv; LHCTX.satb=sbSv; ({playedSteps,gpos,LOOPN,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice}=sv); if(!playing) visQ=[]; }
   return {ev:C, end:t+sd*16}; }
 const GM_PROG={sbrass:62,sbrass3:62,epcity:4,clav:7,clav2:7,clav3:7,piano:0,spiano:0,epiano:4,lofi:4,organ:16,steel:25,nylon:24,eguitar:27,dist:30,pad:89,synth:81,strings:48,strings2:48,strings3:48,trumpet:56,trombone:57,sax:65,brass:61,brass2:61,brass3:61,horn:60,glock:9,koto:107,shami:106};
 const GM_BASS={bass:33,ubass:32,slap3:36,sbass:38,ebass:34};
