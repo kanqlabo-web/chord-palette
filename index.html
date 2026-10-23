@@ -707,7 +707,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.186（2026-10-23）</p>
+    <p class="appver">ver 1.187（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -774,7 +774,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.186（2026-10-23）</p>
+  <p class="appver">ver 1.187（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -3148,7 +3148,11 @@ function playEvents(evs,bt,ct,sd,pat){
     // ぶつかったら、テンション（9度など）の方を、すぐ下の和音の基本の音（ルート・3度・5度・7度）へ替える。3音以上の「パー」はテンションごとそのまま
     // メロディ行・次のコードへつなぐ音（1音ずつのフレーズ）：和音の音の半音上（濁る音）に当たったら、その和音の音へよける
     const FP=(bt.ivs&&bt.rpc!=null)?[...new Set([...CP,...bt.ivs.map(i=>(bt.rpc+i)%12),...(bt.bpc!=null?[bt.bpc]:[])])]:CP;   // コードの全部の音（弾いていない5度なども）
-    notes.slice(I0).forEach(n=>{ if(!(n.mel||tr==='nx')) return; const pc=((n.m%12)+12)%12; if(!FP.includes(pc) && FP.includes((pc+11)%12)) n.m-=1; });
+    // ただし調の中のコード（ダイアトニック。借りてきたコードもその調の中として）はそのまま。
+    // 調の外の音を含むコード（3(7) など）で、その「調の外の音」と半音でぶつかるとき（極端に濁るとき）だけ、その音へ寄せる
+    { const K=keyObj().pc, sc=scaleNow(), inKey=pc=>sc.includes((((pc-K)%12)+12)%12), chrom=FP.filter(pc=>!inKey(pc));
+      if(chrom.length) notes.slice(I0).forEach(n=>{ if(!(n.mel||tr==='nx')) return; const pc=((n.m%12)+12)%12; if(FP.includes(pc)) return;
+        const up=chrom.includes((pc+1)%12), dn=chrom.includes((pc+11)%12); if(dn) n.m-=1; else if(up) n.m+=1; }); }
     const cn=notes.slice(I0).filter(n=>!n.mel && n.st0===st0);
     if(cn.length===2 && !(pat&&pat.satb) && bt.rpc!=null){ const [a,b]=cn[0].m<=cn[1].m?[cn[0],cn[1]]:[cn[1],cn[0]], d=(((b.m-a.m)%12)+12)%12;
       if(d===1||d===11){ const iv=bt.ivs||[], core=[0,bt.third,bt.fifth].concat(iv.some(i=>i===10||i===11)?[bt.seventh]:[]).map(i=>(bt.rpc+i)%12), pc=x=>((x%12)+12)%12, isC=n=>core.includes(pc(n.m));
