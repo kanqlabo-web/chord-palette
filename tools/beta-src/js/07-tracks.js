@@ -250,9 +250,9 @@ function renderTracks(){ if(trk.hidden) return; if(!state.pro){ trk.hidden=true;
   const ad=document.createElement('div'); ad.className='drow dadd'; ad.innerHTML=`<div class="dh"><button class="daddb" id="trkAdd" aria-label="楽器を足す">${ICO.plus}</button></div>`; box.appendChild(ad);
   $('trkAdd').onclick=addTrack;
   const hint=document.createElement('p'); hint.className='dhint'; hint.textContent='色の帯（コードごとの弾き方）をタップすると、その場所の弾き方をピアノロールで直接編集できます。8・16小節のときは、上のページで4小節ずつ切りかえます。帯の区切りを左右にドラッグすると、コードの長さ・食い・後ろ倒しを変えられます。楽器の絵をタップするとミキサー（音量・左右・コンプ・エコーなど）、上のコード名をタップするとコードを編集できます。'; box.appendChild(hint);
-  const mo=document.createElement('div'); mo.className='dmore'; box.appendChild(mo); let armed=null;
+  const mo=document.createElement('div'); mo.className='dmore'; box.appendChild(mo); 
   pickRow(mo,'トラックをまとめて置きかえる','伴奏スタイルから作り直す','選んだスタイルと同じ鳴り方・ミックスにします（いまのトラックはなくなります）',null,null,
-    ()=>openPicker('伴奏スタイルから作り直す', styleCats, null, id=>{ const st=STYLES.find(x=>x.id===id); if(armed!==id){ armed=id; toast('もう一度押すと「'+st.name+'」のトラックに置きかえます'); return false; }
+    ()=>openPicker('伴奏スタイルから作り直す', styleCats, null, id=>{ const st=STYLES.find(x=>x.id===id); 
       proFromStyle(st); if(st.bpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; } state.tk={}; applyMix(); save(); renderAll(); ensureSounds(); renderTracks(); toast(st.name+'のトラックにしました'); return true; }));
   const hd=document.createElement('div'); hd.className='dhead'; hd.id='dHead'; hd.hidden=true; box.appendChild(hd);
   requestAnimationFrame(()=>{ const bw=dawBarW(); trk.style.setProperty('--dbw',bw+'px');
@@ -471,10 +471,13 @@ function pickRow(el,head,label,sub,ico,cv,open){ el.classList.remove('chips','gp
   el.innerHTML=`<div class="phd"><button id="pickBack" aria-label="もどる">${ICO.close}</button><h2 id="pickTitle"></h2><button class="pok" id="pickOk">決定</button></div><div id="pickBody"></div>`;
   document.body.appendChild(el); })();
 let PICK=null;
-function openPicker(title,cats,cur,onPick){ PICK={cats,cur,onPick}; $('pickTitle').textContent=title; $('pickScr').hidden=false; delete $('pickBody').dataset.g; drawPicker(); }
-function drawPicker(){ const P=PICK; twoPane($('pickBody'), P.cats(), P.cur, k=>{ P.cur=k; const close=P.onPick(k); if(close) closePicker(); else drawPicker(); }); }
+// タップで選ぶだけ。「決定」で適用、✕はキャンセル。音色（live）は聴き比べられるようにタップで鳴らし、✕なら開いたときの音色に戻す
+function openPicker(title,cats,cur,onPick,live){ if(live==null) live=/の音を選ぶ|楽器を選ぶ/.test(title);
+  PICK={cats,cur,cur0:cur,onPick,live,snap:live?JSON.stringify(state):null}; $('pickTitle').textContent=title; $('pickScr').hidden=false; delete $('pickBody').dataset.g; drawPicker(); }
+function drawPicker(){ const P=PICK; twoPane($('pickBody'), P.cats(), P.cur, k=>{ P.cur=k; if(P.live) P.onPick(k); drawPicker(); }); }
 function closePicker(){ $('pickScr').hidden=true; PICK=null; }
-$('pickBack').onclick=closePicker; $('pickOk').onclick=closePicker;
+$('pickBack').onclick=()=>{ const P=PICK; if(P&&P.live&&P.cur!==P.cur0){ const o=JSON.parse(P.snap); Object.keys(state).forEach(k=>delete state[k]); Object.assign(state,o); rebuildMy(); save(); renderAll(); ensureSounds(); applyMix(); renderTracks(); if($('sheet').classList.contains('on')&&sheetKind) openSheet(sheetKind); } closePicker(); };
+$('pickOk').onclick=()=>{ const P=PICK; closePicker(); if(P && !P.live && P.cur!=null && P.cur!==P.cur0) P.onPick(P.cur); };
 
 // 伴奏スタイルの分類
 const STYLE_CATS=[['定番',[0,1,3,2,15]],['しっとり・やさしい',[4,5,16,14]],['おしゃれ',[18,11,12,19,9]],['おどれる・はねる',[10,8,13]],['特別な雰囲気',[17,20]]];
