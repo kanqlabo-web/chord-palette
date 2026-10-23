@@ -1454,11 +1454,12 @@ const ARPS = {
                      [...each([0,1,2,3,4,5,6,7,8,9,10,11],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44),[12,[8],1,.5,null,'nx'],[13,[8],1,.54,null,'nx'],[14,[8],1,.58,null,'nx'],[15,[8],1,.62,null,'nx']]],
                 halfA:[each([0,1,2,3,4,5,6,7],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44)], halfB:[each([0,1,2,3,4,5,6,7],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44)],
                 beat:[each([0,1,2,3],[[6],[7],[8],[7]],.45,(s,i)=>s%4===0?.62:.44)]}},
-  // ボサノバの上もの（ピアノ）：中高音域で長くのばし、3連符の回り込みでつなぐ（イパネマの娘のような、のびやかな線）
-  ipanema:{name:'上もの：のびやかなピアノ', pro:'上もの：中高音域の伸ばし＋3連符の回り込み（2小節）', legato:true, rhShift:8, avoid:false,
-           sit:{bar:[[[0,[3],7.5,.5],[8,[3],1.33,.44,null,'su'],[9.33,[3],1.33,.42],[10.67,[2],1.33,.44],[12,[2],4,.48]],
-                      [[2,[2],1.33,.44,null,'su'],[3.33,[2],1.33,.42],[4.67,[1],5.33,.46],[12,[2],1.33,.42,null,'nx'],[13.33,[2],1.33,.44,null,'nx'],[14.67,[2],1.33,.46,null,'nx']]],
-                halfA:[[[0,[3],4,.5],[4,[3],1.33,.44,null,'su'],[5.33,[3],1.33,.42],[6.67,[2],1.33,.44]]], halfB:[[[0,[2],8,.48]]], beat:[[[0,[2],4,.46]]]}},
+  // ボサノバの上もの（ピアノ）：ipanema の MIDI のように、上の2音（3度・6度の重なり）を長くのばしてコードをなぞる（声部はなめらかにつながる）。
+  // 4小節に1回だけ、イエス様が〜（ボサノバ）の MIDI のように、小節の後半で4分の3連符で次のコードへ上っていくオブリ
+  ipanema:{name:'上もの：のびやかなピアノ', pro:'上もの：上2音の伸ばし＋ときどき3連符のオブリ（4小節）', legato:true, rhShift:10, avoid:false, dyad36:true,
+           sit:{bar:[[[0,[2,3],16,.44]],[[0,[2,3],16,.42]],[[0,[2,3],16,.44]],
+                      [[0,[2,3],8,.42],[8,[3],2.67,.46,null,'nx'],[10.67,[3],2.67,.48,null,'nx'],[13.33,[3],2.67,.5,null,'nx']]],
+                halfA:[[[0,[2,3],8,.44]]], halfB:[[[0,[2,3],8,.42]]], beat:[[[0,[2,3],4,.42]]]}},
   glockline:{name:'上もの：高い音でキラキラ', pro:'上もの：高音の短いフレーズ（2小節目は次のコードへつなぐ）', legato:true,
            sit:{bar:[[[0,[6],6,.5],[6,[7],2,.44],[8,[8],8,.48]],[[0,[6],6,.5],[6,[7],2,.44],[8,[8],4,.48],[12,[8],1,.44,null,'nx'],[13,[8],1,.46,null,'nx'],[14,[8],2,.5,null,'nx']]],
                 halfA:[[[0,[6],6,.5],[6,[7],2,.44]]], halfB:[[[0,[8],8,.48]]], beat:[[[0,[6],4,.46]]]}},
@@ -3202,6 +3203,7 @@ function playEvents(evs,bt,ct,sd,pat){
     { const K=keyObj().pc, sc=scaleNow(), inKey=pc=>sc.includes((((pc-K)%12)+12)%12), chrom=FP.filter(pc=>!inKey(pc));
       if(chrom.length) notes.slice(I0).forEach(n=>{ if(!(n.mel||tr==='nx')) return; const pc=((n.m%12)+12)%12; if(FP.includes(pc)) return;
         const up=chrom.includes((pc+1)%12), dn=chrom.includes((pc+11)%12); if(dn) n.m-=1; else if(up) n.m+=1; }); }
+    if(pat&&pat.dyad36 && ns.length===2 && ns.includes(2) && ns.includes(3)){ const nn=notes.slice(I0).filter(n=>!n.mel).sort((a,b)=>a.m-b.m); if(nn.length===2){ const tp=nn[1].m, cps=(bt.ivs||[]).map(i=>(bt.rpc+i)%12); const pick=[3,4,8,9].map(d=>tp-d).find(x=>cps.includes(((x%12)+12)%12)); if(pick!=null){ nn[0].m=pick; nn[0].orig=pick; } } }   // 上2音は3度か6度の重なりに
     const cn=notes.slice(I0).filter(n=>!n.mel && n.st0===st0);
     if(cn.length===2 && !(pat&&pat.satb) && bt.rpc!=null){ const [a,b]=cn[0].m<=cn[1].m?[cn[0],cn[1]]:[cn[1],cn[0]], d=(((b.m-a.m)%12)+12)%12;
       if(d===1||d===11){ const iv=bt.ivs||[], core=[0,bt.third,bt.fifth].concat(iv.some(i=>i===10||i===11)?[bt.seventh]:[]).map(i=>(bt.rpc+i)%12), pc=x=>((x%12)+12)%12, isC=n=>core.includes(pc(n.m));
@@ -3215,7 +3217,7 @@ function playEvents(evs,bt,ct,sd,pat){
       // メロディ（1音ずつのフレーズ）：直前の音と別の行なのに同じ高さになったら、よける前の音に戻す
       const LM=LAST_MEL[PART2?1:0];
       evN.filter(n=>n.mel||tr==='nx').sort((a,b)=>a.st0-b.st0).forEach(n=>{
-        if(LM.m!=null && LM.row!==n.row && LM.m===n.m && (LM.orig!==n.orig || tr==='nx')){ if(n.m!==n.orig) n.m=n.orig; else if(tr==='nx') n.m=pentaStep(n.m,-1,null); }
+        if(LM.m!=null && (LM.row!==n.row || tr==='nx') && LM.m===n.m && (LM.orig!==n.orig || tr==='nx')){ if(n.m!==n.orig) n.m=n.orig; else if(tr==='nx') n.m=pentaStep(n.m,-1,null); }
         LM.m=n.m; LM.row=n.row; LM.orig=n.orig; }); }
   });
   if(!notes.length) return;

@@ -709,7 +709,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
     <button class="mpcard mid" id="tsMid"><span class="mptx"><small>ある程度わかっている人向け</small><b>途中のレベルから</b><span>好きなレベルを選んで始めます。</span></span><i>›</i></button>
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
-    <p class="appver">ver 1.192（2026-10-23）</p>
+    <p class="appver">ver 1.195（2026-10-23）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -776,7 +776,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
   <div class="sec"><h3>PROモード</h3><div class="chips" id="proChips"></div>
     <p class="small">オンにすると、マスの上に「コードを編集」ボタンが出ます（マスをダブルタップしても開けます）。sus4・7th・分数コードなどパレットにないコードを作れて、コードを変える拍や食い・後ろ倒しも決められます。<br>コード・ドラム・ベースのパターンを別々に選んだり自分で作ったりでき、帯の M・S・つまみでミュート・ソロ・音量を調整できます。</p></div>
   <p class="small" id="accNote">伴奏の帯をタップすると、伴奏スタイルと音色・ドラムの音・ベースを選べます。iPhoneで音が出ないときは消音モードを解除してください。</p>
-  <p class="appver">ver 1.192（2026-10-23）</p>
+  <p class="appver">ver 1.195（2026-10-23）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -3179,7 +3179,7 @@ function playEvents(evs,bt,ct,sd,pat){
       // メロディ（1音ずつのフレーズ）：直前の音と別の行なのに同じ高さになったら、よける前の音に戻す
       const LM=LAST_MEL[PART2?1:0];
       evN.filter(n=>n.mel||tr==='nx').sort((a,b)=>a.st0-b.st0).forEach(n=>{
-        if(LM.m!=null && LM.row!==n.row && LM.m===n.m && (LM.orig!==n.orig || tr==='nx')){ if(n.m!==n.orig) n.m=n.orig; else if(tr==='nx') n.m=pentaStep(n.m,-1,null); }
+        if(LM.m!=null && (LM.row!==n.row || tr==='nx') && LM.m===n.m && (LM.orig!==n.orig || tr==='nx')){ if(n.m!==n.orig) n.m=n.orig; else if(tr==='nx') n.m=pentaStep(n.m,-1,null); }
         LM.m=n.m; LM.row=n.row; LM.orig=n.orig; }); }
   });
   if(!notes.length) return;
