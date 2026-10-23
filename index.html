@@ -1129,7 +1129,9 @@ function chordNotes(v,prev){
     if(ml!=null){ const cap=degPitch('d'+ml)+(pat.melOct||0), mp=melPcs(pat);
       // フレーズの音と半音でぶつかる和音の音（例：E のコードの D♯ とフレーズの E）は、7度→5度、それでもぶつかれば6度に替える
       const clash=iv=>mp.some(pc=>{ const d=(((rpc+iv-pc)%12)+12)%12; return d===1||d===11; });
-      let j7=i7; if(clash(j7)) j7=clash(7)?9:7; let j3=i3;
+      // 替える音は、キーの中の音（かコードの音）だけ。ぶつからない5度・6度がなければ、ルートの1オクターブ上（Em の 6度＝C♯ のようなキーの外の音は使わない）
+      const K0=keyObj().pc, SC0=scaleNow(), okIv=iv=>!clash(iv) && (ivs.includes(iv) || SC0.includes((((rpc+iv-K0)%12)+12)%12));
+      let j7=i7; if(clash(j7)) j7=[7,9].find(okIv)??12; let j3=i3;
       const all=[]; for(let o=-12;o<=12;o+=12) [[0,j3,j7],[j3,j7,12],[j7,12,12+j3]].forEach(v=>{ const b=r0+o+v[0]; all.push(v.map(x=>b+x-v[0])); });
       // 和音の中で半音（短2度）がぶつからない形のうち、フレーズのいちばん低い音をギリギリ超えない（半音以上離れた）いちばん高い形
       const ok=all.filter(v=>v[2]<=cap-2&&v[0]>=48&&v[1]-v[0]>=2&&v[2]-v[1]>=2).sort((a,b)=>b[2]-a[2]); if(ok.length) C.splice(0,C.length,ok[0]); }
