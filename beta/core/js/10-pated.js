@@ -220,7 +220,8 @@ function peOpen(kind,scene,mode,x0){ const k=patOf(kind);
   if(mode==='new') newMy(kind,null); else if(!wasMy) newMy(kind, k||'auto');
   // 組み込みの演奏を編集するとき、同じ名前の「（自分用）」がもうあれば、新しく作らずにそれを続けて編集する
   if(!wasMy && mode!=='new'){ const list=listOf(kind), i=list.length-1, nm=list[i]&&list[i].name, j=/（自分用）$/.test(nm||'')?list.findIndex((x,q)=>q<i&&x.name===nm):-1;
-    if(j>=0){ list.pop(); setPatOf(kind,'my'+j); rebuildMy(); save(); PE.wasMy=true; PE.reuse=JSON.stringify(curMy()); } }
+    if(j>=0 && mode==='fresh'){ list[j]=list.pop(); setPatOf(kind,'my'+j); rebuildMy(); save(); PE.wasMy=true; }   // 下書きに取り込み直したときは、前の（自分用）を組み込みの中身で置きかえる
+    else if(j>=0){ list.pop(); setPatOf(kind,'my'+j); rebuildMy(); save(); PE.wasMy=true; PE.reuse=JSON.stringify(curMy()); } }
   PE.copy=PE.wasMy?null:JSON.stringify(curMy());
   clearTimeout(HIST.t); histCommit(); PE.h0=HIST.undo.length;   // 開いた時点を記録して、元に戻すで画面を開く前まで戻らないようにする
   const okScene = isDrumK(kind) ? ['bar','B'] : isBassK(kind) ? ['bar'] : SCENES.map(s=>s[0]);
@@ -512,7 +513,7 @@ $('pePick').onclick=()=>{ const P=PE, kind=P.kind, drum=isDrumK(kind), bass=isBa
   openPicker(drum?'下書きにする叩き方':'下書きにする弾き方', cats, patOf(kind), v=>{
     const list=listOf(kind), i=list.length-1; if(!P.wasMy && JSON.stringify(list[i])===P.copy && patOf(kind)==='my'+i){ list.pop(); rebuildMy(); }
     setPatOf(kind,v); if(kind==='bass') state.bass=true; save(); renderAll(); ensureSounds();
-    const snap=P.snap, sc=P.scene, grid=P.grid; PE=null; peOpen(kind, sc); if(PE){ PE.snap=snap; PE.grid=grid; peDraw(); } return true; }); };
+    const snap=P.snap, sc=P.scene, grid=P.grid; PE=null; peOpen(kind, sc, 'fresh'); if(PE){ PE.snap=snap; PE.grid=grid; peDraw(); } return true; }); };
 
 // ---------- 右クリック・キーボード ----------
 function peCtxClose(){ const c=$('peCtx'); c.hidden=true; c.innerHTML=''; }
