@@ -37,7 +37,7 @@ function ensureAudio(noResume){
     ctx=new (window.AudioContext||window.webkitAudioContext)();
     master=ctx.createGain(); master.gain.value=.85; masterOut=mkMaster(master); masterOut.connect(ctx.destination);
     REVERB=mkReverb(); ECHO=mkEcho(); for(const k in CHAN) delete CHAN[k];
-    // ミキサーは出さないが、伴奏スタイルごとのミックス（左右・響き・コンプなど）は試作版と同じ道を通す
+    // ミキサーは出さないが、伴奏スタイルごとのミックス（左右・響き・コンプなど）はベータ版と同じ道を通す
     compVol=mkChan('arp').inp; drumBus=mkChan('drum').inp; bassBus=mkChan('bass').inp;
     compVol2=mkChan('arp2').inp; compBus2=ctx.createGain(); compBus2.connect(compVol2);   // 楽器2（PRO）
     compBus=ctx.createGain(); compBus.connect(compVol); applyMix();   // 伴奏（コード）だけを通す道。ダンスではキックに合わせて音量を沈める（サイドチェイン風）
@@ -649,7 +649,7 @@ function scheduleStep(g,t){
   else if(!dr.duck && compBus && !CAPTURE && s===0 && compBus.gain.value<.99){ compBus.gain.cancelScheduledValues(tt); compBus.gain.setValueAtTime(1,tt); }
   if(state.fill && dr.F && s===0 && b%4===0 && b>0 && dr.crash0!==false) drum(49,tt,.6);   // シティポップはフィルの最後（前の小節の最後の16分）でクラッシュ済み
   BOWBAR=b; const {i,off}=chordPart(g,t,L,s,b,dr,sd,tt);
-  // 2つ目の楽器（コード2・上もの）。同じコード進行を、別のパターン・別の音色で重ねる（ベースは1回だけ）。通常モードは伴奏スタイルが決める
+  // 2つ目の楽器（コード2・上もの）。同じコード進行を、別のパターン・別の音色で重ねる（ベースは1回だけ）。ビギナーは伴奏スタイルが決める
   if(state.arp2 && ARPS[state.arp2]) withPart2(()=>chordPart(g,t,L,s,b,dr,sd,tt));
   if(!document.hidden) visQ.push({t,b:i,s:off,L,beat:g%4===0,abs:playedSteps,g,ln:LOOPN});
 }
@@ -701,7 +701,7 @@ function showClearPop(n){ const l=LEVELS[n-1]; $('moodTip').hidden=true; MOODPOP
   $('moodPopLater').hidden=true; $('moodPopGo').textContent='OK'; $('moodPop').hidden=false; }
 function showMoodPop(all){ $('moodTip').hidden=true; MOODPOP.all=!!all;
   if(all){ $('moodPopChips').innerHTML='<span style="--fn:var(--d)">PRO</span>'; $('moodPopEye').textContent='ALL CLEAR';
-    $('moodPopTitle').textContent='全レベルクリア！'; $('moodPopText').innerHTML='PROモードが使えるようになりました。<br>設定メニューからオンにできます。';
+    $('moodPopTitle').textContent='全レベルクリア！'; $('moodPopText').innerHTML='PROが使えるようになりました。<br>設定メニューからオンにできます。';
     $('moodPopLater').hidden=true; $('moodPopGo').textContent='OK'; }
   else { const l=LEVELS[MOODPOP.level-1];
     $('moodPopChips').innerHTML=(l.chips||[]).map(([t,c])=>`<span style="--fn:var(${c})">${t}</span>`).join('');
@@ -727,7 +727,7 @@ function bgStart(){
   try{ if(!bgAudio){ bgAudio=new Audio(silentWav(5)); bgAudio.loop=true; bgAudio.setAttribute('playsinline',''); }
     const pr=bgAudio.play(); if(pr&&pr.catch) pr.catch(()=>{}); }catch(e){}
   if('mediaSession' in navigator){ try{
-    navigator.mediaSession.metadata=new MediaMetadata({title:$('progName').textContent||'コード進行パレット', artist:'コード進行パレット', album:`Key ${state.key} ・ BPM ${state.bpm}`});
+    navigator.mediaSession.metadata=new MediaMetadata({title:$('progName').textContent||'コード進行パレット', artist:'コード進行パレット', album:`Key ${state.key} ・ テンポ ${state.bpm}`});
     navigator.mediaSession.playbackState='playing'; }catch(e){} }
 }
 function bgStop(){ try{ if(bgAudio) bgAudio.pause(); }catch(e){} if('mediaSession' in navigator) try{ navigator.mediaSession.playbackState='paused'; }catch(e){} }

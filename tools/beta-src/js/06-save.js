@@ -1,6 +1,6 @@
 // ---------- 保存・共有 ----------
 // 共有リンク：進行と音の設定を URL の「#s=…」に詰める（サーバー不要。開いた人のブラウザで復元）
-const SHARE_KEYS=['slots','segs','ant','bars','len','key','bpm','drum','arp','inst','wide','arp2','inst2','kit','bass','bassSnd','bassPat','fill','mix','pro','lhOff','rhOff','lhOff2','rhOff2','bassOff','sOff','rhLo','lhLo','rhLo2','lhLo2','bassLo','drumOff'];   // 曲を再現するのに必要なもの（PROモードかどうかも）。開いた人の進み具合は変えない
+const SHARE_KEYS=['slots','segs','ant','bars','len','key','bpm','drum','arp','inst','wide','arp2','inst2','kit','bass','bassSnd','bassPat','fill','mix','pro','lhOff','rhOff','lhOff2','rhOff2','bassOff','sOff','rhLo','lhLo','rhLo2','lhLo2','bassLo','drumOff'];   // 曲を再現するのに必要なもの（PROかどうかも）。開いた人の進み具合は変えない
 function packSong(){ const o={v:1}; SHARE_KEYS.forEach(k=>o[k]=state[k]);
   // リンクを短くするため、使っている小節だけ・空の情報は省く
   o.slots=state.slots.slice(0,state.bars);
@@ -12,19 +12,19 @@ function packSong(){ const o={v:1}; SHARE_KEYS.forEach(k=>o[k]=state[k]);
   if(/^my\d+$/.test(state.arp)) o.myArp=listOf('arp')[+state.arp.slice(2)];
   if(!state.arp2){ delete o.arp2; delete o.inst2; } else if(/^my\d+$/.test(state.arp2)) o.myArp2=listOf('arp')[+state.arp2.slice(2)];
   if(state.pro && /^my\d+$/.test(state.bassPat)) o.myBass=listOf('bass')[+state.bassPat.slice(2)];
-  // PRO で足した楽器（マイパターンなら中身も）と、トラックの名前・色
+  // PRO で足した楽器（マイ演奏なら中身も）と、トラックの名前・色
   if(state.pro && (state.xtr||[]).length) o.xtr=state.xtr.map(t=>{ const c={...t}; if(/^my\d+$/.test(t.arp||'')) c.myArp=listOf('arp')[+t.arp.slice(2)]; if(t.type==='drum'&&/^my\d+$/.test(t.drum||'')) c.myDrum=listOf('drum')[+t.drum.slice(2)]; if(t.type==='bass'&&/^my\d+$/.test(t.bassPat||'')) c.myBass=listOf('bass')[+t.bassPat.slice(2)]; return c; });
   if(state.pro && state.tk && Object.values(state.tk).some(m=>m&&(m.name||m.color))) o.tk=state.tk;
   return o; }
 function unpackSong(o){ if(!o||!Array.isArray(o.slots)) return false;
   SHARE_KEYS.forEach(k=>{ if(o[k]!==undefined) state[k]=o[k]; }); if(o.wide===undefined) state.wide=false; if(o.drumOff===undefined) state.drumOff=false;   /* 広がりの設定がない古い曲は「まん中」 */ if(o.lay) state.lay=o.lay;   // 古いリンクの「重ねる音色」→ コード2へ
   state.bassSnd=fixBass(state.bassSnd||'bass');
-  if(o.myDrum){ listOf('drum').push({...o.myDrum,name:(o.myDrum.name||'共有パターン')}); state.drum='my'+(listOf('drum').length-1); }
-  if(o.myArp){ listOf('arp').push({...o.myArp,name:(o.myArp.name||'共有パターン')}); state.arp='my'+(listOf('arp').length-1); }
-  if(o.myArp2){ listOf('arp').push({...o.myArp2,name:(o.myArp2.name||'共有パターン')}); state.arp2='my'+(listOf('arp').length-1); }
+  if(o.myDrum){ listOf('drum').push({...o.myDrum,name:(o.myDrum.name||'共有された演奏')}); state.drum='my'+(listOf('drum').length-1); }
+  if(o.myArp){ listOf('arp').push({...o.myArp,name:(o.myArp.name||'共有された演奏')}); state.arp='my'+(listOf('arp').length-1); }
+  if(o.myArp2){ listOf('arp').push({...o.myArp2,name:(o.myArp2.name||'共有された演奏')}); state.arp2='my'+(listOf('arp').length-1); }
   if(o.arp2===undefined){ state.arp2=''; }
-  if(o.myBass){ listOf('bass').push({...o.myBass,name:(o.myBass.name||'共有パターン')}); state.bassPat='my'+(listOf('bass').length-1); }
-  state.xtr=(o.xtr||[]).map(t=>{ const c={...t}; if(c.myArp){ listOf('arp').push({...c.myArp,name:(c.myArp.name||'共有パターン')}); c.arp='my'+(listOf('arp').length-1); delete c.myArp; } if(c.myDrum){ listOf('drum').push({...c.myDrum,name:(c.myDrum.name||'共有パターン')}); c.drum='my'+(listOf('drum').length-1); delete c.myDrum; } if(c.myBass){ listOf('bass').push({...c.myBass,name:(c.myBass.name||'共有パターン')}); c.bassPat='my'+(listOf('bass').length-1); delete c.myBass; } return c; }); state.tk=o.tk||{};
+  if(o.myBass){ listOf('bass').push({...o.myBass,name:(o.myBass.name||'共有された演奏')}); state.bassPat='my'+(listOf('bass').length-1); }
+  state.xtr=(o.xtr||[]).map(t=>{ const c={...t}; if(c.myArp){ listOf('arp').push({...c.myArp,name:(c.myArp.name||'共有された演奏')}); c.arp='my'+(listOf('arp').length-1); delete c.myArp; } if(c.myDrum){ listOf('drum').push({...c.myDrum,name:(c.myDrum.name||'共有された演奏')}); c.drum='my'+(listOf('drum').length-1); delete c.myDrum; } if(c.myBass){ listOf('bass').push({...c.myBass,name:(c.myBass.name||'共有された演奏')}); c.bassPat='my'+(listOf('bass').length-1); delete c.myBass; } return c; }); state.tk=o.tk||{};
   rebuildMy(); migrateLay(state); ensureArp2(); if(state.arp2 && !ARPS[state.arp2]) state.arp2=ARP_ALIAS[state.arp2]||''; if(ARP_ALIAS[state.arp]) state.arp=ARP_ALIAS[state.arp]; if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4';
   state.inst=fixInst(state.inst); state.inst2=fixInst(state.inst2); if(state.arp2 && !ARPS[state.arp2] && !/^(acc_|my\d)/.test(state.arp2)) state.arp2=''; if(!INSTS[state.inst]) state.inst='piano'; state.kit=fixKit(state.kit); if(!KITS[state.kit]) state.kit='std';
   state.slots=Array.from({length:16},(_,i)=>state.slots[i]??null); state.segs=Array.from({length:16},(_,i)=>(state.segs||[])[i]||[]); state.ant=Array.from({length:16},(_,i)=>(state.ant||[])[i]??null);
@@ -158,7 +158,7 @@ function midiFile(){ const {ev}=captureSong(), PPQ=480, tk=sec=>Math.max(0,Math.
   const us=Math.round(60000000/state.bpm), tempo=[0,0xFF,0x51,3,(us>>16)&255,(us>>8)&255,us&255, 0,0xFF,0x58,4,4,2,24,8, 0,0xFF,0x2F,0];
   const tracks=[[...str('MTrk'),...u32(tempo.length),...tempo],
     track('コード',0,GM_PROG[state.inst]??0,ev.filter(e=>e.k==='key')),
-    ...(ev.some(e=>e.k==='key2')?[track('コード2',3,GM_PROG[state.inst2]??4,ev.filter(e=>e.k==='key2'))]:[]),
+    ...(ev.some(e=>e.k==='key2')?[track('重ねる楽器',3,GM_PROG[state.inst2]??4,ev.filter(e=>e.k==='key2'))]:[]),
     ...(state.pro?(state.xtr||[]).map((x,i)=>{ const k='key'+(i+3), L=ev.filter(e=>e.k===k); return L.length?track(x.name||('楽器'+(i+3)),[4,5,6,7,8,10,11,12,13,14,15][i%11],GM_PROG[x.inst]??0,L):null; }).filter(Boolean):[]),   // PRO で足した楽器
     track('ベース',1,GM_BASS[state.bassSnd]??33,ev.filter(e=>e.k==='bass')),
     track('ドラム',9,null,ev.filter(e=>e.k==='drum'))];
@@ -216,7 +216,7 @@ function showModePick(){ const el=$('modePick'); el.hidden=false; $('tsLevels').
   // つづきから：前回の状態（レベルの進み具合と、作りかけの進行）から
   const hasSave=!FIRST_RUN || LVL>0;
   $('tsCont').hidden=!hasSave;
-  $('tsContSub').textContent = MODE==='free' ? 'フリーモードで自由に作る'
+  $('tsContSub').textContent = MODE==='free' ? 'すべての機能で自由に作る'
     : LVL>=LV_MAX ? '全レベルクリア・自由に作る' : LVL===0 ? 'レベル1から' : `レベル${LVL}までクリア・次は LEVEL ${LVL+1}「${LEVELS[LVL].name}」`;
   $('tsCont').onclick=()=>{ close(); if(MODE==='step' && LVL===0) startLevel(1); };
   // はじめから：進み具合を消してレベル1から（進んでいるときは2回押しで）
@@ -228,6 +228,6 @@ function showModePick(){ const el=$('modePick'); el.hidden=false; $('tsLevels').
     box.innerHTML=LEVELS.map((l,k)=>`<button data-l="${k+1}"><i>LEVEL ${k+1}</i><b>${l.name}</b></button>`).join('');
     box.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const n=+b.dataset.l; MODE='step'; LVL=n-1; saveLv(); close(); startLevel(n); }); };
   // フリーモード
-  $('tsFree').onclick=()=>{ MODE='free'; saveLv(); MOODPOP.pending=false; close(); toast('フリーモード：すべての機能を使えます'); };
+  $('tsFree').onclick=()=>{ MODE='free'; saveLv(); MOODPOP.pending=false; close(); toast('すべての機能を使えます'); };
 }
 if(!OPENED_SHARE) showModePick();

@@ -1,7 +1,7 @@
 // ---------- 版ごとの設定（index.html の CP_CONF） ----------
-// store：保存データのキーの頭（試作版は 'cpbeta-'）、snd：音源の場所、kind：'main'｜'beta'｜'lecture'
+// store：保存データのキーの頭（ベータ版は 'cpbeta-'）、snd：音源の場所、kind：'main'｜'beta'｜'lecture'
 const CP=Object.assign({store:'',snd:'snd/',kind:'main'}, window.CP_CONF||{}), STK=k=>CP.store+k;
-// 試作版などを初めて開いたときは、いつもの版の保存データを写して始める
+// ベータ版などを初めて開いたときは、通常版の保存データを写して始める
 // 講義版は、開くたびにまっさら（ほかの版の保存データ（PRO など）を持ちこまない）
 try{ if(CP.kind==='lecture') Object.keys(localStorage).filter(k=>k.startsWith(STK('chord-palette'))).forEach(k=>localStorage.removeItem(k)); }catch(e){}
 try{ if(CP.store && CP.kind!=='lecture' && localStorage.getItem(STK('chord-palette-v3'))==null){ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.startsWith('chord-palette')) localStorage.setItem(CP.store+k, localStorage.getItem(k)); } } }catch(e){}
@@ -32,7 +32,7 @@ const DEG=[
 ];
 const keyObj=()=>KEYS.find(k=>k.id===state.key)||KEYS[0];
 // ---- コードの表し方 ----
-// マスの値は「数字（ダイアトニックの何番目か）」または「PROモードで作ったコード {o:キーからの半音, q:種類, x:テンション, b:分数コードのベース(半音) or null}」
+// マスの値は「数字（ダイアトニックの何番目か）」または「PROで作ったコード {o:キーからの半音, q:種類, x:テンション, b:分数コードのベース(半音) or null}」
 const QUAL={maj:[0,4,7],m:[0,3,7],sus2:[0,2,7],sus4:[0,5,7],'5':[0,7],'m-5':[0,3,6],aug:[0,4,8],b5:[0,4,6],ms5:[0,3,8]};
 const QUAL_LABEL={maj:'なし',m:'m',sus2:'sus2',sus4:'sus4','5':'5','m-5':'m(♭5)',aug:'aug',b5:'(♭5)',ms5:'m(♯5)'};
 const QUAL_ORDER=['maj','m','sus2','sus4','5','m-5','aug','b5','ms5'];
@@ -284,7 +284,7 @@ function satbVoice(pcs, rpc, bpc, B, sp, prev){
   cands.sort((a,b)=>cost(a)-cost(b)); const best={...cands[0], sev}; return best;
 }
 // 音域（半音いくつ上げ下げ）。楽器ごと：コード（rhOff/lhOff）・コード2（rhOff2/lhOff2）・ベース（bassOff）。
-// PRO はスライダーの値、通常モードは伴奏スタイルごとの決まった値（state.sOff。setStyle で入る）
+// PRO はスライダーの値、ビギナーは伴奏スタイルごとの決まった値（state.sOff。setStyle で入る）
 // PRO では「絶対的な鍵盤の範囲」（いちばん下の音の MIDI 番号：rhLo / lhLo / rhLo2 / lhLo2 / bassLo）で決める。
 // 中身は、パターンの標準の高さからのずれ（半音）に直して使う。null＝パターンの標準のまま
 const RH_DEF=()=>{ const pat=ARPS[state.arp]; return 56+((pat&&pat.rhShift)||0); }, LH_DEF=40, BASS_DEF=28;
@@ -301,7 +301,7 @@ function chordNotes(v,prev){
   if(pcs.length>4 || (ARPS[state.arp]&&ARPS[state.arp].noRoot&&pcs.length>3)) pcs=pcs.filter(pc=>pc!==rpc);                 // 5音以上ならルートは左手に任せる（noRoot：4音のコードもルートを省く。「パー」はテンションごと鳴らす）
   const slash = sp.b!==null&&sp.b!==undefined, bpc = slash ? (k.pc+sp.b)%12 : rpc;
   setScaleFor([...pcs, bpc]);   // 借りてきたコードなら、フレーズの音階を同主短調に（分数コードはベースの音も入れて判定。Cm7/D の D など）
-  // 左手：E2〜E♭3（PROモードでは音域スライダーでずらせる）
+  // 左手：E2〜E♭3（PROでは音域スライダーでずらせる）
   const {lh:lhOff, rh:rhOff}=ROFF();
   const lo=40+lhOff;   // 音域スライダーは「範囲」をずらす（音の名前は変えない）
   let L=lo+(((bpc-lo)%12)+12)%12;
@@ -515,7 +515,7 @@ const DRUMS = {
            bass:[[0,0,6,.9],[8,'5',6,.8],[14,'ap',2,.7]]},
   none:   {name:'なし', v:{}, fill:null, bass:[[0,0,7,1],[8,'5',6,.85],[14,'ap',2,.7]]},
 };
-// 通常は分かりやすい名前、PROモードでは音楽用語の名前
+// 通常は分かりやすい名前、PROでは音楽用語の名前
 const patName=o=>state.pro&&o.pro?o.pro:o.name;
 const DRUM_ORDER=['pop','dpop','run','eight','hard','rride','xstick','medium','half','ballad','epic','city','sixteen','neosoul','lofi','shuffle','dance','bossa','reggae','wa','none'];
 function parseVoices(v){ const o={}; for(const k in v) o[VOICE[k]]=[...v[k]].map(velOf); return o; }
@@ -662,17 +662,17 @@ const ARPS = {
   // キラキラ：「タン・タ・ターン」と、和音の音を高い所で短く（グロッケン・ベル向き）
   // アニソン：シンセの16分アルペジオ（上の3音を「下・中・上・中」で回す）。2小節目の最後の拍で次のコードへ駆け上がる
   // アニソンの上もの：シンセのリードで、シンコペーションのある2小節のフレーズ。2小節目は最後に次のコードへ駆け上がる
-  anilead:{name:'上もの：シンセのリード', pro:'上もの：シンセのメロディ（2小節）', legato:true,
+  anilead:{name:'重ねる楽器：シンセのリード', pro:'重ねる楽器：シンセのメロディ（2小節）', legato:true,
            sit:{bar:[[[0,[8],3,.62],[3,[7],3,.56],[6,[8],2,.6,null,'su'],[8,[8],4,.62],[12,[7],2,.56],[14,[6],2,.54]],
                       [[0,[7],3,.6],[3,[8],3,.62],[6,[8],2,.64,null,'su'],[8,[8],3,.62],[11,[7],1,.5,null,'nx'],[12,[7],1,.52,null,'nx'],[13,[7],1,.54,null,'nx'],[14,[7],2,.58,null,'nx']]],
                 halfA:[[[0,[8],3,.62],[3,[7],3,.56],[6,[8],2,.6,null,'su']]], halfB:[[[0,[8],4,.62],[4,[7],2,.56],[6,[6],2,.54]]], beat:[[[0,[8],4,.6]]]}},
-  glockline:{name:'上もの：高い音でキラキラ', pro:'上もの：高い音の短いフレーズ（2小節）', legato:true,
+  glockline:{name:'重ねる楽器：高い音でキラキラ', pro:'重ねる楽器：高い音の短いフレーズ（2小節）', legato:true,
            sit:{bar:[[[0,[6],6,.5],[6,[7],2,.44],[8,[8],8,.48]],[[0,[6],6,.5],[6,[7],2,.44],[8,[8],4,.48],[12,[8],1,.44,null,'nx'],[13,[8],1,.46,null,'nx'],[14,[8],2,.5,null,'nx']]],
                 halfA:[[[0,[6],6,.5],[6,[7],2,.44]]], halfB:[[[0,[8],8,.48]]], beat:[[[0,[6],4,.46]]]}},
   // brass2.mid から（2小節ひとまとまり）。16分食い。頭の「プァー↘」（長さ3.4マス＋フォール）は前の合いの手のまま
   // 1小節目：頭で上3音「パッ」→ 真ん中の音からペンタで1つ上へ「タ・タ」→ 上2音を16分で刻み、3つ目だけペンタで1つ下（ぶつかれば和音の音）
   // 2小節目：食って入った和音を2マス目で「パッ」と弾き直し、低い所でキーの「5 6 1 1 6 6 1 1 6」（メロディ行を1オクターブ下げて）
-  brassobb:{name:'上もの：パッと合いの手', pro:'上もの：ブラスの合いの手（2小節）', legato:true, pushBy:1, melOct:-12, avoid:false, noRoot:true, rhShift:13, vol:.72, even:true,
+  brassobb:{name:'重ねる楽器：パッと合いの手', pro:'重ねる楽器：ブラスの合いの手（2小節）', legato:true, pushBy:1, melOct:-12, avoid:false, noRoot:true, rhShift:13, vol:.72, even:true,
            sit:{bar:[[[0,[1,2,3],3.4,.78,null,'fall'],[6,[2],1,.64,null,'p0'],[7,[2],1,.66,null,'pu'],
                        [8,[2,3],.5,.74],[9,[2,3],.5,.66],[10,[2,3],.5,.68,null,'pd'],[11,[2,3],.5,.72]],
                       [[2,[1,2,3],.6,.76],[10,['d6'],1,.64,null,'nx'],[12,['d8'],1,.68,null,'nx'],[13,['d9'],1,.72,null,'nx']]],   // エレピのフレーズとかけ合い：次のコードの音へペンタで3音つないで、次の小節の食い（プァー↘）へ   // エレピのフレーズ（5 6 1…）とかぶらないよう、その間は休み、終わりに「6 1 2 3」と16分で駆け上がって次の小節の食い（プァー↘）へつなぐ
@@ -686,7 +686,7 @@ const ARPS = {
 
   // メロディ：高い所で「タン・タン・タ」（3+3+2）と上がっていく（ホルン・ストリングス向き）
   // ファンキー：ブラスのキメ（2小節）。2拍目裏で「パッ（しゃくり）」、3拍目裏で「パパッ」。2小節目は「プァー↘」のあと次のコードへペンタで3音
-  brasshit:{name:'上もの：ブラスのキメ', pro:'上もの：ブラスのキメ（2小節）', legato:true, pushBy:1, noRoot:true, avoid:false, rhShift:13, vol:.7,
+  brasshit:{name:'重ねる楽器：ブラスのキメ', pro:'重ねる楽器：ブラスのキメ（2小節）', legato:true, pushBy:1, noRoot:true, avoid:false, rhShift:13, vol:.7,
            sit:{bar:[[[6,[1,2,3],.5,.8,null,'scoop'],[10,[1,2,3],.4,.72],[11,[1,2,3],.4,.78]],
                       [[3,[1,2,3],.4,.74],[6,[1,2,3],1.6,.82,null,'fall'],[11,[2],1,.6,null,'nx'],[12,[2],1,.64,null,'nx'],[13,[2],1,.68,null,'nx']]],
                 halfA:[[[6,[1,2,3],.5,.8,null,'scoop']]], halfB:[[[2,[1,2,3],.4,.72],[3,[1,2,3],.4,.78]]], beat:[[[0,[1,2,3],.5,.74]]],
@@ -695,7 +695,7 @@ const ARPS = {
   skank:   {name:'レゲエのオルガン', pro:'レゲエのオルガン（裏拍で刻む）', legato:false,
            ev:[[1,[0],.35,.36],[2,RH,.55,.72],[3,[4],.35,.34],[5,[0],.35,.36],[6,RH,.55,.68],[7,[4],.35,.34],
                [9,[0],.35,.36],[10,RH,.55,.72],[11,[4],.35,.34],[13,[0],.35,.36],[14,RH,.55,.68],[15,[4],.35,.34]]},
-  hornline:{name:'上もの：上がっていくメロディ', pro:'上もの：上がっていくメロディ（2小節）', legato:true, tie:true, rhShift:-9, vol:1.7,
+  hornline:{name:'重ねる楽器：上がっていくメロディ', pro:'重ねる楽器：上がっていくメロディ（2小節）', legato:true, tie:true, rhShift:-9, vol:1.7,
            // ホルンらしい中音域（いちばん上でも F4 くらい）：右手の 下→中→上 と上がり、2小節目は上→中のあと次のコードへつなぐ
            sit:{bar:[[[0,[1],6,.58],[6,[2],6,.56],[12,[3],4,.6]],[[0,[3],6,.58],[6,[2],4,.56],[10,[2],2,.54,null,'nx'],[12,[2],2,.56,null,'nx'],[14,[2],2,.58,null,'nx']]],
                 halfA:[[[0,[1],6,.58],[6,[2],2,.54]]], halfB:[[[0,[2],4,.56],[4,[3],4,.58]]], beat:[[[0,[1],4,.56]]]}},

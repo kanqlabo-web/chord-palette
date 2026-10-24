@@ -1,4 +1,4 @@
-// 通常モードのバラードと、PRO でマイパターンに取り込んだものが同じ音になるか
+// ビギナーのバラードと、PRO でマイ演奏に取り込んだものが同じ音になるか
 const {chromium}=require('playwright');
 (async()=>{ const b=await chromium.launch(); const p=await b.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message));
 await p.goto('http://localhost:8765/'); await p.waitForTimeout(600);

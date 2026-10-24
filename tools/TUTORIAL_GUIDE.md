@@ -13,11 +13,11 @@
 - **パレットの大きさはレベルによって変えない**（ユーザーの指示）
   - レベル1・2で使わない伴奏の帯や BPM の場所も空けておく（`.accOff`）
   - 吹き出しは、マスの下の空いている所に出す
-- 大きな変更は、まず試作版（`tools/beta-src/js/05-tutorial.js`）で作る
+- 大きな変更は、まずベータ版（`tools/beta-src/js/05-tutorial.js`）で作る
   - OK が出たら、ファイルを丸ごと `tools/src/js/` へ移す
 
 ## 2. ファイルと主な部品
-- `tools/beta-src/js/05-tutorial.js`（いつもの版は `tools/src/js/05-tutorial.js`）
+- `tools/beta-src/js/05-tutorial.js`（通常版は `tools/src/js/05-tutorial.js`）
   - `SLIDES`: レベル1・2のスライド
   - `MOOD` / `PRACTICE`: 雰囲気のつくり方（レベル3）
   - `L_KEY`: キー（レベル4）
@@ -69,7 +69,7 @@
 4. 進行ライブラリの進行も解放するなら、`presetLv()` を合わせる
 5. `WHERE[n]` に、クリア後に光らせる場所と一言を書く
    - 設定メニューの中なら `{menu:'要素のid', x:'…'}`、画面の要素なら `{t:()=>要素, x:'…'}`
-6. 通常モードで新しくできるようになったことは、PRO でも同じものを作れるようにする（`tparall.js`）
+6. ビギナーで新しくできるようになったことは、PRO でも同じものを作れるようにする（`tparall.js`）
 
 ## 5. コツ（これまでのやり取りから）
 - 直されやすいのは、音楽の言い方の正しさ（ユーザーがかなり細かく直す）
@@ -89,7 +89,7 @@
 - ユーザーはスクリーンショットで指摘してくる。どの画面のどの段階かを、`TUT.i`・`TUT.step` で特定して直す
 
 ## 6. 確認のしかた（Playwright）
-- `python3 -m http.server 8765` のあと、試作版 `http://localhost:8765/beta/` を開く
+- `python3 -m http.server 8765` のあと、ベータ版 `http://localhost:8765/beta/` を開く
 - `startLevel(n)` で、そのレベルを始める
   - `#tutNext` を押し続けて、エラー（`pageerror`）がないか見る
   - 段階ごとにスクリーンショットを撮る

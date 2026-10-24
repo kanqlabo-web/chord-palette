@@ -1,4 +1,4 @@
-// 全スタイルで、通常モードの演奏と、PRO（スタイルを読み込んで、全パートをマイパターンに取り込んだもの）が完全に同じ音になるか
+// 全スタイルで、ビギナーの演奏と、PRO（スタイルを読み込んで、全パートをマイ演奏に取り込んだもの）が完全に同じ音になるか
 // 使い方: node tools/tparall.js [ページ（beta/ など）]
 const {chromium}=require('playwright');
 (async()=>{ const b=await chromium.launch(); const p=await b.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message));

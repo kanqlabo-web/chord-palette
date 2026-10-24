@@ -270,9 +270,9 @@ const MOOD=[
   {html:()=>`<div class="eyebrow a">コツ④　リズムとテンポ</div>
      <h2 class="a" style="--dl:.1">同じ進行でも<br>リズムで雰囲気が変わります</h2>
      ${exampleHTML(EX.calm)}
-     <p class="a" style="--dl:1">伴奏スタイルとBPMを変えるだけで、<br>しっとりにも、ノリノリにもなります。</p>
+     <p class="a" style="--dl:1">伴奏スタイルとテンポ（速さ）を変えるだけで、<br>しっとりにも、ノリノリにもなります。</p>
      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${listenBtn('calm').replace('聴いてみる','しっとり版')}${listenBtn('drive').replace('聴いてみる','ノリノリ版')}</div>`},
-  moodSlide('①','明るい・元気','明るいコードで<br>まっすぐ進む','bright',['明るいコード（1・4・5）だけ。迷いのない元気な響きに。','テンポは速め（BPM 110〜130）がおすすめ。']),
+  moodSlide('①','明るい・元気','明るいコードで<br>まっすぐ進む','bright',['明るいコード（1・4・5）だけ。迷いのない元気な響きに。','テンポ（速さ）は速め（110〜130くらい）がおすすめ。']),
   moodSlide('②','切ない','暗いコードから<br>始めてみる','sad',['6m で始めると、出だしから切ない雰囲気に（小室進行）。','最後は 1 で明るく着地。切ないのに前向き。']),
   moodSlide('③','エモい・泣ける','4 から始めて<br>6m に着地','emo',['4 → 5 と上がって盛り上げてから、暗い 6m に落とす（王道進行）。','5 → 3m と下りてから、6m にストンと着地。しっとり切なく終わります。']),
   moodSlide('④','おしゃれ','コードの響きを<br>少し変えてみる','chic',['2m7・1M7 のように 7 や M7 を足すと、大人っぽい響きに。','レベル6以降で、自分でもこうした響きに変えられるようになります。']),
@@ -282,7 +282,7 @@ const MOOD=[
        <section class="T a" style="--dl:.5"><span class="L">①</span><div><h3>明るい・暗いの割合</h3><p>暗いコードが増えるほど、切なくなる。</p></div></section>
        <section class="S a" style="--dl:.8"><span class="L">②</span><div><h3>始まりと終わり</h3><p>1 はスッキリ、6m は切ない。</p></div></section>
        <section class="D a" style="--dl:1.1"><span class="L">③</span><div><h3>コードどうしの距離</h3><p>跳ぶと力強く、となりへ進むと穏やか。</p></div></section>
-       <section class="T a" style="--dl:1.4"><span class="L">④</span><div><h3>リズムとテンポ</h3><p>伴奏スタイルとBPMで印象が変わる。</p></div></section>
+       <section class="T a" style="--dl:1.4"><span class="L">④</span><div><h3>リズムとテンポ</h3><p>伴奏スタイルとテンポで印象が変わる。</p></div></section>
      </div>
      <p class="a" style="--dl:1.9">では、このコツを使って<br>実際に作ってみましょう！</p>`},
   {html:()=>`<div class="eyebrow a">実践編</div>
@@ -388,13 +388,13 @@ const L_SLIDES={
     {steps:2, enter:bindHear, html:()=>`<div class="eyebrow a">数字のついたコード</div>
      <div class="chordbig pop" style="--dl:.2"><span>Am</span><span class="tn">7</span></div>
      <p class="a" style="--dl:.7" data-upto="0">このように、コードには<br>後ろに数字がつくことがあります。</p>
-     <h2 data-st="1" data-dl=".2">この数字は、ざっくり言うと<br>『オシャレレベル』です</h2>
+     <h2 data-st="1" data-dl=".2">この数字は、ざっくり言うと<br>『オシャレ度』です</h2>
      <p class="sub" data-st="1" data-dl=".8">（正確には、7 は『セブンス』、9・11・13 は『テンション』と呼びます）</p>
      <p data-st="2" data-dl=".2">数字が大きいほど、また数が多いほど、<br><b>オシャレな響き</b>になります。</p>
      <div class="chips7" data-st="2" data-dl=".5">${[SP(9,'m'),SP(9,'m','7'),SP(9,'m','9'),SP(9,'m','11')].map((d,k)=>hearChip(d,.6+k*.15)).join('')}</div>
      <p class="sub" data-st="2" data-dl="1.3">タップすると鳴らせます</p>`},
-    {html:()=>`<div class="eyebrow a">曲調とオシャレレベル</div>
-     <h2 class="a" style="--dl:.1">曲調によって、よく使う<br>オシャレレベルが変わります</h2>
+    {html:()=>`<div class="eyebrow a">曲調とオシャレ度</div>
+     <h2 class="a" style="--dl:.1">曲調によって、よく使う<br>オシャレ度が変わります</h2>
      <div class="roles">
        <section class="D a" style="--dl:.5"><span class="L" style="font-size:1rem">なし</span><div><h3>ロック</h3><p>数字なしで、シンプルに力強く。</p></div>${listenBtn('lv0').replace('聴いてみる','聴く')}</section>
        <section class="S a" style="--dl:.8"><span class="L">7</span><div><h3>J-POP</h3><p>7 や M7 で、ほどよく洗練された響きに。</p></div>${listenBtn('lv7').replace('聴いてみる','聴く')}</section>
@@ -529,7 +529,7 @@ const LEVELS=[
   {name:'数字のついたコード', goal:'コードに数字をつけて、洗練された響きにしてみましょう。', unlock:'数字のついたコード', chips:[['Am7','--t'],['FM7','--s'],['G9','--d']], deck:()=>L_SLIDES.tension},
   {name:'分数コード', goal:'コードの構成音を知り、ベースの音を変えてつながりをなめらかにしましょう。', unlock:'分数コード', chips:[['C/E','--t'],['G/B','--d']], deck:()=>L_SLIDES.slash},
   {name:'明るいコードと暗いコードを入れ替える', goal:'m を外したり、m をつけたりして、進行にメリハリをつけましょう。', unlock:'明るい・暗いの入れ替え', chips:[['E7','--d'],['D7','--d'],['Fm','--s']], deck:()=>L_SLIDES.flip},
-  {name:'1小節に2つのコード', goal:'1小節の中でコードを切り替えて、進行に勢いをつけましょう。分数コードや入れ替えたコードとも組み合わせます。', unlock:'1小節に2つのコード・PROモード', chips:[['3m｜6m','--t'],['2m｜5','--d']], deck:()=>L_SLIDES.split},
+  {name:'1小節に2つのコード', goal:'1小節の中でコードを切り替えて、進行に勢いをつけましょう。分数コードや入れ替えたコードとも組み合わせます。', unlock:'1小節に2つのコード・PRO', chips:[['3m｜6m','--t'],['2m｜5','--d']], deck:()=>L_SLIDES.split},
 ];
 // レベルの解説を組み立てる（タイトル → 本編 → クリア）。review=true は見返し用（クリア扱いにしない）
 function levelDeck(n,review){
@@ -581,7 +581,7 @@ const WHERE={
   2:[{t:()=>document.querySelector('.slotwrap'), x:'<b>進行ガイド</b>は、マスのすぐ上に出ます。<br>役割の流れや、お手本どおりかを教えてくれます。'},
      {menu:'guideChips', x:'表示・非表示は、設定メニュー（≡）の<b>「進行ガイド」</b>で切り替えられます。'}],
   3:[{t:()=>[shown($('arpLane')),shown($('drumLane'))].filter(Boolean), x:'<b>伴奏</b>の帯をタップすると、伴奏スタイルを選べます。'},
-     {t:()=>$('bpm').closest('.bpm'), x:'<b>テンポ</b>は、BPM のスライダーで変えられます。'},
+     {t:()=>$('bpm').closest('.bpm'), x:'<b>テンポ</b>は、スライダーで変えられます。'},
      {t:()=>$('libBtn'), x:'<b>進行ライブラリ</b>は、マスの上の「進行を探す」から開けます。<br>レベルをクリアするたびに、使える進行が増えていきます。'}],
   4:[{menu:'keyChips', x:'<b>キー</b>は、設定メニュー（≡）の「キー」で変えられます。'},
      {t:()=>$('keyBadge'), x:'いまのキーは、ここに表示されます。'}],
@@ -591,7 +591,7 @@ const WHERE={
   7:[tapSlot('スロットで「響き」と「ベース」を選んで、<b>分数コード</b>にできます。')],
   8:[tapSlot('2(7)・3(7)・4m など、<b>明るい・暗いを入れ替えたコード</b>も選べます。')],
   9:[{t:()=>slotsEl, x:'置いてあるコードの<b>右側</b>にコードをドラッグすると、<br>3拍目からのコードを入れられます。'},
-     {menu:'proChips', x:'<b>全レベルクリア！</b><br>設定メニュー（≡）の「PROモード」もオンにできます。'}],
+     {menu:'proChips', x:'<b>全レベルクリア！</b><br>設定メニュー（≡）の「PRO」もオンにできます。'}],
 };
 // 設定メニューの中のものは、実際にメニューを開いて、その項目を光らせる
 const openMenuAt=id=>{ buildMenu&&buildMenu(); drawer.classList.add('on'); scrim.classList.add('on'); const sec=$(id).closest('.sec'); sec.hidden=false; sec.scrollIntoView({block:'center'}); return sec; };

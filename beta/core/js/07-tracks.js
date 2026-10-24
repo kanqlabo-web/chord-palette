@@ -1,13 +1,13 @@
-// ---------- PRO：トラック（試作版） ----------
+// ---------- PRO：トラック（ベータ版） ----------
 // メイン画面の伴奏は1行にまとめ、タップで「トラック」の画面を開く。楽器ごとの行に、いま使っているパターンと音色を出し、
 // パターンをタップするとそのまま編集できる。行を左へスワイプ（か、つまみのボタン）で音量・左右（パン）・響き（リバーブ）
 // 楽器（コード楽器）はいくつでも足せる（state.xtr）。名前と色も変えられる
 
-// 伴奏スタイルを PRO の設定に読み込む（通常モードと同じ鳴り方になるように、音域のずらし方・ミキサーもそのまま写す）
+// 伴奏スタイルを PRO の設定に読み込む（ビギナーと同じ鳴り方になるように、音域のずらし方・ミキサーもそのまま写す）
 function proFromStyle(st){ setStyle(st); const o=sOffOf(st);
   Object.assign(state,{rhLo:null,lhLo:null,rhLo2:null,lhLo2:null,bassLo:null, rhOff:o.rh, lhOff:o.lh, rhOff2:o.rh2, lhOff2:o.lh2, bassOff:o.bass, xtr:[]}); }
 
-// 伴奏スタイルごとのミックス（左右・リバーブ・エコー・コンプ・高音・低音）。通常モードでもこのまま鳴り、PRO に読み込むとトラックの設定になる
+// 伴奏スタイルごとのミックス（左右・リバーブ・エコー・コンプ・高音・低音）。ビギナーでもこのまま鳴り、PRO に読み込むとトラックの設定になる
 // rev・echo・comp は 0〜1、pan・hi・lo は −1〜1（hi・lo は ±9dB）
 const STYLE_FX={
   0:{arp:{rev:.22,comp:.3,hi:.1}, drum:{rev:.12,comp:.35}, bass:{comp:.5,lo:.1}},
@@ -35,7 +35,7 @@ const FX_KEYS=['pan','rev','echo','comp','hi','lo'];
   const fx=STYLE_FX[st.id]; if(fx) for(const c in fx){ const x=mixOf(c); FX_KEYS.forEach(k=>{ if(fx[c][k]!=null) x[k]=fx[c][k]; }); } try{ applyMix(); }catch(e){} }; }
 
 const TRK_COLORS=['#3567D6','#24946A','#DA6A22','#8A4FD3','#D13F6B','#1F8FA8','#B8860B','#5B6475'];
-const TRK_DEF={arp:['コード',0],arp2:['コード2',3],drum:['ドラム',7],bass:['ベース',2]};
+const TRK_DEF={arp:['コード',0],arp2:['重ねる楽器',3],drum:['ドラム',7],bass:['ベース',2]};
 // トラックの一覧（いま鳴らすもの）。kind：arp・arp2・x:ID・drum・bass
 // 足したドラム・ベースを、いつものドラム・ベースとして扱って f を実行する（その場で入れ替えて、すぐ戻す）
 function withTrk(kind,f){ const x=xOf(kind), ty=x&&x.type; if(ty!=='drum'&&ty!=='bass') return f(kind);
@@ -259,7 +259,7 @@ button.badge{font:inherit;font-size:.72rem;cursor:pointer}
   document.body.appendChild(el);
   // 編集画面の上に「別のパターンを選ぶ」
   const pd=document.createElement('div'); pd.className='pdirect'; pd.id='patDirect'; pd.hidden=true;
-  pd.innerHTML=`<button class="chip" id="patPick">別のパターンを選ぶ</button><small id="patDirectNote"></small>`;
+  pd.innerHTML=`<button class="chip" id="patPick">別の演奏を選ぶ</button><small id="patDirectNote"></small>`;
   const ps=$('patSheet'); ps.insertBefore(pd, ps.children[1]);
 })();
 const trk=$('trk');
@@ -316,12 +316,12 @@ function renderTracks(){ if(trk.hidden) return; if(!state.pro){ trk.hidden=true;
     bindRegion(row.querySelector('.dtl'),kind); });
   const ad=document.createElement('div'); ad.className='drow dadd'; ad.innerHTML=`<div class="dh"><button class="daddb" id="trkAdd" aria-label="楽器を足す">${ICO.plus}</button></div>`; box.appendChild(ad);
   $('trkAdd').onclick=addTrack;
-  const hint=document.createElement('p'); hint.className='dhint'; hint.textContent='色の帯をタップすると、弾き方を編集できます。帯の区切りをドラッグすると、コードの長さや食いを変えられます。楽器の絵をタップするとミキサーが開きます。'; box.appendChild(hint);    // ミキサーが開いて狭いときも、見えている幅で折り返す
+  const hint=document.createElement('p'); hint.className='dhint'; hint.textContent='色の帯をタップすると、演奏を編集できます。帯の区切りをドラッグすると、コードの長さや食いを変えられます。楽器の絵をタップするとミキサーが開きます。'; box.appendChild(hint);    // ミキサーが開いて狭いときも、見えている幅で折り返す
   const mo=document.createElement('div'); mo.className='dmore'; box.appendChild(mo);
   { const fitW=()=>{ const sc=$('dScroll'), w=sc?sc.clientWidth:0; if(!w) return; const narrow=w<240;   // ミキサーが開いて狭いときは説明を隠す。ふだんは見えている幅で折り返す
       hint.hidden=mo.hidden=narrow; if(!narrow){ const px=Math.min(600,w)+'px'; hint.style.width=px; mo.style.width=px; } };
     requestAnimationFrame(fitW); setTimeout(fitW,400); }
-  pickRow(mo,'トラックをまとめて置きかえる','伴奏スタイルから作り直す','選んだスタイルと同じ鳴り方・ミックスにします（いまのトラックはなくなります）',null,null,
+  pickRow(mo,'トラックをまとめて置きかえる','伴奏スタイルから作り直す','選んだ伴奏スタイルと同じ鳴り方・ミックスにします（いまのトラックはなくなります）',null,null,
     ()=>openPicker('伴奏スタイルから作り直す', styleCats, null, id=>{ const st=STYLES.find(x=>x.id===id); 
       proFromStyle(st); if(st.bpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; } state.tk={}; applyMix(); save(); renderAll(); ensureSounds(); renderTracks(); return true; }));
   const hd=document.createElement('div'); hd.className='dhead'; hd.id='dHead'; hd.hidden=true; box.appendChild(hd);
@@ -414,7 +414,7 @@ function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=tru
   const rng=(f,label,min,max,val,txt)=>`<label class="dirow"><span>${label}<output>${txt}</output></span><input type="range" min="${min}" max="${max}" step=".01" value="${val}" data-f="${f}"></label>`;
   const sndName = tkInst(kind)||'';
   p.innerHTML=`<div class="dititle"><button class="ditb" id="diSnd" ><div class="dipic">${tkIco(kind)}</div><b>${esc(sndName.replace(/（.*）$/,""))}${ICO.chev}</b>${/（.*）$/.test(sndName)?`<span class="dipar">${esc(sndName.match(/（.*）$/)[0])}</span>`:""}<small>タップして楽器を変える</small></button></div>
-    <div class="disec"><div class="dib"><button class="dilink" id="diPick"><span>${isDrumK(kind)?'パターン・フィルインを選ぶ':isBassK(kind)?'パターンを選ぶ':'パターン・音域を選ぶ'}</span>${ICO.chev}</button></div></div>
+    <div class="disec"><div class="dib"><button class="dilink" id="diPick"><span>${isDrumK(kind)?'演奏・フィルインを選ぶ':isBassK(kind)?'演奏を選ぶ':'演奏・音域を選ぶ'}</span>${ICO.chev}</button></div></div>
     <div class="disec"><h3>出力</h3><div class="dib">
       ${rng('v','音量',0,1.5,x.v??1,Math.round((x.v??1)*100))}
       ${rng('pan','左右（パン）',-1,1,pan,panTxt(pan))}
@@ -440,7 +440,7 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{ if(
 // 楽器を足す：選ぶ画面で選んで「決定」したときだけ足す。ドラム・ベースは、ないときだけ選べる
 function xPatPick(kind){ const drum=isDrumK(kind), done=()=>{ save(); renderAll(); ensureSounds(); renderTracks(); return true; };
   if(drum) openPicker('ドラムの演奏を選ぶ', ()=>patCats(kind), patOf(kind), v=>{ setPatOf(kind,v); return done(); }, false);
-  else openPicker('ベースの弾き方を選ぶ', ()=>[['ベースの弾き方',Object.keys(BASSES).map(k=>({k,label:BASSES[k].name}))]], patOf(kind)||'auto', v=>{ setPatOf(kind,v); return done(); }, false); }
+  else openPicker('ベースの演奏を選ぶ', ()=>[['ベースの演奏',Object.keys(BASSES).map(k=>({k,label:BASSES[k].name}))]], patOf(kind)||'auto', v=>{ setPatOf(kind,v); return done(); }, false); }
 const FAM_PAT={keys:'piano4',guitar:'strum',strings:'whole',brass:'brassobb',sax:'hornline',synth:'anilead',bells:'glockline',wa:'koto'};
 function addTrack(){ const hasDrum=state.drum!=='none'&&!state.drumOff, cats=()=>{ const c=catsOf(INST_GROUPS,INSTS,icoInst);
     c.push(['ドラム',KIT_GROUPS.flatMap(([h,ks])=>ks.map(k=>({k:'@drum:'+k,label:KITS[k],sub:h,ico:icoKit(k)})))]);
@@ -457,7 +457,7 @@ function addTrack(){ const hasDrum=state.drum!=='none'&&!state.drumOff, cats=()=
       if(!state.arp2 || !ARPS[state.arp2]){ state.arp2=pat; state.inst2=v; }
       else { state.xtr=state.xtr||[]; const ids=new Set(state.xtr.map(t=>t.id)); let n=1; while(ids.has('t'+n)) n++;
         state.xtr.push({id:'t'+n, arp:pat, inst:v, rhLo:null, lhLo:null, rhOff:0, lhOff:0, name:'楽器'+(state.xtr.length+3)}); } }
-    save(); renderAll(); ensureSounds(); applyMix(); renderTracks(); toast('トラックを足しました'); }, false); }
+    save(); renderAll(); ensureSounds(); applyMix(); renderTracks(); toast('楽器を足しました'); }, false); }
 function removeTrack(kind){ const x=xOf(kind);
   if(x){ state.xtr=state.xtr.filter(t=>t!==x); if(state.mix) delete state.mix[x.id]; }
   else if(kind==='arp2'){ // コード2をなくすと、足した楽器の1つ目がコード2になる（並びはそのまま）
@@ -477,8 +477,8 @@ function editTrackPattern(kind,scene,where){ const k=patOf(kind);
   if(scene) PR.scene=scene;
   openPatEditor(kind,'edit');
   PAT_TMP = wasMy ? null : {kind, prev:k, list:listOf(kind), snap:JSON.stringify(curMy())};
-  const here = scene&&where ? `${where}で使っている「${SCENE_NAME(curScene())}」の弾き方です。` : '';
-  $('patDirect').hidden=false; $('patDirectNote').textContent = here + (wasMy ? '' : '「'+nm+'」と同じ鳴り方のコピーです。変えると自分用のパターンとして残ります');
+  const here = scene&&where ? `${where}で使っている「${SCENE_NAME(curScene())}」の演奏です。` : '';
+  $('patDirect').hidden=false; $('patDirectNote').textContent = here + (wasMy ? '' : '「'+nm+'」と同じ鳴り方のコピーです。変えると自分用の演奏として残ります');
 }
 $('patPick').onclick=()=>{ const kind=patKind; closePatTmp(); closeAll(); openSheet(kind); };
 // 編集画面を閉じたとき：コピーに何も変えていなければ、コピーを消して元のパターンに戻す
@@ -534,7 +534,7 @@ const catsOf=(G,names,ico)=>{ const used=new Set(), out=G.map(([h,ks])=>[h,ks.fi
   const rest=Object.keys(names).filter(k=>!used.has(k)); if(rest.length) out.push(['そのほか',rest.map(k=>({k,label:names[k],ico:ico(k)}))]); return out; };
 // これまでの「分類のチップ＋一覧のチップ」（groupPick）を、2段の選ぶ画面に置きかえる（音色・ドラムの音）
 groupPick=function(el,G,names,cur,onPick){ const isKit=names===KITS, ico=isKit?icoKit:icoInst;
-  pickRow(el, isKit?'ドラムの音':'楽器（音色）', cur!=null&&names[cur]?names[cur]:'えらぶ', '', ico(cur), null, ()=>openPicker(isKit?'ドラムの音を選ぶ':'楽器を選ぶ', ()=>catsOf(G,names,ico), cur, v=>{ cur=v; onPick(v); return false; })); };
+  pickRow(el, isKit?'ドラムの音':'楽器', cur!=null&&names[cur]?names[cur]:'えらぶ', '', ico(cur), null, ()=>openPicker(isKit?'ドラムの音を選ぶ':'楽器を選ぶ', ()=>catsOf(G,names,ico), cur, v=>{ cur=v; onPick(v); return false; })); };
 
 // 選んでいるものを1行で出し、タップで全画面の選ぶ画面を開く
 function pickRow(el,head,label,sub,ico,cv,open){ el.classList.remove('chips','gpick','tpane','opts'); el.innerHTML='';
@@ -576,7 +576,7 @@ function closePicker(){ $('pickScr').hidden=true; PICK=null; }
 $('pickBack').onclick=()=>{ const P=PICK; if(P&&P.started&&playing) stop();
   if(P&&P.live&&P.cur!==P.cur0){ const o=JSON.parse(P.snap); Object.keys(state).forEach(k=>delete state[k]); Object.assign(state,o); rebuildMy(); $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; save(); renderAll(); ensureSounds(); applyMix(); renderTracks(); if($('sheet').classList.contains('on')&&sheetKind) openSheet(sheetKind); } closePicker(); };
 $('pickOk').onclick=()=>{ const P=PICK; if(P&&P.started&&playing) stop(); closePicker(); if(P && !P.live && P.cur!=null && P.cur!==P.cur0) P.onPick(P.cur); };
-// ベースの音も、1行の要約＋選ぶ画面に（通常モードは「なし」も選べる。PRO はトラックをなくすことで）
+// ベースの音も、1行の要約＋選ぶ画面に（ビギナーは「なし」も選べる。PRO はトラックをなくすことで）
 bassSndRow=function(){ const el=$('bassSndChips'), on=!!state.bass, k=state.bassSnd||'bass';
   pickRow(el,'ベースの音', on?(BASS_SNDS[k]||'ベース'):'なし', '', on?icoBass(k):'', null, ()=>openPicker('ベースの音を選ぶ',
     ()=>[['ベース',[...Object.entries(BASS_SNDS).map(([b,l])=>({k:b,label:l,ico:icoBass(b)})), ...(state.pro?[]:[{k:'none',label:'なし',sub:'ベースを鳴らさない'}])]]],
@@ -590,11 +590,11 @@ const styleCats=()=>STYLE_CATS.map(([h,ids])=>[h, ids.map(id=>STYLES.find(s=>s.i
 // 演奏のパターンの分類（PRO）：自分で作ったもの／伴奏スタイルで使うもの／重ねる上もの／そのほか
 const LAYER_PATS=new Set(['glockline','brassobb','brasshit','hornline','anilead']);
 function patCats(kind){ const drum=isDrumK(kind), src=drum?DRUMS:ARPS, order=drum?drumOrder():arpOrder(), X=xOf(kind), p2like=kind==='arp2'||!!X;
-  const used={}; STYLES.forEach(st=>{ const k=drum?st.drum:st.arp; (used[k]=used[k]||[]).push(st.name); if(!drum&&st.arp2) (used[st.arp2]=used[st.arp2]||[]).push(st.name+'の上もの'); });
+  const used={}; STYLES.forEach(st=>{ const k=drum?st.drum:st.arp; (used[k]=used[k]||[]).push(st.name); if(!drum&&st.arp2) (used[st.arp2]=used[st.arp2]||[]).push(st.name+'の重ねる楽器'); });
   const col=colors(), cv=k=>c=>{ const g=fit(c); if(drum) drawDrumBar(g,0,0,c.width,c.height,DRUMS[k],col); else drawArpBar(g,0,0,c.width,c.height,ARPS[k],col.t,col); };
   const it=k=>({k, del:/^my\d+$/.test(k)?()=>{ delMyPat(kind,k); if(PICK){ PICK.cur=PICK.cur0=patOf(kind); drawPicker(); } }:null, label:/^my\d+$/.test(k)?patName(src[k]).replace(/（自分用）$/,''):patName(src[k]), sub:/^my\d+$/.test(k)?'':src[k]&&src[k].desc?src[k].desc:used[k]?used[k].join('・')+'で使う':'', cv:cv(k)});
   const my=order.filter(k=>/^my\d+$/.test(k)), rest=order.filter(k=>!/^my\d+$/.test(k));
-  const cats=[['自分で作ったもの',my.map(it)], ['伴奏スタイルの演奏',rest.filter(k=>used[k]&&!LAYER_PATS.has(k)).map(it)], ['重ねる上もの',rest.filter(k=>LAYER_PATS.has(k)).map(it)], ['そのほか',rest.filter(k=>!used[k]&&!LAYER_PATS.has(k)).map(it)]];
+  const cats=[['マイ演奏',my.map(it)], ['伴奏スタイルの演奏',rest.filter(k=>used[k]&&!LAYER_PATS.has(k)).map(it)], ['重ねる楽器の演奏',rest.filter(k=>LAYER_PATS.has(k)).map(it)], ['そのほか',rest.filter(k=>!used[k]&&!LAYER_PATS.has(k)).map(it)]];
   if(drum) cats.forEach(c=>c[1]=c[1].filter(x=>x.k!=='none'));   // 「なし」はトラックをなくすことで（PRO）
   return cats; }
 { const os=openSheet; openSheet=function(kind){ sheetSnap(); const r=os.apply(this,arguments); const opts=$('opts');
@@ -604,10 +604,10 @@ function patCats(kind){ const drum=isDrumK(kind), src=drum?DRUMS:ARPS, order=dru
           setStyle(st); if(state.keepInst) Object.assign(state,keep); else pickInst(st.inst); renderAll(); save();
           if(st.bpm && !state.keepBpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; save(); } openSheet(kind); return true; })); });
     else if(state.pro && kind!=='bass' && kind!=='style') requestAnimationFrame(()=>{ if(sheetKind!==kind) return; const k=patOf(kind)||'', drum=kind==='drum', src=drum?DRUMS:ARPS;
-      pickRow(opts,'演奏（パターン）',k&&src[k]?patName(src[k]):'なし（使わない）','',null, k&&src[k]?c=>{ const g=fit(c), col=colors(); if(drum) drawDrumBar(g,0,0,c.width,c.height,src[k],col); else drawArpBar(g,0,0,c.width,c.height,src[k],col.t,col); }:null,
+      pickRow(opts,'演奏',k&&src[k]?patName(src[k]):'なし（使わない）','',null, k&&src[k]?c=>{ const g=fit(c), col=colors(); if(drum) drawDrumBar(g,0,0,c.width,c.height,src[k],col); else drawArpBar(g,0,0,c.width,c.height,src[k],col.t,col); }:null,
         ()=>openPicker(drum?'ドラムの演奏を選ぶ':'演奏を選ぶ', ()=>patCats(kind), k, v=>{ setPatOf(kind,v); save(); renderAll(); ensureSounds(); renderTracks(); openSheet(kind); return true; })); });
     else { opts.classList.add('opts'); }
-    $('part2Sec').hidden=true;   // 通常モード：2つ目の楽器は伴奏スタイルにおまかせ
+    $('part2Sec').hidden=true;   // ビギナー：2つ目の楽器は伴奏スタイルにおまかせ
     if(!state.pro && kind==='arp2'){ opts.hidden=true; opts.previousElementSibling.hidden=true; } else { opts.hidden=false; if(opts.previousElementSibling) opts.previousElementSibling.hidden=false; }
     const X=xOf(kind), ins=kind==='arp2'?state.inst2:X?X.inst:state.inst; if(kind!=='drum' && kind!=='bass' && NO_WIDE.has(ins)) $('wideSec').hidden=true;
     return r; }; }
@@ -644,7 +644,7 @@ function dawPage(){ if(trk.hidden) return; const bw=parseFloat(trk.style.getProp
 // 同じ弾き方（場面）を何度も使うときは、編集できるのは1か所だけ。ほかはうすく表示（くり返し）、ダブルタップでそこを編集する所にできる。
 // 鉛筆と鍵（ガレージバンドと同じ）：鉛筆を押しているあいだ（鍵をかけるとずっと）音を置く・消す。外すと、音を選んで動かす。
 // いつもの伴奏（組み込みのパターン）は、開いたときに自分用のコピーへ切りかえて編集（そのまま「決定」ならコピーを消して元に戻す）。✕はキャンセル
-// マイパターンの画面は使わない（名前・リズムなどの設定だけ「設定」から開く）
+// マイ演奏の画面は使わない（名前・リズムなどの設定だけ「設定」から開く）
 let BLKE=null, BSEGS=[], BD=null, PINCH=null;
 let BSW=18, BRH=30;   // 16分1つの幅・1行の高さ（拡大・縮小で変わる）
 const BSW_MAX=144, GHOST_LEN=.25, BFINE=matchMedia('(hover:hover) and (pointer:fine)').matches;   // BFINE：マウスで使っている（パソコン）
@@ -736,7 +736,7 @@ body.blkset .scrim{z-index:43}
     <p class="bsub" id="blkNote"></p>
     <div class="btool"><div class="bpill" id="blkPill"><button id="blkPen" aria-label="鉛筆（押しているあいだ音を置く・消す。右へずらすと固定）">${PEN_SVG}</button><button id="blkLock" aria-label="鉛筆に鍵をかける">${LOCK_SVG}</button></div>
       <button class="tb" id="blkUndo" aria-label="元に戻す">${UNDO_SVG}</button><button class="tb" id="blkRedo" aria-label="やり直す"><span style="display:grid;transform:scaleX(-1)">${UNDO_SVG}</span></button>
-      <span class="bgap"></span><button class="chip bch" id="blkPick">ほかの弾き方</button><button class="chip bch" id="blkSet">設定</button><button class="tb bzm" id="blkZo" aria-label="縮小">−</button><button class="tb bzm" id="blkZi" aria-label="拡大">＋</button></div>
+      <span class="bgap"></span><button class="chip bch" id="blkPick">ほかの演奏</button><button class="chip bch" id="blkSet">設定</button><button class="tb bzm" id="blkZo" aria-label="縮小">−</button><button class="tb bzm" id="blkZi" aria-label="拡大">＋</button></div>
     <p class="bsub" id="blkHelp"></p>
     <div class="bwrap"><aside id="blkSide" aria-label="選んだ音の設定"></aside><div class="bscroll" id="bScroll"></div></div>
     <div class="bbot"><div class="bdeco" id="blkDeco" hidden><button class="chip bdx" id="blkDecoX">閉じる</button><div id="prFall"></div></div>
@@ -764,7 +764,7 @@ function blkAct(){ const A=BLKE.act=BLKE.act||{}, ax=BLKE.x0||0;
   [...new Set(BSEGS.map(s=>s.key))].forEach(k=>{ const ix=BSEGS.map((s,i)=>s.key===k?i:-1).filter(i=>i>=0);
     if(!ix.includes(A[k])) A[k]=ix.find(i=>BSEGS[i].x0+BSEGS[i].len>ax)??ix[0];
     ix.forEach(i=>BSEGS[i].loop=i!==A[k]); }); }
-// mode: 'edit'（今のを編集。マイパターンでなければコピー）／'new'（空っぽから）／'copy'（複製して）
+// mode: 'edit'（今のを編集。マイ演奏でなければコピー）／'new'（空っぽから）／'copy'（複製して）
 function openBlk(kind,scene,where,x0,x1,mode){ const k=patOf(kind);
   if((kind==='arp2'||xType(kind)==='chord') && (!k || !ARPS[k])) return openSheet(kind);
   const snap=JSON.stringify(state), wasMy=/^my\d+$/.test(k||'') && mode!=='new' && mode!=='copy';
@@ -787,9 +787,9 @@ function blkModeUI(){ if(!BLKE) return; const d=blkDraw(), isDrum=isDrumK(BLKE.k
       : `タップで選ぶ・もう一度でメニュー。ドラッグで移動${isDrum?'':'、⇔で長さ'}。まとめて選ぶ：長押ししてなぞる／音を押さえてほかをタップ／行の名前を長押し`; }
 function drawBlk(){ if(!BLKE) return; const kind=BLKE.kind, rows=blkRows(), L=slotSteps(), W=state.bars*L*BSW, isDrum=isDrumK(kind), mel=blkMel();
   BSEGS=blkSegs(); blkAct(); const ri=r=>rows.findIndex(([k])=>String(k)===String(r)), m=curMy();
-  $('blkTitle').innerHTML=`${esc(tkName(kind))}の弾き方<small>${esc(m.name||'')}</small>`;
+  $('blkTitle').innerHTML=`${esc(tkName(kind))}の演奏<small>${esc(m.name||'')}</small>`;
   const c=BLKE.cur, n=blkUses(c);
-  $('blkNote').textContent = (blkDraw()||BFINE?'':'音を置くときは、鉛筆を押しながらタップ（右へずらすと固定）。') + (BSEGS.some(s=>s.loop) ? 'うすい所は同じ弾き方のくり返し（いっしょに変わる）。ダブルタップでそこを編集。' : '')
+  $('blkNote').textContent = (blkDraw()||BFINE?'':'音を置くときは、鉛筆を押しながらタップ（右へずらすと固定）。') + (BSEGS.some(s=>s.loop) ? 'うすい所は同じ演奏のくり返し（いっしょに変わる）。ダブルタップでそこを編集。' : '')
     + (BLKE.reuse ? `前に編集した自分用の続きです。` : BLKE.wasMy ? '' : `「${BLKE.nm}」のコピーです（変えなければ元のまま）。`);
   let ru='', segs='', notes='';
   for(let b=0;b<state.bars;b++) ru+=`<span class="bn" style="left:${b*L*BSW}px">${b+1}</span>`;
@@ -896,7 +896,7 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
       BLKE.lastTap={t:now,s}; clearTimeout(BLKE.tapT);
       if(!s){ if(D.draw) toast('ここにはコードがありません'); else if(PR.selSet.size){ PR.selSet.clear(); drawBlk(); } return; }
       if(s.loop){ if(dbl){ BLKE.act[s.key]=BSEGS.indexOf(s); BLKE.cur=s.key; PR.scene=s.key; PR.selSet.clear(); BLKE.lastTap=null; drawBlk(); }   // ダブルタップ：ここを編集する所に
-        else BLKE.tapT=setTimeout(()=>toast('うすい所は、同じ弾き方のくり返しです。ダブルタップでここを編集できます'),420); return; }
+        else BLKE.tapT=setTimeout(()=>toast('うすい所は、同じ演奏のくり返しです。ダブルタップでここを編集できます'),420); return; }
       const g=blkGrid(), st=s.off+Math.floor((D.p.x-s.x0)/g+1e-6)*g;
       if(!D.draw){   // 選ぶ：何もない所をタップで選択を外す。何も選んでいなくてコピーした音があれば「貼り付け」
         if(PR.selSet.size){ PR.selSet.clear(); drawBlk(); return; }
@@ -968,29 +968,29 @@ function blkCancel(){ if(!BLKE) return; const o=JSON.parse(BLKE.snap);
   Object.keys(state).forEach(k=>delete state[k]); Object.assign(state,o); rebuildMy(); save(); $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; applyMix(); ensureSounds(); hideBlk(); }
 function blkOk(){ if(!BLKE) return; const B=BLKE, list=listOf(B.kind), i=list.length-1;
   if(!B.wasMy && JSON.stringify(list[i])===B.copy && patOf(B.kind)==='my'+i){ list.pop(); setPatOf(B.kind,B.prev); rebuildMy(); save(); }
-  else if(!B.wasMy && list[i]) toast(`自分用のパターン「${list[i].name}」にしました`);
+  else if(!B.wasMy && list[i]) toast(`自分用の演奏「${list[i].name}」にしました`);
   else if(B.reuse && JSON.stringify(curMy())===B.reuse){ setPatOf(B.kind,B.prev); rebuildMy(); save(); }   // 続きを開いただけで何も変えなければ、組み込みのパターンのまま
-  else if(B.reuse) toast(`自分用のパターン「${curMy().name}」にしました`);
+  else if(B.reuse) toast(`自分用の演奏「${curMy().name}」にしました`);
   hideBlk(); }
 $('blkOk').onclick=blkOk; $('blkX').onclick=blkCancel;
 $('blkPlay').onclick=()=>{ playing?stop():play(); };
 document.addEventListener('keydown',e=>{ if(e.key==='Escape' && BLKE){ if($('patSheet').classList.contains('inblk')) closeAll(); else blkCancel(); } });
 // ほかの弾き方を選ぶ：選んだら、その弾き方で開き直す（キャンセルすれば開いたときに戻る）
 $('blkPick').onclick=()=>{ const B=BLKE, kind=B.kind, drum=isDrumK(kind), bass=isBassK(kind);
-  const cats = bass ? ()=>[['ベースの弾き方',Object.keys(BASSES).map(k=>({k,label:BASSES[k].name}))]] : ()=>patCats(kind);
-  openPicker(drum?'ドラムの演奏を選ぶ':bass?'ベースの弾き方を選ぶ':'演奏を選ぶ', cats, patOf(kind), v=>{
+  const cats = bass ? ()=>[['ベースの演奏',Object.keys(BASSES).map(k=>({k,label:BASSES[k].name}))]] : ()=>patCats(kind);
+  openPicker(drum?'ドラムの演奏を選ぶ':bass?'ベースの演奏を選ぶ':'演奏を選ぶ', cats, patOf(kind), v=>{
     const list=listOf(kind), i=list.length-1; if(!B.wasMy && JSON.stringify(list[i])===B.copy && patOf(kind)==='my'+i){ list.pop(); rebuildMy(); }
     setPatOf(kind,v); if(kind==='bass') state.bass=true; save(); renderAll(); ensureSounds();
     const sc=$('bScroll'), sl=sc.scrollLeft, stp=sc.scrollTop; BLKE=null; openBlk(kind, null, '', B.x0, B.x1); if(BLKE){ BLKE.snap=B.snap; requestAnimationFrame(()=>{ sc.scrollLeft=sl; sc.scrollTop=stp; }); } return true; }); };
 // 設定：名前・リズム・タイミングなど（いままでの編集画面の、音を置く所より下だけ）。ここまでの変更はそのまま
-const BLK_SET_T=()=>`このパターンの設定（${tkName(BLKE.kind)}）`;
+const BLK_SET_T=()=>`この演奏の設定（${tkName(BLKE.kind)}）`;
 $('blkSet').onclick=()=>{ if(!BLKE) return; PR.scene=BLKE.cur; PR.selSet.clear(); $('blkDeco').hidden=true; blkMenuClose();
   document.body.classList.add('blkset'); $('patSheet').classList.add('inblk','on'); scrim.classList.add('on'); $('patMoreAcc').open=true; renderPatEditor(); };
 { const rp=renderPatEditor; renderPatEditor=function(){ const r=rp.apply(this,arguments); if($('patSheet').classList.contains('inblk') && BLKE) $('patTitle').textContent=BLK_SET_T(); return r; }; }
 new MutationObserver(()=>{ const ps=$('patSheet'); if(ps.classList.contains('on') || !ps.classList.contains('inblk')) return;
   ps.classList.remove('inblk'); document.body.classList.remove('blkset'); $('patGrid').innerHTML='';
   if(!BLKE) return; if(/^my\d+$/.test(patOf(BLKE.kind)||'') && curMy()){ BLKE.act={}; PR.selSet.clear(); renderTracks(); drawBlk(); } else hideBlk(); }).observe($('patSheet'),{attributes:true,attributeFilter:['class']});
-// マイパターンの画面はなくす：「パターンを編集」「＋ 新しく作る」などは、すべてピアノロールを開く
+// マイ演奏の画面はなくす：「パターンを編集」「＋ 新しく作る」などは、すべてピアノロールを開く
 openPatEditor=function(kind,mode){ closeAll(); openBlk(kind, PR.scene, '', page*4*slotSteps(), null, mode); };
 editTrackPattern=function(kind,scene){ openBlk(kind, scene, '', 0, null); };
 { const cn=commitNotes; commitNotes=function(){ const r=cn.apply(this,arguments); if(BLKE){ renderAll(); renderTracks(); drawBlk(); } return r; }; }
@@ -1049,12 +1049,12 @@ $('dScroll').addEventListener('click',e=>{ if(!TRK_SEL || e.target.closest('butt
 @media (min-width:760px) and (min-height:720px){ .tut{justify-content:center} .tutstage{flex:0 1 auto;min-height:440px} .tutbar{max-width:620px} .tutnav{margin-top:28px} }
 @media (min-width:1200px) and (min-height:900px){ .mpin{zoom:1.3} }`; document.head.appendChild(st); }
 
-// マイパターン（自分で作った演奏）を消す。ほかのトラックが同じ一覧の後ろのパターンを使っていたら、番号をつめる。消したものを使っていたトラックは標準の演奏にもどす
+// マイ演奏（自分で作った演奏）を消す。ほかのトラックが同じ一覧の後ろのパターンを使っていたら、番号をつめる。消したものを使っていたトラックは標準の演奏にもどす
 const ICO_TRASH='<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function delMyPat(kind,key){ const typ=k=>isDrumK(k)?'d':isBassK(k)?'b':'a', T=typ(kind), i=+key.slice(2), list=listOf(kind);
   const def=T==='d'?'pop':T==='b'?'auto':'piano4';
   trackList().map(t=>t.kind).filter(k=>typ(k)===T).forEach(k=>{ const p=patOf(k); if(!/^my\d+$/.test(p)) return; const j=+p.slice(2); if(j===i) setPatOf(k,def); else if(j>i) setPatOf(k,'my'+(j-1)); });
-  list.splice(i,1); rebuildMy(); save(); renderAll(); renderTracks(); toast('マイパターンを消しました'); }
+  list.splice(i,1); rebuildMy(); save(); renderAll(); renderTracks(); toast('マイ演奏を消しました'); }
 { const st=document.createElement('style'); st.textContent=`
 .tpi .tpdel{margin-left:auto;flex:none;min-width:30px;height:30px;padding:0 4px;border-radius:8px;display:grid;place-items:center;color:var(--muted);border:0;background:transparent;font-size:.75rem;font-weight:800;box-sizing:border-box}
 .tpi .tpdel[data-armed]{padding:0 8px}

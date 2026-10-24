@@ -142,7 +142,7 @@ function renderLecBar(){ const P=$('lecPanel');
     <div class="lplist">${LEVELS.map((l,i)=>{ const k=i+1, st=k<n?'done':k===n?'now':'';
       return `<button class="lplv ${st}" data-lv="${k}"><span class="lpn">LEVEL ${k}</span><b>${l.name}</b><small>使えるようになるもの：${LEC_GET(k)}</small>${k===n?'<em>ここまで開放中</em>':''}</button>`; }).join('')}</div>
     <button class="lpend" id="lecEndB">講義を終了する</button>
-    <p class="lpnote">終了すると、受講者の画面は「いつもの版」に切りかわり、開放したレベルまで使える状態で自由に遊べます。</p></div>`;
+    <p class="lpnote">終了すると、受講者の画面は「通常版」に切りかわり、開放したレベルまで使える状態で自由に遊べます。</p></div>`;
   $('lecQrB').onclick=()=>{ P.dataset.qr=qr?'':'1'; renderLecBar(); };
   const cp=(u,m)=>(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast(m),()=>toast('コピーできませんでした'));
   if($('lecCopyT')) $('lecCopyT').onclick=()=>cp(lecTLink(),'先生用リンクをコピーしました');
@@ -160,7 +160,7 @@ function lecQr(img,dl,url,label){ const draw=()=>{ try{ const q=qrcode(0,'M'); q
       txt(`コード進行パレット 講義（${label}）`,44,true,W+30); txt(`部屋 ${LEC.room}　パスワード ${LEC.pw}`,36,false,W+84);
       const u=cv.toDataURL('image/png'); img.src=u; if(dl) dl.href=u; }catch(e){ img.hidden=true; if(dl) dl.hidden=true; } };
   if(window.qrcode) return draw(); const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; sc.onload=draw; sc.onerror=()=>{ img.hidden=true; if(dl) dl.hidden=true; }; document.head.appendChild(sc); }
-// 講義が終わったら、いつもの版へ（開放したレベルまで使える状態で。いつもの版でもっと進んでいれば、そのまま）
+// 講義が終わったら、通常版へ（開放したレベルまで使える状態で。通常版でもっと進んでいれば、そのまま）
 function lecGoMain(lv){ try{ const k='chord-palette-level', had=+localStorage.getItem(k)||0; localStorage.setItem(k, Math.max(had, lv||0)); localStorage.setItem('chord-palette-mode','step'); }catch(e){}
   location.href=new URL('../', location.href).href; }
 
