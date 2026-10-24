@@ -159,10 +159,10 @@ function lofiBase(){
   // レコードのノイズ（サーッという音＋ときどきプチッ）
   const sr=ctx.sampleRate, len=sr*3, buf=ctx.createBuffer(1,len,sr), ch=buf.getChannelData(0); let lpv=0;
   for(let i=0;i<len;i++){ lpv=lpv*.92+(Math.random()*2-1)*.08; ch[i]=lpv*.5 + (Math.random()<.0008 ? (Math.random()*2-1)*(.4+.6*Math.random()) : 0); }
-  const ns=ctx.createBufferSource(); ns.buffer=buf; ns.loop=true; const nf=ctx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=2500; nf.Q.value=.4;
+  const ns=ctx.createBufferSource(); ns.buffer=buf; ns.loop=true; const nf=ctx.createBiquadFilter(); nf.type='lowpass'; nf.frequency.value=1100; nf.Q.value=.5;   // こもらせる（高いシャーッを削る）
   const ng=ctx.createGain(); ng.gain.value=0; ns.connect(nf); nf.connect(ng); ng.connect(master); ns.start();
   LOFI={ctx,ng,drum:new Map(),k:new Map()}; }
-function lofiNoise(on){ if(!ctx) return; if(on && !(LOFI&&LOFI.ctx===ctx)) lofiBase(); if(LOFI&&LOFI.ctx===ctx) LOFI.ng.gain.setTargetAtTime(on?.4:0,ctx.currentTime,.15); }
+function lofiNoise(on){ if(!ctx) return; if(on && !(LOFI&&LOFI.ctx===ctx)) lofiBase(); if(LOFI&&LOFI.ctx===ctx) LOFI.ng.gain.setTargetAtTime(on?.3:0,ctx.currentTime,.15); }
 function lofiDrum(dest){ if(!(LOFI&&LOFI.ctx===ctx)) lofiBase(); let n=LOFI.drum.get(dest); if(n) return n;
   const inp=ctx.createGain(); const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3200;
   const sh=ctx.createWaveShaper(); const k=2.5, N=1024, c=new Float32Array(N); for(let i=0;i<N;i++){ const x=i/(N-1)*2-1; c[i]=Math.tanh(k*x)/Math.tanh(k); } sh.curve=c;
@@ -178,10 +178,10 @@ function keyTone(m,t,dur,v,inst){
     const g=playZone(LOADED.epcity,m,t,dd,lv,.25,16000,false); OUT=null;
     if(g){ try{ const G=g.gain; G.cancelScheduledValues(t); G.setValueAtTime(0,t); G.linearRampToValueAtTime(lv*1.2,t+.002); G.setTargetAtTime(lv,t+.006,.035); G.setValueAtTime(lv,t+dd); G.setTargetAtTime(0,t+dd,.22); }catch(e){} }
     return g; }
-  if(I==='lofi' && LOADED.epiano){
+  if(I==='lofi' && LOADED.eplofi){
     // ローファイ：エレピを、こもらせて少し揺らす（古いテープ・レコードの感じ）
     OUT=lofiChain(BUS); const fx=INST_FX.epiano;
-    const g=playZone(LOADED.epiano,m,t,Math.max(dur*fx.hold,.08),.36*fx.gain*Math.pow(v,1.5),.35,700+2600*v,false); OUT=null; return g; }
+    const g=playZone(LOADED.eplofi,m,t,Math.max(dur*fx.hold,.08),.36*fx.gain*Math.pow(v,1.5),.35,700+2600*v,false); OUT=null; return g; }
   if(I==='dist' && LOADED.eguitar){
     // ひずみギター：クリーンのエレキをアンプ風のひずみに通す。短い音（ブリッジミュート）はこもらせて「ズン」と
     OUT=distChain(BUS); const mute=dur<.12;
