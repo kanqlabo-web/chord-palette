@@ -1210,13 +1210,14 @@ document.addEventListener('keydown',e=>{ if(!BLKE || $('blkEd').hidden || $('pat
   if(kl==='b') return go(()=>{ PR.blkLock=!PR.blkLock; blkModeUI(); toast(PR.blkLock?'鉛筆を固定しました（B で戻す）':'鉛筆の固定を外しました'); });
   if(k==='?') return go(()=>bKeys(innerWidth/2-240,90));
   if(k==='+'||k==='=') return go(()=>zoomBtn(1.25)); if(k==='-') return go(()=>zoomBtn(.8)); },true);
-// ---------- ピアノロール：広い画面では左に「選んだ音の設定」の枠（MuseScore のパレットのように、分類ごとに開け閉め） ----------
+// ---------- ピアノロール：広い画面では、音を選んだときだけ右に「選んだ音の設定」の枠（ロールの幅が変わらないように重ねて出す）（MuseScore のパレットのように、分類ごとに開け閉め） ----------
 const BSIDE=()=>matchMedia('(min-width:900px)').matches;
-{ const st=document.createElement('style'); st.textContent=`#blkEd .bwrap{flex:1;min-height:0;display:flex}
+{ const st=document.createElement('style'); st.textContent=`#blkEd .bwrap{flex:1;min-height:0;display:flex;position:relative}
 #blkEd .bwrap>.bscroll{flex:1;min-width:0}
 #blkSide{display:none}
 @media (min-width:900px){
-#blkSide{display:block;flex:none;width:252px;overflow:auto;overscroll-behavior:contain;border-right:1px solid var(--line);background:color-mix(in srgb,var(--ink) 3%,var(--surface));font-size:.8rem;user-select:none;-webkit-user-select:none}
+#blkSide.none{display:none!important}
+#blkSide{display:block;position:absolute;z-index:6;right:0;top:0;max-height:100%;width:252px;overflow:auto;overscroll-behavior:contain;border-left:1px solid var(--line);border-bottom:1px solid var(--line);border-bottom-left-radius:12px;box-shadow:-8px 8px 24px rgba(10,14,20,.12);background:color-mix(in srgb,var(--ink) 3%,var(--surface));font-size:.8rem;user-select:none;-webkit-user-select:none}
 #blkEd .bdeco{display:none!important}}
 #blkSide .sh{position:sticky;top:0;z-index:1;padding:10px 12px 8px;background:inherit;border-bottom:1px solid var(--line);font-weight:800}
 #blkSide .sh small{display:block;font-weight:700;color:var(--muted);font-size:.7rem;margin-top:2px}
@@ -1253,12 +1254,13 @@ function bSide(){ const el=$('blkSide'); if(!el || !BLKE || !BSIDE()) return; co
   const sc=el.scrollTop, F={}; let id=0; const fn=f=>{ const q='s'+(id++); F[q]=f; return q; };
   const tile=(on,ico,lab,tip,f)=>`<button class="${on?'on':''}" data-f="${fn(f)}" title="${esc(tip||lab.replace(/\n/g,''))}"><i>${ico}</i><span>${esc(lab).replace(/\n/g,'<br>')}</span></button>`;
   const sec=(key,title,cur,body)=>`<details data-k="${key}"${BFOLD[key]?'':' open'}><summary>${title}${cur?`<span class="cur">${esc(cur)}</span>`:''}</summary>${body}</details>`;
-  let h=`<div class="sh">${k?(k>1?`選んだ${k}個の音`:'選んだ音'):'選んだ音の設定'}<small>${k?'押すと変わります（もう一度で外す）':'ロールの音を選ぶと使えます'}</small></div>`;
+  let h=`<div class="sh">${k>1?`選んだ${k}個の音`:'選んだ音'}<small>押すと変わります（もう一度で外す）</small></div>`;
+  if(!k){ el.innerHTML=''; el.classList.add('none'); return; }   // 何も選んでいないときは枠ごと隠す
+  el.classList.remove('none'); const mel=ns.some(x=>isDeg(x.r)), ok=v=>!(v==='up'&&mel);   // メロディ行には「転回（1つ上の和音の音）」は効かない
   if(isArp){ const cur=n?bFxOf(n):'';
-    BFX.forEach(([t,L],gi)=>{ const hit=L.find(x=>x[0]===cur); h+=sec('fx'+gi,t,hit?hit[2].replace(/\n/g,''):'',`<div class="grid">${L.map(([v,ico,lab,tip])=>tile(n&&ns.every(x=>bFxOf(x)===v),ico,lab,tip,()=>bSetFx(v))).join('')}</div>`); });
+    BFX.map(([t,L])=>[t,L.filter(x=>ok(x[0]))]).filter(([,L])=>L.length).forEach(([t,L],gi)=>{ const hit=L.find(x=>x[0]===cur); h+=sec('fx'+gi,t,hit?hit[2].replace(/\n/g,''):'',`<div class="grid">${L.map(([v,ico,lab,tip])=>tile(n&&ns.every(x=>bFxOf(x)===v),ico,lab,tip,()=>bSetFx(v))).join('')}</div>`); });
     if(n && ns.some(x=>bFxOf(x))) h+=`<button class="clr" data-f="${fn(()=>bSetFx(''))}">飾りを外す</button>`; }
-  if(!isDrum){ const L=[[.25,'1/4'],[.5,'1/2'],[1,'1'],[2,'2'],[4,'1拍'],[8,'2拍'],[16,'1小節']];
-    h+=sec('len','長さ',n?(n.gh?'ゴースト':(L.find(x=>x[0]===n.len)||[0,n.len+'マス'])[1]):'',`<div class="grid">${L.map(([v,l],i)=>tile(n&&!n.gh&&ns.every(x=>!x.gh&&x.len===v),l,(i<4?'マス':'')+`（${i+1}）`,`長さ ${l}${i<4?'マス':''}（数字キー ${i+1}）`,()=>bSetLen(v))).join('')}${tile(n&&ns.every(x=>x.gh),'◌','ゴースト（0）','ごく短く・弱く（0 キー）',bGhost)}</div>`); }
+  // 長さ・位置・行はロールで直接変えられるので、ここには出さない
   { const v0=n?Math.round(n.vel*127):0, hit=n?BDYN.find(([,v])=>Math.abs(v-n.vel)<.02):null;
     h+=sec('vel','強さ',n?(hit?hit[0]+' ':'')+v0:'',`<div class="grid">${BDYN.map(([l,v])=>tile(n&&ns.every(x=>Math.abs(x.vel-v)<.02),`<em style="font-family:serif;font-weight:900">${l}</em>`,'',`強さ ${Math.round(v*127)}`,()=>{ ns.forEach(x=>x.vel=v); commitNotes(); })).join('')}${isDrum?tile(n&&ns.every(x=>x.vel<=.3),'◌','ゴースト（0）','ごく弱く（0 キー）',bGhost):''}</div>
       <label class="vel"><input type="range" min="1" max="127" value="${v0||100}" id="bsVel"><b>${v0||''}</b></label>`); }
