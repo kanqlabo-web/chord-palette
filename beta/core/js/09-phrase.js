@@ -8,9 +8,13 @@
   const OPEN=/[（(「『【〔〈《]$/;   // 開きかっこで終わる語のあとでは切らない
   const AFTER=/[、。！？!?]$/;   // 句読点のあとは切ってよい
   const SKIP='SCRIPT,STYLE,TEXTAREA,INPUT,SELECT,OPTION,svg,CANVAS,OUTPUT,[contenteditable],.nophrase';
-  function phrases(t){ const out=[]; for(const {segment:w} of seg.segment(t)){
+  // 切ってよいのは「助詞・助動詞など、ひらがなだけの語」「句読点」「スペース」のあとだけ（「分数｜コード」「進み｜具合」のような名詞の途中では切らない）
+  const HIRA=/^[\u3040-\u309f\u30fc]+$/;
+  function phrases(t){ const out=[]; let prev=null;
+    for(const {segment:w} of seg.segment(t)){
       const last=out[out.length-1];
-      if(last!=null && (OPEN.test(last) || (GLUE.test(w) && !AFTER.test(last)) || /^\s/.test(w) || /\s$/.test(last))) out[out.length-1]+=w; else out.push(w); }
+      const cut = last!=null && !OPEN.test(last) && (AFTER.test(last) || ((/\s$/.test(last) || HIRA.test(prev)) && !GLUE.test(w)));
+      if(cut||last==null) out.push(w); else out[out.length-1]+=w; prev=w; }
     return out; }
   function wrapText(n){ const t=n.nodeValue; if(t.length<6 || !JA.test(t)) return;
     const ps=phrases(t); if(ps.length<2) return;
@@ -26,7 +30,6 @@
   const mo=new MutationObserver(ms=>{ ms.forEach(m=>{ if(m.type==='characterData') q.add(m.target); else m.addedNodes.forEach(n=>q.add(n)); }); if(!busy){ busy=true; queueMicrotask(flush); } });
   const st=document.createElement('style'); st.textContent=`
 body{word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
-h1,h2,h3,.sub,.coach .bubble p,.tut p,.mpsub,.small{text-wrap:pretty}
 h2,.tut h2,.tut .sub,.eyebrow{text-wrap:balance}`;
   document.head.appendChild(st);
   walk(document.body); mo.observe(document.body,OPT);
