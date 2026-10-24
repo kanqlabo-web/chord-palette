@@ -162,7 +162,8 @@ function lofiBase(){
   const ns=ctx.createBufferSource(); ns.buffer=buf; ns.loop=true; const nf=ctx.createBiquadFilter(); nf.type='lowpass'; nf.frequency.value=1100; nf.Q.value=.5;   // こもらせる（高いシャーッを削る）
   const ng=ctx.createGain(); ng.gain.value=0; ns.connect(nf); nf.connect(ng); ng.connect(master); ns.start();
   LOFI={ctx,ng,drum:new Map(),k:new Map()}; }
-function lofiNoise(on){ if(!ctx) return; if(on && !(LOFI&&LOFI.ctx===ctx)) lofiBase(); if(LOFI&&LOFI.ctx===ctx) LOFI.ng.gain.setTargetAtTime(on?.3:0,ctx.currentTime,.15); }
+function lofiNoise(on){ if(!ctx) return; on=false;   // ベータ版：レコードノイズはローファイのエレピに焼きこんだ音だけを使う（曲全体には流さない）
+  if(on && !(LOFI&&LOFI.ctx===ctx)) lofiBase(); if(LOFI&&LOFI.ctx===ctx) LOFI.ng.gain.setTargetAtTime(on?.3:0,ctx.currentTime,.15); }
 function lofiDrum(dest){ if(!(LOFI&&LOFI.ctx===ctx)) lofiBase(); let n=LOFI.drum.get(dest); if(n) return n;
   const inp=ctx.createGain(); const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3200;
   const sh=ctx.createWaveShaper(); const k=2.5, N=1024, c=new Float32Array(N); for(let i=0;i<N;i++){ const x=i/(N-1)*2-1; c[i]=Math.tanh(k*x)/Math.tanh(k); } sh.curve=c;
