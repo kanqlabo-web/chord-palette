@@ -60,9 +60,12 @@ function lecLocalMembers(f){ lecGet(lecPath()).then(d=>{ const m={}; for(let i=0
 #lecBar .lqr{background:#fff;border-radius:10px;padding:8px;align-self:flex-start}
 #lecBar .lqr img,#lecBar .lqr svg{display:block;width:180px;height:180px}
 #lecBar .lst{opacity:.75;font-size:.72rem}
-body.lec-child .lane~.transport{padding-bottom:44px}
-body.lec-on .app{padding-bottom:64px}
-body.lec-child #toTitle{display:none}`;
+body.lec-on .app{padding-bottom:calc(var(--lecH,56px) + 14px)}
+body.lec-child #toTitle{display:none}
+/* 講義版の画面は、チュートリアル中の画面と同じくらい少なく（メニュー・次のレベルへ・進行ライブラリ・PRO などは出さない） */
+body.lec #menuBtn,body.lec .badges,body.lec .libbtn,body.lec .slothead .right,body.lec .lane .mix{visibility:hidden}
+body.lec #lvBig,body.lec #moodTip{display:none!important}
+body.lec .lane canvas{display:none}   /* 伴奏は名前の行だけ（小節ごとの絵は出さない） */`;
   const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
   const s=document.createElement('div'); s.id='lecStart'; s.hidden=true;
   s.innerHTML=`<div class="lin"><p class="mpeye" style="text-align:center">CHORD PALETTE</p><h2>講義版</h2>
@@ -88,7 +91,10 @@ async function lecStartTeacher(){ const btn=$('lecTeacher'); btn.querySelector('
   }catch(e){ btn.querySelector('span').textContent='部屋を作れませんでした。Firebase の設定（アドレス・匿名ログイン・ルール）を確かめてください。'; } }
 async function lecSetLevel(n){ n=Math.max(0,Math.min(LV_MAX,n)); LEC.lv=n; renderLecBar();
   const cur=await lecGet(lecPath())||{}; await lecPut(lecPath(),{...cur, lv:n, ts:Date.now()},true); }
-function renderLecBar(){ const b=$('lecBar'); b.hidden=false; const open=b.classList.contains('open');
+function renderLecBar(){ lecBarBody(); }
+// 下の帯の高さだけ、画面の下を空ける（再生ボタンが隠れないように）
+new ResizeObserver(()=>document.documentElement.style.setProperty('--lecH',$('lecBar').offsetHeight+'px')).observe($('lecBar'));
+function lecBarBody(){ const b=$('lecBar'); b.hidden=false; const open=b.classList.contains('open');
   if(LEC.role==='teacher'){ const n=LEC.lv, nx=LEVELS[n];
     b.innerHTML=`<div class="lrow"><b>部屋 ${LEC.room}</b><span>パスワード ${LEC.pw}</span><span class="lst" id="lecSt"></span><span class="lsp"></span><span>参加 ${LEC.members}人</span><button class="alt" id="lecMore">${open?'閉じる':'リンク・QR'}</button></div>
       <div class="lrow" style="margin-top:6px"><span>開放: ${n?`LEVEL ${n}「${LEVELS[n-1].name}」まで`:'まだなし'}</span><span class="lsp"></span>
@@ -121,8 +127,11 @@ function lecJoin(room,pw){ LEC.role='child'; LEC.room=room; LEC.pw=pw; MODE='ste
     const beat=()=>{ const p=`${lecPath()}/m/${LEC.me}`; if(LEC_ON()) fetch(fbUrl(p),{method:'PUT',body:JSON.stringify(Date.now())}).catch(()=>{}); else { localStorage.setItem('cplec-room:'+p,Date.now()); lecLocalSend(p,Date.now()); } };
     beat(); clearInterval(LEC.hb); LEC.hb=setInterval(beat,20000); }); }
 
+// ---- 画面を少なく：PRO・レベルの案内タイルは使わない
+{ const ra=renderAll; renderAll=function(){ if(CP.kind==='lecture' && state.pro){ state.pro=false; document.body.classList.remove('pro'); }
+    const r=ra.apply(this,arguments); if(CP.kind==='lecture'){ $('lvBig').hidden=true; document.body.classList.remove('haslv'); $('moodTip').hidden=true; } return r; }; }
 // ---- はじめの画面 ----
-(function lecBoot(){ if(CP.kind!=='lecture') return;
+(function lecBoot(){ if(CP.kind!=='lecture') return; document.body.classList.add('lec'); renderAll();
   $('modePick').hidden=true; $('lecWarn').hidden=LEC_ON();
   $('lecTeacher').onclick=lecStartTeacher;
   $('lecChildBtn').onclick=e=>{ if(e.target.closest('.ljoin')) return; $('lecJoin').classList.add('on'); $('lecRoom').focus(); };

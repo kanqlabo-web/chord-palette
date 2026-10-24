@@ -2,7 +2,9 @@
 // store：保存データのキーの頭（試作版は 'cpbeta-'）、snd：音源の場所、kind：'main'｜'beta'｜'lecture'
 const CP=Object.assign({store:'',snd:'snd/',kind:'main'}, window.CP_CONF||{}), STK=k=>CP.store+k;
 // 試作版などを初めて開いたときは、いつもの版の保存データを写して始める
-try{ if(CP.store && localStorage.getItem(STK('chord-palette-v3'))==null){ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.startsWith('chord-palette')) localStorage.setItem(CP.store+k, localStorage.getItem(k)); } } }catch(e){}
+// 講義版は、開くたびにまっさら（ほかの版の保存データ（PRO など）を持ちこまない）
+try{ if(CP.kind==='lecture') Object.keys(localStorage).filter(k=>k.startsWith(STK('chord-palette'))).forEach(k=>localStorage.removeItem(k)); }catch(e){}
+try{ if(CP.store && CP.kind!=='lecture' && localStorage.getItem(STK('chord-palette-v3'))==null){ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.startsWith('chord-palette')) localStorage.setItem(CP.store+k, localStorage.getItem(k)); } } }catch(e){}
 // ---------- music data ----------
 const KEYS = [
   {id:'C', pc:0, sc:['C','D','E','F','G','A','B']},
