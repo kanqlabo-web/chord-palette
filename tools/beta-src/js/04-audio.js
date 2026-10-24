@@ -82,8 +82,7 @@ function loadSet(name){
   return SETS[name];
 }
 // ローファイのドラムは、音づくりまで済ませた専用の音源（kit-lofi）。入っていない音（タムなど）は標準キットを加工して鳴らす
-// シティポップのキックとスネアも、音づくり済みの専用音源（kit-city）。ハイハット・シンバルなどは標準キットを加工して鳴らす
-const kitSets=k=>k==='lofi'||k==='city'?['kit-'+k,'kit-std']:['kit-'+k];
+const kitSets=k=>k==='lofi'?['kit-lofi','kit-std']:['kit-'+(k==='city'?'std':k)];
 function neededSets(){ const n=[]; if(state.kit!=='synth') n.push(...kitSets(state.kit)); if(!isSynthInst()) n.push(SETOF(state.inst));
   if(state.arp2&&ARPS[state.arp2]){ if(!(state.inst2 in SYNTH_INST)) n.push(SETOF(state.inst2||'epiano')); }
   // PRO で足した楽器
@@ -249,9 +248,9 @@ function cityDrum(dest,note){
   return note===36?c.kick : (note===38||note===37)?c.snare : c.other; }
 function drumIn(note,t,vel=1){
   if(state.kit==='synth'){ chipDrum(note,t,vel); return; }   // ピコピコドラムは 8bit の音に
-  // ローファイ・シティポップ：専用音源にある音は、加工が焼き込み済みなのでそのまま最後まで鳴らす
-  const BK=(state.kit==='lofi'||state.kit==='city')&&LOADED['kit-'+state.kit], LZ=BK&&BK[note];
-  if(LZ&&LZ[0].buf&&playZone(LZ,note,t,LZ[0].buf.duration,(state.kit==='lofi'?.8:.75)*vel,.05)) return;
+  // ローファイ：専用音源にある音は、加工が焼き込み済みなのでそのまま最後まで鳴らす
+  const LZ=state.kit==='lofi'&&LOADED['kit-lofi']&&LOADED['kit-lofi'][note];
+  if(LZ&&LZ[0].buf&&playZone(LZ,note,t,LZ[0].buf.duration,.8*vel,.05)) return;
   const KG=KIT_GAIN[state.kit]; if(KG&&KG[note]) vel*=KG[note];
   const lofi=state.kit==='lofi', city=state.kit==='city', kit=LOADED['kit-'+(lofi||city?'std':state.kit)];
   if(kit&&kit[note]){ const sv=OUT; if(lofi) OUT=lofiDrum(OUT||master); if(city) OUT=cityDrum(OUT||master,note);
