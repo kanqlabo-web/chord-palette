@@ -10,10 +10,12 @@
   const SKIP='SCRIPT,STYLE,TEXTAREA,INPUT,SELECT,OPTION,svg,CANVAS,OUTPUT,[contenteditable],.nophrase';
   // 切ってよいのは「助詞・助動詞など、ひらがなだけの語」「句読点」「スペース」のあとだけ（「分数｜コード」「進み｜具合」のような名詞の途中では切らない）
   const HIRA=/^[\u3040-\u309f\u30fc]+$/;
-  function phrases(t){ const out=[]; let prev=null;
+  // （ ）の前と中では切らない（「ポップス／（定番）」「（コントラ／バス）」のような切れ方をしない）
+  function phrases(t){ const out=[]; let prev=null, depth=0;
     for(const {segment:w} of seg.segment(t)){
       const last=out[out.length-1];
-      const cut = last!=null && !OPEN.test(last) && (AFTER.test(last) || ((/\s$/.test(last) || HIRA.test(prev)) && !GLUE.test(w)));
+      const cut = last!=null && depth===0 && !/^[（(]/.test(w) && !OPEN.test(last) && (AFTER.test(last) || ((/\s$/.test(last) || HIRA.test(prev)) && !GLUE.test(w)));
+      depth=Math.max(0, depth+(w.match(/[（(]/g)||[]).length-(w.match(/[）)]/g)||[]).length);
       if(cut||last==null) out.push(w); else out[out.length-1]+=w; prev=w; }
     return out; }
   function wrapText(n){ const t=n.nodeValue; if(t.length<6 || !JA.test(t)) return;
