@@ -523,11 +523,11 @@ for(const k in ARPS){ const A=ARPS[k]; if(A.ev) prepNx(A.ev); if(A.sit){ for(con
   ARPS[k].at=atMap(ARPS[k].ev); }
 
 // 音色の名前は、楽器にくわしくない人にもわかる言い方で
-const INSTS={piano:'ピアノ',epiano:'電子ピアノ',epcity:'強く弾いた電子ピアノ',clav:'クラビネット',lofi:'レトロな電子ピアノ',spiano:'電子音のピアノ',organ:'オルガン',
+const INSTS={piano:'ピアノ',epiano:'エレピ（やわらか）',epcity:'エレピ（シティポップ）',clav:'クラビネット',lofi:'エレピ（ローファイ）',spiano:'電子音のピアノ',organ:'オルガン',
   steel:'アコースティックギター',nylon:'クラシックギター',eguitar:'エレキギター',dist:'ロックギター（歪み）',
   strings3:'バイオリンなど（弦楽器）',brass3:'ラッパ隊（ブラス）',sbrass:'シンセブラス',trumpet:'トランペット',trombone:'トロンボーン',sax:'サックス',horn:'ホルン',glock:'鉄琴（キラキラ）',synth:'電子音（シンセ）',pad:'ふんわり電子音',koto:'琴',shami:'三味線'};
-// 音源ファイルの名前（ひずみギターはエレキを、ローファイはエレピを加工して使う）
-const SETOF=i=>({dist:'eguitar',lofi:'epiano',epcity:'epiano'})[i]||i;
+// 音源ファイルの名前（ひずみギターはエレキを、ローファイはエレピを加工して使う。シティポップのエレピは明るい音源 epcity を使う）
+const SETOF=i=>({dist:'eguitar',lofi:'epiano'})[i]||i;
 // 聴き比べて決めた音（ストリングス＝JCLive、ブラス＝JCLive）。前の候補を選んでいた保存データ・リンクはこちらに置きかえる
 const INST_ALIAS={strings:'strings3',strings2:'strings3',brass:'brass3',brass2:'brass3',clav2:'clav',clav3:'clav',sbrass3:'sbrass'};
 const fixInst=v=>INST_ALIAS[v]||v;
