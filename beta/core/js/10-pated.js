@@ -164,7 +164,7 @@ const peSnap=()=>peDrum()?1:PE.grid;
 #peEd .pbk{position:absolute;border-radius:3px;background:color-mix(in srgb,var(--ink) 20%,transparent);pointer-events:none;z-index:0}
 #peEd .pbk.m{background:color-mix(in srgb,var(--d) 30%,transparent)}
 #peEd .pfol{gap:4px;font-size:.74rem;color:var(--muted)}
-#peEd .pfol.on{color:var(--ink);border-color:var(--ink)}
+#peEd .pfol.on{color:var(--surface)}
 #peEd .pfol svg{width:15px;height:15px}
 #peEd .pfol{display:inline-flex;align-items:center}
 @media (max-width:899px){
