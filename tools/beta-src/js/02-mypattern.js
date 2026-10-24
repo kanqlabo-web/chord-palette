@@ -261,7 +261,7 @@ function previewRow(r,vel){
 // ---- ピアノロール：タップで追加・削除／右端をドラッグで長さ／ドラッグで移動／長押ししてから上下でベロシティ
 let PR={lastLen:{arp:2,bass:2}, mode:'edit', selSet:new Set()};
 // 選んでいる音（編集・選択のどちらのモードでも、複数選べる）
-const selNotes=()=>{ const a=curNotes(); return a.filter(n=>PR.selSet.has(n)); };
+const selNotes=()=>{ if(!PR.selSet.size) return []; const a=curNotes(); return a.filter(n=>PR.selSet.has(n)); };
 const selOnly=n=>{ PR.selSet=new Set(n?[n]:[]); };
 function renderPatEditor(){
   const isDrum=isDrumK(patKind), g=$('patGrid');

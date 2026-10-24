@@ -123,6 +123,22 @@ const peSnap=()=>peDrum()?1:PE.grid;
 #peCtx button span{flex:1}
 #peCtx kbd{font:inherit;font-size:.72rem;color:var(--muted)}
 #peCtx hr{border:0;border-top:1px solid var(--line);margin:4px 6px}
+#peEd .pbeats,#peGW,#peEd .pvel,#peEd .psong{display:none!important}
+#peEd #peGrid[hidden]{display:none}
+@media (pointer:coarse){#peEd .pzm{display:none}}
+#peEd .bscroll{flex:1;min-height:0}
+#peEd .blabs em.bgh{font-style:normal;font-weight:800;font-size:.68rem;color:var(--ink);cursor:pointer;display:block;width:100%}
+#peEd .bgrp{position:absolute;left:0;right:0;background:color-mix(in srgb,var(--ink) 6%,var(--surface));border-bottom:1px solid var(--line);pointer-events:none;z-index:1}
+/* 強さ：音の色の濃さと、左の目盛り（下からの高さ）で */
+#peEd .prn{overflow:visible;background:color-mix(in srgb,var(--t) calc(8% + var(--v) * 87%),var(--surface));transform:translateY(calc(var(--dy,0) * var(--rh)))}
+#peEd .prn:not(.dr) b{left:3px;bottom:3px;width:4px;height:calc(100% - 6px)!important;max-height:none;opacity:1;border-radius:2px;background:linear-gradient(to top,var(--ink) calc(var(--v) * 100%),color-mix(in srgb,var(--ink) 15%,transparent) 0)}
+#peEd .prn.dr{transform:scale(calc(.6 + var(--v) * .4))}
+/* 飾りの印：フォールは音の終わりから下がる線、しゃくりは下から上がってくる線、ほかは音の中に記号 */
+#peEd .prn.fall::after{content:'';position:absolute;left:100%;right:auto;top:50%;width:22px;height:2.5px;background:var(--ink);transform-origin:0 50%;transform:rotate(40deg);border-radius:2px;border:0}
+#peEd .prn.scoop::before{content:'';position:absolute;left:-20px;right:auto;top:50%;bottom:auto;width:20px;height:2.5px;background:var(--ink);transform-origin:100% 50%;transform:rotate(-38deg);border-radius:2px}
+#peEd .prn.up::after{content:none}
+#peEd .prn.ocd::before,#peEd .prn.ocu::before{content:none}
+#peEd .prn s{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:10px;line-height:1;font-weight:900;text-decoration:none;color:var(--ink);white-space:nowrap;pointer-events:none;text-shadow:0 0 2px var(--surface),0 0 2px var(--surface)}
 @media (max-width:899px){
  #peEd .ptool{flex-wrap:nowrap;gap:4px;overflow-x:auto;scrollbar-width:none}
  #peEd .ptb{min-width:34px;padding:0 6px}
@@ -155,7 +171,7 @@ const peSnap=()=>peDrum()?1:PE.grid;
     <button class="ptb" id="peUndo" aria-label="元に戻す">${I('<path d="M5 4L2 7l3 3M2.5 7H10a3.5 3.5 0 010 7H7" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>')}</button>
     <button class="ptb" id="peRedo" aria-label="やり直す">${I('<path d="M11 4l3 3-3 3M13.5 7H6a3.5 3.5 0 000 7h3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>')}</button>
     <span class="psep"></span>
-    <select class="ptb" id="peGrid" aria-label="マス目"><option value="1">16分</option><option value="0.5">32分</option><option value="0.25">64分</option></select>
+    <select class="ptb" id="peGrid" aria-label="マス目" hidden><option value="1">16分</option></select><button class="ptb pzm" id="peZo" aria-label="縮小" title="縮小（G）">−</button><button class="ptb pzm" id="peZi" aria-label="拡大" title="拡大（H）">＋</button>
     <span id="peDrumBars"></span>
     <button class="ptb" id="peSceneBtn"></button>
     <span class="pgap"></span>
@@ -164,7 +180,7 @@ const peSnap=()=>peDrum()?1:PE.grid;
   </div>
   <div class="pbody">
     <nav id="peScenes" aria-label="場面"></nav>
-    <div class="pmain">
+    <div class="pmain" id="peMain">
       <div class="pbeats nophrase"><div></div><div id="peBeats"></div></div>
       <div class="pgridw" id="peGW"><div class="pegrid"><div class="plabs nophrase" id="peLabs"></div><div class="peroll nophrase" id="peRoll"></div></div></div>
       <div class="pvel"><div>強さ<small>上下にドラッグ</small></div><div id="peVel"></div></div>
@@ -178,7 +194,7 @@ const peSnap=()=>peDrum()?1:PE.grid;
   const c=document.createElement('div'); c.id='peCtx'; c.hidden=true; document.body.appendChild(c); }
 
 // ---------- 開く・閉じる ----------
-function peOpen(kind,scene,mode){ const k=patOf(kind);
+function peOpen(kind,scene,mode,x0){ const k=patOf(kind);
   if((kind==='arp2'||xType(kind)==='chord') && (!k || !ARPS[k])) return openSheet(kind);
   closeAll(); if(typeof BLKE!=='undefined' && BLKE) hideBlk();
   const snap=JSON.stringify(state), wasMy=/^my\d+$/.test(k||'') && mode!=='new' && mode!=='copy';
@@ -194,8 +210,23 @@ function peOpen(kind,scene,mode){ const k=patOf(kind);
   PE.scene = okScene.includes(scene) ? scene : 'bar'; PR.scene=PE.scene;
   // 音のないまとまりは、はじめはたたむ（メロディ行は、使っているときだけ開く）
   peGroups().forEach(([g,,rows])=>{ const used=[...curMy().notes||[], ...Object.values(curMy().sitNotes||{}).flat()].some(n=>rows.some(([r])=>String(r)===String(n.r))); if(!used && peGroups().length>1) PE.fold[g]=true; });
-  $('peGrid').value=String(PE.grid); $('peEd').hidden=false; peDraw(); }
-function peClose(){ PE=null; PED=null; PR.selSet.clear(); $('peEd').hidden=true; $('peInsp').className=''; $('peInsp').innerHTML=''; peCtxClose(); $('peSet').hidden=true; renderAll(); renderTracks(); }
+  // ロールは前のピアノロール（曲の全部のマスを並べる。07 の drawBlk・bindBig）をこの画面の中で使う
+  BLKE={kind, x0:x0||0, snap, wasMy:PE.wasMy, reuse:PE.reuse, prev:k, nm:PE.nm, cur:PE.scene, act:{}}; BD=null; PR.blkLock=false; PR.mode='edit';
+  const sc=$('bScroll'), mn=$('peMain'); if(sc.parentElement!==mn) mn.insertBefore(sc,mn.firstChild);
+  $('peEd').hidden=false; peDraw();
+  requestAnimationFrame(()=>{ if(PE) peScrollTo(PE.scene, x0); }); }
+// その場面を編集する所（act）が見える所までロールを動かす
+function peScrollTo(k,x){ const sc=$('bScroll'), s=BSEGS[BLKE.act[k]]; if(x==null && !s) return false;
+  sc.scrollLeft=Math.max(0,(x!=null?x:s.x0)*BSW-8); return !!s; }
+// 行：まとまりごとに見出しの行（キーが _ で始まる。音は置けない）を入れ、たたんだまとまりの行は出さない
+function peBlkRows(){ const G=peGroups(), out=[];
+  G.forEach(([g,lab,rows])=>{ if(G.length>1) out.push(['_'+g, `<em class="bgh" data-g="${g}">${PE.fold[g]?'▸':'▾'} ${esc(lab)}</em>`]); if(!PE.fold[g]) out.push(...rows); });
+  return out; }
+{ const db=drawBlk; drawBlk=function(){ const r=db.apply(this,arguments); if(PE && BLKE){ PE.scene=PR.scene; peChrome(); peScenes(); peInsp();
+    const roll=$('bRoll'); if(roll) blkRows().forEach(([k],i)=>{ if(String(k)[0]!=='_') return; const d=document.createElement('div'); d.className='bgrp'; d.style.top=(i*BRH)+'px'; d.style.height=BRH+'px'; roll.appendChild(d); }); }
+  return r; }; }
+$('bScroll').addEventListener('click',e=>{ const g=e.target.closest('em.bgh'); if(!g||!PE) return; PE.fold[g.dataset.g]=!PE.fold[g.dataset.g]; drawBlk(); });
+function peClose(){ PE=null; PED=null; BLKE=null; BD=null; $('bScroll').innerHTML=''; PR.selSet.clear(); $('peEd').hidden=true; $('peInsp').className=''; $('peInsp').innerHTML=''; peCtxClose(); $('peSet').hidden=true; renderAll(); renderTracks(); }
 function peCancel(){ if(!PE) return; const o=JSON.parse(PE.snap);
   Object.keys(state).forEach(k=>delete state[k]); Object.assign(state,o); rebuildMy(); save(); $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; applyMix(); ensureSounds(); peClose(); }
 function peOk(){ if(!PE) return; const P=PE, list=listOf(P.kind), i=list.length-1;
@@ -208,22 +239,25 @@ $('pePlay').onclick=()=>{ playing?stop():play(); };
 $('peUndo').onclick=peUndo;
 function peUndo(){ clearTimeout(HIST.t); histCommit(); if(HIST.undo.length<=PE.h0) return toast('これより前には戻せません'); histGo(-1); peAfterHist(); } $('peRedo').onclick=()=>{ histGo(1); peAfterHist(); };
 function peAfterHist(){ if(!PE) return; PR.selSet.clear(); if(/^my\d+$/.test(patOf(PE.kind)||'') && curMy()){ patKind=PE.kind; PR.scene=PE.scene; peDraw(); } else peClose(); }
-$('peToolSel').onclick=()=>{ PE.tool='sel'; peTools(); }; $('peToolPen').onclick=()=>{ PE.tool='pen'; PR.selSet.clear(); peDraw(); };
+$('peToolSel').onclick=()=>{ PR.blkLock=false; drawBlk(); }; $('peToolPen').onclick=()=>{ PR.blkLock=true; PR.selSet.clear(); drawBlk(); };
+$('peZo').onclick=()=>$('blkZo').click(); $('peZi').onclick=()=>$('blkZi').click();
 $('peGrid').onchange=()=>{ PE.grid=+$('peGrid').value; peDraw(); };
-function peTools(){ $('peToolSel').classList.toggle('on',PE.tool==='sel'); $('peToolPen').classList.toggle('on',PE.tool==='pen'); }
-function peSetScene(k){ if(!PE) return; PE.scene=k; PR.scene=k; PR.selSet.clear(); $('peSceneSheet').hidden=true; peDraw(); }
+function peTools(){ $('peToolSel').classList.toggle('on',!blkDraw()); $('peToolPen').classList.toggle('on',blkDraw()); }
+function peSetScene(k){ if(!PE) return; PE.scene=k; PR.scene=k; PR.selSet.clear(); $('peSceneSheet').hidden=true; peDraw();
+  if(!peScrollTo(k)) toast('この場面は、今の曲では使われていません（コードの長さを変えると使われます）'); }
 function peCommit(){ commitNotes(); clearTimeout(HIST.t); histCommit(); peDraw(); }
 
 // ---------- 描く ----------
-function peDraw(){ if(!PE) return; patKind=PE.kind; PR.scene=PE.scene; const m=curMy(); if(!m) return peClose();
+function peDraw(){ if(!PE) return; patKind=PE.kind; PR.scene=PE.scene; if(!curMy()) return peClose(); BLKE.cur=PE.scene; drawBlk(); }
+function peChrome(){ const m=curMy();
   $('peTitle').innerHTML=`${esc(tkName(PE.kind))}の${isDrumK(PE.kind)?'叩き方':'弾き方'}<small class="nophrase">${esc(m.name||'')}${PE.wasMy||PE.reuse?'':`（「${esc(PE.nm)}」のコピー。変えなければ元のまま）`}</small>`;
   $('pePlay').innerHTML=playing?STOP_SVG:PLAY_SVG; $('pePlay').setAttribute('aria-label',playing?'止める':'再生');
-  peTools(); $('peGrid').hidden=peDrum();
+  peTools();
   // ドラムは1・2小節目のタブ
   $('peDrumBars').innerHTML=peDrum()?['bar','B'].map(k=>{ const made=peSceneNotes(k).length; return `<button class="ptb${PE.scene===k?' on':''}" data-k="${k}" style="${!made&&k==='B'?'border-style:dashed':''}">${k==='bar'?'1小節目':'2小節目'+(made||k==='bar'?'':'（1と同じ）')}</button>`; }).join(' '):'';
   $('peDrumBars').querySelectorAll('button').forEach(b=>b.onclick=()=>peSetScene(b.dataset.k));
   const sb=$('peSceneBtn'); sb.hidden=!peArp(); sb.textContent='場面：'+SCENE_NAME(PE.scene)+' ▾';
-  peScenes(); peInsp(); peGridDraw(); peVelDraw(); peSongDraw(); }   // 右の枠の有無で幅が変わるので、先に出してから測る
+}
 function peSceneHTML(){ const m=curMy(), made=k=>peSceneNotes(k).length>0;
   let h='<div class="pesc"><div></div>'+[1,2,3,4].map(i=>`<div class="hd">${i}</div>`).join('');
   PE_SCENES.forEach(([lab,ks])=>{ h+=`<div class="lb">${lab}</div>`; for(let i=0;i<4;i++){ const k=ks[i]; if(!k){ h+='<div></div>'; continue; }
@@ -278,7 +312,7 @@ function peSongDraw(){ const el=$('peSong'), kind=PE.kind, out=[]; const L=slotS
 
 // ---------- 選んだ音の設定（選んだときだけ） ----------
 function peInsp(){ const el=$('peInsp'), ns=peSel(), k=ns.length;
-  if(!k || PE.tool==='pen'){ el.className=''; el.innerHTML=''; return; }
+  if(!k || blkDraw()){ el.className=''; el.innerHTML=''; return; }
   el.className='on'; const n=ns[k-1], F={}; let id=0; const fn=f=>{ const q='f'+(id++); F[q]=f; return q; };
   const row=(opts,cur,set)=>`<div class="irow">${opts.map(([v,l])=>`<button class="${cur(v)?'on':''}" data-f="${fn(()=>set(v))}">${esc(l)}</button>`).join('')}</div>`;
   const all=f=>ns.every(f);
@@ -437,6 +471,7 @@ function peGhost(){ const ns=peSel(); if(!ns.length) return; if(peDrum()){ const
 document.addEventListener('keydown',e=>{ if(!PE || $('peEd').hidden) return;
   if(!$('peSet').hidden){ if(e.key==='Escape'){ e.preventDefault(); e.stopImmediatePropagation(); $('peSet').hidden=true; } return; }
   if(typeof PICK!=='undefined' && PICK) return;
+  if(BLKE) return;   // ロールの中の操作は、前のピアノロール（07）のショートカットで
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && e.target.type!=='range') return;
   const mod=e.ctrlKey||e.metaKey, k=e.key, kl=k.length===1?k.toLowerCase():k, isDrum=peDrum(), g=peSnap();
   const go=f=>{ e.preventDefault(); e.stopImmediatePropagation(); peCtxClose(); f(); };
@@ -466,4 +501,4 @@ addEventListener('resize',()=>{ if(PE) peDraw(); });
 // 入口：今までの「弾き方を編集」はすべてこの画面で開く
 openPatEditor=function(kind,mode){ closeAll(); peOpen(kind, PR.scene, mode); };
 editTrackPattern=function(kind,scene){ peOpen(kind, scene); };
-{ const ob=openBlk; openBlk=function(kind,scene,where,x0,x1,mode){ return peOpen(kind,scene,mode); }; }
+{ const ob=openBlk; openBlk=function(kind,scene,where,x0,x1,mode){ return peOpen(kind,scene,mode,x0); }; }

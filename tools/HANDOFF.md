@@ -239,3 +239,6 @@
   - 演奏の設定（#peSet）＝全部の設定をまとまりごとに。今まで画面になかった pushBy・pluck・rhAbove・vol・rhShift も出す。
   - 見るだけのときは curNotes() を使わない（peNotes()。空の場面を開いただけで sitNotes[k]=[] ができて「変更あり」になるのを防ぐ）。開いた時点で histCommit し PE.h0 より前には戻さない。編集ごとに histCommit（peCommit）。
   - 確認：組み込み83種（コード・ドラム・ベース）を開いて全部の場面を見て完了 → state が変わらない（ベースの auto だけ myBasses:[] ができるが害なし）。
+- ベータ版 編集画面（その6、2026-10-24）：ユーザー判断「基本デザインは OK、ロールは前のものに戻す（たためる行は採用）」。#peEd の中で前のピアノロール（07 の #bScroll・drawBlk・bindBig・ショートカット・右クリック）を使う。peOpen で BLKE を作り #bScroll を #peMain へ移す。blkRows() は PE のとき peBlkRows()（まとまりの見出し行＝キーが `_` で始まる。音は置けない・動かせない）。blkOk/blkCancel は PE のとき peOk/peCancel。10 の自前のマス目（#peGW・強さの帯・鳴る所の帯）は display:none。鉛筆＝PR.blkLock。場面の表を押すとその場面の編集する所までスクロール（曲で使われていない場面はトースト）。選んだ音をもう一度押すと外す（PE のとき blkNoteMenu は出さない）。
+  - 見え方（#peEd のときだけ）：強さ＝音の色の濃さ＋左の目盛り（下から --v）。ドラムは強さで丸の大きさ。フォール＝音の終わりから右下へ下がる線、しゃくり＝左下から上がってくる線。音を下げる飾り（dn・dn2・cd・pd、oc<0）は半行下、上げる飾り（su・su2・cu・pu・up、oc>0）は半行上にずらす（07 の bDy・BSHIFT）。ほかの飾りは音の中に記号（bMark、8va/8vb も）。
+  - selNotes()（beta 02）は選んでいないとき curNotes() を呼ばない（空の場面の配列ができて「変更あり」になるため）。

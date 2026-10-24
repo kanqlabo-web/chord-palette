@@ -683,29 +683,29 @@ const UNDO_SVG='<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="tru
 #blkEd .bdeco{max-height:min(32vh,260px)!important}
 #blkEd .bdeco .chips .chip{padding:5px 10px;font-size:.78rem}
 #blkEd .bdeco h3{margin:8px 0 4px!important}
-#blkEd .bscroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;--lw:${BLW}px;--rh:${BRH}px}
-#blkEd .bruler{display:flex;position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);height:${BRUL}px}
-#blkEd .bcorner{position:sticky;left:0;z-index:6;width:var(--lw);flex:none;background:var(--surface);border-right:1px solid var(--line)}
-#blkEd .brt{position:relative;flex:none}
-#blkEd .brt .bn{position:absolute;top:3px;font-size:.66rem;color:var(--muted);padding-left:4px;border-left:1.5px solid var(--line);height:38px;box-sizing:border-box}
-#blkEd .brt .bc{position:absolute;top:16px;font-weight:800;font-size:.8rem;padding-left:5px;white-space:nowrap;overflow:hidden;line-height:1.15}
-#blkEd .brt .bc small{display:block;font-size:.58rem;font-weight:700;color:var(--muted)}
-#blkEd .brt .bc.loop{opacity:.42}
-#blkEd .bmain{display:flex}
-#blkEd .blabs{position:sticky;left:0;z-index:4;width:var(--lw);flex:none;background:var(--surface);border-right:1px solid var(--line)}
-#blkEd .blabs span{height:var(--rh);display:flex;align-items:center;padding-left:8px;font-size:.62rem;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;box-sizing:border-box}
-#blkEd .blabs span.mel{color:color-mix(in srgb,var(--ink) 70%,transparent);background:color-mix(in srgb,var(--ink) 5%,transparent)}
-#blkEd .blabs span.mel1{border-bottom:1.5px solid color-mix(in srgb,var(--ink) 35%,transparent)}
-#blkEd .broll{position:relative;flex:none;touch-action:pan-x pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-#blkEd .bmel{position:absolute;left:0;right:0;top:0;background:color-mix(in srgb,var(--ink) 5%,transparent);border-bottom:1.5px solid color-mix(in srgb,var(--ink) 35%,transparent);pointer-events:none}
-#blkEd .bseg{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--c) 13%,transparent);border-left:2px solid var(--c);box-sizing:border-box;pointer-events:none}
-#blkEd .bseg.cur{background:color-mix(in srgb,var(--c) 24%,transparent)}
-#blkEd .bseg.loop{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c) 9%,transparent) 0 6px,transparent 6px 12px);border-left-style:dashed}
-#blkEd .prn{touch-action:none}
-#blkEd .prn.loop{opacity:.3;pointer-events:none}
-#blkEd .prn.gh{background:var(--surface);border-style:dashed;border-radius:6px;opacity:.9}
-#blkEd .prn.gh b{display:none}
-#blkEd .bph{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);pointer-events:none;z-index:3}
+:is(#blkEd,#peEd) .bscroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;--lw:${BLW}px;--rh:${BRH}px}
+:is(#blkEd,#peEd) .bruler{display:flex;position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);height:${BRUL}px}
+:is(#blkEd,#peEd) .bcorner{position:sticky;left:0;z-index:6;width:var(--lw);flex:none;background:var(--surface);border-right:1px solid var(--line)}
+:is(#blkEd,#peEd) .brt{position:relative;flex:none}
+:is(#blkEd,#peEd) .brt .bn{position:absolute;top:3px;font-size:.66rem;color:var(--muted);padding-left:4px;border-left:1.5px solid var(--line);height:38px;box-sizing:border-box}
+:is(#blkEd,#peEd) .brt .bc{position:absolute;top:16px;font-weight:800;font-size:.8rem;padding-left:5px;white-space:nowrap;overflow:hidden;line-height:1.15}
+:is(#blkEd,#peEd) .brt .bc small{display:block;font-size:.58rem;font-weight:700;color:var(--muted)}
+:is(#blkEd,#peEd) .brt .bc.loop{opacity:.42}
+:is(#blkEd,#peEd) .bmain{display:flex}
+:is(#blkEd,#peEd) .blabs{position:sticky;left:0;z-index:4;width:var(--lw);flex:none;background:var(--surface);border-right:1px solid var(--line)}
+:is(#blkEd,#peEd) .blabs span{height:var(--rh);display:flex;align-items:center;padding-left:8px;font-size:.62rem;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;box-sizing:border-box}
+:is(#blkEd,#peEd) .blabs span.mel{color:color-mix(in srgb,var(--ink) 70%,transparent);background:color-mix(in srgb,var(--ink) 5%,transparent)}
+:is(#blkEd,#peEd) .blabs span.mel1{border-bottom:1.5px solid color-mix(in srgb,var(--ink) 35%,transparent)}
+:is(#blkEd,#peEd) .broll{position:relative;flex:none;touch-action:pan-x pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+:is(#blkEd,#peEd) .bmel{position:absolute;left:0;right:0;top:0;background:color-mix(in srgb,var(--ink) 5%,transparent);border-bottom:1.5px solid color-mix(in srgb,var(--ink) 35%,transparent);pointer-events:none}
+:is(#blkEd,#peEd) .bseg{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--c) 13%,transparent);border-left:2px solid var(--c);box-sizing:border-box;pointer-events:none}
+:is(#blkEd,#peEd) .bseg.cur{background:color-mix(in srgb,var(--c) 24%,transparent)}
+:is(#blkEd,#peEd) .bseg.loop{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c) 9%,transparent) 0 6px,transparent 6px 12px);border-left-style:dashed}
+:is(#blkEd,#peEd) .prn{touch-action:none}
+:is(#blkEd,#peEd) .prn.loop{opacity:.3;pointer-events:none}
+:is(#blkEd,#peEd) .prn.gh{background:var(--surface);border-style:dashed;border-radius:6px;opacity:.9}
+:is(#blkEd,#peEd) .prn.gh b{display:none}
+:is(#blkEd,#peEd) .bph{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);pointer-events:none;z-index:3}
 #blkEd .bsub{padding:6px 16px 0;font-size:.7rem;color:var(--muted);line-height:1.5;margin:0}
 #blkEd #blkHelp{padding-bottom:4px}
 #blkEd .bbot{position:relative}
@@ -716,7 +716,7 @@ const UNDO_SVG='<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="tru
 #blkMenu .bvel{display:flex;align-items:center;gap:8px;padding:6px 10px;font-weight:800;font-size:.84rem}
 #blkMenu .bvel b{min-width:2.2em;text-align:right}
 #blkMenu .bvel input{width:min(52vw,220px)}
-#blkEd .bhdl{position:absolute;z-index:4;width:24px;height:24px;margin:calc((var(--rh) - 24px)/2) 0 0 -12px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-size:.72rem;font-weight:900;font-style:normal;touch-action:none;box-shadow:0 0 0 2px var(--surface)}
+:is(#blkEd,#peEd) .bhdl{position:absolute;z-index:4;width:24px;height:24px;margin:calc((var(--rh) - 24px)/2) 0 0 -12px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-size:.72rem;font-weight:900;font-style:normal;touch-action:none;box-shadow:0 0 0 2px var(--surface)}
 #blkEd .bdeco .bdx{float:right;margin-top:6px}
 #blkEd .bdeco{position:absolute;left:0;right:0;bottom:100%;z-index:7;max-height:48vh;overflow:auto;padding:2px 16px 12px;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -10px 24px rgba(10,14,20,.14)}
 #blkEd .bdeco h3{font-size:.8rem}
@@ -744,8 +744,8 @@ body.blkset .scrim{z-index:43}
   document.body.appendChild(el); }
 function blkPlayIco(){ const b=$('blkPlay'); if(b){ b.innerHTML=playing?STOP_SVG:PLAY_SVG; b.setAttribute('aria-label',playing?'止める':'再生'); } }
 // コードの楽器はメロディ行をいつも出しておく（はじめはスクロールで上に隠れている）
-const blkMel=()=>!isDrumK(BLKE.kind)&&!isBassK(BLKE.kind);
-function blkRows(){ const k=BLKE.kind; return isDrumK(k)?DRUM_ROWS:isBassK(k)?BASS_ROWS:[...MEL_ROWS,...KEY_ROWS]; }
+const blkMel=()=>!PE&&!isDrumK(BLKE.kind)&&!isBassK(BLKE.kind);
+function blkRows(){ const k=BLKE.kind; if(PE) return peBlkRows(); return isDrumK(k)?DRUM_ROWS:isBassK(k)?BASS_ROWS:[...MEL_ROWS,...KEY_ROWS]; }
 const blkDraw=()=>!!(PR.blkLock||(BLKE&&BLKE.hold));   // 鉛筆（音を置く・消す）か、選ぶか
 const sceneLen=k=>{ const L=scenesOf(patKind); return L?((L.find(x=>x[0]===k)||[0,0,16])[2]):16; };
 // 場面の音（読むだけ。ない場面を作らない）
@@ -799,7 +799,7 @@ function drawBlk(){ if(!BLKE) return; const kind=BLKE.kind, rows=blkRows(), L=sl
     segs+=`<div class="bseg${s.loop?' loop':s.key===c?' cur':''}" style="left:${s.x0*BSW}px;width:${s.len*BSW}px;--c:${s.c}"></div>`;
     notesOfScene(s.key).forEach((n,i)=>{ if(n.st<s.off||n.st>=s.off+s.len) return; const y=ri(n.r); if(y<0) return;
       const w=isDrum?1:Math.min(n.len, s.off+s.len-n.st);
-      notes+=`<i class="prn${isDrum?' dr':''}${s.loop?' loop':PR.selSet.has(n)?' sel':''}${n.fall?' fall':''}${n.up?' up':''}${n.oc<0?' ocd':n.oc>0?' ocu':''}${n.when?' cond':''}${n.gh?' gh':''}" data-s="${si}" data-i="${i}" style="left:${(s.x0+n.st-s.off)*BSW}px;width:${Math.max(isDrum?0:n.gh?10:5,w*BSW)}px;top:calc(${y} * var(--rh));--v:${n.vel}"><b style="height:${Math.round(n.vel*100)}%"></b></i>`; }); });
+      notes+=`<i class="prn${isDrum?' dr':''}${s.loop?' loop':PR.selSet.has(n)?' sel':''}${n.fall?' fall':''}${n.scoop?' scoop':''}${n.up?' up':''}${n.oc<0?' ocd':n.oc>0?' ocu':''}${n.when?' cond':''}${n.gh?' gh':''}" data-s="${si}" data-i="${i}" style="left:${(s.x0+n.st-s.off)*BSW}px;width:${Math.max(isDrum?0:n.gh?10:5,w*BSW)}px;top:calc(${y} * var(--rh));--v:${n.vel};--dy:${isDrum?0:bDy(n)}" title="強さ ${Math.round(n.vel*127)}"><b style="height:${Math.round(n.vel*100)}%"></b>${isDrum?'':bMark(n)}</i>`; }); });
   { const si=BLKE.act[PR.scene], s=BSEGS[si], ln=BLKE.last;   // ⇔：最後に選んだ音の右はし（選んだ音の長さを変える）
     if(!isDrum && s && ln && PR.selSet.has(ln) && !blkDraw() && ln.st>=s.off && ln.st<s.off+s.len && ri(ln.r)>=0)
       notes+=`<i class="bhdl" style="left:${(s.x0+ln.st-s.off+Math.min(ln.len,s.off+s.len-ln.st))*BSW}px;top:calc(${ri(ln.r)} * var(--rh))">⇔</i>`; }
@@ -886,7 +886,7 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
     else if(BD.mode==='move'){ const wOf=o=>isDrum?1:Math.min(o.len,hi-lo), dmin=Math.max(...BD.g.map(o=>lo-o.st)), dmax=Math.min(...BD.g.map(o=>hi-wOf(o)-o.st)), d=Math.max(dmin,Math.min(dmax,ds));
       const ok=BD.g.every(o=>o.ri>=0), rmin=ok?-Math.min(...BD.g.map(o=>o.ri)):0, rmax=ok?rows.length-1-Math.max(...BD.g.map(o=>o.ri)):0, dr=Math.max(rmin,Math.min(rmax,Math.round(dy/BRH)));
       BD.g.forEach((o,k)=>{ const n=o.n; n.st=o.st+d; if(o.el) o.el.style.left=((s.x0+n.st-s.off)*BSW)+'px';
-        if(ok){ const r=String(rows[o.ri+dr][0]); if(String(n.r)!==r){ n.r=r; if(o.n===BD.n) previewRow(r,n.vel); } if(o.el) o.el.style.top=`calc(${o.ri+dr} * var(--rh))`; } }); } };
+        if(ok){ const r=String(rows[o.ri+dr][0]); if(r[0]!=='_' && String(n.r)!==r){ n.r=r; if(o.n===BD.n) previewRow(r,n.vel); } if(o.el) o.el.style.top=`calc(${o.ri+dr} * var(--rh))`; } }); } };
   const up=e=>{ if(BD && BD.add && e && BD.add.pid===e.pointerId){ const n=BD.add.n; BD.add=null;   // 押さえている音に、ほかの音を足す（もう一度で外す）
       PR.selSet.add(BD.n); if(PR.selSet.has(n)&&n!==BD.n) PR.selSet.delete(n); else PR.selSet.add(n); BD.multi=true; BLKE.last=n; paint(); return; }
     if(!BD||(e&&BD.pid!==e.pointerId)) return; const D=BD; BD=null; clearTimeout(D.lp);
@@ -904,7 +904,7 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
           const list=curNotes(), add=C.notes.map(n=>({...n, st:st+n.st})).filter(n=>n.st<s.off+s.len && ridx(n.r)>=0);
           add.forEach(n=>{ if(!isDrum) n.len=Math.min(n.len, s.off+s.len-n.st); list.push(n); }); PR.selSet=new Set(add); BLKE.last=add[add.length-1]; commitNotes(); }]]);
         return; }
-      const key=String(rows[D.p.row][0]); toScene(s);
+      const key=String(rows[D.p.row][0]); if(key[0]==='_') return; toScene(s);
       const list=curNotes(), nx=Math.min(s.off+s.len,...list.filter(x=>String(x.r)===key&&x.st>st).map(x=>x.st));
       const n={r:key, st, len:isDrum?1:Math.max(Math.min(g,nx-st),Math.min(PR.lastLen[patKind]||2, nx-st)), vel:.8}; list.push(n); previewRow(key,n.vel);
       if(isDeg(key)) curMy().melody=true;   // メロディ行を使った（いままでの編集画面との互換のため）
@@ -914,7 +914,8 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
       if(D.multi){ drawBlk(); return; }
       if(D.tog){ if(PR.selSet.has(D.n)) PR.selSet.delete(D.n); else { PR.selSet.add(D.n); BLKE.last=D.n; } drawBlk(); return; }   // Ctrl＋クリック：選ぶ音に足す・外す
       // 選ぶ：タップで選ぶ。選んである音をもう一度タップでメニュー
-      if(D.was && e){ BLKE.last=D.n; drawBlk(); blkNoteMenu(e.clientX, e.clientY); return; }
+      if(D.was && e){ if(PE){ PR.selSet.clear(); drawBlk(); return; }   // 新しい編集画面：もう一度押すと外す（設定は右・下の枠）
+        BLKE.last=D.n; drawBlk(); blkNoteMenu(e.clientX, e.clientY); return; }
       PR.selSet=new Set([D.n]); BLKE.last=D.n; previewRow(D.n.r,D.n.vel); drawBlk(); return; }
     if(D.mode==='move'){ const G=new Set(D.g.map(o=>o.n));
       setCurNotes(curNotes().filter(x=>G.has(x) || !D.g.some(({n})=>String(x.r)===String(n.r) && (isDrum ? x.st===n.st : (x.st<n.st+n.len && x.st+x.len>n.st))))); }
@@ -924,7 +925,7 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
   // 行の名前を長押し：その高さの音をすべて選ぶ
   let lp=null; const labs=$('bScroll').querySelector('.blabs');
   labs.onpointerdown=e=>{ const sp=e.target.closest('span'); if(!sp||blkDraw()) return; const i=[...labs.children].indexOf(sp), x0=e.clientX, y0=e.clientY;
-    clearTimeout(lp); lp=setTimeout(()=>{ lp=null; const si=BLKE.act[BLKE.cur], s=BSEGS[si]; if(!s) return; const r=String(rows[i][0]);
+    clearTimeout(lp); lp=setTimeout(()=>{ lp=null; const si=BLKE.act[BLKE.cur], s=BSEGS[si]; if(!s) return; const r=String(rows[i][0]); if(r[0]==='_') return;
       const ns=notesOfScene(s.key).filter(n=>String(n.r)===r && n.st>=s.off && n.st<s.off+s.len); PR.scene=s.key; PR.selSet=new Set(ns); BLKE.last=ns[ns.length-1]; if(navigator.vibrate) try{ navigator.vibrate(15); }catch(_){} drawBlk(); },430);
     labs.onpointermove=ev=>{ if(Math.hypot(ev.clientX-x0,ev.clientY-y0)>8){ clearTimeout(lp); lp=null; } }; };
   labs.onpointerup=labs.onpointercancel=()=>{ clearTimeout(lp); lp=null; }; }
@@ -964,9 +965,9 @@ $('blkUndo').onclick=()=>{ histGo(-1); blkAfterHist(); }; $('blkRedo').onclick=(
 function blkAfterHist(){ if(!BLKE) return; PR.selSet.clear(); if(/^my\d+$/.test(patOf(BLKE.kind)||'') && curMy()){ renderTracks(); drawBlk(); } else hideBlk(); }
 function blkMark(){ trk.querySelectorAll('.dblk').forEach(x=>x.remove()); }
 function hideBlk(){ BLKE=null; BD=null; PR.selSet.clear(); $('blkEd').hidden=true; $('bScroll').innerHTML=''; renderAll(); renderTracks(); }
-function blkCancel(){ if(!BLKE) return; const o=JSON.parse(BLKE.snap);
+function blkCancel(){ if(PE) return peCancel(); if(!BLKE) return; const o=JSON.parse(BLKE.snap);
   Object.keys(state).forEach(k=>delete state[k]); Object.assign(state,o); rebuildMy(); save(); $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; applyMix(); ensureSounds(); hideBlk(); }
-function blkOk(){ if(!BLKE) return; const B=BLKE, list=listOf(B.kind), i=list.length-1;
+function blkOk(){ if(PE) return peOk(); if(!BLKE) return; const B=BLKE, list=listOf(B.kind), i=list.length-1;
   if(!B.wasMy && JSON.stringify(list[i])===B.copy && patOf(B.kind)==='my'+i){ list.pop(); setPatOf(B.kind,B.prev); rebuildMy(); save(); }
   else if(!B.wasMy && list[i]) toast(`自分用の演奏「${list[i].name}」にしました`);
   else if(B.reuse && JSON.stringify(curMy())===B.reuse){ setPatOf(B.kind,B.prev); rebuildMy(); save(); }   // 続きを開いただけで何も変えなければ、組み込みのパターンのまま
@@ -1186,7 +1187,7 @@ function bKeys(x,y){ const c=$('blkCtx'), K=[
     if(e.altKey && !e.ctrlKey && !e.metaKey) blkZoom(BSW, BRH*f, A); else blkZoom(BSW*f, BRH, A); },{passive:false}); }
 document.addEventListener('pointerdown',e=>{ const c=$('blkCtx'); if(!c.hidden && !c.contains(e.target)) bClose(); },true);
 // キーボード（ピアノロールが開いているとき）
-document.addEventListener('keydown',e=>{ if(!BLKE || $('blkEd').hidden || $('patSheet').classList.contains('inblk') || document.body.classList.contains('blkset')) return;
+document.addEventListener('keydown',e=>{ if(!BLKE || (PE ? !$('peSet').hidden : $('blkEd').hidden) || $('patSheet').classList.contains('inblk') || document.body.classList.contains('blkset')) return;
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && e.target.type!=='range') return;
   if(typeof PICK!=='undefined' && PICK) return;
   const c=$('blkCtx'), mod=e.ctrlKey||e.metaKey, k=e.key, kl=k.length===1?k.toLowerCase():k, g=blkGrid(), isDrum=isDrumK(BLKE.kind);
@@ -1246,6 +1247,10 @@ const BFX=[
   ['飾り（元の音へ戻る）',[['dnr','↓↑','下へ\n行って戻る','元→下→元'],['upr','↑↓','上へ\n行って戻る','元→上→元'],['grc','♪♭','半音下\nから','半音下から入る（装飾音）'],['grs','♪','上の音\nから','上の音から入る（装飾音）'],['trl','tr','トリル','上の音と交互']]]];
 const BDYN=[['pp',.25],['p',.4],['mp',.55],['mf',.7],['f',.85],['ff',1]];
 let BFOLD={}; try{ BFOLD=JSON.parse(localStorage.getItem('blkSideFold')||'{}')||{}; }catch(_){}
+// ロールでの見え方：音を下げる飾りは半行下に、上げる飾りは半行上にずらして見せる。飾りの印（↓1・♭など）は音の中に
+const BSHIFT={dn:.5,dn2:.5,cd:.5,pd:.5,su:-.5,su2:-.5,cu:-.5,pu:-.5,up:-.5};
+const bDy=n=>(n.oc||0)<0?.5:(n.oc||0)>0?-.5:(BSHIFT[bFxOf(n)]||0);
+const bMark=n=>{ const k=bFxOf(n), f=k&&k!=='fall'&&k!=='scoop'?((BFX.flatMap(x=>x[1]).find(x=>x[0]===k)||[])[1]||''):'', o=n.oc>0?'8va':n.oc<0?'8vb':''; const t=[o,f].filter(Boolean).join(' '); return t?`<s>${esc(t)}</s>`:''; };
 const bFxOf=n=>n.fall?'fall':n.up?'up':n.scoop?'scoop':n.nx?'nx':n.nt?n.nt:(nbKind(n)||'');
 function bSetFx(v){ const ns=selNotes(); if(!ns.length) return; const same=ns.every(x=>bFxOf(x)===v); if(same) v='';   // 同じものをもう一度押すと外す
   ns.forEach(x=>{ delete x.fall; delete x.up; delete x.dn; delete x.scoop; delete x.nx; delete x.nt;
