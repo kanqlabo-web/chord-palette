@@ -29,12 +29,19 @@ function mkReverb(){ const sr=ctx.sampleRate, n=Math.floor(sr*2.4), ir=ctx.creat
 function xChan(id){ const had=!!CHAN[id], c=mkChan(id); if(!had) applyMix(); return c.inp; }
 const XB={}; function xBus(k){ const t=(state.xtr||[])[k-2]; if(!t) return compBus2; const c=CHAN[t.id]||mkChan(t.id);
   if(!XB[t.id]){ XB[t.id]=ctx.createGain(); XB[t.id].connect(c.inp); applyMix(); } return XB[t.id]; }
+// 最後の音量の整え方：まとめる（軽いコンプ）→ 音割れ止め（リミッター）→ それでも越えた分だけ丸める。
+// ブラウザのコンプは自動で音量を持ち上げるため、そのぶんをすぐ後ろで下げてから次へ渡す
+const MASTER_CFG={trim:.5, glue:{th:-16,ratio:2.5,knee:8,atk:.006,rel:.18}, lim:{th:-4,ratio:20,knee:0,atk:.0015,rel:.09}, out:1};
+function mkMaster(inp){ const C=MASTER_CFG, mkC=o=>{ const c=ctx.createDynamicsCompressor(); c.threshold.value=o.th; c.ratio.value=o.ratio; c.knee.value=o.knee; c.attack.value=o.atk; c.release.value=o.rel; return c; };
+  const pre=ctx.createGain(); pre.gain.value=C.trim; const glue=mkC(C.glue), lim=mkC(C.lim), out=ctx.createGain(); out.gain.value=C.out;
+  const sc=ctx.createWaveShaper(), N=4096, cv=new Float32Array(N); for(let i=0;i<N;i++){ const x=(i/(N-1)*2-1)*2, a=Math.abs(x); cv[i]=Math.sign(x)*(a<.9?a:.9+.1*Math.tanh((a-.9)/.1)); } sc.curve=cv;
+  const half=ctx.createGain(); half.gain.value=.5;   // 丸める曲線は −2〜2 を受けるので、半分にしてから通す
+  inp.connect(pre); pre.connect(glue); glue.connect(lim); lim.connect(out); out.connect(half); half.connect(sc); return sc; }
 function ensureAudio(noResume){
   if(ctx && ctx.state==='closed') ctx=null;
   if(!ctx){
     ctx=new (window.AudioContext||window.webkitAudioContext)();
-    const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=4;
-    master=ctx.createGain(); master.gain.value=.85; master.connect(comp); comp.connect(ctx.destination); masterOut=comp;
+    master=ctx.createGain(); master.gain.value=.85; masterOut=mkMaster(master); masterOut.connect(ctx.destination);
     REVERB=mkReverb(); ECHO=mkEcho(); for(const k in CHAN) delete CHAN[k]; for(const k in XB) delete XB[k];
     compVol=mkChan('arp').inp; drumBus=mkChan('drum').inp; bassBus=mkChan('bass').inp;
     compVol2=mkChan('arp2').inp; compBus2=ctx.createGain(); compBus2.connect(compVol2);   // 楽器2（PRO）

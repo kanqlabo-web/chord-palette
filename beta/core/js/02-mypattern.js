@@ -460,9 +460,9 @@ const STYLES=[
   {id:2, name:'ロック', bpm:132, drum:'hard', arp:'hardrock', inst:'dist', kit:'power', bass:true},
   {id:3, name:'ギターポップ', bpm:120, drum:'rride', arp:'strum', inst:'eguitar', kit:'room', bass:true},
   {id:16, name:'弾き語り', bpm:92, drum:'none', arp:'strum', inst:'steel', kit:'std', bass:false},
-  {id:4, name:'バラード', bpm:80, lhOff:3, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true, mix:{arp:.78,drum:.72,bass:.78}},
-  {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
-  {id:17, name:'壮大', bpm:110, wide:true, drum:'epic', arp:'epic', inst:'strings3', arp2:'hornline', inst2:'horn', mix:{arp:1,arp2:1.1,drum:.25,bass:.75}, kit:'orch', bass:true, bassSnd:'ubass'},
+  {id:4, name:'バラード', bpm:80, lhOff:3, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true, mix:{arp:1.25,drum:1.15,bass:1.25}},
+  {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass', mix:{arp:1.35,drum:1.35,bass:1.35}},
+  {id:17, name:'壮大', bpm:110, wide:true, drum:'epic', arp:'epic', inst:'strings3', arp2:'hornline', inst2:'horn', mix:{arp:1.25,arp2:1.4,drum:.31,bass:.94}, kit:'orch', bass:true, bassSnd:'ubass'},
   {id:18, name:'シティポップ', bpm:100, rhOff:-3, lhOff:-3, rhOff2:-3, drum:'city', arp:'cityep', inst:'epcity', arp2:'brassobb', inst2:'brass3', kit:'city', bass:true, bassSnd:'slap3'},
   {id:9, name:'ファンキー', bpm:104, drum:'sixteen', arp:'clavfunk', inst:'clav', arp2:'brasshit', inst2:'brass3', kit:'std', bass:true},
   {id:11, name:'ジャジー', bpm:100, drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
@@ -472,7 +472,7 @@ const STYLES=[
   {id:12, name:'ボサノバ', bpm:140, drum:'bossa', arp:'bossa', inst:'nylon', kit:'brush', bass:true, bassSnd:'ubass'},
   {id:13, name:'レゲエ', bpm:80, drum:'reggae', arp:'skank', inst:'organ', kit:'std', bass:true},
   {id:20, name:'和風', bpm:88, drum:'wa', arp:'koto', inst:'koto', kit:'room', bass:true, bassSnd:'ubass'},
-  {id:14, name:'クラシック風', bpm:100, drum:'none', arp:'alberti', inst:'piano', kit:'std', bass:false},
+  {id:14, name:'クラシック風', bpm:100, drum:'none', arp:'alberti', inst:'piano', kit:'std', bass:false, mix:{arp:1.5}},
 ];
 // なくした伴奏（古い共有リンク用）：ゆったり・どっしり
 const OLD_STYLES={6:{drum:'medium', arp:'whole', inst:'pad', kit:'room', bass:true}, 7:{drum:'half', arp:'stacc', inst:'piano', kit:'power', bass:true}};

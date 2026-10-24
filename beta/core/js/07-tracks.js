@@ -28,7 +28,7 @@ const STYLE_FX={
   12:{arp:{pan:-.1,rev:.25,comp:.25}, drum:{pan:.15,rev:.2,comp:.2}, bass:{rev:.05,comp:.35}},
   13:{arp:{pan:.15,rev:.2,echo:.18,comp:.3}, drum:{rev:.12,comp:.4}, bass:{comp:.5,lo:.15,hi:-.15}},
   20:{arp:{rev:.35,echo:.12,comp:.2}, drum:{rev:.3,comp:.25}, bass:{rev:.1,comp:.35}},
-  14:{arp:{rev:.38,comp:.1}}};
+  14:{arp:{rev:.38,comp:.3}}};
 const FX_KEYS=['pan','rev','echo','comp','hi','lo'];
 // 伴奏スタイルを選んだら、そのミックスもトラックの設定に写す（音量はこれまでどおり st.mix から）
 { const ss=setStyle; setStyle=function(st){ ss(st); state.wide=true; state.drumOff=false;   // 左右の広がりは「広げる」が基本（共有リンクで開いた古い曲は、そのときの設定のまま）
