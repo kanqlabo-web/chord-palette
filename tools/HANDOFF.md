@@ -190,6 +190,7 @@
 - 5.22.011: 左右の広がりは「広げる」が基本（setStyle ラッパーと初期 state で wide:true。wide の記録がない古い保存・曲は false のまま。共有リンクはスタイルと違うときだけ w=0/1）。広がりが効かない音色は NO_WIDE（epcity・lofi・dist）で設定を隠す。通常モードは「2つ目の楽器」を選ばせない（part2Sec を隠す）。PRO の「楽器を足す」は選ぶ画面で決定したときだけ足す（ドラム・ベースはないときだけ候補）。トラックはすべて消せる：ドラムは state.drumOff（applyMix で音量0、trackList から外す。drum==='none' も外す）、コード1はコード2を繰り上げ（最後の1つは消せない）。PRO のパターン選びに「なし」はない。
 - 5.22.012: 楽器の絵は音色ごと（07-tracks の SICO：音色キー、kit:キー、bs:キー。icoInst/icoKit/icoBass/tkIco）。分類は INST_GROUPS（1つだけの分類は作らない）、KIT_GROUPS＝生ドラム／電子ドラム。伴奏スタイルの選ぶ画面は live='play'（タップで適用して裏で再生、✕で元に戻す）。ベースの音も pickRow＋選ぶ画面（bassSndRow を上書き）。「楽器を足す」にドラム・ベースの分類を常に出す（すでにあれば1つまでと表示）。DAW の並びはコード→ベース→ドラム。
 - 5.22.013: ドラム・ベースも2つ以上（state.xtr に type:'drum'{drum,kit} / type:'bass'{bassPat,bassSnd}）。鳴らす：xDrumStep（チャンネル xChan(id)）、ベースは withPart の type==='bass' 分岐（NO_KEYS でコードを鳴らさず、ベースの状態をパートごとに保存）。画面：xType/isDrumK/isBassK、patOf/setPatOf/listOf が type を見る。描画などの同期処理は withTrk(kind,f)（その場でメインと入れ替えてすぐ戻す）。保存は xtr に myDrum/myBass も入れる。
+<<<<<<< Updated upstream
 - 5.22.014〜（初めての人目線の見直し、β）: タイトル画面に「iPhoneで音が出ないときは消音モードを解除」。05-tutorial.js も beta-src に置いた（いつもの版へ移すときは丸ごと）。
   - レベル1・2でも伴奏の帯と BPM の場所は空けておく（03-ui の `.accOff`＝visibility:hidden。画面の形をそろえ、パレットの大きさがレベルで変わらない）。チュートリアルの吹き出しはそこ（マスの下）に出る。**パレットの大きさは変えない**（ユーザーの指示）
   - 設定の「コードの切り替え（1マスの長さ）」と「数字の書き方」は全レベルクリアまで隠す（使っている値なら出す）
@@ -197,3 +198,11 @@
   - 王道進行の E7 の一文を削除（レベル8の内容）。レベル3の「BPM」は「テンポ」に
   - パレットの「(S)」＝ときどきその役割にもなる。6m は T(S)、7dim は D(S)（ユーザーの指示）。説明はレベル2「7つのコードの役割」と設定の「色の意味」
 - 5.23.004（β）: 日本語の改行を文節で（`beta-src/js/09-phrase.js`）。Intl.Segmenter で語に分け、ひらがな・句読点・閉じかっこで始まる語は前につなげて、文節の切れ目にだけ `<wbr>` を入れる（MutationObserver で後から描いた所にも）。body は `word-break:keep-all; overflow-wrap:anywhere`（Safari は auto-phrase が使えないため）。設定メニューなどの長い説明は短くした（ユーザー「説明が長すぎる」）。新しい説明もなるべく1〜2文で
+=======
+- 5.22.014: マイパターンの画面（#patSheet の音を置く所）は使わない。openPatEditor・editTrackPattern は openBlk に差し替え（mode 'new'/'copy' も openBlk の6番目の引数）。ピアノロール #blkEd：
+  - コードの楽器はメロディ行（MEL_ROWS）をいつも出し、初めは scrollTop で上に隠す（下端が少し見える）。メロ行に置くと curMy().melody=true（旧画面との互換用、鳴り方は変わらない）。
+  - BSW・BRH は let（−・＋ボタン、2本指で拡大・縮小。指を動かしている間は transform だけ、離してから drawBlk。描き直すと指の下の要素が消えて touch イベントが届かなくなるため）。
+  - 同じ場面は1か所だけ編集できる（BLKE.act[key]＝BSEGS の番号、blkAct）。ほかは .loop（うすく、触れない）。ダブルタップでそこを編集する所に。
+  - 鉛筆と鍵（ガレバン式）：PR.blkLock＝鍵（ずっと鉛筆）、BLKE.hold＝鉛筆を押している間だけ鉛筆。鉛筆はタップで鍵の切りかえ。鉛筆＝タップで置く・消す、外す＝タップで選ぶ・長押ししてなぞって囲む・選んだ音をまとめて動かす。選んだ音は下のバーで「飾り・強さ」（fallRow を #blkDeco の #prFall に描く）・消す・外す。
+  - 「設定」＝#patSheet に .inblk を付けて開く（音を置く所を隠し、名前・リズムなどの設定だけ）。閉じると drawBlk。元に戻す・やり直すは histGo。
+>>>>>>> Stashed changes
