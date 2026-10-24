@@ -647,6 +647,9 @@ function dawPage(){ if(trk.hidden) return; const bw=parseFloat(trk.style.getProp
 // マイパターンの画面は使わない（名前・リズムなどの設定だけ「設定」から開く）
 let BLKE=null, BSEGS=[], BD=null, PINCH=null;
 let BSW=18, BRH=30;   // 16分1つの幅・1行の高さ（拡大・縮小で変わる）
+const BSW_MAX=144, GHOST_LEN=.25;
+// マス目の細かさ（16分＝1）：拡大するほど細かく。ドラムは16分のまま
+const blkGrid=()=>!BLKE||isDrumK(BLKE.kind)?1:BSW>=72?.25:BSW>=36?.5:1;
 const BLW=78, BRUL=44;   // 左の行の名前の幅・上の目盛りの高さ
 PR.blkLock=false;   // 鉛筆の固定（ガレージバンドと同じく、ふだんは「選ぶ」。鉛筆は描き込むときだけ）
 const PEN_SVG='<svg width="19" height="19" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 16l.9-3.6L13 4.3l2.7 2.7-8.1 8.1z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M11.3 6l2.7 2.7" stroke="currentColor" stroke-width="1.7"/></svg>';
@@ -693,6 +696,8 @@ const UNDO_SVG='<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="tru
 #blkEd .bseg.loop{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c) 9%,transparent) 0 6px,transparent 6px 12px);border-left-style:dashed}
 #blkEd .prn{touch-action:none}
 #blkEd .prn.loop{opacity:.3;pointer-events:none}
+#blkEd .prn.gh{background:var(--surface);border-style:dashed;border-radius:6px;opacity:.9}
+#blkEd .prn.gh b{display:none}
 #blkEd .bph{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);pointer-events:none;z-index:3}
 #blkEd .bsub{padding:6px 16px 0;font-size:.7rem;color:var(--muted);line-height:1.5;margin:0}
 #blkEd #blkHelp{padding-bottom:4px}
@@ -787,12 +792,12 @@ function drawBlk(){ if(!BLKE) return; const kind=BLKE.kind, rows=blkRows(), L=sl
     segs+=`<div class="bseg${s.loop?' loop':s.key===c?' cur':''}" style="left:${s.x0*BSW}px;width:${s.len*BSW}px;--c:${s.c}"></div>`;
     notesOfScene(s.key).forEach((n,i)=>{ if(n.st<s.off||n.st>=s.off+s.len) return; const y=ri(n.r); if(y<0) return;
       const w=isDrum?1:Math.min(n.len, s.off+s.len-n.st);
-      notes+=`<i class="prn${isDrum?' dr':''}${s.loop?' loop':PR.selSet.has(n)?' sel':''}${n.fall?' fall':''}${n.up?' up':''}${n.oc<0?' ocd':n.oc>0?' ocu':''}${n.when?' cond':''}" data-s="${si}" data-i="${i}" style="left:${(s.x0+n.st-s.off)*BSW}px;width:${w*BSW}px;top:calc(${y} * var(--rh));--v:${n.vel}"><b style="height:${Math.round(n.vel*100)}%"></b></i>`; }); });
+      notes+=`<i class="prn${isDrum?' dr':''}${s.loop?' loop':PR.selSet.has(n)?' sel':''}${n.fall?' fall':''}${n.up?' up':''}${n.oc<0?' ocd':n.oc>0?' ocu':''}${n.when?' cond':''}${n.gh?' gh':''}" data-s="${si}" data-i="${i}" style="left:${(s.x0+n.st-s.off)*BSW}px;width:${Math.max(isDrum?0:n.gh?10:5,w*BSW)}px;top:calc(${y} * var(--rh));--v:${n.vel}"><b style="height:${Math.round(n.vel*100)}%"></b></i>`; }); });
   { const si=BLKE.act[PR.scene], s=BSEGS[si], ln=BLKE.last;   // ⇔：最後に選んだ音の右はし（選んだ音の長さを変える）
     if(!isDrum && s && ln && PR.selSet.has(ln) && !blkDraw() && ln.st>=s.off && ln.st<s.off+s.len && ri(ln.r)>=0)
       notes+=`<i class="bhdl" style="left:${(s.x0+ln.st-s.off+Math.min(ln.len,s.off+s.len-ln.st))*BSW}px;top:calc(${ri(ln.r)} * var(--rh))">⇔</i>`; }
   const sc=$('bScroll'), sl=sc.scrollLeft, stp=sc.scrollTop; sc.style.setProperty('--rh',BRH+'px');
-  const bg=`repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 40%,transparent) 0 1.5px,transparent 1.5px ${BSW*16}px),repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px ${BSW*4}px),repeating-linear-gradient(180deg,transparent 0 ${BRH-1}px,var(--line) ${BRH-1}px ${BRH}px)`;
+  const G=blkGrid(), bg=`repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 40%,transparent) 0 1.5px,transparent 1.5px ${BSW*16}px),repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px ${BSW*4}px),repeating-linear-gradient(90deg,color-mix(in srgb,var(--line) 70%,transparent) 0 1px,transparent 1px ${BSW}px),${G<1?`repeating-linear-gradient(90deg,color-mix(in srgb,var(--line) 40%,transparent) 0 1px,transparent 1px ${BSW*G}px),`:''}repeating-linear-gradient(180deg,transparent 0 ${BRH-1}px,var(--line) ${BRH-1}px ${BRH}px)`;
   const ML=MEL_ROWS.length;
   sc.innerHTML=`<div style="width:${BLW+W}px;${mel?`min-height:${sc.clientHeight+Math.round((ML-.45)*BRH)}px`:''}"><div class="bruler"><div class="bcorner"></div><div class="brt" style="width:${W}px">${ru}</div></div>
     <div class="bmain"><div class="blabs">${rows.map(([,l],i)=>`<span class="${mel&&i<ML?'mel'+(i===ML-1?' mel1':''):''}">${l}</span>`).join('')}</div><div class="broll" id="bRoll" style="width:${W}px;height:${rows.length*BRH}px;background-image:${bg}">${mel?`<div class="bmel" style="height:${ML*BRH}px"></div>`:''}${segs}${notes}<div class="bph" id="bPh" hidden></div></div></div></div>`;
@@ -831,8 +836,11 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
   const toScene=s=>{ if(PR.scene!==s.key) PR.selSet.clear(); BLKE.cur=s.key; PR.scene=s.key; };
   const paint=()=>{ roll.querySelectorAll('.prn:not(.loop)').forEach(el=>el.classList.toggle('sel',PR.selSet.has(noteOf(el)))); const h=roll.querySelector('.bhdl'); if(h) h.remove(); };
   const grab=(D,g)=>{ D.g=g.map(x=>({n:x, st:x.st, len:x.len, ri:ridx(x.r), el:elOf(D.si,x)})); };
-  roll.onpointerdown=e=>{ if(PINCH) return; blkMenuClose();
+  roll.onpointerdown=e=>{ if(PINCH) return; blkMenuClose(); if(e.pointerType==='mouse' && e.button!==0) return;   // 右クリックは自分のメニュー（blkCtx）
     const el=e.target.closest('.prn'), draw=blkDraw();
+    // マウス：Shift／Ctrl＋クリックで、選ぶ音に足す・外す
+    if(el && !draw && !BD && e.pointerType==='mouse' && (e.shiftKey||e.ctrlKey||e.metaKey)){ const n=noteOf(el); if(!n) return; const s=BSEGS[+el.dataset.s]; toScene(s);
+      if(PR.selSet.has(n)) PR.selSet.delete(n); else { PR.selSet.add(n); BLKE.last=n; } drawBlk(); return; }
     if(BD){ const other=BD.pid!==e.pointerId;
       // 音を押さえたまま、ほかの音をタップ：選ぶ音に足す（もう一度で外す）
       // （離したときに足す。2本指で拡大しはじめたときは足さない）
@@ -844,11 +852,11 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
     if(el){ e.preventDefault(); try{ roll.setPointerCapture(e.pointerId); }catch(_){} const si=+el.dataset.s, s=BSEGS[si], n=noteOf(el); if(!n) return;
       toScene(s); BD={mode:'press', pid:e.pointerId, s, si, n, draw, sx:e.clientX, sy:e.clientY, was:PR.selSet.has(n), t0:Date.now()};
       grab(BD, (!draw && PR.selSet.has(n)) ? selNotes() : [n]); }
-    else { BD={mode:'tap', pid:e.pointerId, sx:e.clientX, sy:e.clientY, p:pos(e), draw};
+    else { BD={mode:'tap', pid:e.pointerId, sx:e.clientX, sy:e.clientY, p:pos(e), draw, mouse:e.pointerType==='mouse'}; if(BD.mouse) try{ roll.setPointerCapture(e.pointerId); }catch(_){}
       if(!draw) BD.lp=setTimeout(()=>{ if(BD&&BD.mode==='tap'){ BD.mode='rect'; BD.p0=BD.p; if(navigator.vibrate) try{ navigator.vibrate(15); }catch(_){} } },430); } };   // 何もない所を長押し：囲んで選ぶ
   let rectEl=null;
   roll.onpointermove=e=>{ if(!BD||BD.pid!==e.pointerId) return; const dx=e.clientX-BD.sx, dy=e.clientY-BD.sy, far=Math.hypot(dx,dy)>6;
-    if(BD.mode==='tap'){ if(far){ clearTimeout(BD.lp); BD=null; } return; }
+    if(BD.mode==='tap'){ if(!far) return; clearTimeout(BD.lp); if(BD.mouse && !BD.draw){ BD.mode='rect'; BD.p0=BD.p; } else { BD=null; return; } }   // マウスは、何もない所からドラッグですぐ囲んで選ぶ
     if(BD.mode==='rect'){ const p=pos(e), a=BD.p0, x0=Math.min(a.px,p.px), x1=Math.max(a.px,p.px), y0=Math.min(a.py,p.py), y1=Math.max(a.py,p.py);
       if(!rectEl){ rectEl=document.createElement('div'); rectEl.className='prrect'; roll.appendChild(rectEl); }
       Object.assign(rectEl.style,{left:x0+'px',top:y0+'px',width:(x1-x0)+'px',height:(y1-y0)+'px'});
@@ -860,9 +868,12 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
     if(BD.mode==='press' && far){ if(BD.draw||BD.multi){ BD.mode='none'; return; }   // 鉛筆は置く・消すだけ
       BD.mode='move'; if(!BD.was){ PR.selSet=new Set([BD.n]); } BLKE.last=BD.n; paint(); }   // 選んでいない音をドラッグ：その音を選んで動かす
     if(BD.mode==='none') return;
-    const {s}=BD, lo=s.off, hi=s.off+s.len, ds=Math.round(dx/BSW);
+    const {s}=BD, lo=s.off, hi=s.off+s.len, g=blkGrid(), ds=Math.round(dx/BSW/g)*g;
     if(BD.mode==='resize') BD.g.forEach(o=>{ const n=o.n, nx=Math.min(hi,...notesOfScene(s.key).filter(x=>x!==n&&String(x.r)===String(n.r)&&x.st>n.st).map(x=>x.st));
-      n.len=Math.max(1,Math.min(nx-n.st, o.len+ds)); if(o.el) o.el.style.width=(Math.min(n.len,hi-n.st)*BSW)+'px'; });
+      // いちばん短くしたあと、さらに左へ縮めるとゴーストノート（ごく短く・弱く）。のばすと元にもどる
+      const mn=Math.min(g,o.len), raw=o.len+dx/BSW;
+      if(raw<mn*.5){ n.gh=true; n.len=Math.min(mn,GHOST_LEN); } else { delete n.gh; n.len=Math.max(mn,Math.min(nx-n.st, o.len+ds)); }
+      if(o.el){ o.el.style.width=Math.max(n.gh?10:5,Math.min(n.len,hi-n.st)*BSW)+'px'; o.el.classList.toggle('gh',!!n.gh); } });
     else if(BD.mode==='move'){ const wOf=o=>isDrum?1:Math.min(o.len,hi-lo), dmin=Math.max(...BD.g.map(o=>lo-o.st)), dmax=Math.min(...BD.g.map(o=>hi-wOf(o)-o.st)), d=Math.max(dmin,Math.min(dmax,ds));
       const ok=BD.g.every(o=>o.ri>=0), rmin=ok?-Math.min(...BD.g.map(o=>o.ri)):0, rmax=ok?rows.length-1-Math.max(...BD.g.map(o=>o.ri)):0, dr=Math.max(rmin,Math.min(rmax,Math.round(dy/BRH)));
       BD.g.forEach((o,k)=>{ const n=o.n; n.st=o.st+d; if(o.el) o.el.style.left=((s.x0+n.st-s.off)*BSW)+'px';
@@ -877,7 +888,7 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
       if(!s){ if(D.draw) toast('ここにはコードがありません'); else if(PR.selSet.size){ PR.selSet.clear(); drawBlk(); } return; }
       if(s.loop){ if(dbl){ BLKE.act[s.key]=BSEGS.indexOf(s); BLKE.cur=s.key; PR.scene=s.key; PR.selSet.clear(); BLKE.lastTap=null; drawBlk(); }   // ダブルタップ：ここを編集する所に
         else BLKE.tapT=setTimeout(()=>toast('うすい所は、同じ弾き方のくり返しです。ダブルタップでここを編集できます'),420); return; }
-      const st=s.off+Math.floor(D.p.x-s.x0);
+      const g=blkGrid(), st=s.off+Math.floor((D.p.x-s.x0)/g+1e-6)*g;
       if(!D.draw){   // 選ぶ：何もない所をタップで選択を外す。何も選んでいなくてコピーした音があれば「貼り付け」
         if(PR.selSet.size){ PR.selSet.clear(); drawBlk(); return; }
         const C=PR.clip; if(C && C.fam===blkFam(BLKE.kind) && e) blkMenu(e.clientX,e.clientY,[['貼り付け',()=>{ blkMenuClose(); toScene(s);
@@ -886,7 +897,7 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
         return; }
       const key=String(rows[D.p.row][0]); toScene(s);
       const list=curNotes(), nx=Math.min(s.off+s.len,...list.filter(x=>String(x.r)===key&&x.st>st).map(x=>x.st));
-      const n={r:key, st, len:isDrum?1:Math.max(1,Math.min(PR.lastLen[patKind]||2, nx-st)), vel:.8}; list.push(n); previewRow(key,n.vel);
+      const n={r:key, st, len:isDrum?1:Math.max(Math.min(g,nx-st),Math.min(PR.lastLen[patKind]||2, nx-st)), vel:.8}; list.push(n); previewRow(key,n.vel);
       if(isDeg(key)) curMy().melody=true;   // メロディ行を使った（いままでの編集画面との互換のため）
       commitNotes(); return; }
     if(D.mode==='press'){
@@ -897,7 +908,7 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
       PR.selSet=new Set([D.n]); BLKE.last=D.n; previewRow(D.n.r,D.n.vel); drawBlk(); return; }
     if(D.mode==='move'){ const G=new Set(D.g.map(o=>o.n));
       setCurNotes(curNotes().filter(x=>G.has(x) || !D.g.some(({n})=>String(x.r)===String(n.r) && (isDrum ? x.st===n.st : (x.st<n.st+n.len && x.st+x.len>n.st))))); }
-    else if(D.mode==='resize' && !isDrum && D.n) PR.lastLen[patKind]=D.n.len;
+    else if(D.mode==='resize' && !isDrum && D.n && !D.n.gh) PR.lastLen[patKind]=D.n.len;
     commitNotes(); };
   roll.onpointerup=up; roll.onpointercancel=e=>{ if(BD&&BD.pid===e.pointerId&&(BD.mode==='tap'||BD.mode==='rect')){ clearTimeout(BD.lp); if(rectEl){ rectEl.remove(); rectEl=null; } BD=null; } else up(e); };
   // 行の名前を長押し：その高さの音をすべて選ぶ
@@ -908,7 +919,7 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
     labs.onpointermove=ev=>{ if(Math.hypot(ev.clientX-x0,ev.clientY-y0)>8){ clearTimeout(lp); lp=null; } }; };
   labs.onpointerup=labs.onpointercancel=()=>{ clearTimeout(lp); lp=null; }; }
 // 拡大・縮小（2本指、または −・＋）。指のまん中（ボタンは画面のまん中）の位置をそのままに
-function blkZoom(w,h,A){ w=Math.max(7,Math.min(48,w)); h=Math.max(20,Math.min(54,h)); if(Math.abs(w-BSW)<.2 && Math.abs(h-BRH)<.2) return;
+function blkZoom(w,h,A){ w=Math.max(7,Math.min(BSW_MAX,w)); h=Math.max(20,Math.min(54,h)); if(Math.abs(w-BSW)<.2 && Math.abs(h-BRH)<.2) return;
   BSW=w; BRH=h; const sc=$('bScroll'); drawBlk(); sc.scrollLeft=A.ux*BSW-A.cx+BLW; sc.scrollTop=A.uy*BRH-A.cy+BRUL; }
 function blkAnchor(cx,cy){ const sc=$('bScroll'); return {cx, cy, ux:(sc.scrollLeft+cx-BLW)/BSW, uy:(sc.scrollTop+cy-BRUL)/BRH}; }
 { const sc=$('bScroll'); let want=null;
@@ -921,7 +932,7 @@ function blkAnchor(cx,cy){ const sc=$('bScroll'); return {cx, cy, ux:(sc.scrollL
   document.addEventListener('touchmove',e=>{ if(!PINCH || e.touches.length<2) return; if(e.cancelable) e.preventDefault(); const [a,b]=e.touches, [dx,dy]=dist(a,b), P=PINCH;
     const both=Math.hypot(dx,dy)/Math.max(1,P.d), fx=P.dx>50?dx/P.dx:(P.dy>50?1:both), fy=P.dy>50?dy/P.dy:(P.dx>50?1:both);   // 横に開けば横、縦に開けば縦
     // 指を動かしているあいだは見た目だけ拡大（描き直すと指の下の要素が消えて、指の動きが届かなくなるため）。離したら描き直す
-    const w=Math.max(7,Math.min(48,P.w*fx)), h=Math.max(20,Math.min(54,P.h*fy)), in_=sc.firstElementChild; want=[w,h];
+    const w=Math.max(7,Math.min(BSW_MAX,P.w*fx)), h=Math.max(20,Math.min(54,P.h*fy)), in_=sc.firstElementChild; want=[w,h];
     if(in_){ in_.style.transformOrigin=`${P.A.cx+P.sl}px ${P.A.cy+P.st}px`; in_.style.transform=`scale(${w/P.w},${h/P.h})`; } },{passive:false});
   const end=()=>{ const P=PINCH; PINCH=null; if(!P||!want) return; const w=want; want=null; const in_=sc.firstElementChild; if(in_) in_.style.transform='';
     if(BLKE) blkZoom(w[0],w[1],P.A); };
@@ -1040,3 +1051,139 @@ function delMyPat(kind,key){ const typ=k=>isDrumK(k)?'d':isBassK(k)?'b':'a', T=t
 .tpi>span:not(.tpdel){flex:1;min-width:0}
 #pickScr .tpi .tpdel,.tpi .tpdel{flex:none!important}
 .tpi .tpdel[data-armed]{background:var(--d);border-color:var(--d);color:#fff}`; document.head.appendChild(st); }
+// ---------- ピアノロール：パソコン用（右クリックのメニュー・ショートカット・ホイールで拡大） ----------
+{ const st=document.createElement('style'); st.textContent=`#blkCtx{position:fixed;z-index:47;min-width:230px;max-width:min(92vw,300px);max-height:calc(100vh - 16px);overflow:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:5px;box-shadow:0 10px 30px rgba(10,14,20,.22);font-size:.84rem}
+#blkCtx[hidden]{display:none}
+#blkCtx.wide{max-width:min(94vw,480px)}
+#blkCtx button.ci{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:inherit;font:inherit;font-weight:700;text-align:left;padding:7px 10px;border-radius:8px;cursor:pointer}
+#blkCtx button.ci:hover,#blkCtx button.ci:focus-visible{background:color-mix(in srgb,var(--ink) 7%,transparent);outline:none}
+#blkCtx button.ci span{flex:1}
+#blkCtx kbd{font:inherit;font-size:.72rem;font-weight:700;color:var(--muted)}
+#blkCtx button.ci.on::before{content:'✓';margin-right:-4px}
+#blkCtx hr{border:0;border-top:1px solid var(--line);margin:4px 6px}
+#blkCtx .ch{font-size:.7rem;font-weight:800;color:var(--muted);padding:6px 10px 2px}
+#blkCtx .crow{display:flex;flex-wrap:wrap;gap:4px;padding:3px 8px 5px}
+#blkCtx .crow button{border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;font-size:.76rem;font-weight:700;padding:4px 8px;border-radius:999px;cursor:pointer}
+#blkCtx .crow button.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+#blkCtx .cvel{display:flex;align-items:center;gap:8px;padding:4px 10px 6px;font-weight:700}
+#blkCtx .cvel input{flex:1;min-width:0}
+#blkCtx .cvel b{min-width:2.2em;text-align:right;font-variant-numeric:tabular-nums}
+#blkCtx table{border-collapse:collapse;margin:2px 6px 6px;font-size:.78rem}
+#blkCtx td{padding:3px 6px;vertical-align:top}
+#blkCtx td:first-child{white-space:nowrap;font-weight:800;color:var(--muted)}`; document.head.appendChild(st); }
+{ const c=document.createElement('div'); c.id='blkCtx'; c.hidden=true; c.setAttribute('role','menu'); document.body.appendChild(c); }
+const BMAC=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent), BK=k=>(BMAC?'⌘':'Ctrl+')+k;
+let BHOV=null, BPT='mouse';   // マウスのいる位置（貼り付け・音を置く場所）・最後に使ったのがマウスか指か
+document.addEventListener('pointerdown',e=>{ BPT=e.pointerType; },true);
+const bSeg=()=>{ const si=BLKE&&BLKE.act[PR.scene]; return si!=null?BSEGS[si]:null; };
+const bRidx=r=>blkRows().findIndex(([k])=>String(k)===String(r));
+const bInSeg=(n,s)=>n.st>=s.off && n.st<s.off+s.len;
+function bPos(cx,cy){ const roll=$('bRoll'); if(!roll) return null; const r=roll.getBoundingClientRect(), x=(cx-r.left)/BSW, row=Math.floor((cy-r.top)/BRH), rows=blkRows();
+  if(x<0||row<0||row>=rows.length) return null; const s=BSEGS.find(q=>x>=q.x0&&x<q.x0+q.len); return {x,row,s}; }
+const bClose=()=>{ const c=$('blkCtx'); c.hidden=true; c.innerHTML=''; };
+const bRedraw=()=>{ if(BLKE){ renderTracks(); drawBlk(); } };
+function bSelAll(){ const s=bSeg(); if(!s) return; PR.selSet=new Set(notesOfScene(s.key).filter(n=>bInSeg(n,s))); const a=[...PR.selSet]; BLKE.last=a[a.length-1]; bRedraw(); }
+function bDel(){ if(!PR.selSet.size) return; setCurNotes(curNotes().filter(n=>!PR.selSet.has(n))); PR.selSet.clear(); commitNotes(); }
+function bCopy(cut){ const ns=selNotes(); if(!ns.length) return; const s0=Math.min(...ns.map(n=>n.st)); PR.clip={fam:blkFam(BLKE.kind), notes:ns.map(n=>({...n, st:n.st-s0}))};
+  if(cut) bDel(); toast(`${ns.length}個${cut?'切り取りました':'コピーしました'}`); }
+function bPasteAt(st,sAt){ const C=PR.clip; if(!C || C.fam!==blkFam(BLKE.kind)){ toast('貼り付ける音がありません（先にコピー）'); return; }
+  const s=sAt||bSeg(); if(!s || s.loop) return; BLKE.cur=s.key; PR.scene=s.key; const isDrum=isDrumK(BLKE.kind), list=curNotes();
+  const add=C.notes.map(n=>({...n, st:st+n.st})).filter(n=>n.st>=s.off && n.st<s.off+s.len && bRidx(n.r)>=0);
+  if(!add.length){ toast('ここには貼り付けられません'); return; }
+  add.forEach(n=>{ if(!isDrum) n.len=Math.min(n.len, s.off+s.len-n.st); list.push(n); }); PR.selSet=new Set(add); BLKE.last=add[add.length-1]; commitNotes(); }
+function bPaste(){ const s=bSeg(); if(!s) return; const g=blkGrid();
+  // マウスが場面の中にあればそこへ、なければ選んだ音のすぐうしろへ
+  if(BHOV && BHOV.s===s) return bPasteAt(s.off+Math.floor((BHOV.x-s.x0)/g+1e-6)*g, s);
+  const ns=selNotes(); bPasteAt(ns.length?Math.max(...ns.map(n=>n.st+(isDrumK(BLKE.kind)?1:n.len))):s.off, s); }
+function bDup(){ const ns=selNotes(); if(!ns.length) return; const s=bSeg(), isDrum=isDrumK(BLKE.kind), a=Math.min(...ns.map(n=>n.st)), b=Math.max(...ns.map(n=>n.st+(isDrum?1:n.len)));
+  const list=curNotes(), add=ns.map(n=>({...n, st:n.st+(b-a)})).filter(n=>n.st<s.off+s.len);
+  if(!add.length){ toast('うしろに場所がありません'); return; } add.forEach(n=>{ if(!isDrum) n.len=Math.min(n.len,s.off+s.len-n.st); list.push(n); }); PR.selSet=new Set(add); BLKE.last=add[add.length-1]; commitNotes(); }
+function bMove(dst,drow){ const ns=selNotes(), s=bSeg(); if(!ns.length||!s) return; const rows=blkRows(), isDrum=isDrumK(BLKE.kind);
+  if(ns.some(n=>n.st+dst<s.off || n.st+dst+(isDrum?1:Math.min(n.len,GHOST_LEN))>s.off+s.len+1e-6)) return;
+  const ix=ns.map(n=>bRidx(n.r)); if(ix.some(i=>i<0||i+drow<0||i+drow>=rows.length)) return;
+  ns.forEach((n,k)=>{ n.st+=dst; n.r=String(rows[ix[k]+drow][0]); if(!isDrum) n.len=Math.min(n.len,s.off+s.len-n.st); });
+  if(drow) previewRow(ns[ns.length-1].r, ns[ns.length-1].vel); commitNotes(); }
+function bLen(d){ if(isDrumK(BLKE.kind)) return; const ns=selNotes(), s=bSeg(); if(!ns.length||!s) return; const g=blkGrid();
+  ns.forEach(n=>{ const nx=Math.min(s.off+s.len,...curNotes().filter(x=>x!==n&&String(x.r)===String(n.r)&&x.st>n.st).map(x=>x.st));
+    if(d<0 && (n.gh || n.len-g<g-1e-6)){ if(!n.gh){ n.gh=true; n.len=Math.min(n.len,GHOST_LEN); } return; }   // いちばん短いところから、さらに縮めるとゴースト
+    if(n.gh && d>0){ delete n.gh; return; }
+    n.len=Math.max(g,Math.min(nx-n.st,n.len+d*g)); }); commitNotes(); }
+function bSetLen(v){ const s=bSeg(); selNotes().forEach(n=>{ const nx=Math.min(s.off+s.len,...curNotes().filter(x=>x!==n&&String(x.r)===String(n.r)&&x.st>n.st).map(x=>x.st)); delete n.gh; n.len=Math.max(.25,Math.min(nx-n.st,v)); }); commitNotes(); }
+function bGhost(){ const ns=selNotes(); if(!ns.length) return;
+  if(isDrumK(BLKE.kind)){ const on=!ns.every(n=>n.vel<=.3); ns.forEach(n=>n.vel=on?.25:.8); commitNotes(); return; }   // ドラムは長さがないので、ごく弱く（ゴースト）
+  const on=!ns.every(n=>n.gh); ns.forEach(n=>{ if(on){ n.gh=true; n.len=Math.min(n.len,GHOST_LEN); } else delete n.gh; }); commitNotes(); }
+function bPlaceAt(cx,cy){ const p=bPos(cx,cy); if(!p||!p.s) return; const s=p.s; if(s.loop){ toast('うすい所は、ダブルタップでそこを編集できるようにしてから'); return; }
+  BLKE.cur=s.key; PR.scene=s.key; const g=blkGrid(), isDrum=isDrumK(BLKE.kind), st=s.off+Math.floor((p.x-s.x0)/g+1e-6)*g, key=String(blkRows()[p.row][0]), list=curNotes();
+  if(list.some(n=>String(n.r)===key && (isDrum?n.st===st:(n.st<=st && n.st+n.len>st)))) return;
+  const nx=Math.min(s.off+s.len,...list.filter(x=>String(x.r)===key&&x.st>st).map(x=>x.st));
+  const n={r:key, st, len:isDrum?1:Math.max(Math.min(g,nx-st),Math.min(PR.lastLen[patKind]||2,nx-st)), vel:.8}; list.push(n); previewRow(key,n.vel);
+  if(isDeg(key)) curMy().melody=true; PR.selSet=new Set([n]); BLKE.last=n; commitNotes(); }
+// 右クリックのメニュー
+function bCtx(x,y,onNote){ const c=$('blkCtx'), isDrum=isDrumK(BLKE.kind), isBass=isBassK(BLKE.kind), isArp=isArpK(BLKE.kind), ns=selNotes(), k=ns.length, n=ns[ns.length-1];
+  const item=(l,kb,f,on)=>`<button class="ci${on?' on':''}" data-f="${f}"><span>${l}</span>${kb?`<kbd>${kb}</kbd>`:''}</button>`;
+  const F={}; let h=''; const add=(l,kb,fn,on)=>{ const id='f'+Object.keys(F).length; F[id]=fn; h+=item(l,kb,id,on); };
+  const row=(title,opts,cur,fn)=>{ h+=`<div class="ch">${title}</div><div class="crow">`+opts.map(([v,l],i)=>{ const id='r'+Object.keys(F).length; F[id]=()=>fn(v); return `<button data-f="${id}" class="${String(cur)===String(v)?'on':''}">${l}</button>`; }).join('')+'</div>'; };
+  if(onNote && k){
+    h+=`<div class="ch">${k>1?`選んだ${k}個の音`:'選んだ音'}</div>`;
+    add('切り取り',BK('X'),()=>bCopy(true)); add('コピー',BK('C'),()=>bCopy(false)); add('すぐうしろに複製',BK('D'),bDup); add('消す','Delete',bDel);
+    h+='<hr>'; const v0=Math.max(1,Math.round(n.vel*127)); h+=`<label class="cvel">強さ<input type="range" min="1" max="127" value="${v0}" id="bcVel"><b>${v0}</b></label>`;
+    if(!isDrum){ const g=blkGrid(), L=[[.25,'1/4'],[.5,'1/2'],[1,'1マス'],[2,'2マス'],[4,'1拍'],[8,'2拍'],[16,'1小節']];
+      row('長さ（マス）',L,n.gh?'':n.len,v=>bSetLen(v)); }
+    add(isDrum?'ゴースト（ごく弱く）':'ゴーストノート（ごく短く・弱く）','G',bGhost, isDrum?ns.every(x=>x.vel<=.3):ns.every(x=>x.gh));
+    if(isArp){ h+='<hr>'; row('高さ',[[-12,'1オクターブ下'],[0,'そのまま'],[12,'1オクターブ上']],n.oc||0,v=>{ ns.forEach(x=>{ if(v) x.oc=v; else delete x.oc; }); commitNotes(); });
+      add('弾き方・鳴らす小節…','',()=>{ bClose(); $('blkDeco').hidden=false; blkSelBar(); }); }
+  } else {
+    if(PR.clip && PR.clip.fam===blkFam(BLKE.kind)) add('ここに貼り付け',BK('V'),()=>{ const p=bPos(x,y); if(p&&p.s){ const g=blkGrid(); bPasteAt(p.s.off+Math.floor((p.x-p.s.x0)/g+1e-6)*g, p.s); } });
+    add('ここに音を置く','ダブルクリック',()=>bPlaceAt(x,y)); add('すべて選ぶ',BK('A'),bSelAll);
+    if(PR.selSet.size) add('選択を外す','Esc',()=>{ PR.selSet.clear(); bRedraw(); });
+  }
+  h+='<hr>'; add('元に戻す',BK('Z'),()=>{ histGo(-1); blkAfterHist(); }); add('ショートカット一覧','?',()=>bKeys(x,y));
+  c.classList.remove('wide'); c.innerHTML=h; c.hidden=false;
+  c.querySelectorAll('[data-f]').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); const f=F[b.dataset.f]; const keep=b.dataset.f[0]==='r'; if(!keep) bClose(); f(); if(keep && BLKE) bCtx(x,y,true); });
+  const vi=$('bcVel'); if(vi){ const out=vi.nextElementSibling; vi.oninput=()=>{ const v=+vi.value; out.textContent=v; ns.forEach(q=>q.vel=v/127);
+      document.querySelectorAll('#bRoll .prn.sel').forEach(el=>{ el.style.setProperty('--v',v/127); const b=el.querySelector('b'); if(b) b.style.height=Math.round(v/127*100)+'%'; }); };
+    vi.onchange=()=>{ commitNotes(); if(BLKE) bCtx(x,y,true); }; }
+  bPlace(c,x,y); }
+function bPlace(c,x,y){ const w=c.offsetWidth, h=c.offsetHeight; c.style.left=Math.max(8,Math.min(innerWidth-w-8,x))+'px'; c.style.top=Math.max(8,Math.min(innerHeight-h-8,y))+'px'; }
+function bKeys(x,y){ const c=$('blkCtx'), K=[
+  [`${BK('ホイール')}`,'横に拡大・縮小（拡大するとマス目が細かくなる）'],['Alt+ホイール','縦に拡大・縮小'],['Shift+ホイール','横にスクロール'],[`${BK('0')}`,'大きさを元に戻す'],['＋ ／ −','拡大・縮小'],
+  ['ダブルクリック','音を置く'],['ドラッグ（何もない所）','囲んで選ぶ'],['Shift+クリック','選ぶ音を足す・外す'],['右クリック','音ごとの設定'],
+  ['B','鉛筆の固定を切りかえ'],['← →','選んだ音を1マス動かす'],['Shift+← →','1拍動かす'],['↑ ↓','1行動かす'],['Alt+← →','短く・長く（いちばん短くするとゴースト）'],['G','ゴーストノート'],
+  [BK('C')+' / '+BK('X')+' / '+BK('V'),'コピー・切り取り・貼り付け'],[BK('D'),'すぐうしろに複製'],[BK('A'),'すべて選ぶ'],['Delete','消す'],[BK('Z')+' / '+BK('Shift+Z'),'元に戻す・やり直す'],
+  ['Space','再生・停止'],['Esc','選択を外す'],[BK('Enter'),'完了']];
+  c.classList.add('wide'); c.innerHTML=`<div class="ch">ショートカット（パソコン）</div><table>${K.map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join('')}</table>`; c.hidden=false; bPlace(c,x,y); }
+{ const sc=$('bScroll');
+  // 右クリック（指の長押しは、いままでどおり囲んで選ぶ）
+  sc.addEventListener('contextmenu',e=>{ if(!BLKE || BPT!=='mouse') return; const roll=$('bRoll'); if(!roll || !roll.contains(e.target)) return; e.preventDefault(); blkMenuClose();
+    let el=e.target.closest('.prn:not(.loop)');
+    if(!el && e.target.closest('.bhdl') && BLKE.last){ const si=BLKE.act[PR.scene]; el=si!=null?roll.querySelector(`.prn[data-s="${si}"][data-i="${notesOfScene(BSEGS[si].key).indexOf(BLKE.last)}"]`):null; }   // ⇔ の上（短い音は ⇔ に隠れる）
+    if(el){ const s=BSEGS[+el.dataset.s], nn=notesOfScene(s.key)[+el.dataset.i]; if(nn){ if(PR.scene!==s.key) PR.selSet.clear(); BLKE.cur=s.key; PR.scene=s.key; if(!PR.selSet.has(nn)){ PR.selSet=new Set([nn]); } BLKE.last=nn; drawBlk(); } }
+    bCtx(e.clientX,e.clientY,!!el); });
+  sc.addEventListener('mousemove',e=>{ if(BLKE) BHOV=bPos(e.clientX,e.clientY); },{passive:true});
+  sc.addEventListener('mouseleave',()=>{ BHOV=null; });
+  sc.addEventListener('dblclick',e=>{ if(!BLKE || BPT!=='mouse' || blkDraw() || e.target.closest('.prn,.bhdl') || !$('bRoll')?.contains(e.target)) return; const p=bPos(e.clientX,e.clientY); if(!p||!p.s||p.s.loop) return; blkMenuClose(); bPlaceAt(e.clientX,e.clientY); });
+  // Ctrl（⌘）＋ホイール（トラックパッドの2本指でのピンチも）：横に拡大。Alt＋ホイール：縦に拡大。マウスの位置をそのままに
+  sc.addEventListener('wheel',e=>{ if(!BLKE || !(e.ctrlKey||e.metaKey||e.altKey)) return; e.preventDefault(); bClose();
+    const r=sc.getBoundingClientRect(), A=blkAnchor(e.clientX-r.left, e.clientY-r.top), d=e.deltaMode===1?e.deltaY*16:e.deltaY, f=Math.exp(-d*.0025);
+    if(e.altKey && !e.ctrlKey && !e.metaKey) blkZoom(BSW, BRH*f, A); else blkZoom(BSW*f, BRH, A); },{passive:false}); }
+document.addEventListener('pointerdown',e=>{ const c=$('blkCtx'); if(!c.hidden && !c.contains(e.target)) bClose(); },true);
+// キーボード（ピアノロールが開いているとき）
+document.addEventListener('keydown',e=>{ if(!BLKE || $('blkEd').hidden || $('patSheet').classList.contains('inblk') || document.body.classList.contains('blkset')) return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && e.target.type!=='range') return;
+  if(typeof PICK!=='undefined' && PICK) return;
+  const c=$('blkCtx'), mod=e.ctrlKey||e.metaKey, k=e.key, kl=k.length===1?k.toLowerCase():k, g=blkGrid(), isDrum=isDrumK(BLKE.kind);
+  const go=f=>{ e.preventDefault(); e.stopImmediatePropagation(); bClose(); blkMenuClose(); f(); };
+  if(k==='Escape'){ if(!c.hidden){ e.preventDefault(); e.stopImmediatePropagation(); bClose(); return; } if(PR.selSet.size) return go(()=>{ PR.selSet.clear(); bRedraw(); }); return; }   // 何も選んでいなければ、いつもどおりキャンセル
+  if(mod){ if(kl==='z') return go(()=>{ histGo(e.shiftKey?1:-1); blkAfterHist(); }); if(kl==='y') return go(()=>{ histGo(1); blkAfterHist(); });
+    if(kl==='a') return go(bSelAll); if(kl==='c') return go(()=>bCopy(false)); if(kl==='x') return go(()=>bCopy(true)); if(kl==='v') return go(bPaste); if(kl==='d') return go(bDup);
+    if(k==='Enter') return go(blkOk); if(k==='0') return go(()=>{ const sc=$('bScroll'); blkZoom(18,30,blkAnchor(BLW+(sc.clientWidth-BLW)/2,BRUL+(sc.clientHeight-BRUL)/2)); });
+    if(k==='='||k==='+'||k===';') return go(()=>zoomBtn(1.25)); if(k==='-') return go(()=>zoomBtn(.8)); return; }
+  if(e.altKey){ if(k==='ArrowLeft') return go(()=>bLen(-1)); if(k==='ArrowRight') return go(()=>bLen(1)); return; }
+  if(k==='Delete'||k==='Backspace') return go(bDel);
+  if(k===' ') return go(()=>{ playing?stop():play(); });
+  if(k==='ArrowLeft'||k==='ArrowRight'){ const st=(e.shiftKey?4:isDrum?1:g)*(k==='ArrowLeft'?-1:1); return go(()=>bMove(st,0)); }
+  if(k==='ArrowUp'||k==='ArrowDown') return go(()=>bMove(0,k==='ArrowUp'?-1:1));
+  if(kl==='g') return go(bGhost);
+  if(kl==='b') return go(()=>{ PR.blkLock=!PR.blkLock; blkModeUI(); toast(PR.blkLock?'鉛筆を固定しました（B で戻す）':'鉛筆の固定を外しました'); });
+  if(k==='?') return go(()=>bKeys(innerWidth/2-240,90));
+  if(k==='+'||k==='=') return go(()=>zoomBtn(1.25)); if(k==='-') return go(()=>zoomBtn(.8)); },true);

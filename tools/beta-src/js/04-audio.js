@@ -516,7 +516,7 @@ const bassPcOf=v=>{ const sp=specOf(v); return (keyObj().pc+((sp.b!==null&&sp.b!
 const bassLow=list=>(list||[]).some(e=>e[1]==='-5'||e[1]==='-12');
 // ポルタメント：直前に鳴らしたベースの音から、次の音へ音程をすべらせる
 let lastBassM=null, GLIDE=null;
-function playBass(list,s,t,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,vel,slide,legOut])=>{ if(st!==s) return;
+function playBass(list,s,t0,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,vel,slide,legOut])=>{ if(Math.floor(st)!==s) return; const t=t0+(st-s)*sd;   // 16分より細かい位置（ピアノロールで拡大して置いた音）も
   let n;
   if(iv==='ap'){
     if(nextV===null||nextV===undefined){ n=bt.slash?12:bt.fifth; }

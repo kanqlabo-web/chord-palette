@@ -162,8 +162,8 @@ function rebuildMy(){
   (state.myArps||[]).forEach((m,i)=>{ migrateMy(m,'arp');
     // 音（notes）を演奏データ（イベント）に戻す。取り込んだときに同じイベントだった音（g が同じで、位置・長さ・強さ・飾りなども同じ）は、1つのイベントにまとめ直す（鳴り方を元のパターンと同じにするため）
     const toEv=ns=>{ const G=new Map(), out=[];
-      (ns||[]).forEach((n,ix)=>{ const r=isDeg(n.r)?n.r:+n.r, fk=fxKey(n), fx=(n.fxk!==undefined && n.fxk===fk) ? n.fx0 : fk, key=n.g!=null ? JSON.stringify([n.g,n.st,n.len,n.vel,n.dir??null,fx??null,n.oc||null,n.when||null]) : 'n'+ix;
-        let e=G.get(key); if(!e){ e=[n.st,[],n.len,n.vel]; if(n.dir!=null||fx!=null||n.oc||n.when){ e[4]=n.dir??null; e[5]=fx??null; } if(n.oc||n.when){ for(let k=6;k<=10;k++) e[k]=e[k]??null; if(n.oc) e[9]=n.oc; if(n.when) e[10]=n.when; }
+      (ns||[]).forEach((n,ix)=>{ const vel=n.gh?n.vel*.45:n.vel, len=n.gh?Math.min(n.len,.25):n.len, r=isDeg(n.r)?n.r:+n.r, fk=fxKey(n), fx=(n.fxk!==undefined && n.fxk===fk) ? n.fx0 : fk, key=n.g!=null ? JSON.stringify([n.g,n.st,len,vel,n.dir??null,fx??null,n.oc||null,n.when||null]) : 'n'+ix;
+        let e=G.get(key); if(!e){ e=[n.st,[],len,vel]; if(n.dir!=null||fx!=null||n.oc||n.when){ e[4]=n.dir??null; e[5]=fx??null; } if(n.oc||n.when){ for(let k=6;k<=10;k++) e[k]=e[k]??null; if(n.oc) e[9]=n.oc; if(n.when) e[10]=n.when; }
           e._o=n.g!=null?n.g:1e6+ix; e._k=[]; G.set(key,e); out.push(e); }
         e[1].push(r); e._k.push(n.k??0); });
       out.forEach(e=>{ const o=e[1].map((r,k)=>[e._k[k],r]).sort((a,b)=>a[0]-b[0]); e[1]=o.map(x=>x[1]); });
@@ -186,7 +186,7 @@ function rebuildMy(){
     (state.myBasses||[]).forEach((m,i)=>{ migrateMy(m,'bass');
       // 音が重なっていたら、あとの音へポルタメントですべらせる（前の音は、あとの音の始まりで切ってつなげる）
       m.notes.forEach(n=>{ delete n.slide; });   // 前の「音ごとにポルタメント」の印は使わない（重なりで決まる）
-      const gl=m.glide||.08, v=m.notes.map(n=>[n.st, (n.iv0!==undefined && n.ivr===n.r) ? n.iv0 : n.r==='0'?0 : n.r==='12'?12 : n.r, n.len, n.vel]);
+      const gl=m.glide||.08, v=m.notes.map(n=>[n.st, (n.iv0!==undefined && n.ivr===n.r) ? n.iv0 : n.r==='0'?0 : n.r==='12'?12 : n.r, n.gh?Math.min(n.len,.25):n.len, n.gh?n.vel*.45:n.vel]);
       v.glide=gl; BASSES['my'+i]={name:m.name||`マイパターン${i+1}`, v}; }); }
 }
 const overlapPrev=(ns,n)=>ns.filter(x=>x!==n && x.st<n.st-.01 && x.st+x.len>n.st+.01).sort((a,b)=>b.st-a.st)[0]||null;   // n の始まりで、まだ鳴っている音
@@ -339,8 +339,6 @@ function fallRow(){ const el=$('prFall'); if(!el) return; const ns=selNotes(), n
   if(!n){ el.innerHTML='<p class="small" style="margin:6px 0 0">音を選ぶと、その音に「フォール」「転回」などの飾りや、長さ・高さを付けられます（複数選ぶと、まとめて変わります）。</p>'; return; }
   const cnt=ns.length>1?`（${ns.length}個まとめて）`:'';
   el.innerHTML=`<h3 style="margin:10px 0 6px">選んだ音の弾き方${cnt}</h3><div class="chips" id="prFallChips"></div>`;
-  el.insertAdjacentHTML('beforeend',`<h3 style="margin:10px 0 6px">選んだ音の長さ${cnt}</h3><div class="chips" id="prLenChips"></div>`);
-  chips($('prLenChips'),[[1,'1マス'],[.5,'半マス'],[.25,'4分の1マス（スタッカート）']],n.len,v=>{ ns.forEach(x=>x.len=v); commitNotes(); drawNotes(); });
   if(patKind!=='bass'){ el.insertAdjacentHTML('beforeend',`<h3 style="margin:10px 0 6px">選んだ音の高さ${cnt}</h3><div class="chips" id="prOctChips"></div>`);
     chips($('prOctChips'),[[-12,'1オクターブ下'],[0,'そのまま'],[12,'1オクターブ上']],n.oc||0,v=>{ ns.forEach(x=>{ if(v) x.oc=v; else delete x.oc; }); commitNotes(); drawNotes(); });
     el.insertAdjacentHTML('beforeend',`<h3 style="margin:10px 0 6px">選んだ音を鳴らす小節${cnt}</h3><div class="chips" id="prWhenChips"></div>`);
