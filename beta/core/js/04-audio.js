@@ -102,8 +102,11 @@ function playZone(zones,m,t,dur,vel,rel,cutoff,loop,atk){
   if(z.gn) vel*=z.gn;   // 音域ごとの大きさをそろえた分
   const g=ctx.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel,t+(atk||.004));
   g.gain.setValueAtTime(vel,t+dur); g.gain.setTargetAtTime(0,t+dur,rel);
-  if(cutoff){ const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=cutoff; lp.Q.value=.5; s.connect(lp); lp.connect(g); }
-  else s.connect(g);
+  // ループしない音源で、音源の長さより長くのばすときは、音源が終わる手前で静かに消す（そのままだと終わりで「プツッ」と切れる）
+  let into=g; const bd=z.buf.duration/rate;
+  if(!s.loop && bd<dur+rel*7){ const fd=ctx.createGain(), fe=t+bd-.004, fs=Math.max(t+.01,fe-Math.min(.12,bd*.25)); fd.gain.setValueAtTime(1,fs); fd.gain.linearRampToValueAtTime(0,fe); fd.connect(g); into=fd; }
+  if(cutoff){ const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=cutoff; lp.Q.value=.5; s.connect(lp); lp.connect(into); }
+  else s.connect(into);
   if(PAN!=null && ctx.createStereoPanner){ const pn=ctx.createStereoPanner(); pn.pan.value=PAN; g.connect(pn); pn.connect(OUT||master); } else g.connect(OUT||master);
   s.start(t); s.stop(t+dur+rel*7);
   // ポルタメントで伸ばすときのために、音程と音量の操作先を覚えておく（伸ばしても途切れないようループさせる）

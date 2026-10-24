@@ -211,7 +211,7 @@ Object.assign(EX,{
 });
 // お手本を鳴らすときは、その雰囲気に合う伴奏スタイル（メイン画面で選べるものと同じ）とテンポにする（ないときは元の設定）
 const styleBy=name=>STYLES.find(x=>x.name===name);
-function setStyle(st){ state.sOff=sOffOf(st); state.wide=!!st.wide; state.mix={}; if(st.mix) for(const c in st.mix) state.mix[c]={v:st.mix[c],m:false,s:false}; try{ applyMix(); }catch(e){} state.drum=st.drum; state.arp=st.arp; state.bassPat='auto'; state.bassSnd=st.bassSnd||'bass'; state.bass=st.bass!==false; state.kit=st.kit; state.inst=st.inst;  state.arp2=st.arp2||''; if(st.inst2) state.inst2=st.inst2;  }
+function setStyle(st){ state.sOff=sOffOf(st); state.wide=true;   /* 左右の広がりは「広げる」が基本（ベータ版と同じミックス） */ state.mix={}; if(st.mix) for(const c in st.mix) state.mix[c]={v:st.mix[c],m:false,s:false}; try{ applyMix(); }catch(e){} state.drum=st.drum; state.arp=st.arp; state.bassPat='auto'; state.bassSnd=st.bassSnd||'bass'; state.bass=st.bass!==false; state.kit=st.kit; state.inst=st.inst;  state.arp2=st.arp2||''; if(st.inst2) state.inst2=st.inst2;  }
 function tutLoadEx(ex){ const b=TUT.backup?JSON.parse(TUT.backup):state, st=ex.style&&styleBy(ex.style);
   // 伴奏スタイルが決まっているお手本は、そのスタイルの楽器で。決まっていないもの（作業中の楽器で鳴っていたもの）はピアノ＋ベースで
   if(st) setStyle(st); else Object.assign(state,{drum:b.drum,arp:b.arp,kit:b.kit,bassPat:b.bassPat,inst:'piano',arp2:'',bass:true,bassSnd:'bass'});
