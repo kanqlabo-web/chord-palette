@@ -77,6 +77,8 @@ body.lec-teacher .app{display:none}
 body.lec-child #toTitle{display:none}
 /* 講義版の画面は、チュートリアル中の画面と同じくらい少なく（メニュー・次のレベルへ・進行ライブラリ・PRO などは出さない） */
 body.lec #menuBtn,body.lec .badges{display:none!important}
+body.lec.lec-menu #menuBtn{display:grid!important}   /* レベル3（伴奏・ライブラリ）からはメニューを出す */
+body.lec .protag,body.lec .sec:has(#lvCount),body.lec .sec:has(#proChips){display:none!important}   /* メニューの中でも、レベル・PRO は出さない */
 body.lec .libbtn,body.lec .slothead .right,body.lec .lane .mix{visibility:hidden}
 body.lec #lvBig,body.lec #moodTip{display:none!important}
 body.lec .lane canvas{display:none}   /* 伴奏は名前の行だけ（小節ごとの絵は出さない） */`;
@@ -151,7 +153,7 @@ function lecJoin(room,pw){ LEC.role='child'; LEC.room=room; LEC.pw=pw; MODE='ste
 
 // ---- 画面を少なく：PRO・レベルの案内タイルは使わない
 { const ra=renderAll; renderAll=function(){ if(CP.kind==='lecture' && state.pro){ state.pro=false; document.body.classList.remove('pro'); }
-    const r=ra.apply(this,arguments); if(CP.kind==='lecture'){ document.body.classList.toggle('tutlite', LVL<2 && !TUT.on); $('lvBig').hidden=true; document.body.classList.remove('haslv'); $('moodTip').hidden=true; } return r; }; }
+    const r=ra.apply(this,arguments); if(CP.kind==='lecture'){ document.body.classList.toggle('tutlite', LVL<2 && !TUT.on); document.body.classList.toggle('lec-menu', LVL>=3 && LEC.role!=='teacher'); $('lvBig').hidden=true; document.body.classList.remove('haslv'); $('moodTip').hidden=true; } return r; }; }
 // ---- はじめの画面 ----
 (function lecBoot(){ if(CP.kind!=='lecture') return; document.body.classList.add('lec'); renderAll();
   $('modePick').hidden=true; $('lecWarn').hidden=LEC_ON();
