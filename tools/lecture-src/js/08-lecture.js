@@ -5,7 +5,7 @@
 // ■ Firebase の設定（ここだけ書きかえる）
 //   apiKey・databaseURL は Firebase のコンソール（プロジェクトの設定 → マイアプリ → ウェブアプリ）に出る値
 //   設定が空のときは「この端末の中だけ」で試せる（同じブラウザの別のタブが受講者になる）
-const LECTURE_FB={ apiKey:'', databaseURL:'' };
+const LECTURE_FB={ apiKey:'AIzaSyDMjJKqZ9NYNh_VW-FeS5AxzRjnYM_Dh-A', databaseURL:'https://chord-palette-b160a-default-rtdb.asia-southeast1.firebasedatabase.app' };
 
 const LEC={ role:null, room:null, pw:null, lv:0, tok:null, es:null, bc:null, me:Math.random().toString(36).slice(2,10), hb:null, members:0 };
 const LEC_ON=()=>!!(LECTURE_FB.apiKey && LECTURE_FB.databaseURL);
