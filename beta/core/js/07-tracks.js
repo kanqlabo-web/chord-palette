@@ -139,6 +139,7 @@ const SICO=(()=>{ const F='fill="currentColor" fill-opacity=".18"';
     'bs:ubass':S('bass',`<path d="M14 2v8M12.5 2h3"/><path ${F} d="M14 9.5c-3 0-4.8 1.8-4.8 4 0 1.2.7 1.8.7 2.5 0 .9-2 1.7-2 4.3 0 2.6 2.7 4.7 6.1 4.7s6.1-2.1 6.1-4.7c0-2.6-2-3.4-2-4.3 0-.7.7-1.3.7-2.5 0-2.2-1.8-4-4.8-4z"/><path d="M12.6 16.5v3M15.4 16.5v3M14 25v2.5"/>`),
     'bs:slap3':S('bass',`<path d="M17 11L25.5 2.5M23.5 1.5l3 3"/><path ${F} d="M16 9.5c-1.8-1-3.6-.4-4.2 1.2-.4 1-1.4 1.2-2.6 1.4-2.8.5-4.4 3.6-2.6 6.4l2.9 2.9c2.8 1.8 5.9.2 6.4-2.6.2-1.2.4-2.2 1.4-2.6 1.6-.6 2.2-2.4 1.2-4.2z"/><path d="M3 4l3 2M2 9h3.5M7 1.5l1 3" stroke-width="1.5"/>`),
     'bs:sbass':S('bass',`<rect ${F} x="3" y="5" width="22" height="18" rx="2.5"/><path d="M6 18v-7h4v7h4v-7h4v7h4"/>`),
+    'bs:cbass':S('bass',`<rect ${F} x="3" y="5" width="22" height="18" rx="2.5"/><path d="M6 18l4-7 4 7 4-7 4 7"/>`),
   }; })();
 const icoInst=k=>SICO[k]||SICO.piano, icoKit=k=>SICO['kit:'+k]||SICO['kit:std'], icoBass=k=>SICO['bs:'+k]||SICO['bs:bass'];
 const tkIco=kind=>withTrk(kind,kind=>{ if(kind==='drum') return icoKit(state.kit); if(kind==='bass') return icoBass(state.bassSnd||'bass'); const x=xOf(kind); return icoInst(x?x.inst:kind==='arp2'?(state.inst2||'epiano'):state.inst); });
