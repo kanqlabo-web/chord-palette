@@ -136,13 +136,16 @@ const peSnap=()=>peDrum()?1:PE.grid;
 /* 強さ：音の色の濃さと、左の目盛り（下からの高さ）で */
 #peEd .prn{overflow:visible;background:color-mix(in srgb,var(--t) calc(8% + var(--v) * 87%),var(--surface));transform:translateY(calc(var(--dy,0) * var(--rh)))}
 #peEd .prn b{display:none}
-#peEd .pvl{position:sticky;bottom:0;z-index:6;display:flex;background:var(--surface);border-top:1px solid var(--line);height:64px}
-#peEd .pvl>span{position:sticky;left:0;z-index:2;width:var(--lw);flex:none;box-sizing:border-box;padding:8px 0 0 8px;font-size:.66rem;font-weight:800;background:var(--surface);border-right:1px solid var(--line);line-height:1.3}
-#peEd .pvl>span small{display:block;font-weight:700;color:var(--muted);font-size:.58rem}
+#peEd .pvl{position:sticky;bottom:0;z-index:6;display:flex;background:var(--surface);border-top:1px solid var(--line);height:64px;box-shadow:0 -1px 0 var(--line)}
+#peEd .pvl>span{position:sticky;left:0;z-index:2;width:var(--lw);flex:none;box-sizing:border-box;padding:0 0 0 8px;display:flex;align-items:center;font-size:.62rem;font-weight:700;color:var(--muted);background:var(--surface);border-right:1px solid var(--line)}
 #peEd .pvlane{position:relative;flex:none;touch-action:none;cursor:ns-resize}
-#peEd .pvlane i{position:absolute;bottom:4px;width:5px;border-radius:2px 2px 0 0;background:var(--t);pointer-events:none}
+#peEd .pvlane .pvs{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--c) 9%,transparent);border-left:2px solid var(--c);box-sizing:border-box;pointer-events:none}
+#peEd .pvlane .pvs.rep{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c) 7%,transparent) 0 6px,transparent 6px 12px);border-left-style:dashed}
+#peEd .pvlane i{position:absolute;bottom:4px;width:2px;margin-left:4px;background:color-mix(in srgb,var(--t) 70%,var(--surface));pointer-events:none}
+#peEd .pvlane i::before{content:'';position:absolute;top:-4px;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--t);box-sizing:border-box;border:1.5px solid var(--surface)}
 #peEd .pvlane i.sel{background:var(--d)}
-#peEd .pvlane i.rep{opacity:.35}
+#peEd .pvlane i.sel::before{background:var(--d)}
+#peEd .pvlane i.rep{opacity:.4}
 #peEd .prn.dr{transform:scale(calc(.6 + var(--v) * .4))}
 /* 飾りの印：フォールは音の終わりから下がる線、しゃくりは下から上がってくる線、ほかは音の中に記号 */
 #peEd .prn.fall::after{content:'';position:absolute;left:100%;right:auto;top:50%;width:22px;height:2.5px;background:var(--ink);transform-origin:0 50%;transform:rotate(40deg);border-radius:2px;border:0}
@@ -260,14 +263,21 @@ function peBlkRows(){ let G=peGroups(); if(peArp()) G=PE.layer==='mel'?G.filter(
 function peVLane(){ const sc=$('bScroll'), box=sc.firstElementChild; if(!box) return; const L=slotSteps(), W=state.bars*L*BSW, rows=new Set(blkRows().map(r=>String(r[0])));
   let h=''; BSEGS.forEach((s,si)=>notesOfScene(s.key).forEach(n=>{ if(!rows.has(String(n.r)) || n.st<s.off || n.st>=s.off+s.len) return;
     h+=`<i class="${PR.selSet.has(n)?'sel':''}${s.rep?' rep':''}" style="left:${(s.x0+n.st-s.off)*BSW+1}px;height:calc(${Math.round(n.vel*100)}% - 8px)"></i>`; }));
-  box.insertAdjacentHTML('beforeend',`<div class="pvl"><span>強さ<small>上下に<br>ドラッグ</small></span><div class="pvlane" id="peVL" style="width:${W}px">${h}</div></div>`);
+  const bands=BSEGS.map(s=>`<div class="pvs${s.rep?' rep':''}" style="left:${s.x0*BSW}px;width:${s.len*BSW}px;--c:${s.c}"></div>`).join('');
+  const grid=`repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 40%,transparent) 0 1.5px,transparent 1.5px ${BSW*16}px),repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px ${BSW*4}px)`;
+  box.insertAdjacentHTML('beforeend',`<div class="pvl"><span title="上下にドラッグで強さ。音を選んでいれば、選んだ音をまとめて">強さ</span><div class="pvlane" id="peVL" style="width:${W}px;background-image:${grid}">${bands}<div class="pvb">${h}</div></div></div>`);
   const el=$('peVL'); let V=null;
-  const set=e=>{ if(!V) return; const b=el.getBoundingClientRect(), v=Math.max(1/127,Math.min(1,(b.bottom-4-e.clientY)/(b.height-8))); V.forEach(n=>n.vel=v);
-    el.querySelectorAll('i').forEach(x=>x.remove()); BSEGS.forEach(s=>notesOfScene(s.key).forEach(n=>{ if(!rows.has(String(n.r)) || n.st<s.off || n.st>=s.off+s.len) return;
-      const i=document.createElement('i'); i.className=(PR.selSet.has(n)?'sel':'')+(s.rep?' rep':''); i.style.left=((s.x0+n.st-s.off)*BSW+1)+'px'; i.style.height=`calc(${Math.round(n.vel*100)}% - 8px)`; el.appendChild(i); })); };
-  el.onpointerdown=e=>{ if(!PE) return; e.preventDefault(); const b=el.getBoundingClientRect(), x=(e.clientX-b.left)/BSW, s=BSEGS.find(q=>x>=q.x0&&x<q.x0+q.len); if(!s) return;
+  const set=e=>{ if(!V) return; const b=el.getBoundingClientRect(), y=(b.bottom-4-e.clientY)/(b.height-8), cl=v=>Math.max(1/127,Math.min(1,v));
+    if(V.rel) V.forEach((n,k)=>n.vel=cl(V.v0[k]+y-V.y0)); else V.forEach(n=>n.vel=cl(y));
+    const pb=el.querySelector('.pvb'); pb.innerHTML=''; BSEGS.forEach(s=>notesOfScene(s.key).forEach(n=>{ if(!rows.has(String(n.r)) || n.st<s.off || n.st>=s.off+s.len) return;
+      const i=document.createElement('i'); i.className=(PR.selSet.has(n)?'sel':'')+(s.rep?' rep':''); i.style.left=((s.x0+n.st-s.off)*BSW+1)+'px'; i.style.height=`calc(${Math.round(n.vel*100)}% - 8px)`; pb.appendChild(i); })); };
+  el.onpointerdown=e=>{ if(!PE) return; e.preventDefault(); const b=el.getBoundingClientRect();
+    // 2つ以上選んでいるときは、どこをドラッグしても選んだ音全部を、差を保ったまま上げ下げ
+    if(PR.selSet.size>1){ V=peSel(); V.rel=true; V.v0=V.map(n=>n.vel); V.y0=(b.bottom-4-e.clientY)/(b.height-8); try{ el.setPointerCapture(e.pointerId); }catch(_){} return; }
+    const x=(e.clientX-b.left)/BSW, s=BSEGS.find(q=>x>=q.x0&&x<q.x0+q.len); if(!s) return;
     const g=blkGrid(), c=s.off+Math.floor((x-s.x0)/g+1e-6)*g, col=notesOfScene(s.key).filter(n=>rows.has(String(n.r)) && n.st>=c && n.st<c+g); if(!col.length) return;
-    const sel=col.filter(n=>PR.selSet.has(n)); V=sel.length?sel:col; PR.scene=s.key; BLKE.cur=s.key; BLKE.act[s.key]=BSEGS.indexOf(s); try{ el.setPointerCapture(e.pointerId); }catch(_){} set(e); };
+    const sel=col.filter(n=>PR.selSet.has(n));
+    V=sel.length?sel:col; PR.scene=s.key; BLKE.cur=s.key; BLKE.act[s.key]=BSEGS.indexOf(s); try{ el.setPointerCapture(e.pointerId); }catch(_){} set(e); };
   el.onpointermove=e=>set(e); el.onpointerup=el.onpointercancel=()=>{ if(!V) return; const n=V[V.length-1]; V=null; previewRow(n.r,n.vel); commitNotes(); clearTimeout(HIST.t); histCommit(); }; }
 // メロディと伴奏は層を分ける。編集していない方の層の音は、裏にうすく透かして見せる（高さは層の行の数に合わせてならす）
 function peBack(roll){ const mel=PE.layer==='mel', other=mel?PE_ARP_GROUPS.filter(x=>x[0]!=='mel').flatMap(x=>x[2]):MEL_ROWS, idx={}; other.forEach(([r],i)=>idx[String(r)]=i);
