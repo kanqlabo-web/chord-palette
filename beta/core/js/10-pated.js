@@ -154,8 +154,8 @@ const peSnap=()=>peDrum()?1:PE.grid;
  #peEd .ptb{min-width:34px;padding:0 6px}
  #peEd .psep,#pePick{display:none!important}
  #peSetBtn{font-size:0!important;width:38px}
- #peEd .pwhere{display:none}
- #peEd .pbar{flex-wrap:nowrap;justify-content:space-between;gap:6px}
+ #peEd .pwhere{order:9;flex-basis:100%;margin:0;white-space:normal;font-size:.68rem;line-height:1.4}
+ #peEd .pbar{justify-content:space-between;gap:6px}
  #peEd .pseg button{padding:0 9px}
  #peEd .plabs .pr{padding-left:8px;font-size:.7rem}
  #peSet{padding:0;align-items:stretch}
@@ -238,7 +238,8 @@ function peBlkRows(){ let G=peGroups(); if(peArp()) G=PE.layer==='mel'?G.filter(
   G.forEach(([g,lab,rows])=>{ if(G.length>1) out.push(['_'+g, `<em class="bgh" data-g="${g}">${PE.fold[g]?'▸':'▾'} ${esc(lab)}</em>`]); if(!PE.fold[g] || G.length<2) out.push(...rows); });
   return out; }
 { const db=drawBlk; drawBlk=function(){ const r=db.apply(this,arguments); if(PE && BLKE){ PE.scene=PR.scene; peChrome(); peBarDraw(); peScenes(); peInsp();
-    const roll=$('bRoll'); if(roll && peArp()) peBack(roll);
+    const roll=$('bRoll'); if(roll){ const E=roll.querySelectorAll('.bseg'); BSEGS.forEach((x,i)=>{ if(x.rep && E[i]) E[i].classList.add('loop'); }); }
+    if(roll && peArp()) peBack(roll);
     if(roll) blkRows().forEach(([k],i)=>{ if(String(k)[0]!=='_') return; const d=document.createElement('div'); d.className='bgrp'; d.style.top=(i*BRH)+'px'; d.style.height=BRH+'px'; roll.appendChild(d); }); }
   return r; }; }
 // メロディと伴奏は層を分ける。編集していない方の層の音は、裏にうすく透かして見せる（高さは層の行の数に合わせてならす）
@@ -275,7 +276,8 @@ function peBarDraw(){ const el=$('peBar'), P=pePlace(); let h='';
     h+=`<div class="pseg" role="group" aria-label="編集する層"><button class="${PE.layer!=='mel'?'on':''}" data-l="acc">伴奏</button><button class="${PE.layer==='mel'?'on':''}" data-l="mel">メロディ${nm?`<small>${nm}</small>`:''}</button></div>`; }
   if(P && P.s){ const lab=chordText(P.s.v)+'・'+SCENE_NAME(P.s.key), shared=P.n>1, can=!!P.base;
     const one=can&&P.own, tip=!can?'この場面は、曲の中で1種類だけです':P.base==='bar'?'1小節の弾き方は4小節ごとにくり返します':'3拍の弾き方は2小節ごとにくり返します';
-    h+=`<span class="pwhere">${esc(lab)}</span><div class="pseg" role="group" aria-label="くり返しの編集" title="${esc(tip)}"><button class="${one?'':'on'}" data-r="all">まとめて${!one&&shared?`<small>${P.n}か所</small>`:''}</button><button class="${one?'on':''}" data-r="one" ${can?'':'disabled'}>ここだけ${one&&shared?`<small>${P.base==='bar'?'4':'2'}小節ごと</small>`:''}</button></div>`; }
+    const msg=!can&&P.n<2||P.n<2&&!one?'この弾き方を使っているのは、ここだけです':one?`${esc(lab)}：この小節だけの弾き方です。ほかの所は変わりません`:`${esc(lab)}：曲の${P.n}か所で同じ弾き方です。今は全部いっしょに変わります`;
+    h+=`<span class="pwhere">${msg}</span><div class="pseg" role="group" aria-label="くり返しの編集" title="${esc(tip)}"><button class="${one?'':'on'}" data-r="all">まとめて${!one&&shared?`<small>${P.n}か所</small>`:''}</button><button class="${one?'on':''}" data-r="one" ${can?'':'disabled'}>ここだけ${one&&shared?`<small>${P.base==='bar'?'4':'2'}小節ごと</small>`:''}</button></div>`; }
   el.innerHTML=h; el.hidden=!h;
   el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{ if(PE.layer===b.dataset.l) return; PE.layer=b.dataset.l; PR.selSet.clear(); drawBlk(); });
   el.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{ if(b.classList.contains('on')) return; if(b.dataset.r==='one') peSplit(); else peMerge(); }); }

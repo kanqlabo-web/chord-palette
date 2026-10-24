@@ -763,7 +763,7 @@ function blkUses(key){ return BSEGS.filter(s=>s.key===key).length; }
 function blkAct(){ const A=BLKE.act=BLKE.act||{}, ax=BLKE.x0||0;
   [...new Set(BSEGS.map(s=>s.key))].forEach(k=>{ const ix=BSEGS.map((s,i)=>s.key===k?i:-1).filter(i=>i>=0);
     if(!ix.includes(A[k])) A[k]=ix.find(i=>BSEGS[i].x0+BSEGS[i].len>ax)??ix[0];
-    ix.forEach(i=>BSEGS[i].loop=i!==A[k]); }); }
+    ix.forEach(i=>{ BSEGS[i].loop=i!==A[k]; if(PE){ BSEGS[i].rep=BSEGS[i].loop; BSEGS[i].loop=false; } }); }); }   // 新しい編集画面では、くり返しの所もそのまま編集できる（いっしょに変わる）
 // mode: 'edit'（今のを編集。マイ演奏でなければコピー）／'new'（空っぽから）／'copy'（複製して）
 function openBlk(kind,scene,where,x0,x1,mode){ const k=patOf(kind);
   if((kind==='arp2'||xType(kind)==='chord') && (!k || !ARPS[k])) return openSheet(kind);
@@ -840,7 +840,7 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
   const ridx=r=>rows.findIndex(([k])=>String(k)===String(r));
   const noteOf=el=>{ const s=BSEGS[+el.dataset.s]; return s&&notesOfScene(s.key)[+el.dataset.i]; };
   const elOf=(si,n)=>roll.querySelector(`.prn[data-s="${si}"][data-i="${notesOfScene(BSEGS[si].key).indexOf(n)}"]`);
-  const toScene=s=>{ if(PR.scene!==s.key) PR.selSet.clear(); BLKE.cur=s.key; PR.scene=s.key; };
+  const toScene=s=>{ if(PR.scene!==s.key) PR.selSet.clear(); BLKE.cur=s.key; PR.scene=s.key; if(PE) BLKE.act[s.key]=BSEGS.indexOf(s); };
   const paint=()=>{ roll.querySelectorAll('.prn:not(.loop)').forEach(el=>el.classList.toggle('sel',PR.selSet.has(noteOf(el)))); const h=roll.querySelector('.bhdl'); if(h) h.remove(); };
   const grab=(D,g)=>{ D.g=g.map(x=>({n:x, st:x.st, len:x.len, ri:ridx(x.r), el:elOf(D.si,x)})); };
   roll.onpointerdown=e=>{ if(PINCH) return; blkMenuClose(); if(e.pointerType==='mouse' && e.button!==0) return;   // 右クリックは自分のメニュー（blkCtx）
@@ -895,6 +895,7 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
     if(D.mode==='tap'){ const s=segAt(D.p.x), now=Date.now(), T=BLKE.lastTap, dbl=T&&T.s===s&&now-T.t<400;
       BLKE.lastTap={t:now,s}; clearTimeout(BLKE.tapT);
       if(!s){ if(D.draw) toast('ここにはコードがありません'); else if(PR.selSet.size){ PR.selSet.clear(); drawBlk(); } return; }
+      if(PE && BLKE.act[s.key]!==BSEGS.indexOf(s)){ toScene(s); if(!D.draw){ PR.selSet.clear(); drawBlk(); return; } }   // 押した所を「編集している所」に
       if(s.loop){ if(dbl){ BLKE.act[s.key]=BSEGS.indexOf(s); BLKE.cur=s.key; PR.scene=s.key; PR.selSet.clear(); BLKE.lastTap=null; drawBlk(); }   // ダブルタップ：ここを編集する所に
         else BLKE.tapT=setTimeout(()=>toast('うすい所は、同じ演奏のくり返しです。ダブルタップでここを編集できます'),420); return; }
       const g=blkGrid(), st=s.off+Math.floor((D.p.x-s.x0)/g+1e-6)*g;
