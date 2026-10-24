@@ -288,9 +288,16 @@ function satbVoice(pcs, rpc, bpc, B, sp, prev){
 // PRO では「絶対的な鍵盤の範囲」（いちばん下の音の MIDI 番号：rhLo / lhLo / rhLo2 / lhLo2 / bassLo）で決める。
 // 中身は、パターンの標準の高さからのずれ（半音）に直して使う。null＝パターンの標準のまま
 const RH_DEF=()=>{ const pat=ARPS[state.arp]; return 56+((pat&&pat.rhShift)||0); }, LH_DEF=40, BASS_DEF=28;
-function ROFF(){ if(state.pro){ const rl=PART2?state.rhLo2:state.rhLo, ll=PART2?state.lhLo2:state.lhLo;
-    return {rh: rl!=null ? rl-RH_DEF() : ((PART2?state.rhOff2:state.rhOff)||0), lh: ll!=null ? ll-LH_DEF : ((PART2?state.lhOff2:state.lhOff)||0)}; }
-  const o=state.sOff||{}; return PART2?{rh:o.rh2||0,lh:o.lh2||0}:{rh:o.rh||0,lh:o.lh||0}; }
+// 楽器ごとの標準の音域（パターンの標準の高さから半音いくつずらすか）。伴奏スタイルや PRO の「ずらし」は、この上に足す
+// エレピは右手 D♭3〜C4・左手 C2〜B2、ギターは実際の楽器の高さに近い E3 から、鉄琴は1オクターブ上
+const INST_RANGE={epiano:{rh:-7,lh:-4},epcity:{rh:-7,lh:-4},lofi:{rh:-7,lh:-4},
+  steel:{rh:-4,lh:0},nylon:{rh:-4,lh:0},eguitar:{rh:-4,lh:0},dist:{rh:-4,lh:0},
+  strings3:{rh:0,lh:-4},trombone:{rh:-5,lh:-4},sax:{rh:-2,lh:0},glock:{rh:12,lh:12}};
+const IOFF=inst=>INST_RANGE[inst]||{rh:0,lh:0};
+function ROFF(){ const io=IOFF(PART2?(state.inst2||'epiano'):state.inst);
+  if(state.pro){ const rl=PART2?state.rhLo2:state.rhLo, ll=PART2?state.lhLo2:state.lhLo;
+    return {rh: rl!=null ? rl-RH_DEF() : ((PART2?state.rhOff2:state.rhOff)||0)+io.rh, lh: ll!=null ? ll-LH_DEF : ((PART2?state.lhOff2:state.lhOff)||0)+io.lh}; }
+  const o=state.sOff||{}; return PART2?{rh:(o.rh2||0)+io.rh,lh:(o.lh2||0)+io.lh}:{rh:(o.rh||0)+io.rh,lh:(o.lh||0)+io.lh}; }
 const BOFF=()=>state.pro?(state.bassLo!=null?state.bassLo-BASS_DEF:(state.bassOff||0)):((state.sOff||{}).bass||0);
 const midiName=m=>['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'][((m%12)+12)%12]+(Math.floor(m/12)-1);
 const sOffOf=st=>({rh:st.rhOff||0, lh:st.lhOff||0, rh2:st.rhOff2||0, lh2:st.lhOff2||0, bass:st.bassOff||0});
@@ -603,7 +610,7 @@ const ARPS = {
                 push:[[[0,[0,5],2,.8],[0,RH,2,.8]]]}},
 
   // シティポップ：エレピで16分のカッティング。アクセント（重ねる音色＝ブラス）は4拍目の裏で「パッ」と次へ
-  citypop:{name:'シティポップ', pro:'電子ピアノを16分で刻む（次のコードを早めに）', legato:true, pushBy:2,
+  citypop:{name:'シティポップ', pro:'エレピを16分で刻む（次のコードを早めに）', legato:true, pushBy:2,
            // エレピは「チャッ・ッチャ・チャー」と16分のシンコペで刻む
            sit:{bar:[[[0,[0],3,.62],[0,RH,2,.72],[3,RH,1,.55],[6,RH,2,.66],[8,[0],3,.56],[10,RH,1,.55],[11,RH,2,.66],[14,RH,1.5,.6]]],
                 halfA:[[[0,[0],3,.62],[0,RH,2,.72],[3,RH,1,.55],[6,RH,2,.64]]],
@@ -614,7 +621,7 @@ const ARPS = {
   // citypop.mid の電子ピアノから：コードは16分食って入り、左手は「ルート・5度・5度」と動いて、右手は8分・16分で和音を刻む。
   // 2拍目の裏はいちばん上の音を一段下げて（G♯→F♯ のような動き）、すぐ下の音を「ッ」と短く強く。
   // 2小節目（同じコードの続き）は、上で「タ・タ・ター・タ・ター・ター・タ」と高い音のフレーズを足す
-  cityep: {name:'シティポップの電子ピアノ', pro:'電子ピアノの刻み＋上のフレーズ（シティポップ）', legato:true, pushBy:1, shell:true,
+  cityep: {name:'シティポップのエレピ', pro:'エレピの刻み＋上のフレーズ（シティポップ）', legato:true, pushBy:1, shell:true,
            sit:{bar:[[[0,[0],1.6,.73],[0,RH,2.3,.7],[1,[4],1,.67],[2,RH,.85,.55],[3,[4],1.3,.7],[4,RH,.6,.64],[6,[0],.35,.71],[6,[1,2],.55,.6],[6,[3],.7,.62,null,'dn'],[7,[1],.12,.86],
                        [8,[0],.5,.72],[8,RH,.65,.7],[12,[0],1.34,.71],[13,RH,.75,.65]],
                       [[0,[0],1.6,.73],[0,RH,2.3,.7],[1,[4],1,.67],[2,RH,.85,.55],[3,[4],1.3,.7],[4,RH,.6,.64],[6,[0],.35,.71],[6,[1,2],.55,.6],[6,[3],.7,.62,null,'dn'],[7,[1],.12,.86],

@@ -439,7 +439,7 @@ const STYLES=[
   {id:4, name:'バラード', bpm:80, lhOff:3, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true, mix:{arp:1.25,drum:1.15,bass:1.25}},
   {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass', mix:{arp:1.35,drum:1.35,bass:1.35}},
   {id:17, name:'壮大', bpm:110, wide:true, drum:'epic', arp:'epic', inst:'strings3', arp2:'hornline', inst2:'horn', mix:{arp:1.25,arp2:1.4,drum:.31,bass:.94}, kit:'orch', bass:true, bassSnd:'ubass'},
-  {id:18, name:'シティポップ', bpm:100, rhOff:-3, lhOff:-3, rhOff2:-3, drum:'city', arp:'cityep', inst:'epcity', arp2:'brassobb', inst2:'brass3', kit:'city', bass:true, bassSnd:'slap3'},
+  {id:18, name:'シティポップ', bpm:100, rhOff2:-3, drum:'city', arp:'cityep', inst:'epcity', arp2:'brassobb', inst2:'brass3', kit:'city', bass:true, bassSnd:'slap3'},
   {id:9, name:'ファンキー', bpm:104, drum:'sixteen', arp:'clavfunk', inst:'clav', arp2:'brasshit', inst2:'brass3', kit:'std', bass:true},
   {id:11, name:'ジャジー', bpm:100, drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
   {id:19, name:'ローファイ', bpm:80, drum:'lofi', arp:'lofi', inst:'lofi', kit:'lofi', bass:true, bassSnd:'ubass'},
@@ -497,11 +497,11 @@ for(const k in ARPS){ const A=ARPS[k]; if(A.ev) prepNx(A.ev); if(A.sit){ for(con
   ARPS[k].at=atMap(ARPS[k].ev); }
 
 // 音色の名前は、楽器にくわしくない人にもわかる言い方で
-const INSTS={piano:'ピアノ',epiano:'電子ピアノ',epcity:'強く弾いた電子ピアノ',clav:'クラビネット',lofi:'レトロな電子ピアノ',spiano:'電子音のピアノ',organ:'オルガン',
+const INSTS={piano:'ピアノ',epiano:'エレピ（やわらか）',epcity:'エレピ（シティポップ）',clav:'クラビネット',lofi:'エレピ（ローファイ）',spiano:'電子音のピアノ',organ:'オルガン',
   steel:'アコースティックギター',nylon:'クラシックギター',eguitar:'エレキギター',dist:'ロックギター（歪み）',
   strings3:'バイオリンなど（弦楽器）',brass3:'ラッパ隊（ブラス）',sbrass:'シンセブラス',trumpet:'トランペット',trombone:'トロンボーン',sax:'サックス',horn:'ホルン',glock:'鉄琴（キラキラ）',synth:'電子音（シンセ）',pad:'ふんわり電子音',koto:'琴',shami:'三味線'};
 // 音源ファイルの名前（ひずみギターはエレキを、ローファイはエレピを加工して使う）
-const SETOF=i=>({dist:'eguitar',lofi:'epiano',epcity:'epiano'})[i]||i;
+const SETOF=i=>({dist:'eguitar',lofi:'epiano'})[i]||i;   // シティポップのエレピは、3つのエレピを重ねて焼き込んだ音源 epcity
 // 聴き比べて決めた音（ストリングス＝JCLive、ブラス＝JCLive）。前の候補を選んでいた保存データ・リンクはこちらに置きかえる
 const INST_ALIAS={strings:'strings3',strings2:'strings3',brass:'brass3',brass2:'brass3',clav2:'clav',clav3:'clav',sbrass3:'sbrass'};
 const fixInst=v=>INST_ALIAS[v]||v;

@@ -482,7 +482,7 @@ function openSheet(kind){
   $('sheetTitle').textContent = kind==='drum' ? 'ドラム' : kind==='style' ? '伴奏スタイル' : kind==='arp2' ? '重ねる楽器' : 'コードの演奏';
   $('soundTitle').textContent = kind==='drum' ? 'ドラムの音' : kind==='style' ? 'コードの楽器' : '楽器';
   const soundRow=()=>groupPick($('soundChips'), kind==='drum'?KIT_GROUPS:INST_GROUPS, kind==='drum'?KITS:INSTS, kind==='drum'?state.kit:kind==='arp2'?(state.inst2||'epiano'):state.inst,
-    v=>{ if(kind==='arp2'){ state.inst2=v; save(); renderAll(); ensureSounds(); } else (kind==='drum'?pickKit:pickInst)(v); soundRow(); });
+    v=>{ if(kind==='arp2'){ state.inst2=v; save(); renderAll(); ensureSounds(); } else (kind==='drum'?pickKit:pickInst)(v); soundRow(); renderRange(kind); });   // 楽器を替えたら、標準の音域もその楽器のものに
   soundRow(); $('soundChips').parentElement.hidden=false;
   $('kitSec').hidden = kind!=='style';
   renderRange(kind);
@@ -562,8 +562,9 @@ function renderRange(kind){
   $('lhRow').hidden=isB; $('rhLab').textContent = isB ? 'ベース' : '右手';
   if(!$('rangeSec').hidden){
     // 標準（パターンの決まった高さ）＝絶対値に直して表示。古い相対の設定（rhOff など）があれば、それも絶対値に直す
-    const defOf=k=>{ if(k==='bassLo') return BASS_DEF+(state.bassOff||0); if(/^lh/.test(k)) return LH_DEF+((k==='lhLo2'?state.lhOff2:state.lhOff)||0);
-      const sv=state.arp; if(k==='rhLo2') state.arp=state.arp2||sv; const d=RH_DEF(); state.arp=sv; return d+((k==='rhLo2'?state.rhOff2:state.rhOff)||0); };
+    const io=IOFF(p2?(state.inst2||'epiano'):state.inst);   // 楽器ごとの標準の音域
+    const defOf=k=>{ if(k==='bassLo') return BASS_DEF+(state.bassOff||0); if(/^lh/.test(k)) return LH_DEF+io.lh+((k==='lhLo2'?state.lhOff2:state.lhOff)||0);
+      const sv=state.arp; if(k==='rhLo2') state.arp=state.arp2||sv; const d=RH_DEF(); state.arp=sv; return d+io.rh+((k==='rhLo2'?state.rhOff2:state.rhOff)||0); };
     [['rh',isB?'bassLo':p2?'rhLo2':'rhLo'],['lh',p2?'lhLo2':'lhLo']].forEach(([id,k])=>{
       const lo0=isB?16:id==='lh'?28:40, hi0=isB?60:id==='lh'?72:96, kb=$(id+'Kb'), out=$(id+'Out');
       const draw=()=>{ const lo=state[k]??defOf(k); kb.min=lo0; kb.max=hi0; kb.value=lo; out.textContent=`${midiName(lo)}〜${midiName(lo+11)}`+(state[k]==null?'（標準）':''); };
