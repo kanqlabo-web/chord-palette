@@ -270,7 +270,7 @@ function buildMenu(){
   if(UL()>=5) chips($('barChips'), [[4,'4'+unit],[8,'8'+unit],[16,'16'+unit]], state.bars, v=>{ state.bars=v; if(page*4>=v) page=0; renderAll(); });
   $('lenSec').hidden=UL()<LV_MAX && state.len===4;   // 1マスの長さ・数字の書き方は、全レベルクリアまで出さない（初めての人には要らない）
   chips($('lenChips'), [[4,'4拍（1小節）'],[2,'2拍'],[1,'1拍']], state.len, v=>{ state.len=v; renderAll(); });
-  $('lenNote').textContent = '2拍にすると、1マスが2拍になります（4マスで2小節）。' + (state.pro ? 'PROモードの拍ごとの切り替えは、1マスの中（2拍なら2拍目）で使えます。' : '');
+  $('lenNote').textContent = '2拍にすると、1マスが半分の長さになります。';
   if(state.label==='roman'){ state.label='num'; state.numStyle='roman'; }   // 前の設定（ローマ数字）からの引き継ぎ
   if(state.label!=='alpha') state.label=numK();
   chips($('labelChips'), [['num','数字'],['alpha','アルファベット']], state.label==='alpha'?'alpha':'num', v=>{ state.label=v==='alpha'?'alpha':numK(); save(); renderAll(); });
