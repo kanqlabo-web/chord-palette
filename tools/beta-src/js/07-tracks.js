@@ -1004,3 +1004,14 @@ editTrackPattern=function(kind,scene){ openBlk(kind, scene, '', 0, null); };
     tg.addEventListener('touchmove',mv,{passive:true}); tg.addEventListener('touchend',end); tg.addEventListener('touchcancel',end); },{passive:true}); }
 // ミキサーを開いているとき、右側（トラックの一覧）の何もない所をタップすると閉じる
 $('dScroll').addEventListener('click',e=>{ if(!TRK_SEL || e.target.closest('button,input,a,.dtl,canvas,.dmore')) return; TRK_SEL=null; renderTracks(); });
+// パソコンなど横に広い画面：下から出るシートと選ぶ画面は、まん中に適度な幅でまとめる。トラック画面は帯を高くして、縦の余白を減らす
+{ const st=document.createElement('style'); st.textContent=`
+@media (min-width:760px){
+  .sheet{max-width:640px;margin:0 auto;border:1px solid var(--line);border-bottom:0;box-sizing:border-box}
+  #patSheet{max-width:960px}
+  #pickScr .phd,#pickScr .tpane{width:100%;max-width:820px;margin-left:auto;margin-right:auto;box-sizing:border-box}
+  #pickScr .tpane{border-left:1px solid var(--line);border-right:1px solid var(--line)}
+}
+@media (min-width:900px) and (min-height:640px){ #trk{--drh:108px} }
+@media (min-width:760px) and (min-height:720px){ .tut{justify-content:center} .tutstage{flex:0 1 auto;min-height:440px} .tutbar{max-width:620px} .tutnav{margin-top:28px} }
+@media (min-width:1200px) and (min-height:900px){ .mpin{zoom:1.3} }`; document.head.appendChild(st); }
