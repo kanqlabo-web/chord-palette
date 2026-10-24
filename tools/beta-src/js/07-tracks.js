@@ -962,11 +962,36 @@ editTrackPattern=function(kind,scene){ openBlk(kind, scene, '', 0, null); };
 // トラック画面は横にスクロールさせない（ページは上の四角で切りかえる）。ミキサーの開け閉めのあとも、いまのページの位置にもどす
 { const st=document.createElement('style'); st.textContent=`#trk .dscroll{overflow-x:hidden;overflow-y:auto}
 .mbtn{display:inline-grid;place-items:center}.mbtn svg{width:12px;height:12px}`; document.head.appendChild(st); }
-// スワイプでミキサーを開け閉め：トラックの頭（M・S・楽器の絵）や左のはしを右へ → そのトラックのミキサー、ミキサーを左へ → 閉じる
-{ let T0=null; const body=$('dInsp').parentElement;
-  body.addEventListener('touchstart',e=>{ const t=e.touches[0]; if(e.touches.length!==1 || e.target.closest('input,textarea,select,.dtl')){ T0=null; return; }
-    const row=e.target.closest('.dtrack'); T0={x:t.clientX, y:t.clientY, at:Date.now(), inInsp:!!e.target.closest('#dInsp'), kind:row?row.dataset.kind:null, edge:t.clientX<28}; },{passive:true});
-  body.addEventListener('touchend',e=>{ if(!T0) return; const t=e.changedTouches[0], dx=t.clientX-T0.x, dy=t.clientY-T0.y, s=T0; T0=null;
-    if(Date.now()-s.at>700 || Math.abs(dx)<50 || Math.abs(dx)<Math.abs(dy)*1.5) return;
-    if(dx<0 && TRK_SEL && s.inInsp){ TRK_SEL=null; renderTracks(); }
-    else if(dx>0 && !TRK_SEL && (s.kind||s.edge)){ const L=trackList(); TRK_SEL=s.kind||(L[0]&&L[0].kind)||null; if(TRK_SEL) renderTracks(); } },{passive:true}); }
+// スワイプでミキサーを開け閉め（指について動く）：トラックの頭（M・S・楽器の絵）や左のはしを右へ → そのトラックのミキサー、どこでも左へ → 閉じる
+// スライダー・入力欄・色の帯（.dtl）の上では反応しない。タップで開け閉めしたときも横にすべらせる
+{ const ins=$('dInsp'), body=ins.parentElement; let G=null, busy=false;
+  const W=()=>ins.offsetWidth||Math.min(340,innerWidth*.68);
+  const setX=(x,anim)=>{ ins.style.transition=anim?'margin-left .22s ease':'none'; ins.style.marginLeft=x+'px'; };
+  const rt=renderTracks;
+  renderTracks=function(){
+    const was=ins.hidden;
+    if(!was && !TRK_SEL && !trk.hidden && !busy && !G){ busy=true; setX(-W(),true);   // 閉じるときは左へすべらせてから
+      setTimeout(()=>{ busy=false; rt.apply(this,arguments); setX(0,false); },220); return; }
+    const r=rt.apply(this,arguments);
+    if(was && !ins.hidden && !G){ setX(-W(),false); requestAnimationFrame(()=>requestAnimationFrame(()=>setX(0,true))); }   // 開くときは左から出す
+    return r; };
+  const settle=open=>{ const w=W(); setX(open?0:-w,true);
+    setTimeout(()=>{ G=null; if(!open){ TRK_SEL=null; busy=true; rt(); busy=false; setX(0,false); } },230); };
+  body.addEventListener('touchstart',e=>{ if(G||busy) return; const t=e.touches[0];
+    if(e.touches.length!==1 || e.target.closest('input,textarea,select,.dtl')) return;
+    const row=e.target.closest('.dtrack'), tg=e.target;
+    const g={x:t.clientX, y:t.clientY, at:Date.now(), kind:row?row.dataset.kind:null, edge:t.clientX<28, open:!!TRK_SEL, mode:null, dx:0};
+    const mv=ev=>{ const p=ev.touches[0], dx=p.clientX-g.x, dy=p.clientY-g.y; g.dx=dx;
+      if(!g.mode){ if(Math.abs(dx)<10 && Math.abs(dy)<10) return;
+        if(Math.abs(dx)<Math.abs(dy)*1.3) g.mode='no';
+        else if(g.open && dx<0) g.mode='close';
+        else if(!g.open && dx>0 && (g.kind||g.edge)){ const L=trackList(); const k=g.kind||(L[0]&&L[0].kind); if(!k){ g.mode='no'; } else { g.mode='open'; G=g; TRK_SEL=k; rt(); setX(-W(),false); } }
+        else g.mode='no';
+        if(g.mode==='close') G=g; }
+      if(g.mode==='close') setX(Math.min(0,dx),false);
+      else if(g.mode==='open') setX(Math.min(0,-W()+dx),false); };
+    const end=()=>{ tg.removeEventListener('touchmove',mv); tg.removeEventListener('touchend',end); tg.removeEventListener('touchcancel',end);
+      const fast=Date.now()-g.at<350, w=W();
+      if(g.mode==='close') settle(!(g.dx<-w/3 || (fast&&g.dx<-40)));
+      else if(g.mode==='open') settle(g.dx>w/3 || (fast&&g.dx>40)); };
+    tg.addEventListener('touchmove',mv,{passive:true}); tg.addEventListener('touchend',end); tg.addEventListener('touchcancel',end); },{passive:true}); }
