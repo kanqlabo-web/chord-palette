@@ -765,3 +765,26 @@ $('blkMore').onclick=()=>{ const B=BLKE; BLKE=null; $('blkEd').hidden=true; $('b
 { const pl=play, sp=stop; play=function(){ const r=pl.apply(this,arguments); Promise.resolve(r).then(blkPlayIco); return r; }; stop=function(){ const r=sp.apply(this,arguments); blkPlayIco(); return r; }; }
 // 再生中の位置（線）
 (function bphLoop(){ const ph=$('bPh'); if(ph && BLKE){ if(playing&&cur&&ctx){ const L=slotSteps(), frac=Math.min(1,(ctx.currentTime-cur.t)/stepDur()); ph.hidden=false; ph.style.left=((cur.b+(cur.s+frac)/(cur.L||16))*L*BSW)+'px'; } else ph.hidden=true; } requestAnimationFrame(bphLoop); })();
+// チュートリアルの吹き出しがパレットのコードを隠すとき（スマホの縦画面）は、コードを小さくして下に寄せ、空いた上に吹き出しを置く
+{ const co=coach, cc=closeCoach, pal=$('palette');
+  const room=on=>{ document.body.classList.toggle('coachRoom',!!on); if(!on) pal.style.removeProperty('--coachRow'); };
+  const tilesRect=()=>{ const rs=[...pal.querySelectorAll('.tile')].map(t=>t.getBoundingClientRect()).filter(r=>r.width);
+    const l=Math.min(...rs.map(r=>r.left)), t=Math.min(...rs.map(r=>r.top)), rt=Math.max(...rs.map(r=>r.right)), b=Math.max(...rs.map(r=>r.bottom));
+    return {left:l,top:t,right:rt,bottom:b,width:rt-l,height:b-t}; };
+  const covers=()=>{ const B=$('coachBubble').getBoundingClientRect();
+    return [...pal.querySelectorAll('.tile'),...$('slots').children].some(e=>{ const r=e.getBoundingClientRect(); return r.width&&r.left<B.right&&r.right>B.left&&r.top<B.bottom&&r.bottom>B.top; }); };
+  coach=function(target,text,btns,keepLite){
+    const arr=Array.isArray(target)?target:[target];
+    if(!arr.includes(pal)){ room(false); return co.apply(this,arguments); }
+    const sub=()=>arr.map(t=>t===pal?tilesRect():t);
+    if(document.body.classList.contains('coachRoom')) return co(sub(),text,btns,keepLite);
+    co(target,text,btns,keepLite);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ if($('coach').hidden||!covers()) return;
+      const P=pal.getBoundingClientRect(), h=$('coachBubble').offsetHeight, gap=8, cur=tilesRect().height;
+      const row=Math.max(44,Math.floor((P.height-h-48-2*gap)/3)); if(row*3+2*gap>=cur) return;
+      pal.style.setProperty('--coachRow',row+'px'); room(true);
+      requestAnimationFrame(()=>co(sub(),text,btns,keepLite)); })); };
+  closeCoach=function(){ room(false); return cc.apply(this,arguments); };
+  const st=document.createElement('style'); st.textContent=`
+body.coachRoom .palette{grid-template-rows:repeat(3,var(--coachRow));align-content:end}
+body.coachRoom .palette .tile{height:var(--coachRow)}`; document.head.appendChild(st); }
