@@ -957,3 +957,13 @@ editTrackPattern=function(kind,scene){ openBlk(kind, scene, '', 0, null); };
 // 再生中の位置（線）
 (function bphLoop(){ const ph=$('bPh'); if(ph && BLKE){ if(playing&&cur&&ctx){ const L=slotSteps(), frac=Math.min(1,(ctx.currentTime-cur.t)/stepDur()); ph.hidden=false; ph.style.left=((cur.b+(cur.s+frac)/(cur.L||16))*L*BSW)+'px'; } else ph.hidden=true; } requestAnimationFrame(bphLoop); })();
 { const st=document.createElement('style'); st.textContent=`.accOff{visibility:hidden;pointer-events:none}`; document.head.appendChild(st); }
+// トラック画面は横にスクロールさせない（ページは上の四角で切りかえる）。ミキサーの開け閉めのあとも、いまのページの位置にもどす
+{ const st=document.createElement('style'); st.textContent=`#trk .dscroll{overflow-x:hidden;overflow-y:auto}`; document.head.appendChild(st); }
+// スワイプでミキサーを開け閉め：トラックの頭（M・S・楽器の絵）や左のはしを右へ → そのトラックのミキサー、ミキサーを左へ → 閉じる
+{ let T0=null; const body=$('dInsp').parentElement;
+  body.addEventListener('touchstart',e=>{ const t=e.touches[0]; if(e.touches.length!==1 || e.target.closest('input,textarea,select,.dtl')){ T0=null; return; }
+    const row=e.target.closest('.dtrack'); T0={x:t.clientX, y:t.clientY, at:Date.now(), inInsp:!!e.target.closest('#dInsp'), kind:row?row.dataset.kind:null, edge:t.clientX<28}; },{passive:true});
+  body.addEventListener('touchend',e=>{ if(!T0) return; const t=e.changedTouches[0], dx=t.clientX-T0.x, dy=t.clientY-T0.y, s=T0; T0=null;
+    if(Date.now()-s.at>700 || Math.abs(dx)<50 || Math.abs(dx)<Math.abs(dy)*1.5) return;
+    if(dx<0 && TRK_SEL && s.inInsp){ TRK_SEL=null; renderTracks(); }
+    else if(dx>0 && !TRK_SEL && (s.kind||s.edge)){ const L=trackList(); TRK_SEL=s.kind||(L[0]&&L[0].kind)||null; if(TRK_SEL) renderTracks(); } },{passive:true}); }
