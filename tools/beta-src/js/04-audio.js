@@ -81,13 +81,15 @@ function loadSet(name){
   }
   return SETS[name];
 }
-function neededSets(){ const n=[]; if(state.kit!=='synth') n.push('kit-'+(state.kit==='lofi'||state.kit==='city'?'std':state.kit)); if(!isSynthInst()) n.push(SETOF(state.inst));
+// ローファイのドラムは、音づくりまで済ませた専用の音源（kit-lofi）。入っていない音（タムなど）は標準キットを加工して鳴らす
+const kitSets=k=>k==='lofi'?['kit-lofi','kit-std']:['kit-'+(k==='city'?'std':k)];
+function neededSets(){ const n=[]; if(state.kit!=='synth') n.push(...kitSets(state.kit)); if(!isSynthInst()) n.push(SETOF(state.inst));
   if(state.arp2&&ARPS[state.arp2]){ if(!(state.inst2 in SYNTH_INST)) n.push(SETOF(state.inst2||'epiano')); }
   // PRO で足した楽器
   if(state.pro) (state.xtr||[]).forEach(t=>{ if(t&&t.arp&&ARPS[t.arp]&&!(t.inst in SYNTH_INST)) n.push(SETOF(t.inst||'piano')); });
   const b=state.bassSnd||'bass'; if(b!=='sbass' && (!isSynthInst()||b!=='bass')) n.push(b);
   // PRO で足したドラム・ベース
-  if(state.pro) (state.xtr||[]).forEach(t=>{ if(t&&t.type==='drum'&&t.kit!=='synth') n.push('kit-'+(t.kit==='lofi'||t.kit==='city'?'std':(t.kit||'std'))); if(t&&t.type==='bass'&&t.bassSnd!=='sbass') n.push(t.bassSnd||'bass'); });
+  if(state.pro) (state.xtr||[]).forEach(t=>{ if(t&&t.type==='drum'&&t.kit!=='synth') n.push(...kitSets(t.kit||'std')); if(t&&t.type==='bass'&&t.bassSnd!=='sbass') n.push(t.bassSnd||'bass'); });
   return [...new Set(n)]; }
 function loadingNow(){ return neededSets().some(n=>!LOADED[n]&&!FAILED[n]); }
 function ensureSounds(){ const p=Promise.all(neededSets().map(loadSet)); renderBadge(); return p; }
@@ -248,6 +250,8 @@ function drumIn(note,t,vel=1){
   if(state.kit==='synth'){ chipDrum(note,t,vel); return; }   // ピコピコドラムは 8bit の音に
   const KG=KIT_GAIN[state.kit]; if(KG&&KG[note]) vel*=KG[note];
   const lofi=state.kit==='lofi', city=state.kit==='city', kit=LOADED['kit-'+(lofi||city?'std':state.kit)];
+  // ローファイ：サンプラーで録り直したようなザラつき・こもりは音源に焼き込み済みなので、そのまま最後まで鳴らす
+  const LZ=lofi&&LOADED['kit-lofi']&&LOADED['kit-lofi'][note]; if(LZ&&LZ[0].buf&&playZone(LZ,note,t,LZ[0].buf.duration,.8*vel,.05)) return;
   if(kit&&kit[note]){ const sv=OUT; if(lofi) OUT=lofiDrum(OUT||master); if(city) OUT=cityDrum(OUT||master,note);
     const dur = city ? (note===36?.16:note===38?.13:note===42?.07:note===44?.07:note===46?.22:note===49?3:note===51?2:.35) : (note===49?2.5:1.2);   // シティポップは短く締める（シンバルは最後まで鳴らす）
     const ok=playZone(kit[note],note,t,dur,DRUM_VOL[note]*vel*(lofi?.9:1),city?(note===49||note===51?.8:.04):.25); OUT=sv; if(ok) return; }
