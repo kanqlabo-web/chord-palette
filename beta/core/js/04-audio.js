@@ -156,29 +156,16 @@ function lofiDrum(dest){ if(!(LOFI&&LOFI.ctx===ctx)) lofiBase(); let n=LOFI.drum
   const inp=ctx.createGain(); const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3200;
   const sh=ctx.createWaveShaper(); const k=2.5, N=1024, c=new Float32Array(N); for(let i=0;i<N;i++){ const x=i/(N-1)*2-1; c[i]=Math.tanh(k*x)/Math.tanh(k); } sh.curve=c;
   const g=ctx.createGain(); g.gain.value=.8; inp.connect(lp); lp.connect(sh); sh.connect(g); g.connect(dest); LOFI.drum.set(dest,inp); return inp; }
-let EPD=null;
-// シティポップのエレピ：明るい音源（epcity）を、ごく軽く飽和させて芯を出し、2.4kHz の金属っぽい鳴りと 4kHz より上を少しだけ持ち上げる。
-// 前は、こもった音源の高音を大きく持ち上げて歪ませていたため、ザーッというノイズが目立っていた（高音は音源の明るさにまかせる）
-function epDrive(dest){ dest=dest||compBus; if(!EPD||EPD.ctx!==ctx) EPD={ctx,m:new Map()}; if(EPD.m.get(dest)) return EPD.m.get(dest);
-  const inp=ctx.createGain(); inp.gain.value=1.2;
-  const sh=ctx.createWaveShaper(); const N=2048, c=new Float32Array(N); for(let i=0;i<N;i++){ const x=i/(N-1)*2-1; c[i]=Math.tanh(1.3*x)/Math.tanh(1.3); } sh.curve=c; sh.oversample='2x';
-  const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=70; hp.Q.value=.7;
-  const mud=ctx.createBiquadFilter(); mud.type='peaking'; mud.frequency.value=450; mud.Q.value=1.2; mud.gain.value=-2;   // こもりの元を少し削る
-  const bark=ctx.createBiquadFilter(); bark.type='peaking'; bark.frequency.value=2400; bark.Q.value=1; bark.gain.value=3;
-  const air=ctx.createBiquadFilter(); air.type='highshelf'; air.frequency.value=4000; air.gain.value=4;      // キラキラ：高音の抜け
-  const top=ctx.createBiquadFilter(); top.type='lowpass'; top.frequency.value=12000; top.Q.value=.6;      // 音源にない高さのざらつきは通さない
-  const out=ctx.createGain(); out.gain.value=.88;
-  inp.connect(sh); sh.connect(hp); hp.connect(mud); mud.connect(bark); bark.connect(air); air.connect(top); top.connect(out); out.connect(dest);
-  EPD.m.set(dest,inp); return inp; }
 function keyTone(m,t,dur,v,inst){
   v=Math.max(.05,Math.min(1,v)); if(CAPTURE){ CAPTURE.push({k:PARTN===0?'key':'key'+(PARTN+1),n:m,t,d:dur,v}); return null; }
   const BUS=PARTN===0?compBus:PARTN===1?compBus2:xBus(PARTN);
   const I=inst||state.inst;
   if(I==='epcity' && LOADED.epcity){
-    // シティポップのエレピ：アタックを少し立て、トーンの金属っぽい鳴りを足す（歪ませすぎない）
-    OUT=epDrive(BUS); const fx=INST_FX.epiano, lv=.36*fx.gain*Math.pow(v,1.3)*.75, dd=Math.max(dur*fx.hold,.08);
+    // シティポップのエレピ：やわらかいエレピ（芯と温かみ）・FM のエレピ2種（抜けと硬さ）を重ねて、音色づくりまで済ませた音源（epcity）。
+    // 重ねる・加工する処理は前もって音源に焼き込んであるので、ここではそのまま鳴らす。アタックだけ少し立てる
+    OUT=BUS; const fx=INST_FX.epiano, lv=.5*Math.pow(v/.85,1.3), dd=Math.max(dur*fx.hold,.08);
     const g=playZone(LOADED.epcity,m,t,dd,lv,.25,16000,false); OUT=null;
-    if(g){ try{ const G=g.gain; G.cancelScheduledValues(t); G.setValueAtTime(0,t); G.linearRampToValueAtTime(lv*1.5,t+.002); G.setTargetAtTime(lv,t+.006,.035); G.setValueAtTime(lv,t+dd); G.setTargetAtTime(0,t+dd,.22); }catch(e){} }
+    if(g){ try{ const G=g.gain; G.cancelScheduledValues(t); G.setValueAtTime(0,t); G.linearRampToValueAtTime(lv*1.2,t+.002); G.setTargetAtTime(lv,t+.006,.035); G.setValueAtTime(lv,t+dd); G.setTargetAtTime(0,t+dd,.22); }catch(e){} }
     return g; }
   if(I==='lofi' && LOADED.epiano){
     // ローファイ：エレピを、こもらせて少し揺らす（古いテープ・レコードの感じ）
