@@ -523,6 +523,8 @@ function twoPane(el, cats, cur, onPick){ cats=cats.filter(c=>c[1].length);
     b.innerHTML=`<span>${esc(c[0])}</span>${has(c)?'<i aria-label="選んでいるものがあります"></i>':ICO.chev}`; b.onclick=()=>{ el.dataset.g=c[0]; twoPane(el,cats,cur,onPick); }; L.appendChild(b); });
   const draws=[]; cats.find(c=>c[0]===g)[1].forEach(it=>{ const b=document.createElement('button'); b.className='tpi'; b.setAttribute('aria-pressed',it.k===cur);
     b.innerHTML=`${it.cv?'<canvas></canvas>':(it.ico||'')}<span><b>${esc(it.label)}</b>${it.sub?`<small>${esc(it.sub)}</small>`:''}</span>${it.k===cur?ICO_CK:''}`;
+    if(it.del){ const d=document.createElement('span'); d.className='tpdel'; d.setAttribute('role','button'); d.setAttribute('aria-label','削除'); d.innerHTML=ICO_TRASH; b.appendChild(d);   // 2回押すと消す
+      d.onclick=e=>{ e.stopPropagation(); if(!d.dataset.armed){ d.dataset.armed='1'; d.textContent='削除'; setTimeout(()=>{ if(d.isConnected){ delete d.dataset.armed; d.innerHTML=ICO_TRASH; } },3000); return; } it.del(); }; }
     b.onclick=()=>onPick(it.k); R.appendChild(b); if(it.cv) draws.push([b.querySelector('canvas'),it.cv]); });
   const sel=R.querySelector('[aria-pressed=true]'); if(sel) requestAnimationFrame(()=>{ R.scrollTop=Math.max(0,sel.offsetTop-R.clientHeight/3); });
   if(draws.length) requestAnimationFrame(()=>draws.forEach(([cv,f])=>{ if(cv.clientWidth) f(cv); })); }
@@ -590,7 +592,7 @@ const LAYER_PATS=new Set(['glockline','brassobb','brasshit','hornline','anilead'
 function patCats(kind){ const drum=isDrumK(kind), src=drum?DRUMS:ARPS, order=drum?drumOrder():arpOrder(), X=xOf(kind), p2like=kind==='arp2'||!!X;
   const used={}; STYLES.forEach(st=>{ const k=drum?st.drum:st.arp; (used[k]=used[k]||[]).push(st.name); if(!drum&&st.arp2) (used[st.arp2]=used[st.arp2]||[]).push(st.name+'の上もの'); });
   const col=colors(), cv=k=>c=>{ const g=fit(c); if(drum) drawDrumBar(g,0,0,c.width,c.height,DRUMS[k],col); else drawArpBar(g,0,0,c.width,c.height,ARPS[k],col.t,col); };
-  const it=k=>({k, label:patName(src[k]), sub:/^my\d+$/.test(k)?'自分で作ったパターン':src[k]&&src[k].desc?src[k].desc:used[k]?used[k].join('・')+'で使う':'', cv:cv(k)});
+  const it=k=>({k, del:/^my\d+$/.test(k)?()=>{ delMyPat(kind,k); if(PICK){ PICK.cur=PICK.cur0=patOf(kind); drawPicker(); } }:null, label:/^my\d+$/.test(k)?patName(src[k]).replace(/（自分用）$/,''):patName(src[k]), sub:/^my\d+$/.test(k)?'':src[k]&&src[k].desc?src[k].desc:used[k]?used[k].join('・')+'で使う':'', cv:cv(k)});
   const my=order.filter(k=>/^my\d+$/.test(k)), rest=order.filter(k=>!/^my\d+$/.test(k));
   const cats=[['自分で作ったもの',my.map(it)], ['伴奏スタイルの演奏',rest.filter(k=>used[k]&&!LAYER_PATS.has(k)).map(it)], ['重ねる上もの',rest.filter(k=>LAYER_PATS.has(k)).map(it)], ['そのほか',rest.filter(k=>!used[k]&&!LAYER_PATS.has(k)).map(it)]];
   if(drum) cats.forEach(c=>c[1]=c[1].filter(x=>x.k!=='none'));   // 「なし」はトラックをなくすことで（PRO）
@@ -1016,3 +1018,16 @@ $('dScroll').addEventListener('click',e=>{ if(!TRK_SEL || e.target.closest('butt
 @media (min-width:900px) and (min-height:640px){ #trk{--drh:108px} }
 @media (min-width:760px) and (min-height:720px){ .tut{justify-content:center} .tutstage{flex:0 1 auto;min-height:440px} .tutbar{max-width:620px} .tutnav{margin-top:28px} }
 @media (min-width:1200px) and (min-height:900px){ .mpin{zoom:1.3} }`; document.head.appendChild(st); }
+
+// マイパターン（自分で作った演奏）を消す。ほかのトラックが同じ一覧の後ろのパターンを使っていたら、番号をつめる。消したものを使っていたトラックは標準の演奏にもどす
+const ICO_TRASH='<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function delMyPat(kind,key){ const typ=k=>isDrumK(k)?'d':isBassK(k)?'b':'a', T=typ(kind), i=+key.slice(2), list=listOf(kind);
+  const def=T==='d'?'pop':T==='b'?'auto':'piano4';
+  trackList().map(t=>t.kind).filter(k=>typ(k)===T).forEach(k=>{ const p=patOf(k); if(!/^my\d+$/.test(p)) return; const j=+p.slice(2); if(j===i) setPatOf(k,def); else if(j>i) setPatOf(k,'my'+(j-1)); });
+  list.splice(i,1); rebuildMy(); save(); renderAll(); renderTracks(); toast('マイパターンを消しました'); }
+{ const st=document.createElement('style'); st.textContent=`
+.tpi .tpdel{margin-left:auto;flex:none;min-width:30px;height:30px;padding:0 4px;border-radius:8px;display:grid;place-items:center;color:var(--muted);border:0;background:transparent;font-size:.75rem;font-weight:800;box-sizing:border-box}
+.tpi .tpdel[data-armed]{padding:0 8px}
+.tpi>span:not(.tpdel){flex:1;min-width:0}
+#pickScr .tpi .tpdel,.tpi .tpdel{flex:none!important}
+.tpi .tpdel[data-armed]{background:var(--d);border-color:var(--d);color:#fff}`; document.head.appendChild(st); }
