@@ -1,8 +1,9 @@
 // ---------- audio ----------
 let PAN=null, PAN_NEXT=null, BOWBAR=0;
-const PIANOISH=new Set(['piano','spiano','epiano','epcity','lofi','organ','clav']);   // 次に鳴らす音の左右の位置（-1=左〜1=右、null=まん中）
+const PIANOISH=new Set(['piano','spiano','chipsq','chiptri','chipsaw','epiano','epcity','lofi','organ','clav']);   // 次に鳴らす音の左右の位置（-1=左〜1=右、null=まん中）
 let ctx=null, master, masterOut=null, noiseBuf, compBus=null, compVol=null, compBus2=null, compVol2=null, drumBus=null, bassBus=null, OUT=null, PART2=false;
-let REVERB=null;
+// PARTN：いま鳴らしているコード楽器（0＝コード、1＝コード2、2〜＝PRO で足した楽器 state.xtr[PARTN-2]）。PART2 は「コード以外のコード楽器」
+let PARTN=0, REVERB=null;
 const CHAN={};   // 楽器ごとの出口。キーは mix の名前（arp・arp2・drum・bass・足した楽器の id）
 // 出口を作る：入口 → 低音・高音（EQ）→ コンプ → 音量（2ch にそろえる）→ 左右（パン）→ マスター。音量のあとからリバーブ・エコーへ送る
 // どの効果も 0 なら音は変わらない（EQ は 0dB、コンプは素通し）
@@ -23,6 +24,11 @@ function mkEcho(){ const inp=ctx.createGain(), d=ctx.createDelay(2), fb=ctx.crea
 function mkReverb(){ const sr=ctx.sampleRate, n=Math.floor(sr*2.4), ir=ctx.createBuffer(2,n,sr);
   for(let c=0;c<2;c++){ const d=ir.getChannelData(c); for(let i=0;i<n;i++){ const x=i/sr; d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.2)*Math.exp(-x*1.6)*(x<.012?x/.012:1); } }
   const cv=ctx.createConvolver(); cv.buffer=ir; const g=ctx.createGain(); g.gain.value=.8; cv.connect(g); g.connect(master); return cv; }
+// 足した楽器の音の入口（なければ作る）
+// 足したドラム・ベースの出口（トラックごとのチャンネル）
+function xChan(id){ const had=!!CHAN[id], c=mkChan(id); if(!had) applyMix(); return c.inp; }
+const XB={}; function xBus(k){ const t=(state.xtr||[])[k-2]; if(!t) return compBus2; const c=CHAN[t.id]||mkChan(t.id);
+  if(!XB[t.id]){ XB[t.id]=ctx.createGain(); XB[t.id].connect(c.inp); applyMix(); } return XB[t.id]; }
 // 最後の音量の整え方：まとめる（軽いコンプ）→ 音割れ止め（リミッター）→ それでも越えた分だけ丸める。
 // ブラウザのコンプは自動で音量を持ち上げるため、そのぶんをすぐ後ろで下げてから次へ渡す
 const MASTER_CFG={trim:.5, glue:{th:-16,ratio:2.5,knee:8,atk:.006,rel:.18}, lim:{th:-4,ratio:20,knee:0,atk:.0015,rel:.09}, out:1};
@@ -36,8 +42,7 @@ function ensureAudio(noResume){
   if(!ctx){
     ctx=new (window.AudioContext||window.webkitAudioContext)();
     master=ctx.createGain(); master.gain.value=.85; masterOut=mkMaster(master); masterOut.connect(ctx.destination);
-    REVERB=mkReverb(); ECHO=mkEcho(); for(const k in CHAN) delete CHAN[k];
-    // ミキサーは出さないが、伴奏スタイルごとのミックス（左右・響き・コンプなど）はベータ版と同じ道を通す
+    REVERB=mkReverb(); ECHO=mkEcho(); for(const k in CHAN) delete CHAN[k]; for(const k in XB) delete XB[k];
     compVol=mkChan('arp').inp; drumBus=mkChan('drum').inp; bassBus=mkChan('bass').inp;
     compVol2=mkChan('arp2').inp; compBus2=ctx.createGain(); compBus2.connect(compVol2);   // 楽器2（PRO）
     compBus=ctx.createGain(); compBus.connect(compVol); applyMix();   // 伴奏（コード）だけを通す道。ダンスではキックに合わせて音量を沈める（サイドチェイン風）
@@ -60,10 +65,11 @@ const mtof=m=>440*Math.pow(2,(m-69)/12);
 const SETS={}, LOADED={}, FAILED={};
 function decode(ab){ return new Promise((res,rej)=>{ const p=ctx.decodeAudioData(ab,res,rej); if(p&&p.then) p.then(res,rej); }); }
 async function decZone(z){ if(z.buf) return; const bin=atob(z.f), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); z.buf=await decode(u.buffer); delete z.f; }
+const SND_FILE={strings3:'strings3c',brass3:'brass3c'};  // ベータ版だけ：新しい音源（Chaos）を使う
 function loadSet(name){
   if(!SETS[name]){
     if(!ctx) ensureAudio(true);
-    SETS[name]=fetch(`${CP.snd}${name}.json`).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(async data=>{
+    SETS[name]=fetch(`${CP.snd}${SND_FILE[name]||name}.json`).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(async data=>{
       const zones=Array.isArray(data)?data:Object.values(data).flat();
       await Promise.all(zones.map(decZone));
       // 弦楽器：音源の音域ごとの大きさの差（3〜4dB 小さい音域がある）をそろえて、内声だけ引っこまないように
@@ -75,8 +81,16 @@ function loadSet(name){
   }
   return SETS[name];
 }
-function neededSets(){ const n=[]; if(state.kit!=='synth') n.push('kit-'+(state.kit==='lofi'||state.kit==='city'?'std':state.kit)); if(!isSynthInst()) n.push(SETOF(state.inst));
-  if(state.arp2&&ARPS[state.arp2]){ if(!(state.inst2 in SYNTH_INST)) n.push(SETOF(state.inst2||'epiano')); } const b=state.bassSnd||'bass'; if(b!=='sbass' && (!isSynthInst()||b!=='bass')) n.push(b); return n; }
+// ローファイのドラムは、音づくりまで済ませた専用の音源（kit-lofi）。入っていない音（タムなど）は標準キットを加工して鳴らす
+const kitSets=k=>k==='lofi'?['kit-lofi','kit-std']:['kit-'+(k==='city'?'std':k)];
+function neededSets(){ const n=[]; if(state.kit!=='synth') n.push(...kitSets(state.kit)); if(!isSynthInst()) n.push(SETOF(state.inst));
+  if(state.arp2&&ARPS[state.arp2]){ if(!(state.inst2 in SYNTH_INST)) n.push(SETOF(state.inst2||'epiano')); }
+  // PRO で足した楽器
+  if(state.pro) (state.xtr||[]).forEach(t=>{ if(t&&t.arp&&ARPS[t.arp]&&!(t.inst in SYNTH_INST)) n.push(SETOF(t.inst||'piano')); });
+  const b=state.bassSnd||'bass'; if(b!=='sbass' && b!=='cbass' && (state.inst!=='synth'||b!=='bass')) n.push(b);
+  // PRO で足したドラム・ベース
+  if(state.pro) (state.xtr||[]).forEach(t=>{ if(t&&t.type==='drum'&&t.kit!=='synth') n.push(...kitSets(t.kit||'std')); if(t&&t.type==='bass'&&t.bassSnd!=='sbass'&&t.bassSnd!=='cbass') n.push(t.bassSnd||'bass'); });
+  return [...new Set(n)]; }
 function loadingNow(){ return neededSets().some(n=>!LOADED[n]&&!FAILED[n]); }
 function ensureSounds(){ const p=Promise.all(neededSets().map(loadSet)); renderBadge(); return p; }
 function renderBadge(){ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中…':''); }
@@ -144,18 +158,19 @@ function lofiKey(dest){
 function lofiBase(){
   // レコードのノイズ（サーッという音＋ときどきプチッ）
   const sr=ctx.sampleRate, len=sr*3, buf=ctx.createBuffer(1,len,sr), ch=buf.getChannelData(0); let lpv=0;
-  for(let i=0;i<len;i++){ lpv=lpv*.92+(Math.random()*2-1)*.08; ch[i]=lpv*.5 + (Math.random()<.0004 ? (Math.random()*2-1)*(.4+.6*Math.random()) : 0); }
-  const ns=ctx.createBufferSource(); ns.buffer=buf; ns.loop=true; const nf=ctx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=2500; nf.Q.value=.4;
+  for(let i=0;i<len;i++){ lpv=lpv*.92+(Math.random()*2-1)*.08; ch[i]=lpv*.5 + (Math.random()<.0008 ? (Math.random()*2-1)*(.4+.6*Math.random()) : 0); }
+  const ns=ctx.createBufferSource(); ns.buffer=buf; ns.loop=true; const nf=ctx.createBiquadFilter(); nf.type='lowpass'; nf.frequency.value=1100; nf.Q.value=.5;   // こもらせる（高いシャーッを削る）
   const ng=ctx.createGain(); ng.gain.value=0; ns.connect(nf); nf.connect(ng); ng.connect(master); ns.start();
   LOFI={ctx,ng,drum:new Map(),k:new Map()}; }
-function lofiNoise(on){ if(!ctx) return; if(on && !(LOFI&&LOFI.ctx===ctx)) lofiBase(); if(LOFI&&LOFI.ctx===ctx) LOFI.ng.gain.setTargetAtTime(on?.13:0,ctx.currentTime,.15); }
+function lofiNoise(on){ if(!ctx) return; on=false;   // ベータ版：レコードノイズはローファイのエレピに焼きこんだ音だけを使う（曲全体には流さない）
+  if(on && !(LOFI&&LOFI.ctx===ctx)) lofiBase(); if(LOFI&&LOFI.ctx===ctx) LOFI.ng.gain.setTargetAtTime(on?.3:0,ctx.currentTime,.15); }
 function lofiDrum(dest){ if(!(LOFI&&LOFI.ctx===ctx)) lofiBase(); let n=LOFI.drum.get(dest); if(n) return n;
   const inp=ctx.createGain(); const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3200;
   const sh=ctx.createWaveShaper(); const k=2.5, N=1024, c=new Float32Array(N); for(let i=0;i<N;i++){ const x=i/(N-1)*2-1; c[i]=Math.tanh(k*x)/Math.tanh(k); } sh.curve=c;
   const g=ctx.createGain(); g.gain.value=.8; inp.connect(lp); lp.connect(sh); sh.connect(g); g.connect(dest); LOFI.drum.set(dest,inp); return inp; }
 function keyTone(m,t,dur,v,inst){
-  v=Math.max(.05,Math.min(1,v)); if(CAPTURE){ CAPTURE.push({k:PART2?'key2':'key',n:m,t,d:dur,v}); return null; }
-  const BUS=PART2?compBus2:compBus;
+  v=Math.max(.05,Math.min(1,v)); if(CAPTURE){ CAPTURE.push({k:PARTN===0?'key':'key'+(PARTN+1),n:m,t,d:dur,v}); return null; }
+  const BUS=PARTN===0?compBus:PARTN===1?compBus2:xBus(PARTN);
   const I=inst||state.inst;
   if(I==='epcity' && LOADED.epcity){
     // シティポップのエレピ：やわらかいエレピ（芯と温かみ）・FM のエレピ2種（抜けと硬さ）を重ねて、音色づくりまで済ませた音源（epcity）。
@@ -164,10 +179,10 @@ function keyTone(m,t,dur,v,inst){
     const g=playZone(LOADED.epcity,m,t,dd,lv,.25,16000,false); OUT=null;
     if(g){ try{ const G=g.gain; G.cancelScheduledValues(t); G.setValueAtTime(0,t); G.linearRampToValueAtTime(lv*1.2,t+.002); G.setTargetAtTime(lv,t+.006,.035); G.setValueAtTime(lv,t+dd); G.setTargetAtTime(0,t+dd,.22); }catch(e){} }
     return g; }
-  if(I==='lofi' && LOADED.epiano){
+  if(I==='lofi' && LOADED.eplofi){
     // ローファイ：エレピを、こもらせて少し揺らす（古いテープ・レコードの感じ）
     OUT=lofiChain(BUS); const fx=INST_FX.epiano;
-    const g=playZone(LOADED.epiano,m,t,Math.max(dur*fx.hold,.08),.36*fx.gain*Math.pow(v,1.5),.35,700+2600*v,false); OUT=null; return g; }
+    const g=playZone(LOADED.eplofi,m,t,Math.max(dur*fx.hold,.08),.36*fx.gain*Math.pow(v,1.5),.35,700+2600*v,false); OUT=null; return g; }
   if(I==='dist' && LOADED.eguitar){
     // ひずみギター：クリーンのエレキをアンプ風のひずみに通す。短い音（ブリッジミュート）はこもらせて「ズン」と
     OUT=distChain(BUS); const mute=dur<.12;
@@ -182,7 +197,7 @@ function keyTone(m,t,dur,v,inst){
   if(g && /^strings/.test(I)){ const up=BOWBAR%2===1, a=t+(fx.atk||.05), e=t+dd;
     try{ const G=g.gain; G.cancelScheduledValues(t); G.setValueAtTime(0,t); G.linearRampToValueAtTime(lv0*(up?.7:1),a);
       G.linearRampToValueAtTime(lv0*(up?1:.78),Math.max(a+.01,e-.03)); G.setTargetAtTime(0,e,.06); }catch(e){} }
-  const r = g || synthTone(m,t,dur,.34*Math.pow(v,1.3)); OUT=null; return r;
+  const r = g || synthTone(m,t,dur,.34*Math.pow(v,1.3),I); OUT=null; return r;
 }
 function bassTone(m,t,dur,vel=1){ if(CAPTURE){ CAPTURE.push({k:'bass',n:m,t,d:dur,v:vel}); return null; } OUT=(playing||PREV)?bassBus:null; const r=bassTone_(m,t,dur,vel); OUT=null; return r; }
 let lastBassVoice=null;
@@ -192,8 +207,9 @@ function bassTone_(m,t,dur,vel=1){
   const lv=lastBassVoice;
   if(GLIDE && lv && lv.ctx===ctx && lv.end>=t-.03){ legatoVoice(lv,m,t,dur); return lv.g; }
   let g;
-  if(nm==='sbass') g=analogBass(m,t,dur,vel);
-  else g=(!isSynthInst()||nm!=='bass')&&LOADED[nm]&&playZone(LOADED[nm],m,t,dur,.7*vel*fx.gain,.08,fx.cut,fx.loop);
+  if(nm==='cbass') g=chipBass(m,t,dur,vel);   // 8bit のベース（三角波）
+  else if(nm==='sbass') g=analogBass(m,t,dur,vel);
+  else g=(state.inst!=='synth'||nm!=='bass')&&LOADED[nm]&&playZone(LOADED[nm],m,t,dur,.7*vel*fx.gain,.08,fx.cut,fx.loop);
   g=g||synthBass(m,t,dur,vel); bassHeld.push(g);
   lastBassVoice=g.voice?{...g.voice,g,ctx,end:t+dur}:null; return g;
 }
@@ -232,6 +248,10 @@ function cityDrum(dest,note){
     c={kick:kLp, snare:sBody, other:oHp}; CITYD.m.set(dest,c); }
   return note===36?c.kick : (note===38||note===37)?c.snare : c.other; }
 function drumIn(note,t,vel=1){
+  if(state.kit==='synth'){ chipDrum(note,t,vel); return; }   // ピコピコドラムは 8bit の音に
+  // ローファイ：専用音源にある音は、加工が焼き込み済みなのでそのまま最後まで鳴らす
+  const LZ=state.kit==='lofi'&&LOADED['kit-lofi']&&LOADED['kit-lofi'][note];
+  if(LZ&&LZ[0].buf&&playZone(LZ,note,t,LZ[0].buf.duration,.8*vel,.05)) return;
   const KG=KIT_GAIN[state.kit]; if(KG&&KG[note]) vel*=KG[note];
   const lofi=state.kit==='lofi', city=state.kit==='city', kit=LOADED['kit-'+(lofi||city?'std':state.kit)];
   if(kit&&kit[note]){ const sv=OUT; if(lofi) OUT=lofiDrum(OUT||master); if(city) OUT=cityDrum(OUT||master,note);
@@ -253,10 +273,55 @@ function env(g,t,peak,sus,dec,dur,rel,att=.005){
   g.gain.setTargetAtTime(peak*sus,t+att,dec/3);
   g.gain.setTargetAtTime(.0001,t+Math.max(dur,att+.01),rel);
 }
-function synthTone(m,t,dur,vel){
+// ---------- 8bit（ファミコンのような音）：シンセピアノとピコピコドラム ----------
+// 音色は 25% の細い矩形波（ピアノ）・50% の矩形波・16 段の三角波・8 段の鋸形波・がさがさしたノイズ。音量は 1/60 秒ごとの階段で変える（ゲーム機の音の作り方）
+let CHIP=null;
+function chipBase(){ if(CHIP&&CHIP.ctx===ctx) return CHIP; const sr=ctx.sampleRate;
+  const N=64, re=new Float32Array(N), im=new Float32Array(N); for(let k=1;k<N;k++){ im[k]=0; re[k]=2*Math.sin(Math.PI*k*.25)/(Math.PI*k); }   // 25% パルス
+  const pulse=[re,im];
+  // 階段の形の波（1 周 32 歩）から作る：三角波は 16 段、鋸形波は 8 段
+  const stepWave=fn=>{ const S=32, r=new Float32Array(N), i2=new Float32Array(N); for(let k=1;k<N;k++){ let a=0,b=0; for(let j=0;j<S;j++){ const v=fn(j), p0=2*Math.PI*k*j/S, p1=2*Math.PI*k*(j+1)/S; a+=v*(Math.sin(p1)-Math.sin(p0))/(Math.PI*k); b+=v*(Math.cos(p0)-Math.cos(p1))/(Math.PI*k); } r[k]=a; i2[k]=b; } return [r,i2]; };
+  const sq=stepWave(j=>j<16?1:-1), tri=stepWave(j=>{ const q=j<16?15-j:j-16; return q/7.5-1; }), saw=stepWave(j=>Math.floor(j/4)/3.5-1);
+  // 三角波は 16 段の階段に（ファミコンの三角波の、少しざらっとした感じ）
+  const tq=ctx.createWaveShaper(), c=new Float32Array(1024); for(let i=0;i<1024;i++){ const x=i/1023*2-1; c[i]=Math.round(x*7.5)/7.5; } tq.curve=c;
+  const lfsr=(short,hold)=>{ const len=sr, b=ctx.createBuffer(1,len,sr), d=b.getChannelData(0); let r=1, v=1;
+    for(let i=0;i<len;i++){ if(i%hold===0){ const bit=(r^(r>>(short?6:1)))&1; r=(r>>1)|(bit<<14); v=(r&1)?1:-1; } d[i]=v*.8; } return b; };
+  return CHIP={ctx,pulse,sq,tri,saw,pw:{},tq,nLong:lfsr(false,2),nLow:lfsr(false,6),nShort:lfsr(true,3),nHi:lfsr(false,1)}; }
+// 音量の階段（1/60 秒ごと、16 段）。peak から decay の速さで sus まで下げ、dur で離して rel で消す
+function chipEnv(G,t,peak,sus,dec,dur,rel){ const fr=1/60, q=v=>Math.round(v*15/Math.max(peak,1e-4))/15*peak; let tt=t, v=peak;
+  G.setValueAtTime(0,t); G.setValueAtTime(q(peak),t+.001);
+  for(let i=1; tt<t+dur && i<240; i++){ tt=t+i*fr; v=sus*peak+(peak-sus*peak)*Math.exp(-(i*fr)/dec); G.setValueAtTime(q(v),tt); }
+  const vEnd=v; for(let i=1;i<=30;i++){ const x=vEnd*Math.exp(-(i*fr)/rel); G.setValueAtTime(x<peak/15?0:q(x),t+dur+i*fr); if(x<peak/15) break; } }
+// 音の出る楽器の音量はなめらかに変える（1/60 秒の階段にすると、高い音で半音ほど離れた別の音がうなって、不協和音のように聞こえる）
+function chipEnvS(G,t,peak,sus,dec,dur,rel){ G.setValueAtTime(0,t); G.linearRampToValueAtTime(peak,t+.002); G.setTargetAtTime(peak*sus,t+.002,dec); G.setTargetAtTime(0,t+dur,rel); }
+// 音色ごとの [波, 音量, 減衰後の残り, 減衰の速さ, 離したあとの余韻]。ピアノは減っていき、ほかはオルガンのように伸びる（三角波はファミコンでも音量が変えられないので、ほぼ一定）
+const CHIP_V={spiano:['pulse',.64,.55,.18,.12],chipsq:['sq',.4,.75,.3,.08],chiptri:['tri',.5,.92,.4,.04],chipsaw:['saw',.62,.7,.3,.08]};
+// 高い音では、聞こえる範囲（約 16kHz）より上の倍音を切った波を使う（切らないと折り返して、別の高さの音が混ざる）
+function chipWave(C,nm,f){ const n=Math.max(2,Math.min(64,Math.floor(Math.min(16000,ctx.sampleRate*.45)/f)+1)), k=nm+n;
+  return C.pw[k]||(C.pw[k]=ctx.createPeriodicWave(C[nm][0].slice(0,n),C[nm][1].slice(0,n))); }
+function chipTone(m,t,dur,vel,inst){ const C=chipBase(), V=CHIP_V[inst]||CHIP_V.spiano, f=mtof(m), g=ctx.createGain(); g.connect(OUT||master);
+  const o=ctx.createOscillator(); o.setPeriodicWave(chipWave(C,V[0],f)); o.frequency.value=f; o.connect(g); o.start(t); o.stop(t+dur+.6);
+  chipEnvS(g.gain,t,vel*V[1],V[2],V[3],Math.max(dur,.05),V[4]); return g; }
+function chipBass(m,t,dur,vel){ const C=chipBase(), o=ctx.createOscillator(), g=ctx.createGain(), f=mtof(m); o.setPeriodicWave(chipWave(C,'tri',f)); o.frequency.value=f;
+  o.connect(g); g.connect(OUT||master); o.start(t); o.stop(t+dur+.4); chipEnvS(g.gain,t,vel*.34,.85,.3,Math.max(dur,.05),.05); return g; }
+function chipDrum(note,t,vel){ const C=chipBase(), out=OUT||master; vel*=.45;
+  const nz=(buf,len,peak,dec,hp)=>{ const s=ctx.createBufferSource(); s.buffer=buf; s.loop=true; const g=ctx.createGain(); if(hp){ const h=ctx.createBiquadFilter(); h.type='highpass'; h.frequency.value=hp; s.connect(h); h.connect(g); } else s.connect(g); g.connect(out); s.start(t,Math.random()*.5); s.stop(t+len+.3); chipEnv(g.gain,t,peak*vel,0,dec,len,.03); };
+  const tri=(f0,f1,len,peak)=>{ const o=ctx.createOscillator(); o.type='triangle'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+len*.8);
+    const g=ctx.createGain(), sh=ctx.createWaveShaper(); sh.curve=C.tq.curve; o.connect(sh); sh.connect(g); g.connect(out); o.start(t); o.stop(t+len+.2); chipEnv(g.gain,t,peak*vel,0,len*.5,len,.03); };
+  if(note===36||note===35){ tri(220,48,.16,.75); return; }
+  if(note===38||note===40){ nz(C.nLong,.14,.45,.06); tri(260,140,.06,.35); return; }
+  if(note===37){ nz(C.nShort,.03,.35,.012); return; }
+  if(note===42||note===44){ nz(C.nHi,.04,.3,.014,7000); return; }   // ハイハット：細かいノイズを高い所だけに（前の短い周期のノイズは「ブー」と音程がついていた）
+  if(note===46){ nz(C.nHi,.2,.26,.08,6000); return; }
+  if(note===49||note===57){ nz(C.nLong,.6,.3,.25); return; }
+  if(note===51||note===59){ nz(C.nShort,.3,.15,.12); return; }
+  if(note===45||note===47||note===50||note===48||note===43||note===41){ const f={41:110,43:130,45:150,47:180,48:210,50:240}[note]; tri(f*1.6,f,.14,.6); return; }
+  nz(C.nShort,.05,.25,.02); }
+function synthTone(m,t,dur,vel,I0=state.inst){
   const f=mtof(m), g=ctx.createGain(), lp=ctx.createBiquadFilter(); lp.type='lowpass';
   g.connect(lp); lp.connect(OUT||master); dur=Math.max(dur,.06);
-  const inst=SYNTH_INST[state.inst]||state.inst;
+  const inst=SYNTH_INST[I0]||I0;
+  if(isChip(I0)){ g.disconnect(); lp.disconnect(); return chipTone(m,t,dur,vel*1.6,I0); }   // 8bit の音色
   if(inst==='piano'){
     lp.frequency.setValueAtTime(3200,t); lp.frequency.exponentialRampToValueAtTime(1100,t+.5);
     const end=t+dur+.8; osc('triangle',f,t,end,g); const g2=ctx.createGain(); g2.gain.value=.3; g2.connect(g); osc('sine',f*2,t,end,g2);
@@ -381,7 +446,7 @@ const shiftMark=a=>a>0?'←食':a<0?'後→':'';
 // 最後に鳴らした音がアクセント（いちばん上の音）だったら、その高さを覚えておき、次のコードのいちばん上の音をそこへつなげる
 let ACC_TOP=null;
 const TIE_LAST=[null,null], SOUNDING=[[],[]], LAST_SOLO=[null,null];   // SOUNDING：パートごとの同じタイミングの音、LAST_SOLO：直前に1音だけで弾いた音（同じ高さにならないように）   // パートごとの直前の音（同じ高さが続いたらつなぐため）
-function playEvents(evs,bt,ct,sd,pat){
+function playEvents(evs,bt,ct,sd,pat){ if(NO_KEYS) return;
   if(bt&&bt.ivs&&bt.rpc!=null) setScaleFor([...bt.ivs.map(i=>(bt.rpc+i)%12), ...(bt.bpc!=null?[bt.bpc]:[])]);
   const tones=bt.tones, notes=[];
   if(evs.length) ACC_TOP = pat&&pat.accLink && evs.some(e=>e[1].includes(6)) && tones[6]!=null ? tones[6] : null;   // 「アクセントのあと上げてつなぐ」パターンだけ
@@ -429,7 +494,7 @@ function playEvents(evs,bt,ct,sd,pat){
       evN.forEach((n,i)=>{ evN.slice(0,i).forEach(o=>{ if(o.st0===n.st0 && o.row!==n.row && o.m===n.m){ const t=(n.m!==n.orig)?n:(o.m!==o.orig)?o:null;
         if(t) t.m=t.orig; if(o.m===n.m){ const lo=(String(n.row)<String(o.row))?n:o; lo.m=scaleDown(lo.m); } } }); });
       // メロディ（1音ずつのフレーズ）：直前の音と別の行なのに同じ高さになったら、よける前の音に戻す
-      const LM=LAST_MEL[PART2?1:0];
+      const LM=LAST_MEL[PARTN]=LAST_MEL[PARTN]||{};
       evN.filter(n=>n.mel||tr==='nx').sort((a,b)=>a.st0-b.st0).forEach(n=>{
         if(LM.m!=null && (LM.row!==n.row || tr==='nx') && LM.m===n.m && (LM.orig!==n.orig || tr==='nx')){ if(n.m!==n.orig) n.m=n.orig; else if(tr==='nx') n.m=pentaStep(n.m,-1,null); }
         LM.m=n.m; LM.row=n.row; LM.orig=n.orig; }); }
@@ -440,7 +505,7 @@ function playEvents(evs,bt,ct,sd,pat){
   //  ・1音ずつの分散で、直前の1音（別の行）と同じ高さ（Gsus4 で D・D と続くなど）
   //  ・左手でのばしている音と同じ高さを右手で弾く（その逆も）
   // 右手は上の和音の音へ、左手は下の和音の音へ。置き場所がなければ、その音は弾かない
-  { const pk=PART2?1:0, S=SOUNDING[pk]=SOUNDING[pk].filter(x=>x.bt===bt && x.end>ct+.001), CPs=new Set(Object.values(tones).filter(x=>x!=null).map(x=>((x%12)+12)%12)), drop=new Set(), LS=LAST_SOLO[pk];
+  { const pk=PARTN, S=SOUNDING[pk]=(SOUNDING[pk]||[]).filter(x=>x.bt===bt && x.end>ct+.001), CPs=new Set(Object.values(tones).filter(x=>x!=null).map(x=>((x%12)+12)%12)), drop=new Set(), LS=LAST_SOLO[pk];
     const LHR=new Set([0,4,5]), T0=n=>ct+(n.st0-Math.floor(n.ev0??n.st0))*sd, solo=n=>!n.mel && notes.filter(o=>!o.mel && o.st0===n.st0).length===1;
     notes.forEach(n=>{ const t0=T0(n), busy=m=>S.some(x=>x.m===m && Math.abs(x.start-t0)<.001) || notes.some(o=>o!==n && !drop.has(o) && o.m===m && o.st0===n.st0) || (solo(n) && LS && LS.bt===bt && LS.m===m);
       const hit=S.find(x=>x.m===n.m && x.row!==n.row && (Math.abs(x.start-t0)<.001 || (x.end>t0+.001 && LHR.has(x.row)!==LHR.has(n.row)))) || (solo(n) && LS && LS.bt===bt && LS.m===n.m && LS.row!==n.row && LS.t<t0-.001);
@@ -479,7 +544,7 @@ function playEvents(evs,bt,ct,sd,pat){
       // 交互に振り分けるのは弦楽器だけ。ほかの楽器（ホルン・ギターなど）はまん中
       else if(!/^strings/.test(state.inst)) PAN_NEXT=0; }
     // 同じ高さの音が続くとき（tie）：弾き直さずに、前の音をそのままのばしてつなぐ
-    const t0=ct+ht+off, pk=PART2?1:0, pv=TIE_LAST[pk];
+    const t0=ct+ht+off, pk=PARTN, pv=TIE_LAST[pk];
     if(pat&&pat.tie && notes.length===1 && pv && pv.m===n.m && pv.end>=t0-.03 && pv.end<t0+sd){ const e=t0+n.len*sd;
       if(pv.cap) pv.cap.d=e-pv.cap.t;
       else if(pv.g&&pv.g.voice){ const V=pv.g.voice; try{ const G=pv.g.gain; G.cancelScheduledValues(t0); G.setValueAtTime(V.level,t0); G.setValueAtTime(V.level,e); G.setTargetAtTime(0,e,V.rel);
@@ -508,7 +573,7 @@ const bassPcOf=v=>{ const sp=specOf(v); return (keyObj().pc+((sp.b!==null&&sp.b!
 const bassLow=list=>(list||[]).some(e=>e[1]==='-5'||e[1]==='-12');
 // ポルタメント：直前に鳴らしたベースの音から、次の音へ音程をすべらせる
 let lastBassM=null, GLIDE=null;
-function playBass(list,s,t,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,vel,slide,legOut])=>{ if(st!==s) return;
+function playBass(list,s,t0,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,vel,slide,legOut])=>{ if(Math.floor(st)!==s) return; const t=t0+(st-s)*sd;   // 16分より細かい位置（ピアノロールで拡大して置いた音）も
   let n;
   if(iv==='ap'){
     if(nextV===null||nextV===undefined){ n=bt.slash?12:bt.fifth; }
@@ -606,16 +671,37 @@ function chordPart(g,t,L,s,b,dr,sd,tt){
   }
   return {i,off};
 }
-const P2={barTones:null,lastR:null,pushedKey:null,PUSHCONT:false,held:[],ACC:null,prev:null,prevB:null,satb:null};
-function resetP2(){ TIE_LAST[0]=TIE_LAST[1]=null; SOUNDING[0]=[]; SOUNDING[1]=[]; LAST_SOLO[0]=LAST_SOLO[1]=null; Object.assign(P2,{barTones:null,lastR:null,pushedKey:null,PUSHCONT:false,held:[],ACC:null,prev:null,prevB:null,satb:null}); }
-function withPart2(f){
-  const sv={barTones,lastR,pushedKey,PUSHCONT,held,ACC:ACC_TOP,prev:LHCTX.prev,prevB:LHCTX.prevB,satb:LHCTX.satb,arp:state.arp,inst:state.inst,bass:state.bass};
-  ({barTones,lastR,pushedKey,PUSHCONT,held}=P2); ACC_TOP=P2.ACC; LHCTX.prev=P2.prev; LHCTX.prevB=P2.prevB; LHCTX.satb=P2.satb;
-  state.arp=state.arp2; state.inst=state.inst2||'epiano'; state.bass=false; PART2=true;
-  try{ return f(); } finally { PART2=false;
-    Object.assign(P2,{barTones,lastR,pushedKey,PUSHCONT,held,ACC:ACC_TOP,prev:LHCTX.prev,prevB:LHCTX.prevB,satb:LHCTX.satb});
+// コード楽器ごとの、演奏の途中の状態（1＝コード2、2〜＝足した楽器）
+const newP=()=>({barTones:null,lastR:null,pushedKey:null,PUSHCONT:false,held:[],ACC:null,prev:null,prevB:null,satb:null});
+const PS={1:newP()}, P2=PS[1];
+function resetP2(){ for(const k in TIE_LAST) TIE_LAST[k]=null; SOUNDING.length=0; LAST_SOLO.length=0; for(const k in LAST_MEL) if(+k>=2) LAST_MEL[k]={}; TIE_LAST[0]=TIE_LAST[1]=null; SOUNDING[0]=[]; SOUNDING[1]=[]; LAST_SOLO[0]=LAST_SOLO[1]=null;
+  for(const k in PS) Object.assign(PS[k],newP()); }
+// コード楽器 k の設定（パターン・音色）。1＝コード2、2〜＝足した楽器
+const partDef=k=> k===1 ? {arp:state.arp2, inst:state.inst2||'epiano'} : (state.xtr||[])[k-2]||null;
+// コード楽器 k として f を実行する（状態を入れ替えて、同じしくみで鳴らす）
+function withPart(k,f){ if(!k) return f(); const d=partDef(k); if(!d) return; const P=PS[k]||(PS[k]=newP());
+  const sv={barTones,lastR,pushedKey,PUSHCONT,held,ACC:ACC_TOP,prev:LHCTX.prev,prevB:LHCTX.prevB,satb:LHCTX.satb,arp:state.arp,inst:state.inst,bass:state.bass,wide:state.wide,pn:PARTN};
+  ({barTones,lastR,pushedKey,PUSHCONT,held}=P); ACC_TOP=P.ACC; LHCTX.prev=P.prev; LHCTX.prevB=P.prevB; LHCTX.satb=P.satb;
+  const isB=d.type==='bass', svB=isB?{bassPat:state.bassPat,bassSnd:state.bassSnd,bus:bassBus,lv:lastBassVoice,bh:bassHeld,lm:lastBassM}:null;
+  if(isB){ state.bass=true; state.bassPat=d.bassPat||'auto'; state.bassSnd=d.bassSnd||'bass'; bassBus=xChan(d.id); NO_KEYS=true; lastBassVoice=P.lv||null; bassHeld=P.bh||(P.bh=[]); lastBassM=P.lm??null; }
+  else { state.arp=d.arp; state.inst=d.inst||'epiano'; state.bass=false; if(k>=2) state.wide=!!d.wide; }
+  PART2=true; PARTN=k;
+  try{ return f(); } finally { PART2=sv.pn>0; PARTN=sv.pn;
+    if(isB){ P.lv=lastBassVoice; P.bh=bassHeld; P.lm=lastBassM; Object.assign(state,{bassPat:svB.bassPat,bassSnd:svB.bassSnd}); bassBus=svB.bus; lastBassVoice=svB.lv; bassHeld=svB.bh; lastBassM=svB.lm; NO_KEYS=false; }
+    Object.assign(P,{barTones,lastR,pushedKey,PUSHCONT,held,ACC:ACC_TOP,prev:LHCTX.prev,prevB:LHCTX.prevB,satb:LHCTX.satb});
     ({barTones,lastR,pushedKey,PUSHCONT,held}=sv); ACC_TOP=sv.ACC; LHCTX.prev=sv.prev; LHCTX.prevB=sv.prevB; LHCTX.satb=sv.satb;
-    Object.assign(state,{arp:sv.arp,inst:sv.inst,bass:sv.bass}); } }
+    Object.assign(state,{arp:sv.arp,inst:sv.inst,bass:sv.bass,wide:sv.wide}); } }
+function withPart2(f){ return withPart(1,f); }
+let NO_KEYS=false;   // 足したベースを鳴らすあいだは、コードの音を鳴らさない
+// 足したドラム1つ分の、この16分（メインのドラムと同じ決め方）
+function xDrumStep(x,s,b,t,sd){ const d=DRUMS[x.drum], fm=fillModeOf(b,d), inF=fm && s>=(fm==='big'?8:12);
+  const tt = d.swing&&inF ? t+[0,1/3,2/3,0][s%4]*sd : t+(d.swing&&s%4===2?sd*.34:0)+(d.swing16&&s%2===1?sd*.3:0);
+  const V = inF ? (fm==='big'?d.F:d.FS) : (b%2===1 && d.VB ? d.VB : d.V);
+  const sk=state.kit, sb=drumBus; state.kit=x.kit||'std'; drumBus=xChan(x.id);
+  try{ for(const n in V){ const v=V[n][s]; if(v) drum(+n,tt,d.dyn?Math.pow(v,d.dyn):v); }
+    if(state.fill && d.F && s===0 && b%4===0 && b>0 && d.crash0!==false) drum(49,tt,.6); } finally { state.kit=sk; drumBus=sb; } }
+// 鳴らすコード楽器の番号（コード2・足した楽器のうち、パターンがあるもの）
+const extraParts=()=>[...(state.arp2&&ARPS[state.arp2]?[1]:[]), ...(state.pro?(state.xtr||[]).map((t,i)=>t&&!t.type&&t.arp&&ARPS[t.arp]?i+2:null).filter(x=>x!=null):[])];
 function scheduleStep(g,t){
   const L=slotSteps(), s=g%16, b=LOOPN*(L*state.bars/16)+Math.floor(g/16);     // b = 進行の頭から数えて何小節目か（ドラム用。途中で長さを変えてもずれない）
   if(ENDED_EARLY){ if(!document.hidden) visQ.push({t,b:Math.floor(g/L),s:g%L,L,beat:g%4===0,abs:playedSteps,g,ln:LOOPN}); return; }   // 締めたあとは何も鳴らさない
@@ -630,15 +716,19 @@ function scheduleStep(g,t){
   if(state.fill && dr.F && s===0 && b%4===0 && b>0 && dr.crash0!==false) drum(49,tt,.6);   // シティポップはフィルの最後（前の小節の最後の16分）でクラッシュ済み
   BOWBAR=b; const {i,off}=chordPart(g,t,L,s,b,dr,sd,tt);
   // 2つ目の楽器（コード2・上もの）。同じコード進行を、別のパターン・別の音色で重ねる（ベースは1回だけ）。ビギナーは伴奏スタイルが決める
-  if(state.arp2 && ARPS[state.arp2]) withPart2(()=>chordPart(g,t,L,s,b,dr,sd,tt));
+  extraParts().forEach(k=>withPart(k,()=>chordPart(g,t,L,s,b,dr,sd,tt)));
+  // PRO で足したベース（ベースだけ鳴らす）・ドラム（それぞれのチャンネルへ）
+  if(state.pro) (state.xtr||[]).forEach((x,i)=>{ if(!x) return;
+    if(x.type==='bass') withPart(i+2,()=>chordPart(g,t,L,s,b,dr,sd,tt));
+    else if(x.type==='drum' && DRUMS[x.drum]) xDrumStep(x,s,b,t,sd); });
   if(!document.hidden) visQ.push({t,b:i,s:off,L,beat:g%4===0,abs:playedSteps,g,ln:LOOPN});
 }
 // 1周で止めるときの締め：最初のコードを「ジャーン」と長く鳴らす（キック＋シンバル、ベースはルート）
 function endHit(t){ const c=cellsOf(0)[0], v=c&&c.v; if(v==null) return;
   const bt=chordNotes(v,lastR), sd=stepDur(), pat=ARPS[state.arp]||{};
-  choke(t); chokeBass(t); if(P2.held.length) withPart2(()=>choke(t)); playEvents([[0,[0,1,2,3,4],14,.55,'d']], bt, t, sd, pat);
+  choke(t); chokeBass(t); for(const k in PS) if(PS[k].held.length) withPart(+k,()=>choke(t)); playEvents([[0,[0,1,2,3,4],14,.55,'d']], bt, t, sd, pat);
   if(state.bass) bassTone(bt.bass, t, sd*14, .6);
-  if(state.drum!=='none'){ drum(36,t,.55); drum(49,t,.4); } }
+  const dr=DRUMS[state.drum]; if(dr && Object.values(dr.V||{}).some(a=>a.some(x=>x))){ drum(36,t,.55); drum(49,t,.4); } }   // ドラムが鳴っているときだけ（音のないドラムパターンでは締めない）
 function tick(){
   // 音声の書き出し：1周したら最初のコードで締めて、余韻まで録音してから止める
   if(EXPORT.on && playedSteps>=EXPORT.len){

@@ -170,7 +170,8 @@ const SLIDES=[
        <section class="S a" style="--dl:1.1"><span class="L">S</span><div><h3>サブドミナント</h3></div><div class="cs">${[3,1].map((d,k)=>tc(d,'S',1.4+k*.12)).join('')}</div></section>
        <section class="D a" style="--dl:1.7"><span class="L">D</span><div><h3>ドミナント</h3></div><div class="cs">${[4,6,2].map((d,k)=>tc(d,'D'+(d===2?' dash':''),2+k*.12)).join('')}</div></section>
      </div>
-     <p class="sub a" style="--dl:2.6">点線の <b>3m</b> は、トニックにもドミナントにもなれる便利なコードです</p>`},
+     <p class="sub a" style="--dl:2.6">点線の <b>3m</b> は、T にも D にもなれます</p>
+     <p class="sub a" style="--dl:2.9">6m と 7dim は、ときどき S にもなります</p>`},
   {html:()=>`<div class="eyebrow a">役割の流れ</div>
      <h2 class="a" style="--dl:.1">役割をつかった<br>お手本の流れは3つ</h2>
      <div class="flows">${[['①','TDT'],['②','TST'],['③','TSDT']].map(([no,f],k)=>`<div class="flow a" style="--dl:${.6+k*.6}"><span class="no">${no}</span>${[...f].map((r,j)=>`${j?`<span class="arr" style="--dl:${.9+k*.6+j*.15}"></span>`:''}<span class="tc ${r} pop" style="--dl:${.7+k*.6+j*.15}"><b>${r}</b></span>`).join('')}</div>`).join('')}</div>
@@ -184,7 +185,7 @@ const SLIDES=[
   {html:()=>`<div class="eyebrow a">実例②　王道進行</div>
      <h2 class="a" style="--dl:.1">4 → 5 → 3m → 6m</h2>
      ${exampleHTML(EX.ohdo)}
-     <div class="exnote"><p class="a" style="--dl:1.4;--fn:var(--s)"><b>始まりが T でなくても OK。</b>くり返すと最後の 6m（T）から 4 に戻るので、ちゃんと T→S→D→T の流れになっています。</p><p class="a" style="--dl:1.8;--fn:var(--d)"><b>同じ役割が続いても OK。</b>5→3m は D→D。2つのドミナントで引っぱって、6m（T）に着地します。3m を 3（E7）にすると、もっとはっきり 6m に向かいます。</p></div>
+     <div class="exnote"><p class="a" style="--dl:1.4;--fn:var(--s)"><b>始まりが T でなくても OK。</b>くり返すと 6m（T）から 4 に戻り、T→S→D→T の流れになります。</p><p class="a" style="--dl:1.8;--fn:var(--d)"><b>同じ役割が続いても OK。</b>5→3m は D→D。2つのドミナントで引っぱって、6m（T）に着地します。</p></div>
      ${listenBtn('ohdo')}`},
   {html:()=>`<div class="eyebrow a">実例③　カノン進行</div>
      <h2 class="a" style="--dl:.1">流れを組み合わせると<br>長い進行も作れます</h2>
@@ -211,7 +212,7 @@ Object.assign(EX,{
 });
 // お手本を鳴らすときは、その雰囲気に合う伴奏スタイル（メイン画面で選べるものと同じ）とテンポにする（ないときは元の設定）
 const styleBy=name=>STYLES.find(x=>x.name===name);
-function setStyle(st){ state.sOff=sOffOf(st); state.wide=true;   /* 左右の広がりは「広げる」が基本（ベータ版と同じミックス） */ state.mix={}; if(st.mix) for(const c in st.mix) state.mix[c]={v:st.mix[c],m:false,s:false}; try{ applyMix(); }catch(e){} state.drum=st.drum; state.arp=st.arp; state.bassPat='auto'; state.bassSnd=st.bassSnd||'bass'; state.bass=st.bass!==false; state.kit=st.kit; state.inst=st.inst;  state.arp2=st.arp2||''; if(st.inst2) state.inst2=st.inst2;  }
+function setStyle(st){ state.sOff=sOffOf(st); state.wide=!!st.wide; state.mix={}; if(st.mix) for(const c in st.mix) state.mix[c]={v:st.mix[c],m:false,s:false}; try{ applyMix(); }catch(e){} state.drum=st.drum; state.arp=st.arp; state.bassPat='auto'; state.bassSnd=st.bassSnd||'bass'; state.bass=st.bass!==false; state.kit=st.kit; state.inst=st.inst;  state.arp2=st.arp2||''; if(st.inst2) state.inst2=st.inst2;  }
 function tutLoadEx(ex){ const b=TUT.backup?JSON.parse(TUT.backup):state, st=ex.style&&styleBy(ex.style);
   // 伴奏スタイルが決まっているお手本は、そのスタイルの楽器で。決まっていないもの（作業中の楽器で鳴っていたもの）はピアノ＋ベースで
   if(st) setStyle(st); else Object.assign(state,{drum:b.drum,arp:b.arp,kit:b.kit,bassPat:b.bassPat,inst:'piano',arp2:'',bass:true,bassSnd:'bass'});
@@ -578,8 +579,7 @@ const shown=el=>{ if(!el||el.hidden) return null; const r=el.getBoundingClientRe
 const firstSlot=()=>shown([...slotsEl.querySelectorAll('.slot.filled')][0])||slotsEl;
 const tapSlot=what=>({t:()=>firstSlot(), x:`置いたコードを<b>タップ</b>すると、${what}`});
 const WHERE={
-  2:[{t:()=>document.querySelector('.slotwrap'), x:'<b>進行ガイド</b>は、マスのすぐ上に出ます。<br>役割の流れや、お手本どおりかを教えてくれます。'},
-     {menu:'guideChips', x:'表示・非表示は、設定メニュー（≡）の<b>「進行ガイド」</b>で切り替えられます。'}],
+  2:[{t:()=>document.querySelector('.slotwrap'), x:'マスの上に出ているのが<b>進行ガイド</b>です。<br>役割の流れや、お手本どおりかを教えてくれます。<br><small>表示・非表示は、設定メニュー（≡）の「進行ガイド」で切り替えられます。</small>'}],
   3:[{t:()=>[shown($('arpLane')),shown($('drumLane'))].filter(Boolean), x:'<b>伴奏</b>の帯をタップすると、伴奏スタイルを選べます。'},
      {t:()=>$('bpm').closest('.bpm'), x:'<b>テンポ</b>は、スライダーで変えられます。'},
      {t:()=>$('libBtn'), x:'<b>進行ライブラリ</b>は、マスの上の「進行を探す」から開けます。<br>レベルをクリアするたびに、使える進行が増えていきます。'}],
@@ -601,6 +601,8 @@ function showWhere(n){ const steps=WHERE[n]; if(!steps) return; let k=0;
     const show=t=>{ if(Array.isArray(t)&&!t.length) t=slotsEl;
       coach(t, `<small style="color:var(--muted)">アンロック：${LEVELS[n-1].unlock}</small><br>${st.x}`, last?[['OK',()=>{ closeCoach(); shutMenu(); }]]:[['つぎへ',()=>{ shutMenu(); k++; setTimeout(go,st.menu?280:0); }]]); };
     if(st.menu){ const sec=openMenuAt(st.menu); setTimeout(()=>show(sec),320); } else show(st.t()); };
+  // レベル2（進行ガイド）は、コードを2つ以上並べてガイドが出てから案内する（クリア直後にメニューを開かない）
+  if(n===2){ const w=setInterval(()=>{ if(LVL>2||!state.guide){ clearInterval(w); return; } if(TUT.on||!$('coach').hidden||!$('moodPop').hidden||[0,1,2,3].filter(k=>state.slots[k]!=null).length<2) return; clearInterval(w); setTimeout(go,600); },400); return; }
   setTimeout(go,350); }
 function closeCoach(){ $('coach').hidden=true; document.body.classList.remove('tutlite'); clearInterval(TUT.wait); }
 function endTutorial(restore){

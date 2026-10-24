@@ -575,8 +575,11 @@ let PICK=null;
 // タップで選ぶだけ。「決定」で適用、赤字の「キャンセル」で取り消し。音色（live）は聴き比べられるようにタップで鳴らし、キャンセルなら開いたときの音色に戻す
 // live='play'（伴奏スタイル）：タップでその伴奏にして裏で鳴らす。決定しなければ元に戻す
 function openPicker(title,cats,cur,onPick,live){ if(live==null) live=/の音を選ぶ|楽器を選ぶ/.test(title)?true:/伴奏スタイル/.test(title)?'play':false;
-  PICK={cats,cur,cur0:cur,onPick,live,snap:live?JSON.stringify(state):null}; $('pickTitle').textContent=title; $('pickScr').hidden=false; delete $('pickBody').dataset.g; drawPicker(); }
-function drawPicker(){ const P=PICK; twoPane($('pickBody'), P.cats(), P.cur, k=>{ P.cur=k; if(P.live) P.onPick(k); if(P.live==='play' && !playing){ P.started=true; play(); } drawPicker(); }); }
+  const inst=sheet.classList.contains('on');   // 伴奏の設定シートから開いたとき：選んだ時点で決定して閉じる（伴奏スタイルはシートも閉じる）
+  PICK={cats,cur,cur0:cur,onPick,live,inst,snap:live&&!inst?JSON.stringify(state):null}; $('pickTitle').textContent=title; $('pickOk').hidden=inst; $('pickScr').hidden=false; delete $('pickBody').dataset.g; drawPicker(); }
+function drawPicker(){ const P=PICK; twoPane($('pickBody'), P.cats(), P.cur, k=>{ P.cur=k;
+  if(P.inst){ closePicker(); if(k!==P.cur0) P.onPick(k); if(P.live==='play') closeAll(); return; }
+  if(P.live) P.onPick(k); if(P.live==='play' && !playing){ P.started=true; play(); } drawPicker(); }); }
 function closePicker(){ $('pickScr').hidden=true; PICK=null; }
 $('pickBack').onclick=()=>{ const P=PICK; if(P&&P.started&&playing) stop();
   if(P&&P.live&&P.cur!==P.cur0){ const o=JSON.parse(P.snap); Object.keys(state).forEach(k=>delete state[k]); Object.assign(state,o); rebuildMy(); $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; save(); renderAll(); ensureSounds(); applyMix(); renderTracks(); if($('sheet').classList.contains('on')&&sheetKind) openSheet(sheetKind); } closePicker(); };
@@ -618,22 +621,8 @@ function patCats(kind){ const drum=isDrumK(kind), src=drum?DRUMS:ARPS, order=dru
     return r; }; }
 const NO_WIDE=new Set(['epcity','lofi','dist']);   // 左右に広げても変わらない音色
 
-// ---------- シートは「決定」で確定、✕・外側タップはキャンセル（開いたときの状態に戻す） ----------
-let SHEET_SNAP=null;
-function sheetSnap(){ if(!sheet.classList.contains('on')) SHEET_SNAP=JSON.stringify(state); }
-function sheetRestore(){ if(!SHEET_SNAP || !sheet.classList.contains('on')) return; const o=JSON.parse(SHEET_SNAP); SHEET_SNAP=null;
-  Object.keys(state).forEach(k=>delete state[k]); Object.assign(state,o); rebuildMy();
-  $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; save(); renderAll(); applyMix(); ensureSounds(); if(!$('trk').hidden) renderTracks(); }
-{ const st=document.createElement('style'); st.textContent=`
-  #sheetFoot{position:sticky;bottom:calc(-16px - env(safe-area-inset-bottom,0px));margin:18px -16px calc(-16px - env(safe-area-inset-bottom,0px));padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);z-index:2}
-  #sheetOk{width:100%;min-height:48px;border:0;border-radius:12px;background:var(--ink);color:var(--surface);font:inherit;font-weight:800;font-size:1rem}`;
-  document.head.appendChild(st);
-  const f=document.createElement('div'); f.id='sheetFoot'; f.innerHTML='<button id="sheetOk">決定</button>'; sheet.appendChild(f);
-  $('sheetOk').onclick=()=>{ SHEET_SNAP=null; closeAll(); };
-  $('closeSheet').setAttribute('aria-label','キャンセル');
-  $('closeSheet').onclick=()=>{ sheetRestore(); closeAll(); };
-  scrim.onclick=()=>{ sheetRestore(); closeAll(); };
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape') sheetRestore(); },true); }
+// ---------- シートの中で選んだものは、その時点で決定（決定ボタンはない。✕・外側タップは閉じるだけ） ----------
+function sheetSnap(){}
 
 // ---------- 4マスずつのページ：メイン画面のページ表示をトラックの画面の上へ移して、同じ page で切りかえる ----------
 const PG_MARK=document.createComment('pages');

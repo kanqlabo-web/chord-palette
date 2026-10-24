@@ -1,6 +1,6 @@
 // ---------- 保存・共有 ----------
 // 共有リンク：進行と音の設定を URL の「#s=…」に詰める（サーバー不要。開いた人のブラウザで復元）
-const SHARE_KEYS=['slots','segs','ant','bars','len','key','bpm','drum','arp','inst','wide','arp2','inst2','kit','bass','bassSnd','bassPat','fill','mix','pro','lhOff','rhOff','lhOff2','rhOff2','bassOff','sOff','rhLo','lhLo','rhLo2','lhLo2','bassLo'];   // 曲を再現するのに必要なもの（PROかどうかも）。開いた人の進み具合は変えない
+const SHARE_KEYS=['slots','segs','ant','bars','len','key','bpm','drum','arp','inst','wide','arp2','inst2','kit','bass','bassSnd','bassPat','fill','mix','pro','lhOff','rhOff','lhOff2','rhOff2','bassOff','sOff','rhLo','lhLo','rhLo2','lhLo2','bassLo','drumOff'];   // 曲を再現するのに必要なもの（PROかどうかも）。開いた人の進み具合は変えない
 function packSong(){ const o={v:1}; SHARE_KEYS.forEach(k=>o[k]=state[k]);
   // リンクを短くするため、使っている小節だけ・空の情報は省く
   o.slots=state.slots.slice(0,state.bars);
@@ -12,15 +12,19 @@ function packSong(){ const o={v:1}; SHARE_KEYS.forEach(k=>o[k]=state[k]);
   if(/^my\d+$/.test(state.arp)) o.myArp=listOf('arp')[+state.arp.slice(2)];
   if(!state.arp2){ delete o.arp2; delete o.inst2; } else if(/^my\d+$/.test(state.arp2)) o.myArp2=listOf('arp')[+state.arp2.slice(2)];
   if(state.pro && /^my\d+$/.test(state.bassPat)) o.myBass=listOf('bass')[+state.bassPat.slice(2)];
+  // PRO で足した楽器（マイ演奏なら中身も）と、トラックの名前・色
+  if(state.pro && (state.xtr||[]).length) o.xtr=state.xtr.map(t=>{ const c={...t}; if(/^my\d+$/.test(t.arp||'')) c.myArp=listOf('arp')[+t.arp.slice(2)]; if(t.type==='drum'&&/^my\d+$/.test(t.drum||'')) c.myDrum=listOf('drum')[+t.drum.slice(2)]; if(t.type==='bass'&&/^my\d+$/.test(t.bassPat||'')) c.myBass=listOf('bass')[+t.bassPat.slice(2)]; return c; });
+  if(state.pro && state.tk && Object.values(state.tk).some(m=>m&&(m.name||m.color))) o.tk=state.tk;
   return o; }
 function unpackSong(o){ if(!o||!Array.isArray(o.slots)) return false;
-  SHARE_KEYS.forEach(k=>{ if(o[k]!==undefined) state[k]=o[k]; }); if(o.lay) state.lay=o.lay;   // 古いリンクの「重ねる音色」→ コード2へ
+  SHARE_KEYS.forEach(k=>{ if(o[k]!==undefined) state[k]=o[k]; }); if(o.wide===undefined) state.wide=false; if(o.drumOff===undefined) state.drumOff=false;   /* 広がりの設定がない古い曲は「まん中」 */ if(o.lay) state.lay=o.lay;   // 古いリンクの「重ねる音色」→ コード2へ
   state.bassSnd=fixBass(state.bassSnd||'bass');
   if(o.myDrum){ listOf('drum').push({...o.myDrum,name:(o.myDrum.name||'共有された演奏')}); state.drum='my'+(listOf('drum').length-1); }
   if(o.myArp){ listOf('arp').push({...o.myArp,name:(o.myArp.name||'共有された演奏')}); state.arp='my'+(listOf('arp').length-1); }
   if(o.myArp2){ listOf('arp').push({...o.myArp2,name:(o.myArp2.name||'共有された演奏')}); state.arp2='my'+(listOf('arp').length-1); }
   if(o.arp2===undefined){ state.arp2=''; }
   if(o.myBass){ listOf('bass').push({...o.myBass,name:(o.myBass.name||'共有された演奏')}); state.bassPat='my'+(listOf('bass').length-1); }
+  state.xtr=(o.xtr||[]).map(t=>{ const c={...t}; if(c.myArp){ listOf('arp').push({...c.myArp,name:(c.myArp.name||'共有された演奏')}); c.arp='my'+(listOf('arp').length-1); delete c.myArp; } if(c.myDrum){ listOf('drum').push({...c.myDrum,name:(c.myDrum.name||'共有された演奏')}); c.drum='my'+(listOf('drum').length-1); delete c.myDrum; } if(c.myBass){ listOf('bass').push({...c.myBass,name:(c.myBass.name||'共有された演奏')}); c.bassPat='my'+(listOf('bass').length-1); delete c.myBass; } return c; }); state.tk=o.tk||{};
   rebuildMy(); migrateLay(state); ensureArp2(); if(state.arp2 && !ARPS[state.arp2]) state.arp2=ARP_ALIAS[state.arp2]||''; if(ARP_ALIAS[state.arp]) state.arp=ARP_ALIAS[state.arp]; if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4';
   state.inst=fixInst(state.inst); state.inst2=fixInst(state.inst2); if(state.arp2 && !ARPS[state.arp2] && !/^(acc_|my\d)/.test(state.arp2)) state.arp2=''; if(!INSTS[state.inst]) state.inst='piano'; state.kit=fixKit(state.kit); if(!KITS[state.kit]) state.kit='std';
   state.slots=Array.from({length:16},(_,i)=>state.slots[i]??null); state.segs=Array.from({length:16},(_,i)=>(state.segs||[])[i]||[]); state.ant=Array.from({length:16},(_,i)=>(state.ant||[])[i]??null);
@@ -36,8 +40,8 @@ function shortHash(o){ const P=[];
   const segs=o.segs||[], ant=o.ant||[];
   P.push('c='+o.slots.map((v,i)=>tokE(v)+(ant[i]?'@'+ant[i]:'')+(segs[i]||[]).map(g=>'|'+g.beat+':'+tokE(g.v)+(g.ant?'@'+g.ant:'')).join('')).join(','));
   P.push('t='+o.bpm);
-  const y=STYLES.find(st=>st.drum===o.drum&&st.arp===o.arp&&st.inst===o.inst&&!!st.wide===!!o.wide&&(st.arp2||'')===(o.arp2||'')&&(!st.arp2||st.inst2===o.inst2)&&st.kit===o.kit&&(st.bass!==false)===!!o.bass&&(st.bassSnd||'bass')===(o.bassSnd||'bass'));
-  if(y && !o.myDrum && !o.myArp) P.push('y='+y.id);
+  const y=STYLES.find(st=>st.drum===o.drum&&st.arp===o.arp&&st.inst===o.inst&&(st.arp2||'')===(o.arp2||'')&&(!st.arp2||st.inst2===o.inst2)&&st.kit===o.kit&&(st.bass!==false)===!!o.bass&&(st.bassSnd||'bass')===(o.bassSnd||'bass'));
+  if(y && !o.myDrum && !o.myArp){ P.push('y='+y.id); if(!!y.wide!==!!o.wide) P.push('w='+(o.wide?1:0)); }   // 左右の広がりがスタイルの決まりと違うときだけ書く
   else { P.push('d='+encodeURIComponent(o.drum),'a='+encodeURIComponent(o.arp),'i='+o.inst,'m='+o.kit); if(o.wide) P.push('w=1'); if(!o.bass) P.push('b=0'); if((o.bassSnd||'bass')!=='bass') P.push('n='+o.bassSnd); }
   if(o.key&&o.key!=='C') P.push('k='+KEYS.findIndex(k=>k.id===o.key));
   if(o.len&&o.len!==4) P.push('l='+o.len);
@@ -58,7 +62,7 @@ function parseShort(h){ const q={}; h.split('&').forEach(kv=>{ const i=kv.indexO
     segs.push(rest.map(r=>{ const c=r.indexOf(':'), [tv,ga]=r.slice(c+1).split('@'); const g={beat:+r.slice(0,c),v:tokD(tv)}; if(ga) g.ant=+ga; return g; })); });
   const o={v:2,slots,segs,ant,bars:slots.length,bpm:+q.t||96,key:q.k?(KEYS[+q.k]||KEYS[0]).id:'C',len:+q.l||4,fill:q.f==='1',pro:q.P==='1',lhOff:+q.Lo||0,rhOff:+q.Ro||0,lhOff2:+q.L2||0,rhOff2:+q.R2||0,bassOff:+q.Bo||0,rhLo:q.RL!=null?+q.RL:null,lhLo:q.LL!=null?+q.LL:null,rhLo2:q.R2L!=null?+q.R2L:null,lhLo2:q.L2L!=null?+q.L2L:null,bassLo:q.BL!=null?+q.BL:null,bassPat:q.p?decodeURIComponent(q.p):'auto',mix:q.x?JSON.parse(b64d(q.x)):{}};
   const st=q.y!==undefined?styleById(+q.y):null;
-  if(st) Object.assign(o,{sOff:sOffOf(st),wide:!!st.wide,drum:st.drum,arp:st.arp,inst:st.inst,arp2:st.arp2||'',inst2:st.inst2||'epiano',kit:st.kit,bass:st.bass!==false,bassSnd:st.bassSnd||'bass'});
+  if(st) Object.assign(o,{sOff:sOffOf(st),wide:q.w!=null?q.w==='1':!!st.wide,drum:st.drum,arp:st.arp,inst:st.inst,arp2:st.arp2||'',inst2:st.inst2||'epiano',kit:st.kit,bass:st.bass!==false,bassSnd:st.bassSnd||'bass'});
   else Object.assign(o,{wide:q.w==='1',drum:decodeURIComponent(q.d||'pop'),arp:decodeURIComponent(q.a||'piano4'),inst:q.i||'piano',lay:q.z||'',kit:q.m||'std',bass:q.b!=='0',bassSnd:q.n||'bass'});
   if(q.a2||q.i2){ o.arp2=q.a2?decodeURIComponent(q.a2):''; o.inst2=q.i2||'epiano'; o.lay2=q.z2||''; }
   if(q.j) Object.assign(o,JSON.parse(b64d(q.j)));
@@ -139,8 +143,8 @@ function captureSong(){ const C=[]; const sbSv=LHCTX.satb; LHCTX.satb=null; rese
   try{ for(let n=0;n<T;n++){ scheduleStep(n,t); t+=sd; playedSteps++; } if(!ENDED_EARLY) endHit(t); }
   finally{ CAPTURE=null; CAP_LEN=null; ENDED_EARLY=eeSv; [LHCTX.prev,LHCTX.prevB]=lhSv; LHCTX.satb=sbSv; ({playedSteps,gpos,LOOPN,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice}=sv); if(!playing) visQ=[]; }
   return {ev:C, end:t+sd*16}; }
-const GM_PROG={sbrass:62,epcity:4,clav:7,piano:0,spiano:0,epiano:4,lofi:4,organ:16,steel:25,nylon:24,eguitar:27,dist:30,pad:89,synth:81,strings3:48,trumpet:56,trombone:57,sax:65,brass3:61,horn:60,glock:9,koto:107,shami:106};
-const GM_BASS={bass:33,ubass:32,slap3:36,sbass:38,ebass:34};
+const GM_PROG={sbrass:62,epcity:4,clav:7,piano:0,spiano:0,chipsq:80,chiptri:80,chipsaw:81,epiano:4,lofi:4,organ:16,steel:25,nylon:24,eguitar:27,dist:30,pad:89,synth:81,strings3:48,trumpet:56,trombone:57,sax:65,brass3:61,horn:60,glock:9,koto:107,shami:106};
+const GM_BASS={bass:33,ubass:32,slap3:36,sbass:38,cbass:38,ebass:34};
 function midiFile(){ const {ev}=captureSong(), PPQ=480, tk=sec=>Math.max(0,Math.round(sec*state.bpm/60*PPQ));
   const vlq=n=>{ const b=[n&127]; while(n>>=7) b.unshift((n&127)|128); return b; };
   const str=t=>[...new TextEncoder().encode(t)];
@@ -155,6 +159,7 @@ function midiFile(){ const {ev}=captureSong(), PPQ=480, tk=sec=>Math.max(0,Math.
   const tracks=[[...str('MTrk'),...u32(tempo.length),...tempo],
     track('コード',0,GM_PROG[state.inst]??0,ev.filter(e=>e.k==='key')),
     ...(ev.some(e=>e.k==='key2')?[track('重ねる楽器',3,GM_PROG[state.inst2]??4,ev.filter(e=>e.k==='key2'))]:[]),
+    ...(state.pro?(state.xtr||[]).map((x,i)=>{ const k='key'+(i+3), L=ev.filter(e=>e.k===k); return L.length?track(x.name||('楽器'+(i+3)),[4,5,6,7,8,10,11,12,13,14,15][i%11],GM_PROG[x.inst]??0,L):null; }).filter(Boolean):[]),   // PRO で足した楽器
     track('ベース',1,GM_BASS[state.bassSnd]??33,ev.filter(e=>e.k==='bass')),
     track('ドラム',9,null,ev.filter(e=>e.k==='drum'))];
   return new Blob([new Uint8Array([...str('MThd'),...u32(6),...u16(1),...u16(tracks.length),...u16(PPQ),...tracks.flat()])],{type:'audio/midi'}); }
