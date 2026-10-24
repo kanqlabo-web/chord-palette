@@ -1,6 +1,6 @@
 // 日本語の改行を文節で：単語の途中（「コー／ド」など）で折り返さないように、文節の切れ目にだけ <wbr> を入れる
 // Intl.Segmenter で単語に分け、ひらがな・閉じかっこ・句読点で始まる語は前につなげる（助詞などが行頭に来ない）。
-// CSS は keep-all（<wbr> とスペースでだけ折り返す）。1行に入りきらない長い語だけ、どこでも折り返す
+// <wbr> を入れた文字の親だけ keep-all（<wbr> とスペースでだけ折り返す）。1行に入りきらない長い語だけ、途中で折り返す
 (function(){
   if(typeof Intl==='undefined' || !Intl.Segmenter) return;
   const seg=new Intl.Segmenter('ja',{granularity:'word'}), JA=/[぀-ヿ一-鿿]/;
@@ -19,6 +19,7 @@
   function wrapText(n){ const t=n.nodeValue; if(t.length<6 || !JA.test(t)) return;
     const ps=phrases(t); if(ps.length<2) return;
     const f=document.createDocumentFragment(); ps.forEach((p,i)=>{ if(i) f.appendChild(document.createElement('wbr')); f.appendChild(document.createTextNode(p)); });
+    const pe=n.parentElement; pe.style.wordBreak='keep-all'; pe.style.overflowWrap='break-word';   // 文節で切るのは <wbr> を入れた所だけ（数字や短い名前には効かせない）
     n.parentNode.replaceChild(f,n); }
   function walk(root){ if(root.nodeType===3){ const p=root.parentElement; if(p && !p.closest(SKIP)) wrapText(root); return; }
     if(root.nodeType!==1 || root.closest(SKIP)) return;
@@ -29,7 +30,6 @@
   const OPT={childList:true,subtree:true,characterData:true};
   const mo=new MutationObserver(ms=>{ ms.forEach(m=>{ if(m.type==='characterData') q.add(m.target); else m.addedNodes.forEach(n=>q.add(n)); }); if(!busy){ busy=true; queueMicrotask(flush); } });
   const st=document.createElement('style'); st.textContent=`
-body{word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
 h2,.tut h2,.tut .sub,.eyebrow{text-wrap:balance}`;
   document.head.appendChild(st);
   walk(document.body); mo.observe(document.body,OPT);

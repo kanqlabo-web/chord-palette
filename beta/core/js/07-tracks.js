@@ -309,8 +309,11 @@ function renderTracks(){ if(trk.hidden) return; if(!state.pro){ trk.hidden=true;
     bindRegion(row.querySelector('.dtl'),kind); });
   const ad=document.createElement('div'); ad.className='drow dadd'; ad.innerHTML=`<div class="dh"><button class="daddb" id="trkAdd" aria-label="楽器を足す">${ICO.plus}</button></div>`; box.appendChild(ad);
   $('trkAdd').onclick=addTrack;
-  const hint=document.createElement('p'); hint.className='dhint'; hint.textContent='色の帯（コードごとの弾き方）をタップすると、その場所の弾き方をピアノロールで直接編集できます。8・16小節のときは、上のページで4小節ずつ切りかえます。帯の区切りを左右にドラッグすると、コードの長さ・食い・後ろ倒しを変えられます。楽器の絵をタップするとミキサー（音量・左右・コンプ・エコーなど）、上のコード名をタップするとコードを編集できます。'; box.appendChild(hint);
-  const mo=document.createElement('div'); mo.className='dmore'; box.appendChild(mo); 
+  const hint=document.createElement('p'); hint.className='dhint'; hint.textContent='色の帯をタップすると、弾き方を編集できます。帯の区切りをドラッグすると、コードの長さや食いを変えられます。楽器の絵をタップするとミキサーが開きます。'; box.appendChild(hint);    // ミキサーが開いて狭いときも、見えている幅で折り返す
+  const mo=document.createElement('div'); mo.className='dmore'; box.appendChild(mo);
+  { const fitW=()=>{ const sc=$('dScroll'), w=sc?sc.clientWidth:0; if(!w) return; const narrow=w<240;   // ミキサーが開いて狭いときは説明を隠す。ふだんは見えている幅で折り返す
+      hint.hidden=mo.hidden=narrow; if(!narrow){ const px=Math.min(600,w)+'px'; hint.style.width=px; mo.style.width=px; } };
+    requestAnimationFrame(fitW); setTimeout(fitW,400); }
   pickRow(mo,'トラックをまとめて置きかえる','伴奏スタイルから作り直す','選んだスタイルと同じ鳴り方・ミックスにします（いまのトラックはなくなります）',null,null,
     ()=>openPicker('伴奏スタイルから作り直す', styleCats, null, id=>{ const st=STYLES.find(x=>x.id===id); 
       proFromStyle(st); if(st.bpm){ state.bpm=st.bpm; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; } state.tk={}; applyMix(); save(); renderAll(); ensureSounds(); renderTracks(); return true; }));
@@ -395,7 +398,7 @@ function dawFrame(){ if(trk.hidden) return; const hd=$('dHead'), on=!!playing;
     else if(!on) dawPlayPg=-1; if(!on&&!hd.hidden){ hd.hidden=true; trk.querySelectorAll('.dbn.now').forEach(s=>s.classList.remove('now')); } }
   requestAnimationFrame(dawFrame); }
 // ミキサー（GarageBand の「トラック設定」のように左から出る）
-const FX_ROWS=[['comp','コンプレッサー（音の大きさをそろえる）',0,1],['hi','高音（トレブル）',-1,1],['lo','低音（ベース）',-1,1],['echo','エコー（やまびこ）',0,1],['rev','リバーブ（部屋の響き）',0,1]];
+const FX_ROWS=[['comp','コンプ（音量をそろえる）',0,1],['hi','高音（トレブル）',-1,1],['lo','低音（ベース）',-1,1],['echo','エコー（やまびこ）',0,1],['rev','リバーブ（部屋の響き）',0,1]];
 const fxTxt=(k,v)=>k==='hi'||k==='lo' ? (Math.abs(v)<.03?'0':(v>0?'+':'−')+Math.round(Math.abs(v)*9)+'dB') : Math.round(v*100);
 let INSP_SND=false;   // ミキサーで音色の一覧を開いているか
 function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=true; INSP_SND=false; return; } p.hidden=false;
