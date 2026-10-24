@@ -155,11 +155,11 @@ function lofiKey(dest){
 function lofiBase(){
   // レコードのノイズ（サーッという音＋ときどきプチッ）
   const sr=ctx.sampleRate, len=sr*3, buf=ctx.createBuffer(1,len,sr), ch=buf.getChannelData(0); let lpv=0;
-  for(let i=0;i<len;i++){ lpv=lpv*.92+(Math.random()*2-1)*.08; ch[i]=lpv*.5 + (Math.random()<.00012 ? (Math.random()*2-1)*.9 : 0); }
+  for(let i=0;i<len;i++){ lpv=lpv*.92+(Math.random()*2-1)*.08; ch[i]=lpv*.5 + (Math.random()<.0004 ? (Math.random()*2-1)*(.4+.6*Math.random()) : 0); }
   const ns=ctx.createBufferSource(); ns.buffer=buf; ns.loop=true; const nf=ctx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=2500; nf.Q.value=.4;
   const ng=ctx.createGain(); ng.gain.value=0; ns.connect(nf); nf.connect(ng); ng.connect(master); ns.start();
   LOFI={ctx,ng,drum:new Map(),k:new Map()}; }
-function lofiNoise(on){ if(!ctx) return; if(on && !(LOFI&&LOFI.ctx===ctx)) lofiBase(); if(LOFI&&LOFI.ctx===ctx) LOFI.ng.gain.setTargetAtTime(on?.05:0,ctx.currentTime,.15); }
+function lofiNoise(on){ if(!ctx) return; if(on && !(LOFI&&LOFI.ctx===ctx)) lofiBase(); if(LOFI&&LOFI.ctx===ctx) LOFI.ng.gain.setTargetAtTime(on?.13:0,ctx.currentTime,.15); }
 function lofiDrum(dest){ if(!(LOFI&&LOFI.ctx===ctx)) lofiBase(); let n=LOFI.drum.get(dest); if(n) return n;
   const inp=ctx.createGain(); const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3200;
   const sh=ctx.createWaveShaper(); const k=2.5, N=1024, c=new Float32Array(N); for(let i=0;i<N;i++){ const x=i/(N-1)*2-1; c[i]=Math.tanh(k*x)/Math.tanh(k); } sh.curve=c;
@@ -203,7 +203,8 @@ function bassTone_(m,t,dur,vel=1){
   const lv=lastBassVoice;
   if(GLIDE && lv && lv.ctx===ctx && lv.end>=t-.03){ legatoVoice(lv,m,t,dur); return lv.g; }
   let g;
-  if(nm==='sbass') g=analogBass(m,t,dur,vel);
+  if(state.inst==='spiano'&&nm==='bass') g=chipBass(m,t,dur,vel);   // 8bit のピアノには 8bit のベース（三角波）
+  else if(nm==='sbass') g=analogBass(m,t,dur,vel);
   else g=(!isSynthInst()||nm!=='bass')&&LOADED[nm]&&playZone(LOADED[nm],m,t,dur,.7*vel*fx.gain,.08,fx.cut,fx.loop);
   g=g||synthBass(m,t,dur,vel); bassHeld.push(g);
   lastBassVoice=g.voice?{...g.voice,g,ctx,end:t+dur}:null; return g;
@@ -243,6 +244,7 @@ function cityDrum(dest,note){
     c={kick:kLp, snare:sBody, other:oHp}; CITYD.m.set(dest,c); }
   return note===36?c.kick : (note===38||note===37)?c.snare : c.other; }
 function drumIn(note,t,vel=1){
+  if(state.kit==='synth'){ chipDrum(note,t,vel); return; }   // ピコピコドラムは 8bit の音に
   const KG=KIT_GAIN[state.kit]; if(KG&&KG[note]) vel*=KG[note];
   const lofi=state.kit==='lofi', city=state.kit==='city', kit=LOADED['kit-'+(lofi||city?'std':state.kit)];
   if(kit&&kit[note]){ const sv=OUT; if(lofi) OUT=lofiDrum(OUT||master); if(city) OUT=cityDrum(OUT||master,note);
@@ -264,10 +266,45 @@ function env(g,t,peak,sus,dec,dur,rel,att=.005){
   g.gain.setTargetAtTime(peak*sus,t+att,dec/3);
   g.gain.setTargetAtTime(.0001,t+Math.max(dur,att+.01),rel);
 }
+// ---------- 8bit（ファミコンのような音）：シンセピアノとピコピコドラム ----------
+// 音色は 25% の細い矩形波・4段階の三角波・がさがさしたノイズ。音量は 1/60 秒ごとの階段で変える（ゲーム機の音の作り方）
+let CHIP=null;
+function chipBase(){ if(CHIP&&CHIP.ctx===ctx) return CHIP; const sr=ctx.sampleRate;
+  const N=64, re=new Float32Array(N), im=new Float32Array(N); for(let k=1;k<N;k++){ im[k]=0; re[k]=2*Math.sin(Math.PI*k*.25)/(Math.PI*k); }   // 25% パルス
+  const pulse=ctx.createPeriodicWave(re,im);
+  // 三角波は 16 段の階段に（ファミコンの三角波の、少しざらっとした感じ）
+  const tq=ctx.createWaveShaper(), c=new Float32Array(1024); for(let i=0;i<1024;i++){ const x=i/1023*2-1; c[i]=Math.round(x*7.5)/7.5; } tq.curve=c;
+  const lfsr=(short,hold)=>{ const len=sr, b=ctx.createBuffer(1,len,sr), d=b.getChannelData(0); let r=1, v=1;
+    for(let i=0;i<len;i++){ if(i%hold===0){ const bit=(r^(r>>(short?6:1)))&1; r=(r>>1)|(bit<<14); v=(r&1)?1:-1; } d[i]=v*.8; } return b; };
+  return CHIP={ctx,pulse,tq,nLong:lfsr(false,2),nLow:lfsr(false,6),nShort:lfsr(true,3)}; }
+// 音量の階段（1/60 秒ごと、16 段）。peak から decay の速さで sus まで下げ、dur で離して rel で消す
+function chipEnv(G,t,peak,sus,dec,dur,rel){ const fr=1/60, q=v=>Math.round(v*15/Math.max(peak,1e-4))/15*peak; let tt=t, v=peak;
+  G.setValueAtTime(0,t); G.setValueAtTime(q(peak),t+.001);
+  for(let i=1; tt<t+dur && i<240; i++){ tt=t+i*fr; v=sus*peak+(peak-sus*peak)*Math.exp(-(i*fr)/dec); G.setValueAtTime(q(v),tt); }
+  const vEnd=v; for(let i=1;i<=30;i++){ const x=vEnd*Math.exp(-(i*fr)/rel); G.setValueAtTime(x<peak/15?0:q(x),t+dur+i*fr); if(x<peak/15) break; } }
+function chipTone(m,t,dur,vel){ const C=chipBase(), f=mtof(m), g=ctx.createGain(); g.connect(OUT||master);
+  const o=ctx.createOscillator(); o.setPeriodicWave(C.pulse); o.frequency.value=f; o.connect(g); o.start(t); o.stop(t+dur+.6);
+  chipEnv(g.gain,t,vel*.2,.55,.18,Math.max(dur,.05),.12); return g; }
+function chipBass(m,t,dur,vel){ const C=chipBase(), o=ctx.createOscillator(), sh=ctx.createWaveShaper(), g=ctx.createGain(); o.type='triangle'; o.frequency.value=mtof(m);
+  sh.curve=C.tq.curve; o.connect(sh); sh.connect(g); g.connect(OUT||master); o.start(t); o.stop(t+dur+.4); chipEnv(g.gain,t,vel*.4,.85,.3,Math.max(dur,.05),.05); return g; }
+function chipDrum(note,t,vel){ const C=chipBase(), out=OUT||master; vel*=.45;
+  const nz=(buf,len,peak,dec)=>{ const s=ctx.createBufferSource(); s.buffer=buf; s.loop=true; const g=ctx.createGain(); s.connect(g); g.connect(out); s.start(t,Math.random()*.5); s.stop(t+len+.3); chipEnv(g.gain,t,peak*vel,0,dec,len,.03); };
+  const tri=(f0,f1,len,peak)=>{ const o=ctx.createOscillator(); o.type='triangle'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+len*.8);
+    const g=ctx.createGain(), sh=ctx.createWaveShaper(); sh.curve=C.tq.curve; o.connect(sh); sh.connect(g); g.connect(out); o.start(t); o.stop(t+len+.2); chipEnv(g.gain,t,peak*vel,0,len*.5,len,.03); };
+  if(note===36||note===35){ tri(220,48,.16,.75); return; }
+  if(note===38||note===40){ nz(C.nLong,.14,.45,.06); tri(260,140,.06,.35); return; }
+  if(note===37){ nz(C.nShort,.03,.35,.012); return; }
+  if(note===42||note===44){ nz(C.nShort,.035,.22,.012); return; }
+  if(note===46){ nz(C.nShort,.16,.22,.07); return; }
+  if(note===49||note===57){ nz(C.nLong,.6,.3,.25); return; }
+  if(note===51||note===59){ nz(C.nShort,.3,.15,.12); return; }
+  if(note===45||note===47||note===50||note===48||note===43||note===41){ const f={41:110,43:130,45:150,47:180,48:210,50:240}[note]; tri(f*1.6,f,.14,.6); return; }
+  nz(C.nShort,.05,.25,.02); }
 function synthTone(m,t,dur,vel){
   const f=mtof(m), g=ctx.createGain(), lp=ctx.createBiquadFilter(); lp.type='lowpass';
   g.connect(lp); lp.connect(OUT||master); dur=Math.max(dur,.06);
   const inst=SYNTH_INST[state.inst]||state.inst;
+  if(state.inst==='spiano'){ g.disconnect(); lp.disconnect(); return chipTone(m,t,dur,vel*1.6); }   // シンセピアノは 8bit の音に
   if(inst==='piano'){
     lp.frequency.setValueAtTime(3200,t); lp.frequency.exponentialRampToValueAtTime(1100,t+.5);
     const end=t+dur+.8; osc('triangle',f,t,end,g); const g2=ctx.createGain(); g2.gain.value=.3; g2.connect(g); osc('sine',f*2,t,end,g2);
