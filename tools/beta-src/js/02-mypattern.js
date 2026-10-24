@@ -463,7 +463,7 @@ const STYLES=[
   {id:4, name:'バラード', bpm:80, lhOff:3, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true, mix:{arp:1.25,drum:1.15,bass:1.25}},
   {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass', mix:{arp:1.35,drum:1.35,bass:1.35}},
   {id:17, name:'壮大', bpm:110, wide:true, drum:'epic', arp:'epic', inst:'strings3', arp2:'hornline', inst2:'horn', mix:{arp:1.25,arp2:1.4,drum:.31,bass:.94}, kit:'orch', bass:true, bassSnd:'ubass'},
-  {id:18, name:'シティポップ', bpm:100, rhOff:-3, lhOff:-3, rhOff2:-3, drum:'city', arp:'cityep', inst:'epcity', arp2:'brassobb', inst2:'brass3', kit:'city', bass:true, bassSnd:'slap3'},
+  {id:18, name:'シティポップ', bpm:100, rhOff2:-3, drum:'city', arp:'cityep', inst:'epcity', arp2:'brassobb', inst2:'brass3', kit:'city', bass:true, bassSnd:'slap3'},
   {id:9, name:'ファンキー', bpm:104, drum:'sixteen', arp:'clavfunk', inst:'clav', arp2:'brasshit', inst2:'brass3', kit:'std', bass:true},
   {id:11, name:'ジャジー', bpm:100, drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
   {id:19, name:'ローファイ', bpm:80, drum:'lofi', arp:'lofi', inst:'lofi', kit:'lofi', bass:true, bassSnd:'ubass'},

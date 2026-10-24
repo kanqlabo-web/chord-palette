@@ -286,10 +286,19 @@ function satbVoice(pcs, rpc, bpc, B, sp, prev){
 // PRO では「絶対的な鍵盤の範囲」（いちばん下の音の MIDI 番号：rhLo / lhLo / rhLo2 / lhLo2 / bassLo）で決める。
 // 中身は、パターンの標準の高さからのずれ（半音）に直して使う。null＝パターンの標準のまま
 const RH_DEF=()=>{ const pat=ARPS[state.arp]; return 56+((pat&&pat.rhShift)||0); }, LH_DEF=40, BASS_DEF=28;
-function ROFF(){ if(state.pro){ const X=PARTN>=2?((state.xtr||[])[PARTN-2]||{}):null;   // 足した楽器は、その楽器の音域
+// 楽器ごとの標準の音域（パターンの標準の高さから半音いくつずらすか）。伴奏スタイルや PRO の「ずらし」は、この上に足す
+// エレピは右手 D♭3〜C4・左手 C2〜B2、ギターは実際の楽器の高さに近い E3 から、鉄琴は1オクターブ上
+const INST_RANGE={epiano:{rh:-7,lh:-4},epcity:{rh:-7,lh:-4},lofi:{rh:-7,lh:-4},
+  steel:{rh:-4,lh:0},nylon:{rh:-4,lh:0},eguitar:{rh:-4,lh:0},dist:{rh:-4,lh:0},
+  strings3:{rh:0,lh:-4},trombone:{rh:-5,lh:-4},sax:{rh:-2,lh:0},glock:{rh:12,lh:12}};
+const IOFF=inst=>INST_RANGE[inst]||{rh:0,lh:0};
+// いま鳴らしている楽器（コード・コード2・足した楽器）の音色
+const partInst=()=>PARTN>=2?(((state.xtr||[])[PARTN-2]||{}).inst||'piano'):PART2?(state.inst2||'epiano'):state.inst;
+function ROFF(){ const io=IOFF(partInst());
+  if(state.pro){ const X=PARTN>=2?((state.xtr||[])[PARTN-2]||{}):null;   // 足した楽器は、その楽器の音域
     const rl=X?X.rhLo:PART2?state.rhLo2:state.rhLo, ll=X?X.lhLo:PART2?state.lhLo2:state.lhLo;
-    return {rh: rl!=null ? rl-RH_DEF() : ((X?X.rhOff:PART2?state.rhOff2:state.rhOff)||0), lh: ll!=null ? ll-LH_DEF : ((X?X.lhOff:PART2?state.lhOff2:state.lhOff)||0)}; }
-  const o=state.sOff||{}; return PART2?{rh:o.rh2||0,lh:o.lh2||0}:{rh:o.rh||0,lh:o.lh||0}; }
+    return {rh: rl!=null ? rl-RH_DEF() : ((X?X.rhOff:PART2?state.rhOff2:state.rhOff)||0)+io.rh, lh: ll!=null ? ll-LH_DEF : ((X?X.lhOff:PART2?state.lhOff2:state.lhOff)||0)+io.lh}; }
+  const o=state.sOff||{}; return PART2?{rh:(o.rh2||0)+io.rh,lh:(o.lh2||0)+io.lh}:{rh:(o.rh||0)+io.rh,lh:(o.lh||0)+io.lh}; }
 const BOFF=()=>state.pro?(state.bassLo!=null?state.bassLo-BASS_DEF:(state.bassOff||0)):((state.sOff||{}).bass||0);
 const midiName=m=>['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'][((m%12)+12)%12]+(Math.floor(m/12)-1);
 const sOffOf=st=>({rh:st.rhOff||0, lh:st.lhOff||0, rh2:st.rhOff2||0, lh2:st.lhOff2||0, bass:st.bassOff||0});
