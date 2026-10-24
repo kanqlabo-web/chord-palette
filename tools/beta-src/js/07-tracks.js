@@ -1008,6 +1008,7 @@ $('dScroll').addEventListener('click',e=>{ if(!TRK_SEL || e.target.closest('butt
 { const st=document.createElement('style'); st.textContent=`
 @media (min-width:760px){
   .sheet{max-width:640px;margin:0 auto;border:1px solid var(--line);border-bottom:0;box-sizing:border-box}
+  .sheet{clip-path:inset(0 round 20px 20px 0 0);scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--muted) 45%,transparent) transparent}   /* スクロールバーで右上の角が四角くならないように */
   #patSheet{max-width:960px}
   #pickScr .phd,#pickScr .tpane{width:100%;max-width:820px;margin-left:auto;margin-right:auto;box-sizing:border-box}
   #pickScr .tpane{border-left:1px solid var(--line);border-right:1px solid var(--line)}
