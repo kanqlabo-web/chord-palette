@@ -262,7 +262,7 @@ function peResolve(k){ const F={bar2:'bar',bar3rd:'bar',bar4th:'bar2',bar32:'bar
 function peSrc(base,p){ if(base==='bar3') return p%2&&peHas('bar32')?'bar32':'bar3'; return peResolve(PE_CYC.bar[p%4]); }
 function pePlace(){ if(!peArp()) return null; const s=BSEGS[BLKE.act[PR.scene]]; if(!s) return null; const base=peBase(s.key); const p=base?(s.b%(base==='bar3'?2:4)):0, K=base?PE_CYC[base]:[];
   // own：この小節が、ほかの小節と音を分けてあるか
-  const own=!!base && (p>0 ? peSrc(base,p)===K[p] : K.every((_,q)=>!q || peSrc(base,q)!==K[0]));
+  const own=!!base && K.every((_,q)=>q===p || peSrc(base,q)!==peSrc(base,p));   // ほかのどの小節とも音を分けてある
   return {s, base, p, own, n:BSEGS.filter(x=>x.key===s.key).length}; }
 function peSplit(){ const P=pePlace(); if(!P||!P.base) return; const {base,p}=P, K=PE_CYC[base], m=curMy(), src=K.map((_,q)=>peSrc(base,q)), cp=k=>JSON.parse(JSON.stringify(peSceneNotes(k)));
   const snap=src.map(cp); m.sitNotes=m.sitNotes||{};
