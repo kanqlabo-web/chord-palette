@@ -39,7 +39,10 @@ const peSnap=()=>peDrum()?1:PE.grid;
 #peEd select.ptb{padding:0 6px;font-weight:700}
 #peEd .pbody{flex:1;min-height:0;display:flex;position:relative}
 #peScenes{display:none}
-#peEd .pmain{flex:1;min-width:0;display:flex;flex-direction:column}
+#peEd .pmain{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
+#pePop{position:absolute;z-index:8;max-width:min(420px,calc(100% - 16px));padding:8px 12px;border-radius:10px;background:var(--ink);color:var(--surface);font-size:.78rem;font-weight:800;line-height:1.45;box-shadow:0 8px 24px rgba(10,14,20,.25);pointer-events:none;opacity:0;transform:translateY(-6px) scale(.96);transition:opacity .18s,transform .18s}
+#pePop.on{opacity:1;transform:none}
+#peEd .pbar .pseg+.pseg{margin-left:auto}
 #peEd .pgridw{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:8px 10px 0 0}
 #peEd .pegrid{display:flex;min-width:0}
 #peEd .plabs{width:var(--plw);flex:none;user-select:none;-webkit-user-select:none}
@@ -238,6 +241,7 @@ function peBlkRows(){ let G=peGroups(); if(peArp()) G=PE.layer==='mel'?G.filter(
   G.forEach(([g,lab,rows])=>{ if(G.length>1) out.push(['_'+g, `<em class="bgh" data-g="${g}">${PE.fold[g]?'▸':'▾'} ${esc(lab)}</em>`]); if(!PE.fold[g] || G.length<2) out.push(...rows); });
   return out; }
 { const db=drawBlk; drawBlk=function(){ const r=db.apply(this,arguments); if(PE && BLKE){ PE.scene=PR.scene; peChrome(); peBarDraw(); peScenes(); peInsp();
+    { const sig=PR.scene+':'+BLKE.act[PR.scene]; if(sig!==PE.popSig){ PE.popSig=sig; if(PE.msg) pePop(PE.msg); } }
     const roll=$('bRoll'); if(roll){ const E=roll.querySelectorAll('.bseg'); BSEGS.forEach((x,i)=>{ if(x.rep && E[i]) E[i].classList.add('loop'); }); }
     if(roll && peArp()) peBack(roll);
     if(roll) blkRows().forEach(([k],i)=>{ if(String(k)[0]!=='_') return; const d=document.createElement('div'); d.className='bgrp'; d.style.top=(i*BRH)+'px'; d.style.height=BRH+'px'; roll.appendChild(d); }); }
@@ -277,7 +281,7 @@ function peBarDraw(){ const el=$('peBar'), P=pePlace(); let h='';
   if(P && P.s){ const lab=chordText(P.s.v)+'・'+SCENE_NAME(P.s.key), shared=P.n>1, can=!!P.base;
     const one=can&&P.own, tip=!can?'この場面は、曲の中で1種類だけです':P.base==='bar'?'1小節の弾き方は4小節ごとにくり返します':'3拍の弾き方は2小節ごとにくり返します';
     const msg=!can&&P.n<2||P.n<2&&!one?'この弾き方を使っているのは、ここだけです':one?`${esc(lab)}：この小節だけの弾き方です。ほかの所は変わりません`:`${esc(lab)}：曲の${P.n}か所で同じ弾き方です。今は全部いっしょに変わります`;
-    h+=`<span class="pwhere">${msg}</span><div class="pseg" role="group" aria-label="くり返しの編集" title="${esc(tip)}"><button class="${one?'':'on'}" data-r="all">まとめて${!one&&shared?`<small>${P.n}か所</small>`:''}</button><button class="${one?'on':''}" data-r="one" ${can?'':'disabled'}>ここだけ${one&&shared?`<small>${P.base==='bar'?'4':'2'}小節ごと</small>`:''}</button></div>`; }
+    PE.msg=(P.n>1||one)?msg:''; h+=`<div class="pseg" role="group" aria-label="くり返しの編集" title="${esc(tip)}"><button class="${one?'':'on'}" data-r="all">まとめて${!one&&shared?`<small>${P.n}か所</small>`:''}</button><button class="${one?'on':''}" data-r="one" ${can?'':'disabled'}>ここだけ${one&&shared?`<small>${P.base==='bar'?'4':'2'}小節ごと</small>`:''}</button></div>`; }
   el.innerHTML=h; el.hidden=!h;
   el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{ if(PE.layer===b.dataset.l) return; PE.layer=b.dataset.l; PR.selSet.clear(); drawBlk(); });
   el.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{ if(b.classList.contains('on')) return; if(b.dataset.r==='one') peSplit(); else peMerge(); }); }
@@ -301,6 +305,13 @@ $('peGrid').onchange=()=>{ PE.grid=+$('peGrid').value; peDraw(); };
 function peTools(){ $('peToolSel').classList.toggle('on',!blkDraw()); $('peToolPen').classList.toggle('on',blkDraw()); }
 function peSetScene(k){ if(!PE) return; PE.scene=k; PR.scene=k; PR.selSet.clear(); $('peSceneSheet').hidden=true; peDraw();
   if(!peScrollTo(k)) toast('この場面は、今の曲では使われていません（コードの長さを変えると使われます）'); }
+// 編集している所のそばに、短いメッセージをポンと出す（くり返しをまとめて編集しているときなど）
+function pePop(t){ let el=$('pePop'); if(!el){ el=document.createElement('div'); el.id='pePop'; el.setAttribute('role','status'); $('peMain').appendChild(el); }
+  const sc=$('bScroll'), s=BSEGS[BLKE.act[PR.scene]], W=$('peMain').clientWidth;
+  el.textContent=t; el.classList.remove('on'); void el.offsetWidth;
+  const x=s?BLW+s.x0*BSW-sc.scrollLeft+8:BLW+8; el.style.left=Math.max(8,Math.min(W-el.offsetWidth-8,x))+'px'; el.style.top=(sc.offsetTop+BRUL+6)+'px';
+  el.classList.add('on'); clearTimeout(el.t); el.t=setTimeout(()=>el.classList.remove('on'),2800); }
+{ const cn=commitNotes; commitNotes=function(){ const r=cn.apply(this,arguments); if(PE && PE.msg && /いっしょ/.test(PE.msg)){ const sig=PR.scene+':'+BLKE.act[PR.scene]; PE.popEd=PE.popEd||{}; if(!PE.popEd[sig]){ PE.popEd[sig]=1; pePop(PE.msg); } } return r; }; }
 function peCommit(){ commitNotes(); clearTimeout(HIST.t); histCommit(); peDraw(); }
 
 // ---------- 描く ----------
