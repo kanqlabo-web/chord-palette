@@ -135,7 +135,14 @@ const peSnap=()=>peDrum()?1:PE.grid;
 #peEd .bgrp{position:absolute;left:0;right:0;background:color-mix(in srgb,var(--ink) 6%,var(--surface));border-bottom:1px solid var(--line);pointer-events:none;z-index:1}
 /* 強さ：音の色の濃さと、左の目盛り（下からの高さ）で */
 #peEd .prn{overflow:visible;background:color-mix(in srgb,var(--t) calc(8% + var(--v) * 87%),var(--surface));transform:translateY(calc(var(--dy,0) * var(--rh)))}
-#peEd .prn:not(.dr) b{left:3px;bottom:3px;width:4px;height:calc(100% - 6px)!important;max-height:none;opacity:1;border-radius:2px;background:linear-gradient(to top,var(--ink) calc(var(--v) * 100%),color-mix(in srgb,var(--ink) 15%,transparent) 0)}
+#peEd .prn b{display:none}
+#peEd .pvl{position:sticky;bottom:0;z-index:6;display:flex;background:var(--surface);border-top:1px solid var(--line);height:64px}
+#peEd .pvl>span{position:sticky;left:0;z-index:2;width:var(--lw);flex:none;box-sizing:border-box;padding:8px 0 0 8px;font-size:.66rem;font-weight:800;background:var(--surface);border-right:1px solid var(--line);line-height:1.3}
+#peEd .pvl>span small{display:block;font-weight:700;color:var(--muted);font-size:.58rem}
+#peEd .pvlane{position:relative;flex:none;touch-action:none;cursor:ns-resize}
+#peEd .pvlane i{position:absolute;bottom:4px;width:5px;border-radius:2px 2px 0 0;background:var(--t);pointer-events:none}
+#peEd .pvlane i.sel{background:var(--d)}
+#peEd .pvlane i.rep{opacity:.35}
 #peEd .prn.dr{transform:scale(calc(.6 + var(--v) * .4))}
 /* 飾りの印：フォールは音の終わりから下がる線、しゃくりは下から上がってくる線、ほかは音の中に記号 */
 #peEd .prn.fall::after{content:'';position:absolute;left:100%;right:auto;top:50%;width:22px;height:2.5px;background:var(--ink);transform-origin:0 50%;transform:rotate(40deg);border-radius:2px;border:0}
@@ -246,8 +253,22 @@ function peBlkRows(){ let G=peGroups(); if(peArp()) G=PE.layer==='mel'?G.filter(
     { const sig=PR.scene+':'+BLKE.act[PR.scene]; if(sig!==PE.popSig){ PE.popSig=sig; if(PE.pop) pePop(PE.pop); } }
     const roll=$('bRoll'); if(roll){ const E=roll.querySelectorAll('.bseg'); BSEGS.forEach((x,i)=>{ if(x.rep && E[i]) E[i].classList.add('loop'); }); }
     if(roll && peArp()) peBack(roll);
+    if(roll) peVLane();
     if(roll) blkRows().forEach(([k],i)=>{ if(String(k)[0]!=='_') return; const d=document.createElement('div'); d.className='bgrp'; d.style.top=(i*BRH)+'px'; d.style.height=BRH+'px'; roll.appendChild(d); }); }
   return r; }; }
+// 強さの帯：ロールの下（いつも見える）。縦にドラッグでその列の音（選んでいればその音）の強さを変える
+function peVLane(){ const sc=$('bScroll'), box=sc.firstElementChild; if(!box) return; const L=slotSteps(), W=state.bars*L*BSW, rows=new Set(blkRows().map(r=>String(r[0])));
+  let h=''; BSEGS.forEach((s,si)=>notesOfScene(s.key).forEach(n=>{ if(!rows.has(String(n.r)) || n.st<s.off || n.st>=s.off+s.len) return;
+    h+=`<i class="${PR.selSet.has(n)?'sel':''}${s.rep?' rep':''}" style="left:${(s.x0+n.st-s.off)*BSW+1}px;height:calc(${Math.round(n.vel*100)}% - 8px)"></i>`; }));
+  box.insertAdjacentHTML('beforeend',`<div class="pvl"><span>強さ<small>上下に<br>ドラッグ</small></span><div class="pvlane" id="peVL" style="width:${W}px">${h}</div></div>`);
+  const el=$('peVL'); let V=null;
+  const set=e=>{ if(!V) return; const b=el.getBoundingClientRect(), v=Math.max(1/127,Math.min(1,(b.bottom-4-e.clientY)/(b.height-8))); V.forEach(n=>n.vel=v);
+    el.querySelectorAll('i').forEach(x=>x.remove()); BSEGS.forEach(s=>notesOfScene(s.key).forEach(n=>{ if(!rows.has(String(n.r)) || n.st<s.off || n.st>=s.off+s.len) return;
+      const i=document.createElement('i'); i.className=(PR.selSet.has(n)?'sel':'')+(s.rep?' rep':''); i.style.left=((s.x0+n.st-s.off)*BSW+1)+'px'; i.style.height=`calc(${Math.round(n.vel*100)}% - 8px)`; el.appendChild(i); })); };
+  el.onpointerdown=e=>{ if(!PE) return; e.preventDefault(); const b=el.getBoundingClientRect(), x=(e.clientX-b.left)/BSW, s=BSEGS.find(q=>x>=q.x0&&x<q.x0+q.len); if(!s) return;
+    const g=blkGrid(), c=s.off+Math.floor((x-s.x0)/g+1e-6)*g, col=notesOfScene(s.key).filter(n=>rows.has(String(n.r)) && n.st>=c && n.st<c+g); if(!col.length) return;
+    const sel=col.filter(n=>PR.selSet.has(n)); V=sel.length?sel:col; PR.scene=s.key; BLKE.cur=s.key; BLKE.act[s.key]=BSEGS.indexOf(s); try{ el.setPointerCapture(e.pointerId); }catch(_){} set(e); };
+  el.onpointermove=e=>set(e); el.onpointerup=el.onpointercancel=()=>{ if(!V) return; const n=V[V.length-1]; V=null; previewRow(n.r,n.vel); commitNotes(); clearTimeout(HIST.t); histCommit(); }; }
 // メロディと伴奏は層を分ける。編集していない方の層の音は、裏にうすく透かして見せる（高さは層の行の数に合わせてならす）
 function peBack(roll){ const mel=PE.layer==='mel', other=mel?PE_ARP_GROUPS.filter(x=>x[0]!=='mel').flatMap(x=>x[2]):MEL_ROWS, idx={}; other.forEach(([r],i)=>idx[String(r)]=i);
   const H=blkRows().length*BRH, rh=H/other.length; let h='';
