@@ -48,19 +48,32 @@ function lecLocalMembers(f){ lecGet(lecPath()).then(d=>{ const m={}; for(let i=0
 #lecStart .ljoin.on{display:flex;flex-wrap:wrap}
 #lecStart input{font-size:16px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);flex:1;min-width:7em;background:var(--surface);color:var(--ink)}
 #lecStart .lwarn{font-size:.78rem;color:var(--d);margin:4px 0 12px;line-height:1.6}
-#lecBar{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:45;background:var(--ink);color:var(--bg);border-radius:14px;padding:8px 12px;font-size:.8rem;box-shadow:0 6px 20px rgba(0,0,0,.25)}
-#lecBar .lrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-#lecBar b{font-family:var(--display);font-size:.92rem}
-#lecBar button{border:0;border-radius:999px;padding:7px 12px;font-weight:700;font-size:.8rem;cursor:pointer;background:var(--bg);color:var(--ink)}
-#lecBar button.alt{background:color-mix(in srgb,var(--bg) 16%,transparent);color:var(--bg)}
-#lecBar .lsp{flex:1}
-#lecBar .lmore{display:none;margin-top:8px;gap:10px;flex-direction:column}
-#lecBar.open .lmore{display:flex}
-#lecBar .llink{word-break:break-all;font-size:.74rem;opacity:.85}
-#lecBar .lqr{background:#fff;border-radius:10px;padding:8px;align-self:flex-start}
-#lecBar .lqr img,#lecBar .lqr svg{display:block;width:180px;height:180px}
-#lecBar .lst{opacity:.75;font-size:.72rem}
-body.lec-on .app{padding-bottom:calc(var(--lecH,56px) + 14px)}
+#lecPanel{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto;padding:max(18px,env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
+#lecPanel[hidden]{display:none}
+#lecPanel .lpin{max-width:520px;margin:0 auto}
+#lecPanel .lphead{display:flex;gap:10px}
+#lecPanel .lphead div{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+#lecPanel .lphead small{display:block;color:var(--muted);font-size:.72rem}
+#lecPanel .lphead b{font-family:var(--display);font-size:1.5rem;letter-spacing:.04em}
+#lecPanel .lpbtn{margin-top:10px;width:100%;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:800}
+#lecPanel .lpqr{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:10px}
+#lecPanel .lpqr[hidden]{display:none}
+#lecPanel .lqr{background:#fff;border-radius:12px;padding:10px}
+#lecPanel .lqr svg{display:block;width:min(64vw,240px);height:min(64vw,240px)}
+#lecPanel .llink{word-break:break-all;font-size:.74rem;color:var(--muted);text-align:center}
+#lecPanel h3{margin:22px 0 8px;font-size:1rem}
+#lecPanel h3 small{display:block;font-weight:600;color:var(--muted);font-size:.74rem;margin-top:2px}
+#lecPanel .lplist{display:flex;flex-direction:column;gap:8px}
+#lecPanel .lplv{display:block;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:10px 14px;color:var(--ink);font:inherit;position:relative;opacity:.6}
+#lecPanel .lplv.done{opacity:1}
+#lecPanel .lplv.now{opacity:1;border-color:var(--ink);box-shadow:0 0 0 1.5px var(--ink)}
+#lecPanel .lplv .lpn{font-family:var(--display);font-weight:900;font-size:.74rem;color:var(--muted)}
+#lecPanel .lplv b{display:block;font-size:.98rem;margin:1px 0 3px;padding-right:6.5em}
+#lecPanel .lplv small{display:block;color:var(--muted);font-size:.76rem;line-height:1.5}
+#lecPanel .lplv em{position:absolute;top:10px;right:12px;font-style:normal;font-weight:800;font-size:.7rem;background:var(--ink);color:var(--bg);border-radius:999px;padding:2px 8px}
+#lecPanel .lpend{margin-top:22px;width:100%;min-height:50px;border:0;border-radius:14px;background:var(--d);color:#fff;font:inherit;font-weight:900;font-size:1rem}
+#lecPanel .lpnote{color:var(--muted);font-size:.74rem;line-height:1.6;margin:8px 2px 0}
+body.lec-teacher .app{display:none}
 body.lec-child #toTitle{display:none}
 /* 講義版の画面は、チュートリアル中の画面と同じくらい少なく（メニュー・次のレベルへ・進行ライブラリ・PRO などは出さない） */
 body.lec #menuBtn,body.lec .badges{display:none!important}
@@ -77,60 +90,68 @@ body.lec .lane canvas{display:none}   /* 伴奏は名前の行だけ（小節ご
       <div class="ljoin" id="lecJoin"><input id="lecRoom" inputmode="numeric" maxlength="4" placeholder="部屋番号（4けた）" autocomplete="off"><input id="lecPw" maxlength="8" placeholder="パスワード" autocomplete="off"><button class="chip main" id="lecGo">参加する</button></div></div>
   </div>`;
   document.body.appendChild(s);
-  const b=document.createElement('div'); b.id='lecBar'; b.hidden=true; document.body.appendChild(b);
+  const b=document.createElement('div'); b.id='lecPanel'; b.hidden=true; document.body.appendChild(b);
 })();
 function lecStatus(t){ const el=$('lecSt'); if(el) el.textContent=t; }
 
 // ---- 先生 ----
+// 先生はスマホで操作する（PC はスライドに使う）。先生の画面にはパレットを出さず、部屋の情報・レベルの一覧・終了だけ
+// レベル1は、部屋を作った時点で開放（見方を説明してから QR コードを配るため）
+const LEC_GET=n=>n===1?'パレットのコードを並べて鳴らす':LEVELS[n-1].unlock;   // そのレベルで使えるようになるもの
 async function lecStartTeacher(){ const btn=$('lecTeacher'); btn.querySelector('span').textContent='部屋を作っています…';
   try{ for(let k=0;k<6;k++){ LEC.room=String(Math.floor(1000+Math.random()*9000)); LEC.pw=Math.random().toString(36).slice(2,6);
       if(!(await lecGet(lecPath()))) break; }
-    LEC.role='teacher'; LEC.lv=0; if(LEC_ON()) await fbAuth();
-    const ok=await lecPut(lecPath(),{owner:LEC.uid||'local', lv:0, ts:Date.now()},true); if(!ok) throw new Error('put');
+    LEC.role='teacher'; LEC.lv=1; if(LEC_ON()) await fbAuth();
+    const ok=await lecPut(lecPath(),{owner:LEC.uid||'local', lv:1, ts:Date.now()},true); if(!ok) throw new Error('put');
     try{ localStorage.setItem('cplec-teacher',JSON.stringify({room:LEC.room,pw:LEC.pw,uid:LEC.uid||null,t:Date.now()})); }catch(e){}
-    MODE='free'; saveLv(); $('lecStart').hidden=true; document.body.classList.add('lec-on'); lecWatch(lecOnData); renderLecBar(); renderAll();
+    lecTeacherOn();
   }catch(e){ btn.querySelector('span').textContent='部屋を作れませんでした。Firebase の設定（アドレス・匿名ログイン・ルール）を確かめてください。'; } }
-async function lecSetLevel(n){ n=Math.max(0,Math.min(LV_MAX,n)); LEC.lv=n; renderLecBar();
+function lecTeacherOn(){ $('lecStart').hidden=true; document.body.classList.add('lec-on','lec-teacher'); lecWatch(lecOnData); renderLecBar(); }
+async function lecSetLevel(n){ n=Math.max(1,Math.min(LV_MAX,n)); LEC.lv=n; renderLecBar();
   const cur=await lecGet(lecPath())||{}; await lecPut(lecPath(),{...cur, lv:n, ts:Date.now()},true); }
-function renderLecBar(){ lecBarBody(); }
-// 下の帯の高さだけ、画面の下を空ける（再生ボタンが隠れないように）
-new ResizeObserver(()=>document.documentElement.style.setProperty('--lecH',$('lecBar').offsetHeight+'px')).observe($('lecBar'));
-function lecBarBody(){ const b=$('lecBar'); b.hidden=false; const open=b.classList.contains('open');
-  if(LEC.role==='teacher'){ const n=LEC.lv, nx=LEVELS[n];
-    b.innerHTML=`<div class="lrow"><b>部屋 ${LEC.room}</b><span>パスワード ${LEC.pw}</span><span class="lst" id="lecSt"></span><span class="lsp"></span><span>参加 ${LEC.members}人</span><button class="alt" id="lecMore">${open?'閉じる':'リンク・QR'}</button></div>
-      <div class="lrow" style="margin-top:6px"><span>開放: ${n?`LEVEL ${n}「${LEVELS[n-1].name}」まで`:'まだなし'}</span><span class="lsp"></span>
-        ${n?`<button class="alt" id="lecBack" aria-label="1つ戻す">戻す</button><button class="alt" id="lecShow">LEVEL ${n} の解説</button>`:''}${nx?`<button id="lecNext">LEVEL ${n+1} を開放</button>`:''}</div>
-      <div class="lmore"><span class="llink" id="lecLinkTx">${lecLink()}</span><div class="lrow"><button id="lecCopy">リンクをコピー</button></div><div class="lqr" id="lecQr"></div></div>`;
-    $('lecMore').onclick=()=>{ b.classList.toggle('open'); renderLecBar(); };
-    if($('lecNext')) $('lecNext').onclick=()=>lecSetLevel(LEC.lv+1);
-    if($('lecBack')) $('lecBack').onclick=()=>lecSetLevel(LEC.lv-1);
-    if($('lecShow')) $('lecShow').onclick=()=>startLevel(LEC.lv,true);
-    $('lecCopy').onclick=()=>{ (navigator.clipboard?navigator.clipboard.writeText(lecLink()):Promise.reject()).then(()=>toast('リンクをコピーしました'),()=>toast('リンクを長押ししてコピーしてください')); };
-    if(open) lecQr($('lecQr'));
-  } else {
-    b.innerHTML=`<div class="lrow"><b>講義に参加中</b><span>部屋 ${LEC.room}</span><span class="lst" id="lecSt"></span><span class="lsp"></span><span>${LVL?`LEVEL ${LVL} まで`:'先生の合図を待っています'}</span></div>`; } }
+async function lecEnd(){ const cur=await lecGet(lecPath())||{}; await lecPut(lecPath(),{...cur, lv:LEC.lv, end:true, ts:Date.now()},true); lecGoMain(LEC.lv); }
+function renderLecBar(){ const P=$('lecPanel');
+  if(LEC.role!=='teacher'){ P.hidden=true; return; }
+  P.hidden=false; const n=LEC.lv, qr=P.dataset.qr==='1';
+  P.innerHTML=`<div class="lpin">
+    <div class="lphead"><div><small>部屋番号</small><b>${LEC.room}</b></div><div><small>パスワード</small><b>${LEC.pw}</b></div><div><small>参加</small><b id="lecMem">${LEC.members}人</b></div></div>
+    <button class="lpbtn" id="lecQrB">${qr?'QR コードを閉じる':'QR コード・リンクを出す'}</button>
+    <div class="lpqr" ${qr?'':'hidden'}><div class="lqr" id="lecQr"></div><span class="llink">${lecLink()}</span><button class="lpbtn" id="lecCopy">リンクをコピー</button></div>
+    <h3>開放するレベル<small>タップすると、そのレベルまで開放します（とばしても、戻してもOK）</small></h3>
+    <div class="lplist">${LEVELS.map((l,i)=>{ const k=i+1, st=k<n?'done':k===n?'now':'';
+      return `<button class="lplv ${st}" data-lv="${k}"><span class="lpn">LEVEL ${k}</span><b>${l.name}</b><small>使えるようになるもの：${LEC_GET(k)}</small>${k===n?'<em>ここまで開放中</em>':''}</button>`; }).join('')}</div>
+    <button class="lpend" id="lecEndB">講義を終了する</button>
+    <p class="lpnote">終了すると、受講者の画面は「いつもの版」に切りかわり、開放したレベルまで使える状態で自由に遊べます。</p></div>`;
+  $('lecQrB').onclick=()=>{ P.dataset.qr=qr?'':'1'; renderLecBar(); };
+  if($('lecCopy')) $('lecCopy').onclick=()=>{ (navigator.clipboard?navigator.clipboard.writeText(lecLink()):Promise.reject()).then(()=>toast('リンクをコピーしました'),()=>toast('リンクを長押ししてコピーしてください')); };
+  P.querySelectorAll('.lplv').forEach(b=>b.onclick=()=>lecSetLevel(+b.dataset.lv));
+  $('lecEndB').onclick=()=>{ const b=$('lecEndB'); if(!b.dataset.armed){ b.dataset.armed='1'; b.textContent='もう一度押すと終了します'; return; } b.disabled=true; lecEnd(); };
+  if(qr) lecQr($('lecQr')); }
 // QR コード（qrcode-generator を読み込んで作る。読めないときはリンクだけ）
 function lecQr(el){ const draw=()=>{ try{ const q=qrcode(0,'M'); q.addData(lecLink()); q.make(); el.innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true}); }catch(e){ el.hidden=true; } };
   if(window.qrcode) return draw(); const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; sc.onload=draw; sc.onerror=()=>{ el.hidden=true; }; document.head.appendChild(sc); }
+// 講義が終わったら、いつもの版へ（開放したレベルまで使える状態で。いつもの版でもっと進んでいれば、そのまま）
+function lecGoMain(lv){ try{ const k='chord-palette-level', had=+localStorage.getItem(k)||0; localStorage.setItem(k, Math.max(had, lv||0)); localStorage.setItem('chord-palette-mode','step'); }catch(e){}
+  location.href=new URL('../', location.href).href; }
 
 // ---- 部屋の中身が変わったとき（先生・受講者どちらも）
 function lecOnData(d){ if(!d) return; const now=Date.now(); LEC.members=Object.values(d.m||{}).filter(t=>now-t<70000).length;
-  if(LEC.role==='child'){ const n=+d.lv||0; if(n!==LVL){ const up=n>LVL; LVL=n; saveLv(); closeAll(); renderAll();
-      if(up && n>0){ toast(`LEVEL ${n}「${LEVELS[n-1].name}」が開放されました`); if(!TUT.on) setTimeout(()=>showWhere(n),500); } } }
-  renderLecBar(); }
+  if(LEC.role==='child'){ if(d.end) return lecGoMain(+d.lv||0);
+    const n=+d.lv||0; if(n!==LVL){ LVL=n; saveLv(); closeAll(); renderAll(); } }   // 開放したときの案内は出さない
+  else { const m=$('lecMem'); if(m) m.textContent=LEC.members+'人'; } }
 
 // ---- 受講者 ----
 function lecJoin(room,pw){ LEC.role='child'; LEC.room=room; LEC.pw=pw; MODE='step';
   lecGet(lecPath()).then(d=>{ if(!d){ $('lecStart').hidden=false; toast('部屋が見つかりません。部屋番号とパスワードを確かめてください'); LEC.role=null; return; }
     $('lecStart').hidden=true; $('modePick').hidden=true; document.body.classList.add('lec-on','lec-child'); LVL=+d.lv||0; saveLv(); renderAll();
-    lecWatch(lecOnData); renderLecBar();
+    lecWatch(lecOnData);
     // 参加していることを先生に知らせる（20秒ごと）
     const beat=()=>{ const p=`${lecPath()}/m/${LEC.me}`; if(LEC_ON()) fetch(fbUrl(p),{method:'PUT',body:JSON.stringify(Date.now())}).catch(()=>{}); else { localStorage.setItem('cplec-room:'+p,Date.now()); lecLocalSend(p,Date.now()); } };
     beat(); clearInterval(LEC.hb); LEC.hb=setInterval(beat,20000); }); }
 
 // ---- 画面を少なく：PRO・レベルの案内タイルは使わない
 { const ra=renderAll; renderAll=function(){ if(CP.kind==='lecture' && state.pro){ state.pro=false; document.body.classList.remove('pro'); }
-    const r=ra.apply(this,arguments); if(CP.kind==='lecture'){ $('lvBig').hidden=true; document.body.classList.remove('haslv'); $('moodTip').hidden=true; } return r; }; }
+    const r=ra.apply(this,arguments); if(CP.kind==='lecture'){ document.body.classList.toggle('tutlite', LVL<2 && !TUT.on); $('lvBig').hidden=true; document.body.classList.remove('haslv'); $('moodTip').hidden=true; } return r; }; }
 // ---- はじめの画面 ----
 (function lecBoot(){ if(CP.kind!=='lecture') return; document.body.classList.add('lec'); renderAll();
   $('modePick').hidden=true; $('lecWarn').hidden=LEC_ON();
@@ -144,6 +165,6 @@ function lecJoin(room,pw){ LEC.role='child'; LEC.room=room; LEC.pw=pw; MODE='ste
   try{ const t=JSON.parse(localStorage.getItem('cplec-teacher')); if(t && Date.now()-t.t<6*3600*1000){ const s=$('lecTeacher').querySelector('span'); s.innerHTML+=`<br>前に作った部屋（${t.room}）に戻るときは、下のボタンから。`;
       const back=document.createElement('button'); back.className='chip'; back.textContent=`部屋 ${t.room} に戻る`; back.style.marginTop='8px';
       back.onclick=async e=>{ e.stopPropagation(); LEC.role='teacher'; LEC.room=t.room; LEC.pw=t.pw; const d=await lecGet(lecPath()); LEC.lv=(d&&+d.lv)||0; if(LEC_ON()) await fbAuth().catch(()=>{});
-        MODE='free'; $('lecStart').hidden=true; document.body.classList.add('lec-on'); lecWatch(lecOnData); renderLecBar(); renderAll(); };
+        LEC.lv=Math.max(1,LEC.lv); lecTeacherOn(); };
       $('lecTeacher').after(back); } }catch(e){}
   $('lecStart').hidden=false; })();
