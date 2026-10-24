@@ -85,7 +85,7 @@ const peSnap=()=>peDrum()?1:PE.grid;
 #peInsp h4{margin:10px 0 5px;font-size:.76rem;font-weight:800;display:flex;justify-content:space-between}
 #peInsp h4 span{color:var(--muted);font-weight:700}
 #peInsp .irow{display:flex;gap:5px;flex-wrap:wrap}
-#peInsp .irow button{flex:1;min-width:0;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:.74rem;font-weight:700;cursor:pointer;white-space:nowrap;padding:0 6px}
+#peInsp .irow button{flex:1;min-width:0;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:.74rem;font-weight:700;cursor:pointer;white-space:normal;line-height:1.15;overflow-wrap:anywhere;padding:2px 4px;min-height:32px;height:auto}
 #peInsp .irow button.on{background:var(--ink);color:var(--surface);border-color:var(--ink);font-weight:800}
 #peInsp .igrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
 #peInsp .igrid button{min-height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer;padding:2px}
@@ -450,7 +450,7 @@ function peInsp(){ const el=$('peInsp'), ns=peSel(), k=ns.length;
     h+=`<h4>飾り${cur?`<span>${esc((BFX.flatMap(x=>x[1]).find(x=>x[0]===cur)||[,,''])[2].replace(/\n/g,''))}</span>`:''}</h4><div class="igrid">`;
     BFX.forEach(([,L])=>L.filter(x=>!(x[0]==='up'&&mel)).forEach(([v,ico,lab,tip])=>{ h+=`<button class="${all(x=>bFxOf(x)===v)?'on':''}" title="${esc(tip)}" data-f="${fn(()=>{ bSetFx(v); clearTimeout(HIST.t); histCommit(); peDraw(); })}"><i>${ico}</i><span>${esc(lab).replace(/\n/g,'<br>')}</span></button>`; }));
     h+='</div>';
-    h+=`<h4>高さ</h4>`+row([[-12,'オクターブ下'],[0,'そのまま'],[12,'オクターブ上']],v=>all(x=>(x.oc||0)===v),v=>{ ns.forEach(x=>{ if(v) x.oc=v; else delete x.oc; }); peCommit(); });
+    h+=`<h4>高さ<span>1オクターブ</span></h4>`+row([[-12,'下げる'],[0,'そのまま'],[12,'上げる']],v=>all(x=>(x.oc||0)===v),v=>{ ns.forEach(x=>{ if(v) x.oc=v; else delete x.oc; }); peCommit(); });
     h+=`<h4>鳴らすとき</h4><select id="peIWhen" aria-label="鳴らすとき">${WHEN_KINDS.map(([v,l])=>`<option value="${v}"${(n.when||'')===v?' selected':''}>${esc(l)}</option>`).join('')}</select>`; }
   el.innerHTML=h;
   el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ const f=F[b.dataset.f]; if(f) f(); });
