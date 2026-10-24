@@ -266,11 +266,17 @@ function pePlace(){ if(!peArp()) return null; const s=BSEGS[BLKE.act[PR.scene]];
   return {s, base, p, own, n:BSEGS.filter(x=>x.key===s.key).length}; }
 function peSplit(){ const P=pePlace(); if(!P||!P.base) return; const {base,p}=P, K=PE_CYC[base], m=curMy(), src=K.map((_,q)=>peSrc(base,q)), cp=k=>JSON.parse(JSON.stringify(peSceneNotes(k)));
   const snap=src.map(cp); m.sitNotes=m.sitNotes||{};
-  if(p===0) K.forEach((k,q)=>{ if(q && src[q]===src[0]) m.sitNotes[k]=snap[q]; });   // 1小節目だけにする：同じ音を使っているほかの小節に、今の音を写す
-  else { m.sitNotes[K[p]]=snap[p]; if(base==='bar' && p===1 && !peHas('bar4th')) m.sitNotes.bar4th=snap[3]; }   // 2小節目を作ると4小節目も変わるので、4小節目は今のままを写す
+  const id=base+':'+p, made=(PE.made=PE.made||{})[id]=PE.made[id]||[], mk=k=>{ if(!made.includes(k)) made.push(k); };   // 「ここだけ」で写した場面（まとめるときは、これだけ消す）
+  if(p===0) K.forEach((k,q)=>{ if(q && src[q]===src[0]){ m.sitNotes[k]=snap[q]; mk(k); } });   // 1小節目だけにする：同じ音を使っているほかの小節に、今の音を写す
+  else { if(src[p]!==K[p]){ m.sitNotes[K[p]]=snap[p]; mk(K[p]); } if(base==='bar' && p===1 && !peHas('bar4th')){ m.sitNotes.bar4th=snap[3]; mk('bar4th'); } }   // 2小節目を作ると4小節目も変わるので、4小節目は今のままを写す
   const si=BLKE.act[PR.scene]; PR.scene=PE.scene=BLKE.cur=K[p]; BLKE.act[K[p]]=si; PR.selSet.clear(); rebuildMy(); save(); clearTimeout(HIST.t); histCommit(); peDraw(); toast('ここだけの弾き方にしました。ほかの所は変わりません'); }
 function peMerge(){ const P=pePlace(); if(!P||!P.base) return; const {base,p}=P, K=PE_CYC[base], m=curMy(); if(!m.sitNotes) return;
-  if(p===0) K.slice(1).forEach(k=>delete m.sitNotes[k]); else delete m.sitNotes[K[p]];
+  // 消す場面：1小節目なら「ここだけ」で写した場面（なければほかの小節の場面全部）、ほかの小節ならその小節の場面
+  const made=(PE.made||{})[base+':'+p]||[], del=(p===0?(made.length?made.slice():K.slice(1)):[...new Set([K[p],...made])]).filter(peHas);
+  // もとから入っていた弾き方（写したものでない）が消えるときは、確かめる
+  const lost=del.filter(k=>!made.includes(k)), nn=lost.reduce((a,k)=>a+peSceneNotes(k).length,0), mel=lost.some(k=>peSceneNotes(k).some(n=>isDeg(n.r)));
+  if(lost.length && !confirm(`${lost.map(SCENE_NAME).join('・')}だけの弾き方（${nn}音${mel?'、メロディを含む':''}）が消えて、ほかの所と同じになります。よろしいですか？（あとで「元に戻す」でも戻せます）`)) return;
+  del.forEach(k=>{ delete m.sitNotes[k]; const i=made.indexOf(k); if(i>=0) made.splice(i,1); });
   // 分けたときに写しただけの小節（中身が戻り先と同じ）は、まとめなおす
   for(let q=K.length-1;q>0;q--){ const k=K[q], f=peResolve(PE_FALL[k]); if(peHas(k) && JSON.stringify(peSceneNotes(k))===JSON.stringify(peSceneNotes(f))) delete m.sitNotes[k]; }
   const si=BLKE.act[PR.scene]; PR.scene=PE.scene=BLKE.cur=p===0?K[0]:peSrc(base,p); BLKE.act[PR.scene]=si; PR.selSet.clear(); rebuildMy(); save(); clearTimeout(HIST.t); histCommit(); peDraw();
