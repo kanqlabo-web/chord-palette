@@ -470,6 +470,7 @@ const STYLES=[
   {id:19, name:'ローファイ', bpm:80, drum:'lofi', arp:'lofi', inst:'lofi', kit:'lofi', bass:true, bassSnd:'ubass'},
   {id:8, name:'スキップ風', bpm:108, drum:'shuffle', arp:'shuffle', inst:'piano', kit:'std', bass:true},
   {id:10, name:'ダンス', bpm:124, drum:'dance', arp:'house', inst:'synth', kit:'elec', bass:true, bassSnd:'sbass'},
+  {id:21, name:'チップチューン', bpm:150, drum:'chip', arp:'chiparp', inst:'spiano', arp2:'anilead', inst2:'chipsq', kit:'synth', bass:true, bassSnd:'cbass', mix:{bass:.8,drum:1.1}},
   {id:12, name:'ボサノバ', bpm:140, drum:'bossa', arp:'bossa', inst:'nylon', kit:'brush', bass:true, bassSnd:'ubass'},
   {id:13, name:'レゲエ', bpm:80, drum:'reggae', arp:'skank', inst:'organ', kit:'std', bass:true},
   {id:20, name:'和風', bpm:88, drum:'wa', arp:'koto', inst:'koto', kit:'room', bass:true, bassSnd:'ubass'},

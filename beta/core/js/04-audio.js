@@ -295,7 +295,7 @@ function chipEnv(G,t,peak,sus,dec,dur,rel){ const fr=1/60, q=v=>Math.round(v*15/
 // 音の出る楽器の音量はなめらかに変える（1/60 秒の階段にすると、高い音で半音ほど離れた別の音がうなって、不協和音のように聞こえる）
 function chipEnvS(G,t,peak,sus,dec,dur,rel){ G.setValueAtTime(0,t); G.linearRampToValueAtTime(peak,t+.002); G.setTargetAtTime(peak*sus,t+.002,dec); G.setTargetAtTime(0,t+dur,rel); }
 // 音色ごとの [波, 音量, 減衰後の残り, 減衰の速さ, 離したあとの余韻]。ピアノは減っていき、ほかはオルガンのように伸びる（三角波はファミコンでも音量が変えられないので、ほぼ一定）
-const CHIP_V={spiano:['pulse',.2,.55,.18,.12],chipsq:['sq',.16,.75,.3,.08],chiptri:['tri',.2,.92,.4,.04],chipsaw:['saw',.25,.7,.3,.08]};
+const CHIP_V={spiano:['pulse',.64,.55,.18,.12],chipsq:['sq',.4,.75,.3,.08],chiptri:['tri',.5,.92,.4,.04],chipsaw:['saw',.62,.7,.3,.08]};
 // 高い音では、聞こえる範囲（約 16kHz）より上の倍音を切った波を使う（切らないと折り返して、別の高さの音が混ざる）
 function chipWave(C,nm,f){ const n=Math.max(2,Math.min(64,Math.floor(Math.min(16000,ctx.sampleRate*.45)/f)+1)), k=nm+n;
   return C.pw[k]||(C.pw[k]=ctx.createPeriodicWave(C[nm][0].slice(0,n),C[nm][1].slice(0,n))); }
