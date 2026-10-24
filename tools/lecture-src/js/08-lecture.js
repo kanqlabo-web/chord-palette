@@ -11,11 +11,17 @@ const LEC={ role:null, room:null, pw:null, lv:0, tok:null, es:null, bc:null, me:
 const LEC_ON=()=>!!(LECTURE_FB.apiKey && LECTURE_FB.databaseURL);
 const lecPath=()=>`lectures/${LEC.room}-${LEC.pw}`;
 const lecLink=()=>`${location.origin}${location.pathname}#r=${LEC.room}&p=${LEC.pw}`;
+// 先生用リンク：同じ先生として、別の端末（スマホ）からも操作できる（ログインの合鍵 t を入れる。受講者には見せない）
+const lecTLink=()=>`${lecLink()}&t=${encodeURIComponent(LEC.rt||'local')}`;
 
 // ---- 通信：Firebase（REST と、変わったら届く通知 EventSource）。設定がなければ同じ端末のタブどうし（BroadcastChannel）
-async function fbAuth(){ if(LEC.tok) return LEC.tok;   // 先生だけ、名前なしのログイン（書きこみの権限のため）
-  const r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${LECTURE_FB.apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})});
-  const j=await r.json(); if(!j.idToken) throw new Error('auth'); LEC.tok=j.idToken; LEC.uid=j.localId; return LEC.tok; }
+// 先生だけ、名前なしのログイン（書きこみの権限のため）。合鍵（rt）があれば、同じ先生としてログインしなおす（1時間で切れるので、切れる前に取り直す）
+async function fbAuth(){ if(LEC.tok && Date.now()<LEC.exp) return LEC.tok;
+  const K=LECTURE_FB.apiKey;
+  if(LEC.rt){ const r=await fetch(`https://securetoken.googleapis.com/v1/token?key=${K}`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(LEC.rt)});
+    const j=await r.json(); if(!j.id_token) throw new Error('auth'); LEC.tok=j.id_token; LEC.uid=j.user_id; LEC.rt=j.refresh_token||LEC.rt; LEC.exp=Date.now()+50*60*1000; return LEC.tok; }
+  const r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${K}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})});
+  const j=await r.json(); if(!j.idToken) throw new Error('auth'); LEC.tok=j.idToken; LEC.uid=j.localId; LEC.rt=j.refreshToken; LEC.exp=Date.now()+50*60*1000; return LEC.tok; }
 const fbUrl=(p,auth)=>`${LECTURE_FB.databaseURL.replace(/\/$/,'')}/${p}.json${auth?`?auth=${auth}`:''}`;
 async function lecGet(p){ if(!LEC_ON()){ try{ return JSON.parse(localStorage.getItem('cplec-room:'+p)); }catch(e){ return null; } }
   const r=await fetch(fbUrl(p)); return r.ok?r.json():null; }
@@ -58,8 +64,15 @@ function lecLocalMembers(f){ lecGet(lecPath()).then(d=>{ const m={}; for(let i=0
 #lecPanel .lpbtn{margin-top:10px;width:100%;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:800}
 #lecPanel .lpqr{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:10px}
 #lecPanel .lpqr[hidden]{display:none}
-#lecPanel .lqr{background:#fff;border-radius:12px;padding:10px}
-#lecPanel .lqr svg{display:block;width:min(64vw,240px);height:min(64vw,240px)}
+#lecPanel .lpqr{align-items:stretch}
+#lecPanel .lqbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px}
+#lecPanel .lqbox h4{margin:0;align-self:flex-start;font-size:.92rem}
+#lecPanel .lqbox p{margin:0;font-size:.74rem;color:var(--muted);line-height:1.6;align-self:flex-start}
+#lecPanel .lqt{border-color:color-mix(in srgb,var(--d) 45%,var(--line))}
+#lecPanel .lqimg{display:block;width:min(70vw,280px);height:auto;border-radius:10px;border:1px solid var(--line)}
+#lecPanel .lqt .lqimg{width:min(46vw,180px)}
+#lecPanel .lqbtns{display:flex;gap:8px;width:100%}
+#lecPanel .lqbtns .lpbtn{flex:1;margin-top:0;display:grid;place-items:center;text-decoration:none;font-size:.86rem}
 #lecPanel .llink{word-break:break-all;font-size:.74rem;color:var(--muted);text-align:center}
 #lecPanel h3{margin:22px 0 8px;font-size:1rem}
 #lecPanel h3 small{display:block;font-weight:600;color:var(--muted);font-size:.74rem;margin-top:2px}
@@ -105,33 +118,47 @@ async function lecStartTeacher(){ const btn=$('lecTeacher'); btn.querySelector('
       if(!(await lecGet(lecPath()))) break; }
     LEC.role='teacher'; LEC.lv=1; if(LEC_ON()) await fbAuth();
     const ok=await lecPut(lecPath(),{owner:LEC.uid||'local', lv:1, ts:Date.now()},true); if(!ok) throw new Error('put');
-    try{ localStorage.setItem('cplec-teacher',JSON.stringify({room:LEC.room,pw:LEC.pw,uid:LEC.uid||null,t:Date.now()})); }catch(e){}
     lecTeacherOn();
   }catch(e){ btn.querySelector('span').textContent='部屋を作れませんでした。Firebase の設定（アドレス・匿名ログイン・ルール）を確かめてください。'; } }
-function lecTeacherOn(){ $('lecStart').hidden=true; document.body.classList.add('lec-on','lec-teacher'); lecWatch(lecOnData); renderLecBar(); }
+function lecTeacherOn(){ try{ localStorage.setItem('cplec-teacher',JSON.stringify({room:LEC.room,pw:LEC.pw,rt:LEC.rt||null,t:Date.now()})); }catch(e){}
+  $('lecStart').hidden=true; document.body.classList.add('lec-on','lec-teacher'); lecWatch(lecOnData); renderLecBar(); }
 async function lecSetLevel(n){ n=Math.max(1,Math.min(LV_MAX,n)); LEC.lv=n; renderLecBar();
   const cur=await lecGet(lecPath())||{}; await lecPut(lecPath(),{...cur, lv:n, ts:Date.now()},true); }
-async function lecEnd(){ const cur=await lecGet(lecPath())||{}; await lecPut(lecPath(),{...cur, lv:LEC.lv, end:true, ts:Date.now()},true); lecGoMain(LEC.lv); }
+async function lecEnd(){ const cur=await lecGet(lecPath())||{}; await lecPut(lecPath(),{...cur, lv:LEC.lv, end:true, ts:Date.now()},true);
+  try{ localStorage.removeItem('cplec-teacher'); }catch(e){} location.href=new URL('../select/', location.href).href; }   // 先生は版を選ぶ画面へ
 function renderLecBar(){ const P=$('lecPanel');
   if(LEC.role!=='teacher'){ P.hidden=true; return; }
   P.hidden=false; const n=LEC.lv, qr=P.dataset.qr==='1';
   P.innerHTML=`<div class="lpin">
     <div class="lphead"><div><small>部屋番号</small><b>${LEC.room}</b></div><div><small>パスワード</small><b>${LEC.pw}</b></div><div><small>参加</small><b id="lecMem">${LEC.members}人</b></div></div>
-    <button class="lpbtn" id="lecQrB">${qr?'QR コードを閉じる':'QR コード・リンクを出す'}</button>
-    <div class="lpqr" ${qr?'':'hidden'}><div class="lqr" id="lecQr"></div><span class="llink">${lecLink()}</span><button class="lpbtn" id="lecCopy">リンクをコピー</button></div>
+    <button class="lpbtn" id="lecQrB">${qr?'QR コード・リンクを閉じる':'QR コード・リンクを出す'}</button>
+    <div class="lpqr" ${qr?'':'hidden'}>
+      <div class="lqbox"><h4>受講者用</h4><img class="lqimg" id="lecQrS" alt="受講者用の QR コード"><span class="llink">${lecLink()}</span>
+        <div class="lqbtns"><a class="lpbtn" id="lecDlS" download="講義_部屋${LEC.room}_受講者用QR.png">QR を画像で保存</a><button class="lpbtn" id="lecCopy">リンクをコピー</button></div></div>
+      <div class="lqbox lqt"><h4>先生用（スマホで操作するとき）</h4><p>この QR・リンクを開いた端末も、この画面で操作できます。受講者には見せないでください。</p><img class="lqimg" id="lecQrT" alt="先生用の QR コード">
+        <div class="lqbtns"><a class="lpbtn" id="lecDlT" download="講義_部屋${LEC.room}_先生用QR.png">QR を画像で保存</a><button class="lpbtn" id="lecCopyT">先生用リンクをコピー</button></div></div></div>
     <h3>開放するレベル<small>タップすると、そのレベルまで開放します（とばしても、戻してもOK）</small></h3>
     <div class="lplist">${LEVELS.map((l,i)=>{ const k=i+1, st=k<n?'done':k===n?'now':'';
       return `<button class="lplv ${st}" data-lv="${k}"><span class="lpn">LEVEL ${k}</span><b>${l.name}</b><small>使えるようになるもの：${LEC_GET(k)}</small>${k===n?'<em>ここまで開放中</em>':''}</button>`; }).join('')}</div>
     <button class="lpend" id="lecEndB">講義を終了する</button>
     <p class="lpnote">終了すると、受講者の画面は「いつもの版」に切りかわり、開放したレベルまで使える状態で自由に遊べます。</p></div>`;
   $('lecQrB').onclick=()=>{ P.dataset.qr=qr?'':'1'; renderLecBar(); };
+  const cp=(u,m)=>(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast(m),()=>toast('コピーできませんでした'));
+  if($('lecCopyT')) $('lecCopyT').onclick=()=>cp(lecTLink(),'先生用リンクをコピーしました');
   if($('lecCopy')) $('lecCopy').onclick=()=>{ (navigator.clipboard?navigator.clipboard.writeText(lecLink()):Promise.reject()).then(()=>toast('リンクをコピーしました'),()=>toast('リンクを長押ししてコピーしてください')); };
   P.querySelectorAll('.lplv').forEach(b=>b.onclick=()=>lecSetLevel(+b.dataset.lv));
   $('lecEndB').onclick=()=>{ const b=$('lecEndB'); if(!b.dataset.armed){ b.dataset.armed='1'; b.textContent='もう一度押すと終了します'; return; } b.disabled=true; lecEnd(); };
-  if(qr) lecQr($('lecQr')); }
+  if(qr){ lecQr($('lecQrS'),$('lecDlS'),lecLink(),'受講者用'); lecQr($('lecQrT'),$('lecDlT'),lecTLink(),'先生用'); } }
 // QR コード（qrcode-generator を読み込んで作る。読めないときはリンクだけ）
-function lecQr(el){ const draw=()=>{ try{ const q=qrcode(0,'M'); q.addData(lecLink()); q.make(); el.innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true}); }catch(e){ el.hidden=true; } };
-  if(window.qrcode) return draw(); const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; sc.onload=draw; sc.onerror=()=>{ el.hidden=true; }; document.head.appendChild(sc); }
+// QR コードを画像（PNG）で作る：長押し・「画像で保存」でそのまま保存できるように、下に部屋番号も入れる
+function lecQr(img,dl,url,label){ const draw=()=>{ try{ const q=qrcode(0,'M'); q.addData(url); q.make();
+      const n=q.getModuleCount(), cs=16, m=4*cs, W=n*cs+m*2, H=W+120, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const g=cv.getContext('2d');
+      g.fillStyle='#fff'; g.fillRect(0,0,W,H); g.fillStyle='#111';
+      for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(q.isDark(r,c)) g.fillRect(m+c*cs,m+r*cs,cs,cs);
+      g.textAlign='center'; const txt=(t,px,bold,y)=>{ let f=px; do{ g.font=`${bold?'bold ':''}${f}px sans-serif`; f-=2; }while(g.measureText(t).width>W-40 && f>12); g.fillText(t,W/2,y); };   /* 幅に収まる大きさで */
+      txt(`コード進行パレット 講義（${label}）`,44,true,W+30); txt(`部屋 ${LEC.room}　パスワード ${LEC.pw}`,36,false,W+84);
+      const u=cv.toDataURL('image/png'); img.src=u; if(dl) dl.href=u; }catch(e){ img.hidden=true; if(dl) dl.hidden=true; } };
+  if(window.qrcode) return draw(); const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; sc.onload=draw; sc.onerror=()=>{ img.hidden=true; if(dl) dl.hidden=true; }; document.head.appendChild(sc); }
 // 講義が終わったら、いつもの版へ（開放したレベルまで使える状態で。いつもの版でもっと進んでいれば、そのまま）
 function lecGoMain(lv){ try{ const k='chord-palette-level', had=+localStorage.getItem(k)||0; localStorage.setItem(k, Math.max(had, lv||0)); localStorage.setItem('chord-palette-mode','step'); }catch(e){}
   location.href=new URL('../', location.href).href; }
@@ -140,7 +167,8 @@ function lecGoMain(lv){ try{ const k='chord-palette-level', had=+localStorage.ge
 function lecOnData(d){ if(!d) return; const now=Date.now(); LEC.members=Object.values(d.m||{}).filter(t=>now-t<70000).length;
   if(LEC.role==='child'){ if(d.end) return lecGoMain(+d.lv||0);
     const n=+d.lv||0; if(n!==LVL){ LVL=n; saveLv(); closeAll(); renderAll(); } }   // 開放したときの案内は出さない
-  else { const m=$('lecMem'); if(m) m.textContent=LEC.members+'人'; } }
+  else { const n=Math.max(1,+d.lv||1); if(n!==LEC.lv){ LEC.lv=n; renderLecBar(); }   // ほかの端末（先生用リンク）で変えたとき
+    const m=$('lecMem'); if(m) m.textContent=LEC.members+'人'; } }
 
 // ---- 受講者 ----
 function lecJoin(room,pw){ LEC.role='child'; LEC.room=room; LEC.pw=pw; MODE='step';
@@ -162,11 +190,15 @@ function lecJoin(room,pw){ LEC.role='child'; LEC.room=room; LEC.pw=pw; MODE='ste
   $('lecGo').onclick=e=>{ e.stopPropagation(); const r=$('lecRoom').value.trim(), p=$('lecPw').value.trim().toLowerCase(); if(!/^\d{4}$/.test(r)||!p){ toast('部屋番号（4けた）とパスワードを入れてください'); return; } lecJoin(r,p); };
   // 配られたリンク（#r=部屋&p=パスワード）から開いたときは、そのまま受講者として参加
   const h=new URLSearchParams(location.hash.slice(1)), r=h.get('r'), p=h.get('p');
+  const tk=h.get('t');
+  if(r && p && tk){ (async()=>{ LEC.role='teacher'; LEC.room=r; LEC.pw=p.toLowerCase(); if(tk!=='local') LEC.rt=tk;   // 先生用リンク：同じ先生として操作
+      try{ if(LEC_ON()) await fbAuth(); const d=await lecGet(lecPath()); if(!d) throw new Error('none'); LEC.lv=Math.max(1,+d.lv||1); history.replaceState(null,'',location.pathname); lecTeacherOn(); }
+      catch(e){ LEC.role=null; LEC.rt=null; $('lecStart').hidden=false; toast('先生用リンクで部屋を開けませんでした'); } })(); return; }
   if(r && p){ lecJoin(r,p.toLowerCase()); return; }
   // 先生が同じ端末で開き直したとき（部屋はそのまま使う）
   try{ const t=JSON.parse(localStorage.getItem('cplec-teacher')); if(t && Date.now()-t.t<6*3600*1000){ const s=$('lecTeacher').querySelector('span'); s.innerHTML+=`<br>前に作った部屋（${t.room}）に戻るときは、下のボタンから。`;
       const back=document.createElement('button'); back.className='chip'; back.textContent=`部屋 ${t.room} に戻る`; back.style.marginTop='8px';
-      back.onclick=async e=>{ e.stopPropagation(); LEC.role='teacher'; LEC.room=t.room; LEC.pw=t.pw; const d=await lecGet(lecPath()); LEC.lv=(d&&+d.lv)||0; if(LEC_ON()) await fbAuth().catch(()=>{});
+      back.onclick=async e=>{ e.stopPropagation(); LEC.role='teacher'; LEC.room=t.room; LEC.pw=t.pw; LEC.rt=t.rt||null; const d=await lecGet(lecPath()); LEC.lv=(d&&+d.lv)||0; if(LEC_ON()) await fbAuth().catch(()=>{});
         LEC.lv=Math.max(1,LEC.lv); lecTeacherOn(); };
       $('lecTeacher').after(back); } }catch(e){}
   $('lecStart').hidden=false; })();
