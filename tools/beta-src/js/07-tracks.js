@@ -593,7 +593,7 @@ function patCats(kind){ const drum=isDrumK(kind), src=drum?DRUMS:ARPS, order=dru
   const used={}; STYLES.forEach(st=>{ const k=drum?st.drum:st.arp; (used[k]=used[k]||[]).push(st.name); if(!drum&&st.arp2) (used[st.arp2]=used[st.arp2]||[]).push(st.name+'の重ねる楽器'); });
   const col=colors(), cv=k=>c=>{ const g=fit(c); if(drum) drawDrumBar(g,0,0,c.width,c.height,DRUMS[k],col); else drawArpBar(g,0,0,c.width,c.height,ARPS[k],col.t,col); };
   const it=k=>({k, del:/^my\d+$/.test(k)?()=>{ delMyPat(kind,k); if(PICK){ PICK.cur=PICK.cur0=patOf(kind); drawPicker(); } }:null, label:/^my\d+$/.test(k)?patName(src[k]).replace(/（自分用）$/,''):patName(src[k]), sub:/^my\d+$/.test(k)?'':src[k]&&src[k].desc?src[k].desc:used[k]?used[k].join('・')+'で使う':'', cv:cv(k)});
-  const my=order.filter(k=>/^my\d+$/.test(k)), rest=order.filter(k=>!/^my\d+$/.test(k));
+  const my=order.filter(k=>/^my\d+$/.test(k) && !(listOf(kind)[+k.slice(2)]||{}).tmp), rest=order.filter(k=>!/^my\d+$/.test(k));
   const cats=[['マイ演奏',my.map(it)], ['伴奏スタイルの演奏',rest.filter(k=>used[k]&&!LAYER_PATS.has(k)).map(it)], ['重ねる楽器の演奏',rest.filter(k=>LAYER_PATS.has(k)).map(it)], ['そのほか',rest.filter(k=>!used[k]&&!LAYER_PATS.has(k)).map(it)]];
   if(drum) cats.forEach(c=>c[1]=c[1].filter(x=>x.k!=='none'));   // 「なし」はトラックをなくすことで（PRO）
   return cats; }

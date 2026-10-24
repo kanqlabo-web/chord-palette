@@ -1,7 +1,7 @@
 // ---------- 演奏の編集画面（作り直し版）----------
 // 鳴らし方・データの形（マイ演奏の notes / sitNotes / 設定）は今のまま。画面だけを作り直す。
 // ・場面は「コードの長さ × 何小節目」の表で選ぶ（空っぽの場面は、どこと同じかを点線で見せる）
-// ・1つの場面の弾き方をマス目で編集（行はメロディ・アクセント・右手・左手のまとまり。使っていないまとまりはたためる）
+// ・1つの場面の演奏をマス目で編集（行はメロディ・アクセント・右手・左手のまとまり。使っていないまとまりはたためる）
 // ・音ごとの設定は、音を選んだときだけ右（スマホは下）に出す。演奏全体の設定は「演奏の設定」にまとめる
 const PE_SCENES=[['1小節ずっと',['bar','bar2','bar3rd','bar4th']],['3拍',['bar3','bar32']],['前半2拍',['halfA']],['3拍目から',['halfB']],['1拍だけ',['beat']],['先に弾く',['push','push2']]];
 // 空っぽの場面が代わりに使う場面（鳴らすときの決め方と同じ）
@@ -31,6 +31,7 @@ const peSnap=()=>peDrum()?1:PE.grid;
 #peEd .pplay svg{width:18px;height:18px}
 #peOk{flex:none;padding:0 18px;min-height:38px;border:0;border-radius:12px;background:var(--ink);color:var(--surface);font:inherit;font-weight:800}
 #peEd .ptool{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#peEd .ptb:disabled,#peSet .ptb:disabled{opacity:.45}
 #peEd .ptb,#peSet .ptb{min-width:36px;height:36px;padding:0 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:800;font-size:.84rem;display:inline-grid;place-items:center;flex:none;cursor:pointer}
 #peEd .ptb.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 #peEd .ptb svg{width:16px;height:16px}
@@ -155,7 +156,7 @@ const peSnap=()=>peDrum()?1:PE.grid;
 @media (max-width:899px){
  #peEd .ptool{flex-wrap:nowrap;gap:4px;overflow-x:auto;scrollbar-width:none}
  #peEd .ptb{min-width:34px;padding:0 6px}
- #peEd .psep,#pePick{display:none!important}
+ #peEd .psep,#pePick,#peReg{display:none!important}
  #peSetBtn{font-size:0!important;width:38px}
  #peEd .pwhere{order:9;flex-basis:100%;margin:0;white-space:normal;font-size:.68rem;line-height:1.4}
  #peEd .pbar{justify-content:space-between;gap:6px}
@@ -191,7 +192,8 @@ const peSnap=()=>peDrum()?1:PE.grid;
     <span id="peDrumBars"></span>
     <button class="ptb" id="peSceneBtn"></button>
     <span class="pgap"></span>
-    <button class="ptb" id="pePick">ほかの弾き方を下書きに</button>
+    <button class="ptb" id="peReg" title="ほかの曲や楽器でも選べるように、マイ演奏に入れます">マイ演奏に登録</button>
+    <button class="ptb" id="pePick">ほかの演奏を下書きに</button>
     <button class="ptb" id="peSetBtn" aria-label="演奏の設定" title="演奏の設定">${I('<path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="4" r="1.6" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/><circle cx="11" cy="8" r="1.6" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/><circle cx="7" cy="12" r="1.6" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>')}演奏の設定</button>
   </div>
   <div class="pbar" id="peBar"></div>
@@ -214,14 +216,13 @@ const peSnap=()=>peDrum()?1:PE.grid;
 function peOpen(kind,scene,mode,x0){ const k=patOf(kind);
   if((kind==='arp2'||xType(kind)==='chord') && (!k || !ARPS[k])) return openSheet(kind);
   closeAll(); if(typeof BLKE!=='undefined' && BLKE) hideBlk();
-  const snap=JSON.stringify(state), wasMy=/^my\d+$/.test(k||'') && mode!=='new' && mode!=='copy';
+  // 演奏の編集は、その曲だけのもの（tmp）。組み込みやマイ演奏を編集するときは、この曲用の写しを作って編集する。マイ演奏に入れるのは「登録」したときだけ
+  const isMy=/^my\d+$/.test(k||''), src=isMy?listOf(kind)[+k.slice(2)]:null, snap=JSON.stringify(state), wasMy=!!(src && src.tmp) && mode!=='new' && mode!=='copy';
   PE={kind, snap, wasMy, prev:k, nm:tkPatName(kind), tool:'sel', grid:PE&&PE.grid||1, fold:{}};
   patKind=kind; PR.selSet=new Set();
   if(mode==='new') newMy(kind,null); else if(!wasMy) newMy(kind, k||'auto');
-  // 組み込みの演奏を編集するとき、同じ名前の「（自分用）」がもうあれば、新しく作らずにそれを続けて編集する
-  if(!wasMy && mode!=='new'){ const list=listOf(kind), i=list.length-1, nm=list[i]&&list[i].name, j=/（自分用）$/.test(nm||'')?list.findIndex((x,q)=>q<i&&x.name===nm):-1;
-    if(j>=0 && mode==='fresh'){ list[j]=list.pop(); setPatOf(kind,'my'+j); rebuildMy(); save(); PE.wasMy=true; }   // 下書きに取り込み直したときは、前の（自分用）を組み込みの中身で置きかえる
-    else if(j>=0){ list.pop(); setPatOf(kind,'my'+j); rebuildMy(); save(); PE.wasMy=true; PE.reuse=JSON.stringify(curMy()); } }
+  if(!wasMy){ const m=curMy(); m.tmp=true; m.name=(mode==='new'?'新しい演奏':(src?src.name:PE.nm)).replace(/（(自分用|この曲用)）$/,'').slice(0,14)+'（この曲用）'; rebuildMy(); }
+  peGC();
   PE.copy=PE.wasMy?null:JSON.stringify(curMy());
   clearTimeout(HIST.t); histCommit(); PE.h0=HIST.undo.length;   // 開いた時点を記録して、元に戻すで画面を開く前まで戻らないようにする
   const okScene = isDrumK(kind) ? ['bar','B'] : isBassK(kind) ? ['bar'] : SCENES.map(s=>s[0]);
@@ -253,8 +254,8 @@ function peBack(roll){ const mel=PE.layer==='mel', other=mel?PE_ARP_GROUPS.filte
   BSEGS.forEach(s=>notesOfScene(s.key).forEach(n=>{ const i=idx[String(n.r)]; if(i==null || n.st<s.off || n.st>=s.off+s.len) return;
     h+=`<i class="pbk${mel?'':' m'}" style="left:${(s.x0+n.st-s.off)*BSW}px;width:${Math.max(4,Math.min(n.len,s.off+s.len-n.st)*BSW-1)}px;top:${i*rh+1}px;height:${Math.max(3,rh-2)}px"></i>`; }));
   roll.insertAdjacentHTML('afterbegin',h); }
-// くり返し：同じ弾き方（場面）を使う所を「まとめて編集」するか、「ここだけ編集」するか
-// 1小節の弾き方は4小節ひとまとまり（bar・bar2・bar3rd・bar4th）、3拍は2小節（bar3・bar32）まで別にできる
+// くり返し：同じ演奏（場面）を使う所を「まとめて編集」するか、「ここだけ編集」するか
+// 1小節の演奏は4小節ひとまとまり（bar・bar2・bar3rd・bar4th）、3拍は2小節（bar3・bar32）まで別にできる
 const PE_CYC={bar:['bar','bar2','bar3rd','bar4th'], bar3:['bar3','bar32']};
 const peBase=k=>PE_CYC.bar.includes(k)?'bar':PE_CYC.bar3.includes(k)?'bar3':null;
 const peHas=k=>peSceneNotes(k).length>0;
@@ -270,24 +271,24 @@ function peSplit(){ const P=pePlace(); if(!P||!P.base) return; const {base,p}=P,
   const id=base+':'+p, made=(PE.made=PE.made||{})[id]=PE.made[id]||[], mk=k=>{ if(!made.includes(k)) made.push(k); };   // 「ここだけ」で写した場面（まとめるときは、これだけ消す）
   if(p===0) K.forEach((k,q)=>{ if(q && src[q]===src[0]){ m.sitNotes[k]=snap[q]; mk(k); } });   // 1小節目だけにする：同じ音を使っているほかの小節に、今の音を写す
   else { if(src[p]!==K[p]){ m.sitNotes[K[p]]=snap[p]; mk(K[p]); } if(base==='bar' && p===1 && !peHas('bar4th')){ m.sitNotes.bar4th=snap[3]; mk('bar4th'); } }   // 2小節目を作ると4小節目も変わるので、4小節目は今のままを写す
-  const si=BLKE.act[PR.scene]; PR.scene=PE.scene=BLKE.cur=K[p]; BLKE.act[K[p]]=si; PR.selSet.clear(); rebuildMy(); save(); clearTimeout(HIST.t); histCommit(); peDraw(); toast('ここだけの弾き方にしました。ほかの所は変わりません'); }
+  const si=BLKE.act[PR.scene]; PR.scene=PE.scene=BLKE.cur=K[p]; BLKE.act[K[p]]=si; PR.selSet.clear(); rebuildMy(); save(); clearTimeout(HIST.t); histCommit(); peDraw(); toast('ここだけの演奏にしました。ほかの所は変わりません'); }
 function peMerge(){ const P=pePlace(); if(!P||!P.base) return; const {base,p}=P, K=PE_CYC[base], m=curMy(); if(!m.sitNotes) return;
   // 消す場面：1小節目なら「ここだけ」で写した場面（なければほかの小節の場面全部）、ほかの小節ならその小節の場面
   const made=(PE.made||{})[base+':'+p]||[], del=(p===0?(made.length?made.slice():K.slice(1)):[...new Set([K[p],...made])]).filter(peHas);
-  // もとから入っていた弾き方（写したものでない）が消えるときは、確かめる
+  // もとから入っていた演奏（写したものでない）が消えるときは、確かめる
   const lost=del.filter(k=>!made.includes(k)), nn=lost.reduce((a,k)=>a+peSceneNotes(k).length,0), mel=lost.some(k=>peSceneNotes(k).some(n=>isDeg(n.r)));
-  if(lost.length && !confirm(`${lost.map(SCENE_NAME).join('・')}だけの弾き方（${nn}音${mel?'、メロディを含む':''}）が消えて、ほかの所と同じになります。よろしいですか？（あとで「元に戻す」でも戻せます）`)) return;
+  if(lost.length && !confirm(`${lost.map(SCENE_NAME).join('・')}だけの演奏（${nn}音${mel?'、メロディを含む':''}）が消えて、ほかの所と同じになります。よろしいですか？（あとで「元に戻す」でも戻せます）`)) return;
   del.forEach(k=>{ delete m.sitNotes[k]; const i=made.indexOf(k); if(i>=0) made.splice(i,1); });
   // 分けたときに写しただけの小節（中身が戻り先と同じ）は、まとめなおす
   for(let q=K.length-1;q>0;q--){ const k=K[q], f=peResolve(PE_FALL[k]); if(peHas(k) && JSON.stringify(peSceneNotes(k))===JSON.stringify(peSceneNotes(f))) delete m.sitNotes[k]; }
   const si=BLKE.act[PR.scene]; PR.scene=PE.scene=BLKE.cur=p===0?K[0]:peSrc(base,p); BLKE.act[PR.scene]=si; PR.selSet.clear(); rebuildMy(); save(); clearTimeout(HIST.t); histCommit(); peDraw();
-  toast(p===0?'ほかの所も、この弾き方にそろえました（元に戻すで戻せます）':'ほかの所と同じ弾き方に戻しました（元に戻すで戻せます）'); }
+  toast(p===0?'ほかの所も、この演奏にそろえました（元に戻すで戻せます）':'ほかの所と同じ演奏に戻しました（元に戻すで戻せます）'); }
 function peBarDraw(){ const el=$('peBar'), P=pePlace(); let h='';
   if(peArp()){ const nm=[curMy().notes||[],...Object.values(curMy().sitNotes||{})].flat().filter(n=>isDeg(n.r)).length;
     h+=`<div class="pseg" role="group" aria-label="編集する層"><button class="${PE.layer!=='mel'?'on':''}" data-l="acc">伴奏</button><button class="${PE.layer==='mel'?'on':''}" data-l="mel">メロディ${nm?`<small>${nm}</small>`:''}</button></div>`; }
   if(P && P.s){ const lab=chordText(P.s.v)+'・'+SCENE_NAME(P.s.key), shared=P.n>1, can=!!P.base;
-    const one=can&&P.own, tip=!can?'この場面は、曲の中で1種類だけです':P.base==='bar'?'1小節の弾き方は4小節ごとにくり返します':'3拍の弾き方は2小節ごとにくり返します';
-    const msg=!can&&P.n<2||P.n<2&&!one?'この弾き方を使っているのは、ここだけです':one?`${esc(lab)}：この小節だけの弾き方です。ほかの所は変わりません`:`${esc(lab)}：曲の${P.n}か所で同じ弾き方です。今は全部いっしょに変わります`;
+    const one=can&&P.own, tip=!can?'この場面は、曲の中で1種類だけです':P.base==='bar'?'1小節の演奏は4小節ごとにくり返します':'3拍の演奏は2小節ごとにくり返します';
+    const msg=!can&&P.n<2||P.n<2&&!one?'この演奏を使っているのは、ここだけです':one?`${esc(lab)}：この小節だけの演奏です。ほかの所は変わりません`:`${esc(lab)}：曲の${P.n}か所で同じ演奏です。今は全部いっしょに変わります`;
     PE.pop=(P.n>1&&!one)?`${P.n}か所いっしょに変わります`:''; h+=`<span class="pwhere">${msg}</span><div class="pseg" role="group" aria-label="くり返しの編集" title="${esc(tip)}"><button class="${one?'':'on'}" data-r="all">まとめて${!one&&shared?`<small>${P.n}か所</small>`:''}</button><button class="${one?'on':''}" data-r="one" ${can?'':'disabled'}>ここだけ${one&&shared?`<small>${P.base==='bar'?'4':'2'}小節ごと</small>`:''}</button></div>`; }
   el.innerHTML=h; el.hidden=!h;
   el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{ if(PE.layer===b.dataset.l) return; PE.layer=b.dataset.l; PR.selSet.clear(); drawBlk(); });
@@ -298,10 +299,18 @@ function peCancel(){ if(!PE) return; const o=JSON.parse(PE.snap);
   Object.keys(state).forEach(k=>delete state[k]); Object.assign(state,o); rebuildMy(); save(); $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; applyMix(); ensureSounds(); peClose(); }
 function peOk(){ if(!PE) return; const P=PE, list=listOf(P.kind), i=list.length-1;
   if(!P.wasMy && JSON.stringify(list[i])===P.copy && patOf(P.kind)==='my'+i){ list.pop(); setPatOf(P.kind,P.prev); rebuildMy(); save(); }
-  else if(P.reuse && JSON.stringify(curMy())===P.reuse){ setPatOf(P.kind,P.prev); rebuildMy(); save(); }   // 続きを開いただけで何も変えなければ、組み込みの演奏のまま
-  else if((!P.wasMy || P.reuse) && curMy()) toast(`自分用の演奏「${curMy().name}」にしました`);
-  peClose(); }
-$('peX').onclick=peCancel; $('peOk').onclick=peOk;
+  peGC(); save(); peClose(); }
+// 使われなくなった「この曲用」の演奏を消す（マイ演奏の番号はつめる）
+function peGC(){ const typ=k=>isDrumK(k)?'d':isBassK(k)?'b':'a';
+  ['arp','drum','bass'].forEach(K0=>{ const list=listOf(K0), T=typ(K0), ks=trackList().map(t=>t.kind).filter(k=>typ(k)===T);
+    for(let i=list.length-1;i>=0;i--){ if(!list[i] || !list[i].tmp || ks.some(k=>patOf(k)==='my'+i)) continue;
+      ks.forEach(k=>{ const p=patOf(k); if(/^my\d+$/.test(p||'') && +p.slice(2)>i) setPatOf(k,'my'+(+p.slice(2)-1)); }); list.splice(i,1); } });
+  rebuildMy(); }
+// マイ演奏に登録（ほかの曲・ほかの楽器でも選べるようになる）
+function peReg(){ const m=curMy(); if(!m) return; const def=m.name.replace(/（この曲用）$/,''), nm=prompt('マイ演奏に登録する名前',def); if(nm==null) return; const name=nm.trim().slice(0,20)||def;
+  if(m.tmp){ delete m.tmp; m.name=name; } else { const c=JSON.parse(JSON.stringify(m)); c.name=name; listOf(PE.kind).push(c); }
+  rebuildMy(); save(); clearTimeout(HIST.t); histCommit(); PE.wasMy=true; peDraw(); toast(`マイ演奏「${name}」に登録しました`); }
+$('peReg').onclick=peReg; $('peX').onclick=peCancel; $('peOk').onclick=peOk;
 $('pePlay').onclick=()=>{ playing?stop():play(); };
 $('peUndo').onclick=peUndo;
 function peUndo(){ clearTimeout(HIST.t); histCommit(); if(HIST.undo.length<=PE.h0) return toast('これより前には戻せません'); histGo(-1); peAfterHist(); } $('peRedo').onclick=()=>{ histGo(1); peAfterHist(); };
@@ -325,7 +334,8 @@ function peCommit(){ commitNotes(); clearTimeout(HIST.t); histCommit(); peDraw()
 // ---------- 描く ----------
 function peDraw(){ if(!PE) return; patKind=PE.kind; PR.scene=PE.scene; if(!curMy()) return peClose(); BLKE.cur=PE.scene; drawBlk(); }
 function peChrome(){ const m=curMy();
-  $('peTitle').innerHTML=`${esc(tkName(PE.kind))}の${isDrumK(PE.kind)?'叩き方':'弾き方'}<small class="nophrase">${esc(m.name||'')}${PE.wasMy||PE.reuse?'':`（「${esc(PE.nm)}」のコピー。変えなければ元のまま）`}</small>`;
+  $('peTitle').innerHTML=`${esc(tkName(PE.kind))}の演奏<small class="nophrase">${esc(m.name||'')}${m.tmp?'・この曲だけの演奏（マイ演奏には入りません）':'・マイ演奏'}</small>`;
+  const rg=$('peReg'); rg.disabled=!m.tmp; rg.textContent=m.tmp?'マイ演奏に登録':'登録済み';
   $('pePlay').innerHTML=playing?STOP_SVG:PLAY_SVG; $('pePlay').setAttribute('aria-label',playing?'止める':'再生');
   peTools();
   // ドラムは1・2小節目のタブ
@@ -340,7 +350,7 @@ function peSceneHTML(){ const m=curMy(), made=k=>peSceneNotes(k).length>0;
       h+=`<button class="${mk?'made':'empty'}${PE.scene===k?' cur':''}" data-k="${k}" title="${esc(tip)}" aria-label="${esc(tip)}">${mk?'':'＝'}</button>`; } });
   h+='</div>';
   const fb=PE_FALL[PE.scene], empty=!made(PE.scene);
-  h+=`<div class="pescnote"><b style="color:var(--ink)">${esc(SCENE_NAME(PE.scene))}</b><br>${empty?(fb?`空っぽなので「${esc(SCENE_NAME(fb))}」と同じに鳴ります。音を置くと、この場面だけの弾き方になります。`:'空っぽなので、次のコードの弾き始めを先に弾いて小節の頭までのばします。'):'この場面の弾き方を編集しています。'}${PE.scene==='bar'&&m.contNotes?'<br>（コードが続くとき用の弾き方も入っています。1小節を編集するとそちらは消えます）':''}</div>`;
+  h+=`<div class="pescnote"><b style="color:var(--ink)">${esc(SCENE_NAME(PE.scene))}</b><br>${empty?(fb?`空っぽなので「${esc(SCENE_NAME(fb))}」と同じに鳴ります。音を置くと、この場面だけの演奏になります。`:'空っぽなので、次のコードの弾き始めを先に弾いて小節の頭までのばします。'):'この場面の演奏を編集しています。'}${PE.scene==='bar'&&m.contNotes?'<br>（コードが続くとき用の演奏も入っています。1小節を編集するとそちらは消えます）':''}</div>`;
   return h; }
 function peScenes(){ const nav=$('peScenes'); if(!peArp()){ nav.style.display='none'; return; } nav.style.display='';
   nav.innerHTML='<h3>場面</h3><div style="font-size:.68rem;color:var(--muted)">コードの長さと、何小節目か</div>'+peSceneHTML();
@@ -502,18 +512,18 @@ function peSettings(){ const box=$('peSet'), m=curMy(), kind=PE.kind, F={}; let 
   } else {
     h+=sec('すべり（ポルタメント）',opt('音を重ねたときの、すべる速さ',[[.035,'速い'],[.08,'ふつう'],[.16,'ゆっくり']],m.glide||.08,v=>set('glide',v)));
   }
-  box.innerHTML=`<div role="dialog" aria-label="演奏の設定"><div class="sh"><h3>演奏の設定<small class="nophrase">${esc(m.name||'')}・すべての場面に効きます</small></h3><button class="ptb" id="peSetPick">ほかの弾き方を下書きに</button><button class="ptb" id="peSetX">閉じる</button></div><div class="sb">${h}</div></div>`;
+  box.innerHTML=`<div role="dialog" aria-label="演奏の設定"><div class="sh"><h3>演奏の設定<small class="nophrase">${esc(m.name||'')}・すべての場面に効きます</small></h3><button class="ptb" id="peSetReg" ${m.tmp?"":"disabled"}>${m.tmp?"マイ演奏に登録":"登録済み"}</button><button class="ptb" id="peSetPick">ほかの演奏を下書きに</button><button class="ptb" id="peSetX">閉じる</button></div><div class="sb">${h}</div></div>`;
   box.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ const f=F[b.dataset.f]; if(f) f(); });
-  $('peSetPick').onclick=()=>{ box.hidden=true; $('pePick').click(); }; $('peSetX').onclick=()=>{ box.hidden=true; }; box.onclick=e=>{ if(e.target===box) box.hidden=true; };
+  $('peSetReg').onclick=()=>{ box.hidden=true; peReg(); }; $('peSetPick').onclick=()=>{ box.hidden=true; $('pePick').click(); }; $('peSetX').onclick=()=>{ box.hidden=true; }; box.onclick=e=>{ if(e.target===box) box.hidden=true; };
   box.hidden=false; }
 $('peSetBtn').onclick=()=>peSettings();
-// ほかの弾き方を下書きに：選んだ弾き方で開き直す（キャンセルすれば開いたときに戻る）
+// ほかの演奏を下書きに：選んだ演奏で開き直す（キャンセルすれば開いたときに戻る）
 $('pePick').onclick=()=>{ const P=PE, kind=P.kind, drum=isDrumK(kind), bass=isBassK(kind);
-  const cats = bass ? ()=>[['ベースの弾き方',Object.keys(BASSES).filter(k=>!/^my\d+$/.test(k)||true).map(k=>({k,label:BASSES[k].name}))]] : ()=>patCats(kind);
-  openPicker(drum?'下書きにする叩き方':'下書きにする弾き方', cats, patOf(kind), v=>{
+  const cats = bass ? ()=>[['ベースの演奏',Object.keys(BASSES).filter(k=>!/^my\d+$/.test(k)||true).map(k=>({k,label:BASSES[k].name}))]] : ()=>patCats(kind);
+  openPicker('下書きにする演奏', cats, patOf(kind), v=>{
     const list=listOf(kind), i=list.length-1; if(!P.wasMy && JSON.stringify(list[i])===P.copy && patOf(kind)==='my'+i){ list.pop(); rebuildMy(); }
     setPatOf(kind,v); if(kind==='bass') state.bass=true; save(); renderAll(); ensureSounds();
-    const snap=P.snap, sc=P.scene, grid=P.grid; PE=null; peOpen(kind, sc, 'fresh'); if(PE){ PE.snap=snap; PE.grid=grid; peDraw(); } return true; }); };
+    const snap=P.snap, sc=P.scene, grid=P.grid; PE=null; peOpen(kind, sc); if(PE){ PE.snap=snap; PE.grid=grid; peDraw(); } return true; }); };
 
 // ---------- 右クリック・キーボード ----------
 function peCtxClose(){ const c=$('peCtx'); c.hidden=true; c.innerHTML=''; }
@@ -573,7 +583,7 @@ addEventListener('resize',()=>{ if(PE) peDraw(); });
       else { const E=chordLine(); let e=null; E.forEach(x=>{ if(x.b===b && (x.pos-b*L)<=cur.s) e=x; }); if(e&&hasV(e.v)){ const cell=cellsOf(e.b)[e.h]; const sc=isBassK(PE.kind)?{key:'bar'}:sceneAt(PE.kind,e.b,cell); key=sc&&sc.key; off=(e.pos-b*L); } }
       if(key===PE.scene){ const frac=Math.min(1,(ctx.currentTime-cur.t)/stepDur()), x=(cur.s-off+frac)*(16/(cur.L||16)); if(x>=0&&x<=peN()){ on=true; ph.style.left=(x*PE.cw)+'px'; } } }
     ph.hidden=!on; $('pePlay').innerHTML=playing?STOP_SVG:PLAY_SVG; } requestAnimationFrame(pePhLoop); })();
-// 入口：今までの「弾き方を編集」はすべてこの画面で開く
+// 入口：今までの「演奏を編集」はすべてこの画面で開く
 openPatEditor=function(kind,mode){ closeAll(); peOpen(kind, PR.scene, mode); };
 editTrackPattern=function(kind,scene){ peOpen(kind, scene); };
 { const ob=openBlk; openBlk=function(kind,scene,where,x0,x1,mode){ return peOpen(kind,scene,mode,x0); }; }
