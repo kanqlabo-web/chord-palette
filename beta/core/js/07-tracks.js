@@ -708,9 +708,10 @@ const UNDO_SVG='<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="tru
 #blkEd .bdeco .bdx{float:right;margin-top:6px}
 #blkEd .bdeco{position:absolute;left:0;right:0;bottom:100%;z-index:7;max-height:48vh;overflow:auto;padding:2px 16px 12px;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -10px 24px rgba(10,14,20,.14)}
 #blkEd .bdeco h3{font-size:.8rem}
-#blkEd .bfoot{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 16px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);margin-top:8px}
+#blkEd .bfoot{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 16px}
+#blkEd .bbot{padding-bottom:env(safe-area-inset-bottom,0px)}
 #blkEd .bfoot .chip{flex:none}
-#blkOk{flex:1;min-width:120px;min-height:46px;border:0;border-radius:12px;background:var(--ink);color:var(--surface);font:inherit;font-weight:800;font-size:1rem}
+#blkOk{flex:1;min-width:110px;min-height:40px;border:0;border-radius:12px;background:var(--ink);color:var(--surface);font:inherit;font-weight:800;font-size:1rem}
 #patSheet.inblk{z-index:44}
 #patSheet.inblk .pgrid,#patSheet.inblk #patHelp,#patSheet.inblk #patPlay,#patSheet.inblk #patDirect{display:none!important}
 body.blkset .scrim{z-index:43}
@@ -718,14 +719,14 @@ body.blkset .scrim{z-index:43}
   document.head.appendChild(st);
   const el=document.createElement('div'); el.id='blkEd'; el.hidden=true; el.setAttribute('role','dialog');
   el.innerHTML=`<div class="bh"><h2 id="blkTitle"></h2><button class="bplay" id="blkPlay" aria-label="再生"></button><button class="iconbtn" id="blkX" aria-label="キャンセル"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+    <div class="bfoot"><button class="chip" id="blkPick">ほかの弾き方</button><button class="chip" id="blkSet">設定</button><button id="blkOk">決定</button></div>
+    <p class="bsub" id="blkNote"></p>
     <div class="btool"><div class="bpill" id="blkPill"><button id="blkPen" aria-label="鉛筆（押しているあいだ音を置く・消す。右へずらすと固定）">${PEN_SVG}</button><button id="blkLock" aria-label="鉛筆に鍵をかける">${LOCK_SVG}</button></div>
       <button class="tb" id="blkUndo" aria-label="元に戻す">${UNDO_SVG}</button><button class="tb" id="blkRedo" aria-label="やり直す"><span style="display:grid;transform:scaleX(-1)">${UNDO_SVG}</span></button>
       <span class="bgap"></span><button class="tb" id="blkZo" aria-label="縮小">−</button><button class="tb" id="blkZi" aria-label="拡大">＋</button></div>
     <p class="bsub" id="blkHelp"></p>
     <div class="bscroll" id="bScroll"></div>
-    <div class="bbot"><div class="bdeco" id="blkDeco" hidden><button class="chip bdx" id="blkDecoX">閉じる</button><div id="prFall"></div></div>
-    <p class="bsub" id="blkNote"></p>
-    <div class="bfoot"><button class="chip" id="blkPick">ほかの弾き方</button><button class="chip" id="blkSet">設定</button><button id="blkOk">決定</button></div></div><div id="blkMenu" hidden></div>`;
+    <div class="bbot"><div class="bdeco" id="blkDeco" hidden><button class="chip bdx" id="blkDecoX">閉じる</button><div id="prFall"></div></div></div><div id="blkMenu" hidden></div>`;
   document.body.appendChild(el); }
 function blkPlayIco(){ const b=$('blkPlay'); if(b){ b.innerHTML=playing?STOP_SVG:PLAY_SVG; b.setAttribute('aria-label',playing?'止める':'再生'); } }
 // コードの楽器はメロディ行をいつも出しておく（はじめはスクロールで上に隠れている）
@@ -756,7 +757,10 @@ function openBlk(kind,scene,where,x0,x1,mode){ const k=patOf(kind);
   BLKE={kind, x0:x0||0, x1, snap, wasMy, prev:k, nm:tkPatName(kind), cur:scene||'bar', act:{}};
   patKind=kind; PR.scene=scene||'bar'; PR.mode='edit'; PR.selSet.clear();
   if(mode==='new') newMy(kind,null); else if(!wasMy) newMy(kind, k||'auto');
-  BLKE.copy=wasMy?null:JSON.stringify(curMy());
+  // 組み込みのパターンを編集するとき、同じ名前の「（自分用）」がもうあれば、新しく作らずにそれを続けて編集する
+  if(!wasMy && mode!=='new'){ const list=listOf(kind), i=list.length-1, nm=list[i]&&list[i].name, j=/（自分用）$/.test(nm||'')?list.findIndex((x,q)=>q<i&&x.name===nm):-1;
+    if(j>=0){ list.pop(); setPatOf(kind,'my'+j); rebuildMy(); save(); BLKE.wasMy=true; BLKE.reuse=JSON.stringify(curMy()); } }
+  BLKE.copy=BLKE.wasMy?null:JSON.stringify(curMy());
   $('patGrid').innerHTML=''; $('blkDeco').hidden=true; blkMenuClose();
   $('blkEd').hidden=false; blkPlayIco(); renderAll(); renderTracks(); drawBlk();
   requestAnimationFrame(()=>{ const sc=$('bScroll'); sc.scrollLeft=Math.max(0,BLKE.x0*BSW-4); sc.scrollTop=blkMel()?Math.round((MEL_ROWS.length-.45)*BRH):0; }); }   // メロディ行は、下の端が少しだけ見える所まで隠す
@@ -771,7 +775,7 @@ function drawBlk(){ if(!BLKE) return; const kind=BLKE.kind, rows=blkRows(), L=sl
   $('blkTitle').innerHTML=`${esc(tkName(kind))}の弾き方<small>${esc(m.name||'')}</small>`;
   const c=BLKE.cur, n=blkUses(c);
   $('blkNote').textContent = (blkDraw()?'':'音を置くときは、鉛筆を押しながらタップ（右へずらすと固定）。') + (BSEGS.some(s=>s.loop) ? 'うすい所は同じ弾き方のくり返し（いっしょに変わる）。ダブルタップでそこを編集。' : '')
-    + (BLKE.wasMy ? '' : `「${BLKE.nm}」のコピーです（変えなければ元のまま）。`);
+    + (BLKE.reuse ? `前に編集した自分用の続きです。` : BLKE.wasMy ? '' : `「${BLKE.nm}」のコピーです（変えなければ元のまま）。`);
   let ru='', segs='', notes='';
   for(let b=0;b<state.bars;b++) ru+=`<span class="bn" style="left:${b*L*BSW}px">${b+1}</span>`;
   BSEGS.forEach((s,si)=>{ const lab = (isDrum ? (s.key==='B'?'2小節目':'') : SCENE_NAME(s.key)) + (s.loop?'（くり返し）':'');
@@ -941,6 +945,8 @@ function blkCancel(){ if(!BLKE) return; const o=JSON.parse(BLKE.snap);
 function blkOk(){ if(!BLKE) return; const B=BLKE, list=listOf(B.kind), i=list.length-1;
   if(!B.wasMy && JSON.stringify(list[i])===B.copy && patOf(B.kind)==='my'+i){ list.pop(); setPatOf(B.kind,B.prev); rebuildMy(); save(); }
   else if(!B.wasMy && list[i]) toast(`自分用のパターン「${list[i].name}」にしました`);
+  else if(B.reuse && JSON.stringify(curMy())===B.reuse){ setPatOf(B.kind,B.prev); rebuildMy(); save(); }   // 続きを開いただけで何も変えなければ、組み込みのパターンのまま
+  else if(B.reuse) toast(`自分用のパターン「${curMy().name}」にしました`);
   hideBlk(); }
 $('blkOk').onclick=blkOk; $('blkX').onclick=blkCancel;
 $('blkPlay').onclick=()=>{ playing?stop():play(); };
