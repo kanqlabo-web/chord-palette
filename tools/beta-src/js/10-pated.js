@@ -254,8 +254,10 @@ function peOpen(kind,scene,mode,x0){ const k=patOf(kind);
 function peScrollTo(k,x){ const sc=$('bScroll'), s=BSEGS[BLKE.act[k]]; if(x==null && !s) return false;
   sc.scrollLeft=Math.max(0,(x!=null?x:s.x0)*BSW-8); return !!s; }
 // 行：まとまりごとに見出しの行（キーが _ で始まる。音は置けない）を入れ、たたんだまとまりの行は出さない
+// メロ行の名前は、今の調・楽器で実際に鳴る音（例: E4）
+function peMelName(r){ try{ const p=degPitch(r), off=((p-keyObj().pc)%12+12)%12; return noteName(off)+(Math.floor(p/12)-1); }catch(e){ return r; } }
 function peBlkRows(){ let G=peGroups(); if(peArp()) G=PE.layer==='mel'?G.filter(x=>x[0]==='mel'):G.filter(x=>x[0]!=='mel'); const out=[];
-  G.forEach(([g,lab,rows])=>{ if(G.length>1) out.push(['_'+g, `<em class="bgh" data-g="${g}">${PE.fold[g]?'▸':'▾'} ${esc(lab)}</em>`]); if(!PE.fold[g] || G.length<2) out.push(...rows); });
+  G.forEach(([g,lab,rows])=>{ if(G.length>1) out.push(['_'+g, `<em class="bgh" data-g="${g}">${PE.fold[g]?'▸':'▾'} ${esc(lab)}</em>`]); if(!PE.fold[g] || G.length<2) out.push(...(g==='mel'?rows.map(([r])=>[r,peMelName(r)]):rows)); });
   return out; }
 { const db=drawBlk; drawBlk=function(){ const r=db.apply(this,arguments); if(PE && BLKE){ PE.scene=PR.scene; peChrome(); peBarDraw(); peScenes(); peInsp();
     { const sig=PR.scene+':'+BLKE.act[PR.scene]; if(sig!==PE.popSig){ PE.popSig=sig; if(PE.pop) pePop(PE.pop); } }
