@@ -755,7 +755,7 @@ function blkSegs(){ const kind=BLKE.kind, L=slotSteps(), col=colors(), out=[];
   if(isDrumK(kind)){ for(let b=0;b<state.bars;b++){ const sc=sceneAt(kind,b,cellsOf(b)[0]); out.push({x0:b*L, len:L, key:sc.key, off:(b*L)%16, c:col.muted, b}); } return out; }
   const E=chordLine(), S=effStarts(kind,E), end=state.bars*L;
   E.forEach((e,k)=>{ if(!hasV(e.v)) return; const x0=Math.max(0,S[k]), x1=k+1<E.length?S[k+1]:end; if(x1<=x0) return;
-    let key='bar', off=0; if(!isBassK(kind)){ const sc=sceneAt(kind,e.b,cellsOf(e.b)[e.h]); if(!sc) return; key=sc.key; off=sc.off||0; }
+    let key='bar', off=0; if(!isBassK(kind)){ const sc=sceneAt(kind,e.b,cellsOf(e.b)[e.h]); if(!sc) return; key=sc.key; off=sc.off||0; if(PE) key=peResolve(key); }
     out.push({x0, len:Math.min(x1-x0, sceneLen(key)-off), key, off, c:roleCol(col,roleAt(e.b,e.h,e.v)), v:e.v, b:e.b}); });
   return out; }
 function blkUses(key){ return BSEGS.filter(s=>s.key===key).length; }

@@ -139,11 +139,24 @@ const peSnap=()=>peDrum()?1:PE.grid;
 #peEd .prn.up::after{content:none}
 #peEd .prn.ocd::before,#peEd .prn.ocu::before{content:none}
 #peEd .prn s{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:10px;line-height:1;font-weight:900;text-decoration:none;color:var(--ink);white-space:nowrap;pointer-events:none;text-shadow:0 0 2px var(--surface),0 0 2px var(--surface)}
+#peEd .pbar{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#peEd .pbar[hidden]{display:none}
+#peEd .pwhere{margin-left:auto;font-size:.72rem;font-weight:800;color:var(--muted);white-space:nowrap}
+#peEd .pseg{display:flex;padding:3px;gap:2px;border-radius:10px;background:color-mix(in srgb,var(--ink) 8%,transparent);flex:none}
+#peEd .pseg button{height:30px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-size:.78rem;font-weight:800;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
+#peEd .pseg button small{font-size:.64rem;font-weight:700;opacity:.8}
+#peEd .pseg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(10,14,20,.18)}
+#peEd .pseg button:disabled{opacity:.4;cursor:default}
+#peEd .pbk{position:absolute;border-radius:3px;background:color-mix(in srgb,var(--ink) 20%,transparent);pointer-events:none;z-index:0}
+#peEd .pbk.m{background:color-mix(in srgb,var(--d) 30%,transparent)}
 @media (max-width:899px){
  #peEd .ptool{flex-wrap:nowrap;gap:4px;overflow-x:auto;scrollbar-width:none}
  #peEd .ptb{min-width:34px;padding:0 6px}
  #peEd .psep,#pePick{display:none!important}
  #peSetBtn{font-size:0!important;width:38px}
+ #peEd .pwhere{display:none}
+ #peEd .pbar{flex-wrap:nowrap;justify-content:space-between;gap:6px}
+ #peEd .pseg button{padding:0 9px}
  #peEd .plabs .pr{padding-left:8px;font-size:.7rem}
  #peSet{padding:0;align-items:stretch}
  #peSet>div{border-radius:0}
@@ -178,6 +191,7 @@ const peSnap=()=>peDrum()?1:PE.grid;
     <button class="ptb" id="pePick">ほかの弾き方を下書きに</button>
     <button class="ptb" id="peSetBtn" aria-label="演奏の設定" title="演奏の設定">${I('<path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="4" r="1.6" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/><circle cx="11" cy="8" r="1.6" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/><circle cx="7" cy="12" r="1.6" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>')}演奏の設定</button>
   </div>
+  <div class="pbar" id="peBar"></div>
   <div class="pbody">
     <nav id="peScenes" aria-label="場面"></nav>
     <div class="pmain" id="peMain">
@@ -210,6 +224,7 @@ function peOpen(kind,scene,mode,x0){ const k=patOf(kind);
   PE.scene = okScene.includes(scene) ? scene : 'bar'; PR.scene=PE.scene;
   // 音のないまとまりは、はじめはたたむ（メロディ行は、使っているときだけ開く）
   peGroups().forEach(([g,,rows])=>{ const used=[...curMy().notes||[], ...Object.values(curMy().sitNotes||{}).flat()].some(n=>rows.some(([r])=>String(r)===String(n.r))); if(!used && peGroups().length>1) PE.fold[g]=true; });
+  { const all=[curMy().notes||[],...Object.values(curMy().sitNotes||{})].flat(); PE.layer=all.length&&all.every(n=>isDeg(n.r))?'mel':'acc'; }
   // ロールは前のピアノロール（曲の全部のマスを並べる。07 の drawBlk・bindBig）をこの画面の中で使う
   BLKE={kind, x0:x0||0, snap, wasMy:PE.wasMy, reuse:PE.reuse, prev:k, nm:PE.nm, cur:PE.scene, act:{}}; BD=null; PR.blkLock=false; PR.mode='edit';
   const sc=$('bScroll'), mn=$('peMain'); if(sc.parentElement!==mn) mn.insertBefore(sc,mn.firstChild);
@@ -219,12 +234,51 @@ function peOpen(kind,scene,mode,x0){ const k=patOf(kind);
 function peScrollTo(k,x){ const sc=$('bScroll'), s=BSEGS[BLKE.act[k]]; if(x==null && !s) return false;
   sc.scrollLeft=Math.max(0,(x!=null?x:s.x0)*BSW-8); return !!s; }
 // 行：まとまりごとに見出しの行（キーが _ で始まる。音は置けない）を入れ、たたんだまとまりの行は出さない
-function peBlkRows(){ const G=peGroups(), out=[];
-  G.forEach(([g,lab,rows])=>{ if(G.length>1) out.push(['_'+g, `<em class="bgh" data-g="${g}">${PE.fold[g]?'▸':'▾'} ${esc(lab)}</em>`]); if(!PE.fold[g]) out.push(...rows); });
+function peBlkRows(){ let G=peGroups(); if(peArp()) G=PE.layer==='mel'?G.filter(x=>x[0]==='mel'):G.filter(x=>x[0]!=='mel'); const out=[];
+  G.forEach(([g,lab,rows])=>{ if(G.length>1) out.push(['_'+g, `<em class="bgh" data-g="${g}">${PE.fold[g]?'▸':'▾'} ${esc(lab)}</em>`]); if(!PE.fold[g] || G.length<2) out.push(...rows); });
   return out; }
-{ const db=drawBlk; drawBlk=function(){ const r=db.apply(this,arguments); if(PE && BLKE){ PE.scene=PR.scene; peChrome(); peScenes(); peInsp();
-    const roll=$('bRoll'); if(roll) blkRows().forEach(([k],i)=>{ if(String(k)[0]!=='_') return; const d=document.createElement('div'); d.className='bgrp'; d.style.top=(i*BRH)+'px'; d.style.height=BRH+'px'; roll.appendChild(d); }); }
+{ const db=drawBlk; drawBlk=function(){ const r=db.apply(this,arguments); if(PE && BLKE){ PE.scene=PR.scene; peChrome(); peBarDraw(); peScenes(); peInsp();
+    const roll=$('bRoll'); if(roll && peArp()) peBack(roll);
+    if(roll) blkRows().forEach(([k],i)=>{ if(String(k)[0]!=='_') return; const d=document.createElement('div'); d.className='bgrp'; d.style.top=(i*BRH)+'px'; d.style.height=BRH+'px'; roll.appendChild(d); }); }
   return r; }; }
+// メロディと伴奏は層を分ける。編集していない方の層の音は、裏にうすく透かして見せる（高さは層の行の数に合わせてならす）
+function peBack(roll){ const mel=PE.layer==='mel', other=mel?PE_ARP_GROUPS.filter(x=>x[0]!=='mel').flatMap(x=>x[2]):MEL_ROWS, idx={}; other.forEach(([r],i)=>idx[String(r)]=i);
+  const H=blkRows().length*BRH, rh=H/other.length; let h='';
+  BSEGS.forEach(s=>notesOfScene(s.key).forEach(n=>{ const i=idx[String(n.r)]; if(i==null || n.st<s.off || n.st>=s.off+s.len) return;
+    h+=`<i class="pbk${mel?'':' m'}" style="left:${(s.x0+n.st-s.off)*BSW}px;width:${Math.max(4,Math.min(n.len,s.off+s.len-n.st)*BSW-1)}px;top:${i*rh+1}px;height:${Math.max(3,rh-2)}px"></i>`; }));
+  roll.insertAdjacentHTML('afterbegin',h); }
+// くり返し：同じ弾き方（場面）を使う所を「まとめて編集」するか、「ここだけ編集」するか
+// 1小節の弾き方は4小節ひとまとまり（bar・bar2・bar3rd・bar4th）、3拍は2小節（bar3・bar32）まで別にできる
+const PE_CYC={bar:['bar','bar2','bar3rd','bar4th'], bar3:['bar3','bar32']};
+const peBase=k=>PE_CYC.bar.includes(k)?'bar':PE_CYC.bar3.includes(k)?'bar3':null;
+const peHas=k=>peSceneNotes(k).length>0;
+// 空の場面は、鳴らすときと同じ場面にたどる（3・4小節目は1・2小節目、3拍の2小節目は3拍）
+function peResolve(k){ const F={bar2:'bar',bar3rd:'bar',bar4th:'bar2',bar32:'bar3'}; while(F[k] && !peHas(k)) k=F[k]; return k; }
+function peSrc(base,p){ if(base==='bar3') return p%2&&peHas('bar32')?'bar32':'bar3'; return peResolve(PE_CYC.bar[p%4]); }
+function pePlace(){ if(!peArp()) return null; const s=BSEGS[BLKE.act[PR.scene]]; if(!s) return null; const base=peBase(s.key); const p=base?(s.b%(base==='bar3'?2:4)):0, K=base?PE_CYC[base]:[];
+  // own：この小節が、ほかの小節と音を分けてあるか
+  const own=!!base && (p>0 ? peSrc(base,p)===K[p] : K.every((_,q)=>!q || peSrc(base,q)!==K[0]));
+  return {s, base, p, own, n:BSEGS.filter(x=>x.key===s.key).length}; }
+function peSplit(){ const P=pePlace(); if(!P||!P.base) return; const {base,p}=P, K=PE_CYC[base], m=curMy(), src=K.map((_,q)=>peSrc(base,q)), cp=k=>JSON.parse(JSON.stringify(peSceneNotes(k)));
+  const snap=src.map(cp); m.sitNotes=m.sitNotes||{};
+  if(p===0) K.forEach((k,q)=>{ if(q && src[q]===src[0]) m.sitNotes[k]=snap[q]; });   // 1小節目だけにする：同じ音を使っているほかの小節に、今の音を写す
+  else { m.sitNotes[K[p]]=snap[p]; if(base==='bar' && p===1 && !peHas('bar4th')) m.sitNotes.bar4th=snap[3]; }   // 2小節目を作ると4小節目も変わるので、4小節目は今のままを写す
+  const si=BLKE.act[PR.scene]; PR.scene=PE.scene=BLKE.cur=K[p]; BLKE.act[K[p]]=si; PR.selSet.clear(); rebuildMy(); save(); clearTimeout(HIST.t); histCommit(); peDraw(); toast('ここだけの弾き方にしました。ほかの所は変わりません'); }
+function peMerge(){ const P=pePlace(); if(!P||!P.base) return; const {base,p}=P, K=PE_CYC[base], m=curMy(); if(!m.sitNotes) return;
+  if(p===0) K.slice(1).forEach(k=>delete m.sitNotes[k]); else delete m.sitNotes[K[p]];
+  // 分けたときに写しただけの小節（中身が戻り先と同じ）は、まとめなおす
+  for(let q=K.length-1;q>0;q--){ const k=K[q], f=peResolve(PE_FALL[k]); if(peHas(k) && JSON.stringify(peSceneNotes(k))===JSON.stringify(peSceneNotes(f))) delete m.sitNotes[k]; }
+  const si=BLKE.act[PR.scene]; PR.scene=PE.scene=BLKE.cur=p===0?K[0]:peSrc(base,p); BLKE.act[PR.scene]=si; PR.selSet.clear(); rebuildMy(); save(); clearTimeout(HIST.t); histCommit(); peDraw();
+  toast(p===0?'ほかの所も、この弾き方にそろえました（元に戻すで戻せます）':'ほかの所と同じ弾き方に戻しました（元に戻すで戻せます）'); }
+function peBarDraw(){ const el=$('peBar'), P=pePlace(); let h='';
+  if(peArp()){ const nm=[curMy().notes||[],...Object.values(curMy().sitNotes||{})].flat().filter(n=>isDeg(n.r)).length;
+    h+=`<div class="pseg" role="group" aria-label="編集する層"><button class="${PE.layer!=='mel'?'on':''}" data-l="acc">伴奏</button><button class="${PE.layer==='mel'?'on':''}" data-l="mel">メロディ${nm?`<small>${nm}</small>`:''}</button></div>`; }
+  if(P && P.s){ const lab=chordText(P.s.v)+'・'+SCENE_NAME(P.s.key), shared=P.n>1, can=!!P.base;
+    const one=can&&P.own, tip=!can?'この場面は、曲の中で1種類だけです':P.base==='bar'?'1小節の弾き方は4小節ごとにくり返します':'3拍の弾き方は2小節ごとにくり返します';
+    h+=`<span class="pwhere">${esc(lab)}</span><div class="pseg" role="group" aria-label="くり返しの編集" title="${esc(tip)}"><button class="${one?'':'on'}" data-r="all">まとめて${!one&&shared?`<small>${P.n}か所</small>`:''}</button><button class="${one?'on':''}" data-r="one" ${can?'':'disabled'}>ここだけ${one&&shared?`<small>${P.base==='bar'?'4':'2'}小節ごと</small>`:''}</button></div>`; }
+  el.innerHTML=h; el.hidden=!h;
+  el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{ if(PE.layer===b.dataset.l) return; PE.layer=b.dataset.l; PR.selSet.clear(); drawBlk(); });
+  el.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{ if(b.classList.contains('on')) return; if(b.dataset.r==='one') peSplit(); else peMerge(); }); }
 $('bScroll').addEventListener('click',e=>{ const g=e.target.closest('em.bgh'); if(!g||!PE) return; PE.fold[g.dataset.g]=!PE.fold[g.dataset.g]; drawBlk(); });
 function peClose(){ PE=null; PED=null; BLKE=null; BD=null; $('bScroll').innerHTML=''; PR.selSet.clear(); $('peEd').hidden=true; $('peInsp').className=''; $('peInsp').innerHTML=''; peCtxClose(); $('peSet').hidden=true; renderAll(); renderTracks(); }
 function peCancel(){ if(!PE) return; const o=JSON.parse(PE.snap);
