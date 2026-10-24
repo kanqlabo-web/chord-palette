@@ -65,10 +65,11 @@ const mtof=m=>440*Math.pow(2,(m-69)/12);
 const SETS={}, LOADED={}, FAILED={};
 function decode(ab){ return new Promise((res,rej)=>{ const p=ctx.decodeAudioData(ab,res,rej); if(p&&p.then) p.then(res,rej); }); }
 async function decZone(z){ if(z.buf) return; const bin=atob(z.f), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); z.buf=await decode(u.buffer); delete z.f; }
+const SND_FILE={strings3:'strings3c',brass3:'brass3c'};  // ベータ版だけ：新しい音源（Chaos）を使う
 function loadSet(name){
   if(!SETS[name]){
     if(!ctx) ensureAudio(true);
-    SETS[name]=fetch(`${CP.snd}${name}.json`).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(async data=>{
+    SETS[name]=fetch(`${CP.snd}${SND_FILE[name]||name}.json`).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(async data=>{
       const zones=Array.isArray(data)?data:Object.values(data).flat();
       await Promise.all(zones.map(decZone));
       // 弦楽器：音源の音域ごとの大きさの差（3〜4dB 小さい音域がある）をそろえて、内声だけ引っこまないように
