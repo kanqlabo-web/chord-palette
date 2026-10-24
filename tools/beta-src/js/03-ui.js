@@ -248,7 +248,7 @@ function renderAll(){
   if(showLv){ const t=`LEVEL ${LVL+1}`; $('lvBigN').textContent=LEVELS[LVL].name;
     if($('lvBigT').textContent!==t){ $('lvBigT').textContent=t; lb.classList.remove('fresh'); void lb.offsetWidth; lb.classList.add('fresh'); }
     lb.setAttribute('aria-label',`次のレベル：レベル${LVL+1}「${LEVELS[LVL].name}」をはじめる`); }
-  const hideAcc=ULx()<3; $('arpLane').hidden=$('drumLane').hidden=hideAcc; $('bpm').closest('.bpm').hidden=hideAcc;   // レベル3（雰囲気）までは伴奏とBPMを出さない
+  const hideAcc=ULx()<3; [$('arpLane'),$('drumLane'),$('bpm').closest('.bpm')].forEach(e=>{ e.hidden=false; e.classList.toggle('accOff',hideAcc); });   // レベル3（雰囲気）までは伴奏とBPMを見せない（場所は空けておき、画面の形をそろえる。チュートリアルの吹き出しもここに出る）
   buildMenu(); applyMix();
 }
 
@@ -268,11 +268,13 @@ function buildMenu(){
   const unit = state.len<4 ? 'マス' : '小節';
   $('barChips').closest('.sec').hidden=UL()<5;
   if(UL()>=5) chips($('barChips'), [[4,'4'+unit],[8,'8'+unit],[16,'16'+unit]], state.bars, v=>{ state.bars=v; if(page*4>=v) page=0; renderAll(); });
+  $('lenSec').hidden=UL()<LV_MAX && state.len===4;   // 1マスの長さ・数字の書き方は、全レベルクリアまで出さない（初めての人には要らない）
   chips($('lenChips'), [[4,'4拍（1小節）'],[2,'2拍'],[1,'1拍']], state.len, v=>{ state.len=v; renderAll(); });
   $('lenNote').textContent = '2拍にすると、1マスが2拍になります（4マスで2小節）。' + (state.pro ? 'PROモードの拍ごとの切り替えは、1マスの中（2拍なら2拍目）で使えます。' : '');
   if(state.label==='roman'){ state.label='num'; state.numStyle='roman'; }   // 前の設定（ローマ数字）からの引き継ぎ
   if(state.label!=='alpha') state.label=numK();
   chips($('labelChips'), [['num','数字'],['alpha','アルファベット']], state.label==='alpha'?'alpha':'num', v=>{ state.label=v==='alpha'?'alpha':numK(); save(); renderAll(); });
+  { const adv=UL()<LV_MAX && state.numStyle!=='roman'; $('numChips').hidden=adv; $('numChips').previousElementSibling.hidden=adv; }
   chips($('numChips'), [['arabic','1・2・3（アラビア数字）'],['roman','Ⅰ・Ⅱ・Ⅲ（ローマ数字）']], state.numStyle==='roman'?'roman':'arabic', v=>{ state.numStyle=v; if(state.label!=='alpha') state.label=numK(); save(); renderAll(); });
   $('guideChips').closest('.sec').hidden=UL()<2;
   if(UL()>=2) chips($('guideChips'), [[true,'表示する'],[false,'表示しない']], state.guide, v=>{ state.guide=v; renderAll(); });
