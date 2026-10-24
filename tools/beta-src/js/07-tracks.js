@@ -1002,3 +1002,5 @@ editTrackPattern=function(kind,scene){ openBlk(kind, scene, '', 0, null); };
       if(g.mode==='close') settle(!(g.dx<-w/3 || (fast&&g.dx<-40)));
       else if(g.mode==='open') settle(g.dx>w/3 || (fast&&g.dx>40)); };
     tg.addEventListener('touchmove',mv,{passive:true}); tg.addEventListener('touchend',end); tg.addEventListener('touchcancel',end); },{passive:true}); }
+// ミキサーを開いているとき、右側（トラックの一覧）の何もない所をタップすると閉じる
+$('dScroll').addEventListener('click',e=>{ if(!TRK_SEL || e.target.closest('button,input,a,.dtl,canvas,.dmore')) return; TRK_SEL=null; renderTracks(); });
