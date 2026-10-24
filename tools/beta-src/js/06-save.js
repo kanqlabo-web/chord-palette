@@ -143,7 +143,7 @@ function captureSong(){ const C=[]; const sbSv=LHCTX.satb; LHCTX.satb=null; rese
   try{ for(let n=0;n<T;n++){ scheduleStep(n,t); t+=sd; playedSteps++; } if(!ENDED_EARLY) endHit(t); }
   finally{ CAPTURE=null; CAP_LEN=null; ENDED_EARLY=eeSv; [LHCTX.prev,LHCTX.prevB]=lhSv; LHCTX.satb=sbSv; ({playedSteps,gpos,LOOPN,lastR,barTones,pushedKey,lastBassM,held,bassHeld,lastBassVoice}=sv); if(!playing) visQ=[]; }
   return {ev:C, end:t+sd*16}; }
-const GM_PROG={sbrass:62,epcity:4,clav:7,piano:0,spiano:0,epiano:4,lofi:4,organ:16,steel:25,nylon:24,eguitar:27,dist:30,pad:89,synth:81,strings3:48,trumpet:56,trombone:57,sax:65,brass3:61,horn:60,glock:9,koto:107,shami:106};
+const GM_PROG={sbrass:62,epcity:4,clav:7,piano:0,spiano:0,chipsq:80,chiptri:80,chipsaw:81,epiano:4,lofi:4,organ:16,steel:25,nylon:24,eguitar:27,dist:30,pad:89,synth:81,strings3:48,trumpet:56,trombone:57,sax:65,brass3:61,horn:60,glock:9,koto:107,shami:106};
 const GM_BASS={bass:33,ubass:32,slap3:36,sbass:38,ebass:34};
 function midiFile(){ const {ev}=captureSong(), PPQ=480, tk=sec=>Math.max(0,Math.round(sec*state.bpm/60*PPQ));
   const vlq=n=>{ const b=[n&127]; while(n>>=7) b.unshift((n&127)|128); return b; };

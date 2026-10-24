@@ -103,6 +103,9 @@ const SICO=(()=>{ const F='fill="currentColor" fill-opacity=".18"';
     clav:S('keys',kb(13,10)+`<path d="M4 5h20M4 9h20" stroke-width="1.1"/><path d="M10 4l1.5 6M18 4l-1.5 6"/>`),
     lofi:S('keys',`<rect ${F} x="3" y="6" width="22" height="16" rx="2"/><circle cx="10" cy="13" r="2.4"/><circle cx="18" cy="13" r="2.4"/><path d="M12.4 13h3.2M8 22l1.5-3.5h9L20 22"/>`),
     spiano:S('keys',kb(13,10)+`<path d="M4 8c2-4 4-4 6 0s4 4 6 0 4-4 6 0"/>`),
+    chipsq:S('synth',`<rect ${F} x="2.5" y="3" width="23" height="22" rx="2"/><path d="M5 18v-8h4.5v8H14v-8h4.5v8H23"/>`),
+    chiptri:S('synth',`<rect ${F} x="2.5" y="3" width="23" height="22" rx="2"/><path d="M5 18l4.5-8 4.5 8 4.5-8 4.5 8"/>`),
+    chipsaw:S('synth',`<rect ${F} x="2.5" y="3" width="23" height="22" rx="2"/><path d="M5 18l9-8v8l9-8v8"/>`),
     organ:S('keys',`<path ${F} d="M5 23V11l2-2 2 2v12zM10.5 23V6.5l2-2 2 2V23zM16 23V8.5l2-2 2 2V23zM21.5 23V12l1.5-1.5 1.5 1.5v11z"/><path d="M3 23.5h22"/>`),
     steel:S('guitar',ag),
     nylon:S('guitar',`<g transform="rotate(40 14 14)">${ag}</g><circle cx="13" cy="15.5" r="3.2" stroke-width="1"/>`),
@@ -141,7 +144,7 @@ const icoInst=k=>SICO[k]||SICO.piano, icoKit=k=>SICO['kit:'+k]||SICO['kit:std'],
 const tkIco=kind=>withTrk(kind,kind=>{ if(kind==='drum') return icoKit(state.kit); if(kind==='bass') return icoBass(state.bassSnd||'bass'); const x=xOf(kind); return icoInst(x?x.inst:kind==='arp2'?(state.inst2||'epiano'):state.inst); });
 const instFam=kind=>{ if(kind==='drum') return 'drum'; if(kind==='bass') return 'bass'; const x=xOf(kind), k=x?x.inst:kind==='arp2'?(state.inst2||'epiano'):state.inst;
   if(/^(steel|nylon|eguitar|dist)$/.test(k)) return 'guitar'; if(/^strings/.test(k)) return 'strings'; if(/^(brass|sbrass|trumpet|trombone|horn)/.test(k)) return 'brass';
-  if(k==='sax') return 'sax'; if(/^(synth|pad)$/.test(k)) return 'synth'; if(k==='glock') return 'bells'; if(/^(koto|shami)$/.test(k)) return 'wa'; return 'keys'; };
+  if(k==='sax') return 'sax'; if(/^(synth|pad|chip)/.test(k)) return 'synth'; if(k==='glock') return 'bells'; if(/^(koto|shami)$/.test(k)) return 'wa'; return 'keys'; };
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
 const panTxt=p=>Math.abs(p)<.03?'中':p<0?'左'+Math.round(-p*100):'右'+Math.round(p*100);
 (function(){
@@ -529,7 +532,7 @@ function twoPane(el, cats, cur, onPick){ cats=cats.filter(c=>c[1].length);
   const sel=R.querySelector('[aria-pressed=true]'); if(sel) requestAnimationFrame(()=>{ R.scrollTop=Math.max(0,sel.offsetTop-R.clientHeight/3); });
   if(draws.length) requestAnimationFrame(()=>draws.forEach(([cv,f])=>{ if(cv.clientWidth) f(cv); })); }
 // 音色の絵
-const famOfInst=k=>/^(steel|nylon|eguitar|dist)$/.test(k)?'guitar':/^strings/.test(k)?'strings':/^(brass|sbrass|trumpet|trombone|horn)/.test(k)?'brass':k==='sax'?'sax':/^(synth|pad)$/.test(k)?'synth':k==='glock'?'bells':/^(koto|shami)$/.test(k)?'wa':'keys';
+const famOfInst=k=>/^(steel|nylon|eguitar|dist)$/.test(k)?'guitar':/^strings/.test(k)?'strings':/^(brass|sbrass|trumpet|trombone|horn)/.test(k)?'brass':k==='sax'?'sax':/^(synth|pad|chip)/.test(k)?'synth':k==='glock'?'bells':/^(koto|shami)$/.test(k)?'wa':'keys';
 const catsOf=(G,names,ico)=>{ const used=new Set(), out=G.map(([h,ks])=>[h,ks.filter(k=>names[k]).map(k=>{ used.add(k); return {k,label:names[k],ico:ico(k)}; })]);
   const rest=Object.keys(names).filter(k=>!used.has(k)); if(rest.length) out.push(['そのほか',rest.map(k=>({k,label:names[k],ico:ico(k)}))]); return out; };
 // これまでの「分類のチップ＋一覧のチップ」（groupPick）を、2段の選ぶ画面に置きかえる（音色・ドラムの音）

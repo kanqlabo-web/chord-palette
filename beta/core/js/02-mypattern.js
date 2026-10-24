@@ -522,7 +522,7 @@ for(const k in ARPS){ const A=ARPS[k]; if(A.ev) prepNx(A.ev); if(A.sit){ for(con
   ARPS[k].at=atMap(ARPS[k].ev); }
 
 // 音色の名前は、楽器にくわしくない人にもわかる言い方で
-const INSTS={piano:'ピアノ',epiano:'エレピ（やわらか）',epcity:'エレピ（シティポップ）',clav:'クラビネット',lofi:'エレピ（ローファイ）',spiano:'ピアノ（8bit）',organ:'オルガン',
+const INSTS={piano:'ピアノ',epiano:'エレピ（やわらか）',epcity:'エレピ（シティポップ）',clav:'クラビネット',lofi:'エレピ（ローファイ）',spiano:'ピアノ（8bit）',chipsq:'矩形波（8bit）',chiptri:'三角波（8bit）',chipsaw:'鋸形波（8bit）',organ:'オルガン',
   steel:'アコースティックギター',nylon:'クラシックギター',eguitar:'エレキギター',dist:'ロックギター（歪み）',
   strings3:'バイオリンなど（弦楽器）',brass3:'ラッパ隊（ブラス）',sbrass:'シンセブラス',trumpet:'トランペット',trombone:'トロンボーン',sax:'サックス',horn:'ホルン',glock:'鉄琴（キラキラ）',synth:'電子音（シンセ）',pad:'ふんわり電子音',koto:'琴',shami:'三味線'};
 // 音源ファイルの名前（ひずみギターはエレキを、ローファイはエレピを加工して使う。シティポップのエレピは明るい音源 epcity を使う）
@@ -541,12 +541,13 @@ function accOnly(key){ const A=ARPS[key]; if(!A) return null; const nk='acc_'+ke
 // 古い保存データ・リンクの「重ねる音色」を、コード2の「アクセントだけ」に置きかえる
 function migrateLay(o){ const lay=o.lay; delete o.lay; delete o.lay2; if(!lay||o.arp2) return; const k=accOnly(o.arp); if(k){ o.arp2=k; o.inst2=fixInst(lay); } }
 const ensureArp2=()=>{ if(/^acc_/.test(state.arp2||'')) accOnly(state.arp2.slice(4)); };
-const SYNTH_INST={spiano:'piano',synth:'synth'};
+const SYNTH_INST={spiano:'piano',chipsq:'piano',chiptri:'piano',chipsaw:'piano',synth:'synth'};
+const isChip=i=>i==='spiano'||/^chip/.test(i||'');   // 8bit（ファミコンのような音）の音色
 const instShort=()=>INSTS[state.inst]+(!state.pro&&state.arp2&&ARPS[state.arp2]?'＋'+INSTS[state.inst2||'epiano']:'');
 // 音色・ドラムの音のジャンル分け（選ぶ画面で見出しをつけて並べる）
 // 音色の分類（1つしか入らない分類は作らない）
 const INST_GROUPS=[['ピアノ・鍵盤',['piano','epiano','epcity','clav','lofi','organ']],['ギター',['steel','nylon','eguitar','dist']],
-  ['オーケストラ',['strings3','horn','trumpet','trombone','brass3','sax','glock']],['電子音',['synth','pad','sbrass','spiano']],['和楽器',['koto','shami']]];
+  ['オーケストラ',['strings3','horn','trumpet','trombone','brass3','sax','glock']],['電子音',['synth','pad','sbrass']],['8bit',['spiano','chipsq','chiptri','chipsaw']],['和楽器',['koto','shami']]];
 const KIT_GROUPS=[['生ドラム',['std','room','power','brush','city','lofi','orch']],['電子ドラム',['elec','tr808','synth']]];
 // 場所を取らないよう、まずジャンルを選び、その中の音色だけを並べる（いま選んでいる音色のジャンルに印）
 function groupPick(el, G, names, cur, onPick){
