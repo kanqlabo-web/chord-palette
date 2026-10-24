@@ -255,8 +255,8 @@ function drumIn(note,t,vel=1){
   const KG=KIT_GAIN[state.kit]; if(KG&&KG[note]) vel*=KG[note];
   const lofi=state.kit==='lofi', city=state.kit==='city', kit=LOADED['kit-'+(lofi||city?'std':state.kit)];
   if(kit&&kit[note]){ const sv=OUT; if(lofi) OUT=lofiDrum(OUT||master); if(city) OUT=cityDrum(OUT||master,note);
-    const dur = city ? (note===36?.16:note===38?.07:note===42?.07:note===44?.07:note===46?.22:note===49?3:note===51?2:.35) : (note===49?2.5:1.2);   // シティポップは短く締める（シンバルは最後まで鳴らす）
-    const ok=playZone(kit[note],note,t,dur,DRUM_VOL[note]*vel*(lofi?.9:1),city?(note===49||note===51?.8:note===38?.02:.04):.25); OUT=sv; if(ok) return; }
+    const dur = city ? (note===36?.16:note===38?.13:note===42?.07:note===44?.07:note===46?.22:note===49?3:note===51?2:.35) : (note===49?2.5:1.2);   // シティポップは短く締める（シンバルは最後まで鳴らす）
+    const ok=playZone(kit[note],note,t,dur,DRUM_VOL[note]*vel*(lofi?.9:1),city?(note===49||note===51?.8:.04):.25); OUT=sv; if(ok) return; }
   const f={36:kick,37:rim,38:snare,42:t=>hat(t,vel>.7),44:t=>hat(t,false),46:ohat,49:t=>noise(t,'highpass',6000,1.2,.1*vel),51:t=>noise(t,'bandpass',6500,.4,.07*vel,2),
     50:t=>tom(t,220),47:t=>tom(t,160),45:t=>tom(t,115),75:clave}[note]; if(f) f(t);
 }
