@@ -128,20 +128,18 @@ function distChain(dest){
   inp.connect(hp); hp.connect(sh); sh.connect(mid); mid.connect(pres); pres.connect(lp); lp.connect(lp2); lp2.connect(out); out.connect(dest);
   DIST.m.set(dest,inp); return inp;
 }
-// ローファイ：高音を削り、軽くつぶして、テープのように音程をゆっくり揺らす。再生中はレコードのノイズを薄く流す
+// ローファイ：高音を削り、軽くつぶす。再生中はレコードのノイズを薄く流す（音程の揺れは、気になるのでなくした）
 let LOFI=null;
 function lofiChain(dest){
   dest=dest||compBus; if(LOFI&&LOFI.ctx===ctx){ if(LOFI.k.get(dest)) return LOFI.k.get(dest); return lofiKey(dest); }
   lofiBase(); return lofiKey(dest); }
 function lofiKey(dest){
   const inp=ctx.createGain(); inp.gain.value=1;
-  const d=ctx.createDelay(.05); d.delayTime.value=.012;
-  const lfo=ctx.createOscillator(), lg=ctx.createGain(); lfo.frequency.value=.6; lg.gain.value=.0022; lfo.connect(lg); lg.connect(d.delayTime); lfo.start();
   const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=140;
   const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2600; lp.Q.value=.3;
   const sh=ctx.createWaveShaper(); const n=1024, c=new Float32Array(n); for(let i=0;i<n;i++){ const x=i/(n-1)*2-1; c[i]=Math.tanh(1.8*x)/Math.tanh(1.8); } sh.curve=c;
   const out=ctx.createGain(); out.gain.value=.9;
-  inp.connect(d); d.connect(hp); hp.connect(lp); lp.connect(sh); sh.connect(out); out.connect(dest);
+  inp.connect(hp); hp.connect(lp); lp.connect(sh); sh.connect(out); out.connect(dest);
   LOFI.k.set(dest,inp); return inp; }
 function lofiBase(){
   // レコードのノイズ（サーッという音＋ときどきプチッ）
