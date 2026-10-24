@@ -25,7 +25,7 @@ const peSnap=()=>peDrum()?1:PE.grid;
 #peEd{position:fixed;inset:0;z-index:42;display:flex;flex-direction:column;background:var(--surface);color:var(--ink)}
 #peEd[hidden]{display:none}
 #peEd .ph{display:flex;align-items:center;gap:10px;padding:max(8px,env(safe-area-inset-top,0px)) 12px 8px;border-bottom:1px solid var(--line)}
-#peEd .ph h2{flex:1;min-width:0;margin:0;font-family:var(--display);font-weight:900;font-size:1rem;line-height:1.3}
+#peEd .ph h2{flex:1;min-width:0;margin:0;font-family:var(--display);font-weight:900;font-size:1rem;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #peEd .ph h2 small{display:block!important;font-weight:700;font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #peEd .pplay{width:40px;height:40px;border-radius:50%;border:0;background:var(--ink);color:var(--surface);display:grid;place-items:center;flex:none}
 #peEd .pplay svg{width:18px;height:18px}
@@ -194,8 +194,8 @@ const peSnap=()=>peDrum()?1:PE.grid;
 
 { const el=document.createElement('div'); el.id='peEd'; el.hidden=true; el.setAttribute('role','dialog'); el.setAttribute('aria-label','演奏の編集');
   const I=(d)=>`<svg viewBox="0 0 16 16" aria-hidden="true">${d}</svg>`;
-  el.innerHTML=`<div class="ph"><button class="iconbtn" id="peX" aria-label="キャンセル"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
-    <h2 id="peTitle"></h2><button class="ptb pfol" id="peFol" aria-pressed="true" title="再生中、鳴っている所をロールが追いかける（F）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h9M8 4.5L11.5 8 8 11.5" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 3v10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>追いかける</span></button><button class="pplay" id="pePlay" aria-label="再生"></button><button id="peOk">完了</button></div>
+  el.innerHTML=`<div class="ph"><button class="xcancel" id="peX">キャンセル</button>
+    <h2 id="peTitle" class="nophrase"></h2><button class="ptb pfol" id="peFol" aria-pressed="true" title="再生中、鳴っている所をロールが追いかける（F）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h9M8 4.5L11.5 8 8 11.5" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 3v10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>追いかける</span></button><button class="pplay" id="pePlay" aria-label="再生"></button><button id="peOk">完了</button></div>
   <div class="ptool">
     <button class="ptb on" id="peToolSel" aria-label="選ぶ" title="選ぶ（V）">${I('<path d="M3 2l9 5-4 1.2L6 12z" fill="currentColor"/>')}</button>
     <button class="ptb" id="peToolPen" aria-label="鉛筆" title="鉛筆（B）">${I('<path d="M3 13l1-3.5L11 2.5l2.5 2.5L6.5 12z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>')}</button>

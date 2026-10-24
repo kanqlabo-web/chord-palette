@@ -569,10 +569,10 @@ function pickRow(el,head,label,sub,ico,cv,open){ el.classList.remove('chips','gp
 .prow1 em{display:block;font-style:normal;font-size:.7rem;color:var(--muted)}
 .prow1>svg:last-child{flex:none;color:var(--muted)}`; document.head.appendChild(st);
   const el=document.createElement('div'); el.id='pickScr'; el.hidden=true; el.setAttribute('role','dialog');
-  el.innerHTML=`<div class="phd"><button id="pickBack" aria-label="もどる">${ICO.close}</button><h2 id="pickTitle"></h2><button class="pok" id="pickOk">決定</button></div><div id="pickBody"></div>`;
+  el.innerHTML=`<div class="phd"><button class="xcancel" id="pickBack">キャンセル</button><h2 id="pickTitle"></h2><button class="pok" id="pickOk">決定</button></div><div id="pickBody"></div>`;
   document.body.appendChild(el); })();
 let PICK=null;
-// タップで選ぶだけ。「決定」で適用、✕はキャンセル。音色（live）は聴き比べられるようにタップで鳴らし、✕なら開いたときの音色に戻す
+// タップで選ぶだけ。「決定」で適用、赤字の「キャンセル」で取り消し。音色（live）は聴き比べられるようにタップで鳴らし、キャンセルなら開いたときの音色に戻す
 // live='play'（伴奏スタイル）：タップでその伴奏にして裏で鳴らす。決定しなければ元に戻す
 function openPicker(title,cats,cur,onPick,live){ if(live==null) live=/の音を選ぶ|楽器を選ぶ/.test(title)?true:/伴奏スタイル/.test(title)?'play':false;
   PICK={cats,cur,cur0:cur,onPick,live,snap:live?JSON.stringify(state):null}; $('pickTitle').textContent=title; $('pickScr').hidden=false; delete $('pickBody').dataset.g; drawPicker(); }
@@ -729,7 +729,12 @@ const UNDO_SVG='<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="tru
 #blkEd .bbot{padding-bottom:env(safe-area-inset-bottom,0px)}
 #blkEd .bfoot .chip{flex:none}
 #blkOk{flex:none;padding:0 16px;min-height:38px;border:0;border-radius:12px;background:var(--ink);color:var(--surface);font:inherit;font-weight:800;font-size:.92rem}
-#blkEd .bh #blkX{margin-left:-8px}
+#blkEd .bh #blkX{margin-left:-4px}
+/* 閉じると編集が消えるボタンは、すべて赤字の「キャンセル」 */
+:root{--cancel:#C8372D}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--cancel:#FF7B6E}}
+:root[data-theme="dark"]{--cancel:#FF7B6E}
+button.xcancel{flex:none;width:auto!important;min-width:0!important;height:34px!important;padding:0 10px!important;border-radius:999px!important;border:1px solid var(--line)!important;background:var(--surface)!important;color:var(--cancel)!important;font:inherit;font-size:.78rem;font-weight:800;white-space:nowrap;cursor:pointer;display:inline-grid;place-items:center}
 #blkEd .bplaybar{display:flex;align-items:center;gap:10px;padding:8px 16px;border-top:1px solid var(--line)}
 #patSheet.inblk{z-index:44}
 #patSheet.inblk .pgrid,#patSheet.inblk #patHelp,#patSheet.inblk #patPlay,#patSheet.inblk #patDirect{display:none!important}
@@ -737,7 +742,7 @@ body.blkset .scrim{z-index:43}
 #trk .dblk{position:absolute;top:3px;bottom:3px;border:2.5px solid var(--ink);border-radius:9px;pointer-events:none;z-index:2}`;
   document.head.appendChild(st);
   const el=document.createElement('div'); el.id='blkEd'; el.hidden=true; el.setAttribute('role','dialog');
-  el.innerHTML=`<div class="bh"><button class="iconbtn" id="blkX" aria-label="キャンセル"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><h2 id="blkTitle"></h2><button id="blkOk">完了</button></div>
+  el.innerHTML=`<div class="bh"><button class="xcancel" id="blkX">キャンセル</button><h2 id="blkTitle"></h2><button id="blkOk">完了</button></div>
     <p class="bsub" id="blkNote"></p>
     <div class="btool"><div class="bpill" id="blkPill"><button id="blkPen" aria-label="鉛筆（押しているあいだ音を置く・消す。右へずらすと固定）">${PEN_SVG}</button><button id="blkLock" aria-label="鉛筆に鍵をかける">${LOCK_SVG}</button></div>
       <button class="tb" id="blkUndo" aria-label="元に戻す">${UNDO_SVG}</button><button class="tb" id="blkRedo" aria-label="やり直す"><span style="display:grid;transform:scaleX(-1)">${UNDO_SVG}</span></button>
