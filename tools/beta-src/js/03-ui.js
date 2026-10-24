@@ -47,7 +47,7 @@ const app=$('app'), palette=$('palette'), slotsEl=$('slots');
 for(let d=0;d<7;d++){
   const el=document.createElement('div');
   el.className=`tile ${DEG[d].fn}`; el.dataset.deg=d; el.tabIndex=0; el.setAttribute('role','button');
-  const fl = d===2 ? '<b style="color:var(--d)">D</b>/<b style="color:var(--t)">T</b>' : d===5 ? 'T<small>(S)</small>' : DEG[d].fn;
+  const fl = d===2 ? '<b style="color:var(--d)">D</b>/<b style="color:var(--t)">T</b>' : d===5 ? 'T<small>(S)</small>' : d===6 ? 'D<small>(S)</small>' : DEG[d].fn;   // ( ) は、ときどきその役割にもなる
   if(d===2) el.classList.add('dual');
   el.innerHTML=`<span class="deg"></span><span class="fn">${fl}</span><span class="name"></span>`;
   palette.appendChild(el);

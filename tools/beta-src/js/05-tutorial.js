@@ -170,7 +170,8 @@ const SLIDES=[
        <section class="S a" style="--dl:1.1"><span class="L">S</span><div><h3>サブドミナント</h3></div><div class="cs">${[3,1].map((d,k)=>tc(d,'S',1.4+k*.12)).join('')}</div></section>
        <section class="D a" style="--dl:1.7"><span class="L">D</span><div><h3>ドミナント</h3></div><div class="cs">${[4,6,2].map((d,k)=>tc(d,'D'+(d===2?' dash':''),2+k*.12)).join('')}</div></section>
      </div>
-     <p class="sub a" style="--dl:2.6">点線の <b>3m</b> は、トニックにもドミナントにもなれる便利なコードです</p>`},
+     <p class="sub a" style="--dl:2.6">点線の <b>3m</b> は、トニックにもドミナントにもなれる便利なコードです</p>
+     <p class="sub a" style="--dl:2.9">6m と 7dim は、ときどき<b>サブドミナント</b>にもなります（パレットの右上の <b>(S)</b>）</p>`},
   {html:()=>`<div class="eyebrow a">役割の流れ</div>
      <h2 class="a" style="--dl:.1">役割をつかった<br>お手本の流れは3つ</h2>
      <div class="flows">${[['①','TDT'],['②','TST'],['③','TSDT']].map(([no,f],k)=>`<div class="flow a" style="--dl:${.6+k*.6}"><span class="no">${no}</span>${[...f].map((r,j)=>`${j?`<span class="arr" style="--dl:${.9+k*.6+j*.15}"></span>`:''}<span class="tc ${r} pop" style="--dl:${.7+k*.6+j*.15}"><b>${r}</b></span>`).join('')}</div>`).join('')}</div>
