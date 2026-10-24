@@ -63,6 +63,8 @@ function trackSummary(){ const L=trackList(); return L.length+'つ ・ '+L.filte
 // 左：トラックの頭（M・S と楽器の絵）。右：小節の目盛り（コード名つき）と、コードごとに色分けした帯
 // 帯をタップすると、その場所で実際に使っている弾き方（場面）を開く。楽器の絵をタップすると、そのトラックのミキサーが左から出る
 // 色は画面の明るさ（ライト・ダーク）に合わせて、アプリの色をそのまま使う
+// ミュート（スピーカーに×）・ソロ（ヘッドホン）
+const ICO_MUTE='<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6h2.2L8 3.2v9.6L4.7 10H2.5z" fill="currentColor"/><path d="M10.5 6l3.5 4M14 6l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>', ICO_SOLO='<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.8 10V8.5a5.2 5.2 0 0 1 10.4 0V10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="2" y="9" width="3.2" height="4.6" rx="1.2" fill="currentColor"/><rect x="10.8" y="9" width="3.2" height="4.6" rx="1.2" fill="currentColor"/></svg>';
 const ICO={
   mix:'<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M5 3v16M11 3v16M17 3v16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="2.5" y="11" width="5" height="3.4" rx="1.2" fill="var(--surface)" stroke="currentColor" stroke-width="1.6"/><rect x="8.5" y="5" width="5" height="3.4" rx="1.2" fill="var(--surface)" stroke="currentColor" stroke-width="1.6"/><rect x="14.5" y="13" width="5" height="3.4" rx="1.2" fill="var(--surface)" stroke="currentColor" stroke-width="1.6"/></svg>',
   play:'<svg width="26" height="26" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3.5l11 6.5-11 6.5z" fill="currentColor"/></svg>',
@@ -178,7 +180,7 @@ const panTxt=p=>Math.abs(p)<.03?'中':p<0?'左'+Math.round(-p*100):'右'+Math.ro
 #trk .dtrack .dh{height:var(--drh);display:flex;align-items:center;gap:6px;padding:0 6px 0 10px;border-bottom:1px solid var(--line)}
 #trk .dtrack .dh::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:0 3px 3px 0;background:var(--tc)}
 #trk .dms2{display:flex;border:1.5px solid var(--line);border-radius:9px;overflow:hidden;flex:none}
-#trk .dms2 button{width:24px;height:30px;border:0;background:var(--surface);cursor:pointer;font-weight:900;font-size:.78rem;padding:0}
+#trk .dms2 button{width:26px;height:30px;border:0;background:var(--surface);cursor:pointer;padding:0;display:grid;place-items:center}
 #trk .dms2 button+button{border-left:1.5px solid var(--line)}
 #trk .dms2 button[data-k=m][aria-pressed=true]{background:var(--ink);color:var(--bg)}
 #trk .dms2 button[data-k=s][aria-pressed=true]{background:var(--warn);color:#1B2230}
@@ -300,7 +302,7 @@ function renderTracks(){ if(trk.hidden) return; if(!state.pro){ trk.hidden=true;
   const ru=document.createElement('div'); ru.className='drow druler'; ru.innerHTML=`<div class="dh"></div><div class="dtl"></div>`; box.appendChild(ru);
   L.forEach(({kind})=>{ const mk=mixKey(kind), x=mixOf(mk), row=document.createElement('div');
     row.className='drow dtrack'+(TRK_SEL===kind?' sel':''); row.dataset.kind=kind; row.classList.toggle('silent', solo?!x.s:!!x.m); row.style.setProperty('--tc',tkColor(kind));
-    row.innerHTML=`<div class="dh"><div class="dms2"><button data-k="m" aria-pressed="${!!x.m}" aria-label="ミュート">M</button><button data-k="s" aria-pressed="${!!x.s}" aria-label="ソロ">S</button></div>
+    row.innerHTML=`<div class="dh"><div class="dms2"><button data-k="m" aria-pressed="${!!x.m}" aria-label="ミュート">${ICO_MUTE}</button><button data-k="s" aria-pressed="${!!x.s}" aria-label="ソロ">${ICO_SOLO}</button></div>
       <button class="dico" aria-label="${esc(tkName(kind))}のミキサー">${tkIco(kind)}<span>${esc(tkName(kind))}</span></button></div>
       <div class="dtl"><canvas></canvas></div>`;
     box.appendChild(row);
@@ -958,7 +960,8 @@ editTrackPattern=function(kind,scene){ openBlk(kind, scene, '', 0, null); };
 (function bphLoop(){ const ph=$('bPh'); if(ph && BLKE){ if(playing&&cur&&ctx){ const L=slotSteps(), frac=Math.min(1,(ctx.currentTime-cur.t)/stepDur()); ph.hidden=false; ph.style.left=((cur.b+(cur.s+frac)/(cur.L||16))*L*BSW)+'px'; } else ph.hidden=true; } requestAnimationFrame(bphLoop); })();
 { const st=document.createElement('style'); st.textContent=`.accOff{visibility:hidden;pointer-events:none}`; document.head.appendChild(st); }
 // トラック画面は横にスクロールさせない（ページは上の四角で切りかえる）。ミキサーの開け閉めのあとも、いまのページの位置にもどす
-{ const st=document.createElement('style'); st.textContent=`#trk .dscroll{overflow-x:hidden;overflow-y:auto}`; document.head.appendChild(st); }
+{ const st=document.createElement('style'); st.textContent=`#trk .dscroll{overflow-x:hidden;overflow-y:auto}
+.mbtn{display:inline-grid;place-items:center}.mbtn svg{width:12px;height:12px}`; document.head.appendChild(st); }
 // スワイプでミキサーを開け閉め：トラックの頭（M・S・楽器の絵）や左のはしを右へ → そのトラックのミキサー、ミキサーを左へ → 閉じる
 { let T0=null; const body=$('dInsp').parentElement;
   body.addEventListener('touchstart',e=>{ const t=e.touches[0]; if(e.touches.length!==1 || e.target.closest('input,textarea,select,.dtl')){ T0=null; return; }

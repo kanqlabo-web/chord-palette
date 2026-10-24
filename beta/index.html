@@ -32,19 +32,19 @@
   </div>
 
   <div class="lane" id="arpLane" role="button" tabindex="0" aria-label="コードパターンを選ぶ">
-    <span class="lanehead"><span id="arpLabel">コード</span> <b id="arpName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mix" data-ch="arp"><button class="mbtn" data-k="m" aria-label="ミュート">M</button><button class="mbtn" data-k="s" aria-label="ソロ">S</button><input type="range" min="0" max="1.5" step="0.05" value="1" aria-label="音量"></span></span>
+    <span class="lanehead"><span id="arpLabel">コード</span> <b id="arpName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mix" data-ch="arp"><button class="mbtn" data-k="m" aria-label="ミュート"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6h2.2L8 3.2v9.6L4.7 10H2.5z" fill="currentColor"/><path d="M10.5 6l3.5 4M14 6l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button class="mbtn" data-k="s" aria-label="ソロ"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.8 10V8.5a5.2 5.2 0 0 1 10.4 0V10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="2" y="9" width="3.2" height="4.6" rx="1.2" fill="currentColor"/><rect x="10.8" y="9" width="3.2" height="4.6" rx="1.2" fill="currentColor"/></svg></button><input type="range" min="0" max="1.5" step="0.05" value="1" aria-label="音量"></span></span>
     <canvas id="arpCv"></canvas>
   </div>
   <div class="lane" id="arp2Lane" role="button" tabindex="0" aria-label="2つ目の楽器を選ぶ">
-    <span class="lanehead">コード2 <b id="arp2Name"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mix" data-ch="arp2"><button class="mbtn" data-k="m" aria-label="ミュート">M</button><button class="mbtn" data-k="s" aria-label="ソロ">S</button><input type="range" min="0" max="1.5" step="0.05" value="1" aria-label="音量"></span></span>
+    <span class="lanehead">コード2 <b id="arp2Name"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mix" data-ch="arp2"><button class="mbtn" data-k="m" aria-label="ミュート"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6h2.2L8 3.2v9.6L4.7 10H2.5z" fill="currentColor"/><path d="M10.5 6l3.5 4M14 6l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button class="mbtn" data-k="s" aria-label="ソロ"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.8 10V8.5a5.2 5.2 0 0 1 10.4 0V10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="2" y="9" width="3.2" height="4.6" rx="1.2" fill="currentColor"/><rect x="10.8" y="9" width="3.2" height="4.6" rx="1.2" fill="currentColor"/></svg></button><input type="range" min="0" max="1.5" step="0.05" value="1" aria-label="音量"></span></span>
     <canvas id="arp2Cv"></canvas>
   </div>
   <div class="lane" id="drumLane" role="button" tabindex="0" aria-label="ドラムパターンを選ぶ">
-    <span class="lanehead">ドラム <b id="drumName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mix" data-ch="drum"><button class="mbtn" data-k="m" aria-label="ミュート">M</button><button class="mbtn" data-k="s" aria-label="ソロ">S</button><input type="range" min="0" max="1.5" step="0.05" value="1" aria-label="音量"></span></span>
+    <span class="lanehead">ドラム <b id="drumName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mix" data-ch="drum"><button class="mbtn" data-k="m" aria-label="ミュート"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6h2.2L8 3.2v9.6L4.7 10H2.5z" fill="currentColor"/><path d="M10.5 6l3.5 4M14 6l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button class="mbtn" data-k="s" aria-label="ソロ"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.8 10V8.5a5.2 5.2 0 0 1 10.4 0V10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="2" y="9" width="3.2" height="4.6" rx="1.2" fill="currentColor"/><rect x="10.8" y="9" width="3.2" height="4.6" rx="1.2" fill="currentColor"/></svg></button><input type="range" min="0" max="1.5" step="0.05" value="1" aria-label="音量"></span></span>
     <canvas id="drumCv"></canvas>
   </div>
   <div class="lane" id="bassLane" role="button" tabindex="0" aria-label="ベースパターンを選ぶ">
-    <span class="lanehead">ベース <b id="bassName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mix" data-ch="bass"><button class="mbtn" data-k="m" aria-label="ミュート">M</button><button class="mbtn" data-k="s" aria-label="ソロ">S</button><input type="range" min="0" max="1.5" step="0.05" value="1" aria-label="音量"></span></span>
+    <span class="lanehead">ベース <b id="bassName"></b><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mix" data-ch="bass"><button class="mbtn" data-k="m" aria-label="ミュート"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6h2.2L8 3.2v9.6L4.7 10H2.5z" fill="currentColor"/><path d="M10.5 6l3.5 4M14 6l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button class="mbtn" data-k="s" aria-label="ソロ"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.8 10V8.5a5.2 5.2 0 0 1 10.4 0V10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="2" y="9" width="3.2" height="4.6" rx="1.2" fill="currentColor"/><rect x="10.8" y="9" width="3.2" height="4.6" rx="1.2" fill="currentColor"/></svg></button><input type="range" min="0" max="1.5" step="0.05" value="1" aria-label="音量"></span></span>
     <canvas id="bassCv"></canvas>
   </div>
 
@@ -69,7 +69,7 @@
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>フリーモード</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
     <p class="mpnote">音の出るアプリです。iPhoneで音が出ないときは、消音モードを解除してください。</p>
-    <p class="appver">ver 5.23.009（2026-10-24）</p>
+    <p class="appver">ver 5.23.010（2026-10-24）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -138,7 +138,7 @@
   <div class="sec"><h3>リセット</h3>
     <div class="chips"><button class="chip" id="resetSlots">マスを空にする</button><button class="chip" id="resetAll">設定もすべて最初に戻す</button></div>
     <p class="small" style="margin:0">セーブデータとマイパターンは消えません。</p></div>
-  <p class="appver">ver 5.23.009（2026-10-24）</p>
+  <p class="appver">ver 5.23.010（2026-10-24）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -197,7 +197,7 @@
 <script src="core/js/04-audio.js?v=ea4a64bb"></script>
 <script src="core/js/05-tutorial.js?v=4d786b28"></script>
 <script src="core/js/06-save.js?v=f2dd2311"></script>
-<script src="core/js/07-tracks.js?v=c05c756a"></script>
+<script src="core/js/07-tracks.js?v=58141e0b"></script>
 <script src="core/js/09-phrase.js?v=fb5cf4e3"></script>
 </body>
 </html>
