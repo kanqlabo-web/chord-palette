@@ -435,9 +435,9 @@ const STYLES=[
   {id:2, name:'ロック', bpm:132, drum:'hard', arp:'hardrock', inst:'dist', kit:'power', bass:true},
   {id:3, name:'ギターポップ', bpm:120, drum:'rride', arp:'strum', inst:'eguitar', kit:'room', bass:true},
   {id:16, name:'弾き語り', bpm:92, drum:'none', arp:'strum', inst:'steel', kit:'std', bass:false},
-  {id:4, name:'バラード', bpm:80, lhOff:3, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true, mix:{arp:.78,drum:.72,bass:.78}},
-  {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass'},
-  {id:17, name:'壮大', bpm:110, wide:true, drum:'epic', arp:'epic', inst:'strings3', arp2:'hornline', inst2:'horn', mix:{arp:1,arp2:1.1,drum:.25,bass:.75}, kit:'orch', bass:true, bassSnd:'ubass'},
+  {id:4, name:'バラード', bpm:80, lhOff:3, drum:'ballad', arp:'pballad', inst:'piano', kit:'brush', bass:true, mix:{arp:1.25,drum:1.15,bass:1.25}},
+  {id:5, name:'しっとり', bpm:76, drum:'xstick', arp:'garp', inst:'nylon', kit:'brush', bass:false, bassSnd:'ubass', mix:{arp:1.35,drum:1.35,bass:1.35}},
+  {id:17, name:'壮大', bpm:110, wide:true, drum:'epic', arp:'epic', inst:'strings3', arp2:'hornline', inst2:'horn', mix:{arp:1.25,arp2:1.4,drum:.31,bass:.94}, kit:'orch', bass:true, bassSnd:'ubass'},
   {id:18, name:'シティポップ', bpm:100, rhOff:-3, lhOff:-3, rhOff2:-3, drum:'city', arp:'cityep', inst:'epcity', arp2:'brassobb', inst2:'brass3', kit:'city', bass:true, bassSnd:'slap3'},
   {id:9, name:'ファンキー', bpm:104, drum:'sixteen', arp:'clavfunk', inst:'clav', arp2:'brasshit', inst2:'brass3', kit:'std', bass:true},
   {id:11, name:'ジャジー', bpm:100, drum:'neosoul', arp:'rhodes', inst:'piano', kit:'std', bass:true, bassSnd:'bass'},
@@ -447,7 +447,7 @@ const STYLES=[
   {id:12, name:'ボサノバ', bpm:140, drum:'bossa', arp:'bossa', inst:'nylon', kit:'brush', bass:true, bassSnd:'ubass'},
   {id:13, name:'レゲエ', bpm:80, drum:'reggae', arp:'skank', inst:'organ', kit:'std', bass:true},
   {id:20, name:'和風', bpm:88, drum:'wa', arp:'koto', inst:'koto', kit:'room', bass:true, bassSnd:'ubass'},
-  {id:14, name:'クラシック風', bpm:100, drum:'none', arp:'alberti', inst:'piano', kit:'std', bass:false},
+  {id:14, name:'クラシック風', bpm:100, drum:'none', arp:'alberti', inst:'piano', kit:'std', bass:false, mix:{arp:1.5}},
 ];
 // なくした伴奏（古い共有リンク用）：ゆったり・どっしり
 const OLD_STYLES={6:{drum:'medium', arp:'whole', inst:'pad', kit:'room', bass:true}, 7:{drum:'half', arp:'stacc', inst:'piano', kit:'power', bass:true}};
@@ -535,11 +535,37 @@ const isSynthInst=()=>state.inst in SYNTH_INST;
 // PROモードのミキサー：ドラム・コード・ベースの音量とミュート・ソロ
 const MIX_CH=['arp','arp2','drum','bass'];
 function mixOf(ch){ if(!state.mix) state.mix={}; return state.mix[ch]||(state.mix[ch]={v:1,m:false,s:false}); }
+// 伴奏スタイルごとのミックス（左右・リバーブ・エコー・コンプ・高音・低音）。ミキサーは出さないが、通常モードでも PRO でもこのまま鳴る（試作版と同じ値）
+// rev・echo・comp は 0〜1、pan・hi・lo は −1〜1（hi・lo は ±9dB）
+const STYLE_FX={
+  0:{arp:{rev:.22,comp:.3,hi:.1}, drum:{rev:.12,comp:.35}, bass:{comp:.5,lo:.1}},
+  1:{arp:{pan:-.1,rev:.18,comp:.35,hi:.15}, drum:{rev:.1,comp:.45}, bass:{comp:.5}},
+  15:{arp:{rev:.2,echo:.12,comp:.4,hi:.15}, drum:{rev:.08,comp:.5,hi:.1}, bass:{comp:.55,lo:.15}},
+  2:{arp:{pan:-.15,rev:.12,comp:.3,lo:-.15}, drum:{rev:.15,comp:.55}, bass:{comp:.6,lo:.15}},
+  3:{arp:{pan:.15,rev:.2,echo:.1,comp:.3}, drum:{rev:.18,comp:.4}, bass:{comp:.5}},
+  16:{arp:{rev:.25,comp:.35,hi:.1}},
+  4:{arp:{rev:.35,comp:.2}, drum:{rev:.3,comp:.25}, bass:{rev:.08,comp:.4}},
+  5:{arp:{rev:.35,echo:.08,comp:.2}, drum:{pan:.1,rev:.3}},
+  17:{arp:{rev:.45,comp:.15}, arp2:{pan:.2,rev:.5,comp:.15}, drum:{rev:.4}, bass:{rev:.2,comp:.3}},
+  18:{arp:{pan:-.2,rev:.22,echo:.08,comp:.3,hi:.1}, arp2:{pan:.25,rev:.25,comp:.35,hi:.1}, drum:{rev:.12,comp:.4}, bass:{comp:.55,hi:.1}},
+  9:{arp:{pan:-.25,rev:.1,comp:.4,hi:.1}, arp2:{pan:.2,rev:.2,comp:.35}, drum:{rev:.08,comp:.5}, bass:{comp:.6}},
+  11:{arp:{rev:.28,comp:.2,hi:-.1}, drum:{rev:.2,comp:.25}, bass:{rev:.05,comp:.35}},
+  19:{arp:{rev:.25,echo:.15,comp:.45,hi:-.35}, drum:{rev:.1,comp:.5,hi:-.3}, bass:{comp:.4,hi:-.2}},
+  8:{arp:{rev:.2,comp:.25}, drum:{rev:.15,comp:.35}, bass:{comp:.45}},
+  10:{arp:{rev:.25,echo:.2,comp:.4,hi:.15}, drum:{rev:.05,comp:.6,lo:.15}, bass:{comp:.6,lo:.1}},
+  12:{arp:{pan:-.1,rev:.25,comp:.25}, drum:{pan:.15,rev:.2,comp:.2}, bass:{rev:.05,comp:.35}},
+  13:{arp:{pan:.15,rev:.2,echo:.18,comp:.3}, drum:{rev:.12,comp:.4}, bass:{comp:.5,lo:.15,hi:-.15}},
+  20:{arp:{rev:.35,echo:.12,comp:.2}, drum:{rev:.3,comp:.25}, bass:{rev:.1,comp:.35}},
+  14:{arp:{rev:.38,comp:.3}}};
 function applyMix(){ if(!ctx||!drumBus) return;
-  const pro=!!state.pro, solo=pro&&MIX_CH.some(c=>mixOf(c).s), t=ctx.currentTime;
-  [['arp',compVol],['arp2',compVol2],['drum',drumBus],['bass',bassBus]].forEach(([c,node])=>{ if(!node) return; const x=mixOf(c);
-    const sm=(styleNow()||{}).mix, g = !pro ? (sm&&sm[c]!=null?sm[c]:1) : solo ? (x.s?x.v:0) : (x.m?0:x.v);   // 通常モードは伴奏スタイルの音量バランス
-    node.gain.setTargetAtTime(g,t,.03); });
+  const pro=!!state.pro, solo=pro&&MIX_CH.some(c=>mixOf(c).s), t=ctx.currentTime, T=(p,v)=>p.setTargetAtTime(v,t,.03);
+  const st=styleNow()||{}, sm=st.mix, sfx=STYLE_FX[st.id]||{};
+  if(ECHO) T(ECHO.d.delayTime, Math.min(1.5,60/state.bpm*.75));   // エコーは付点8分
+  MIX_CH.forEach(c=>{ const ch=CHAN[c]; if(!ch) return; const x=mixOf(c), f=sfx[c]||{};
+    const g = !pro ? (sm&&sm[c]!=null?sm[c]:1) : solo ? (x.s?x.v:0) : (x.m?0:x.v);   // 通常モードは伴奏スタイルの音量バランス
+    T(ch.vol.gain,g); T(ch.pan.pan,f.pan||0); T(ch.send.gain,f.rev||0); T(ch.esend.gain,(f.echo||0)*.8);
+    T(ch.lo.gain,(f.lo||0)*9); T(ch.hi.gain,(f.hi||0)*9);
+    const k=f.comp||0; T(ch.comp.threshold,-k*26); T(ch.comp.ratio,1+k*5); T(ch.mk.gain,Math.pow(10,k*7/20)); });
   document.querySelectorAll('.mix').forEach(el=>{ const x=mixOf(el.dataset.ch);
     el.querySelector('[data-k="m"]').setAttribute('aria-pressed',x.m); el.querySelector('[data-k="s"]').setAttribute('aria-pressed',x.s);
     el.querySelector('input').value=x.v; el.closest('.lane').classList.toggle('silent', pro && (solo?!x.s:x.m)); });
