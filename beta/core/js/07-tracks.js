@@ -1209,6 +1209,7 @@ document.addEventListener('keydown',e=>{ if(!BLKE || (PE ? !$('peSet').hidden : 
   if(BNUM[k] && !e.shiftKey){ if(isDrum) return; return go(()=>{ if(selNotes().length) bSetLen(BNUM[k]); else PR.lastLen[patKind]=BNUM[k]; }); }   // 選んでいなければ、次に置く音の長さ
   if(kl==='q') return go(bQuant); if(kl==='r') return go(bDup);
   if(kl==='h') return go(()=>zoomBtn(1.25)); if(kl==='g') return go(()=>zoomBtn(.8)); if(k==='F' || (kl==='f'&&e.shiftKey)) return go(bFit);
+  if(kl==='f' && !e.shiftKey && !mod && PE) return go(()=>$('peFol').click());   // 再生に合わせて追いかけるの切りかえ
   if(kl==='b') return go(()=>{ PR.blkLock=!PR.blkLock; blkModeUI(); toast(PR.blkLock?'鉛筆を固定しました（B で戻す）':'鉛筆の固定を外しました'); });
   if(k==='?') return go(()=>bKeys(innerWidth/2-240,90));
   if(k==='+'||k==='=') return go(()=>zoomBtn(1.25)); if(k==='-') return go(()=>zoomBtn(.8)); },true);

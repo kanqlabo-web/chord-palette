@@ -163,7 +163,12 @@ const peSnap=()=>peDrum()?1:PE.grid;
 #peEd .pseg button:disabled{opacity:.4;cursor:default}
 #peEd .pbk{position:absolute;border-radius:3px;background:color-mix(in srgb,var(--ink) 20%,transparent);pointer-events:none;z-index:0}
 #peEd .pbk.m{background:color-mix(in srgb,var(--d) 30%,transparent)}
+#peEd .pfol{gap:4px;font-size:.74rem;color:var(--muted)}
+#peEd .pfol.on{color:var(--ink);border-color:var(--ink)}
+#peEd .pfol svg{width:15px;height:15px}
+#peEd .pfol{display:inline-flex;align-items:center}
 @media (max-width:899px){
+ #peEd .pfol span{display:none}
  #peEd .ptool{flex-wrap:nowrap;gap:4px;overflow-x:auto;scrollbar-width:none}
  #peEd .ptb{min-width:34px;padding:0 6px}
  #peEd .psep,#pePick,#peReg{display:none!important}
@@ -190,7 +195,7 @@ const peSnap=()=>peDrum()?1:PE.grid;
 { const el=document.createElement('div'); el.id='peEd'; el.hidden=true; el.setAttribute('role','dialog'); el.setAttribute('aria-label','演奏の編集');
   const I=(d)=>`<svg viewBox="0 0 16 16" aria-hidden="true">${d}</svg>`;
   el.innerHTML=`<div class="ph"><button class="iconbtn" id="peX" aria-label="キャンセル"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
-    <h2 id="peTitle"></h2><button class="pplay" id="pePlay" aria-label="再生"></button><button id="peOk">完了</button></div>
+    <h2 id="peTitle"></h2><button class="ptb pfol" id="peFol" aria-pressed="true" title="再生中、鳴っている所をロールが追いかける（F）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h9M8 4.5L11.5 8 8 11.5" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 3v10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>追いかける</span></button><button class="pplay" id="pePlay" aria-label="再生"></button><button id="peOk">完了</button></div>
   <div class="ptool">
     <button class="ptb on" id="peToolSel" aria-label="選ぶ" title="選ぶ（V）">${I('<path d="M3 2l9 5-4 1.2L6 12z" fill="currentColor"/>')}</button>
     <button class="ptb" id="peToolPen" aria-label="鉛筆" title="鉛筆（B）">${I('<path d="M3 13l1-3.5L11 2.5l2.5 2.5L6.5 12z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>')}</button>
@@ -614,6 +619,15 @@ addEventListener('resize',()=>{ if(PE) peDraw(); });
       else { const E=chordLine(); let e=null; E.forEach(x=>{ if(x.b===b && (x.pos-b*L)<=cur.s) e=x; }); if(e&&hasV(e.v)){ const cell=cellsOf(e.b)[e.h]; const sc=isBassK(PE.kind)?{key:'bar'}:sceneAt(PE.kind,e.b,cell); key=sc&&sc.key; off=(e.pos-b*L); } }
       if(key===PE.scene){ const frac=Math.min(1,(ctx.currentTime-cur.t)/stepDur()), x=(cur.s-off+frac)*(16/(cur.L||16)); if(x>=0&&x<=peN()){ on=true; ph.style.left=(x*PE.cw)+'px'; } } }
     ph.hidden=!on; $('pePlay').innerHTML=playing?STOP_SVG:PLAY_SVG; } requestAnimationFrame(pePhLoop); })();
+// 再生中は、鳴っている所をロールが追いかける（ページめくりのように、右はし近くまで来たら先へ送る）。ボタンで切りかえ、覚えておく
+let PE_FOL=true; try{ PE_FOL=localStorage.getItem('peFollow')!=='0'; }catch(_){}
+function peFolUI(){ const b=$('peFol'); b.classList.toggle('on',PE_FOL); b.setAttribute('aria-pressed',PE_FOL?'true':'false'); }
+$('peFol').onclick=()=>{ PE_FOL=!PE_FOL; try{ localStorage.setItem('peFollow',PE_FOL?'1':'0'); }catch(_){} peFolUI(); toast(PE_FOL?'再生中、ロールが鳴っている所を追いかけます':'ロールを追いかけないようにしました'); };
+peFolUI();
+(function peFolLoop(){ if(PE && BLKE && PE_FOL && playing && cur && ctx && !BD){ const sc=$('bScroll'), L=slotSteps(), frac=Math.min(1,(ctx.currentTime-cur.t)/stepDur()),
+    x=(cur.b+(cur.s+frac)/(cur.L||16))*L*BSW, w=sc.clientWidth-BLW, sl=sc.scrollLeft;
+    if(w>40 && (x<sl || x>sl+w*.85)) sc.scrollLeft=Math.max(0,x-w*.1); }
+  $('pePlay').innerHTML=playing?STOP_SVG:PLAY_SVG; requestAnimationFrame(peFolLoop); })();
 // 入口：今までの「演奏を編集」はすべてこの画面で開く
 openPatEditor=function(kind,mode){ closeAll(); peOpen(kind, PR.scene, mode); };
 editTrackPattern=function(kind,scene){ peOpen(kind, scene); };
