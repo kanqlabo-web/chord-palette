@@ -738,7 +738,7 @@ body.blkset .scrim{z-index:43}
       <button class="tb" id="blkUndo" aria-label="元に戻す">${UNDO_SVG}</button><button class="tb" id="blkRedo" aria-label="やり直す"><span style="display:grid;transform:scaleX(-1)">${UNDO_SVG}</span></button>
       <span class="bgap"></span><button class="chip bch" id="blkPick">ほかの弾き方</button><button class="chip bch" id="blkSet">設定</button><button class="tb bzm" id="blkZo" aria-label="縮小">−</button><button class="tb bzm" id="blkZi" aria-label="拡大">＋</button></div>
     <p class="bsub" id="blkHelp"></p>
-    <div class="bscroll" id="bScroll"></div>
+    <div class="bwrap"><aside id="blkSide" aria-label="選んだ音の設定"></aside><div class="bscroll" id="bScroll"></div></div>
     <div class="bbot"><div class="bdeco" id="blkDeco" hidden><button class="chip bdx" id="blkDecoX">閉じる</button><div id="prFall"></div></div>
     <div class="bplaybar"><button class="bplay" id="blkPlay" aria-label="再生"></button></div></div><div id="blkMenu" hidden></div>`;
   document.body.appendChild(el); }
@@ -830,7 +830,7 @@ function blkNoteMenu(x,y){ const isArp=isArpK(patKind), it=[
     ['消す',()=>{ blkMenuClose(); setCurNotes(curNotes().filter(n=>!PR.selSet.has(n))); PR.selSet.clear(); commitNotes(); }],
     ['コピー',()=>{ blkMenuClose(); const ns=selNotes(), s0=Math.min(...ns.map(n=>n.st)); PR.clip={fam:blkFam(BLKE.kind), notes:ns.map(n=>({...n, st:n.st-s0}))}; toast(`${ns.length}個コピーしました（何もない所をタップで貼り付け）`); }],
     ['強さ',()=>blkVelMenu(x,y)]];
-  if(isArp) it.push(['飾り…',()=>{ blkMenuClose(); $('blkDeco').hidden=false; blkSelBar(); }]);
+  if(isArp && !BSIDE()) it.push(['飾り…',()=>{ blkMenuClose(); $('blkDeco').hidden=false; blkSelBar(); }]);
   blkMenu(x,y,it); }
 function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
   roll.addEventListener('touchstart',e=>{ if(e.target.closest('.prn,.bhdl') && e.cancelable) e.preventDefault(); },{passive:false});   // 音をつかんだときはスクロールしない
@@ -1148,7 +1148,7 @@ function bCtx(x,y,onNote){ const c=$('blkCtx'), isDrum=isDrumK(BLKE.kind), isBas
       row('長さ（マス）　数字キー 1〜7',L,n.gh?'':n.len,v=>bSetLen(v)); }
     add(isDrum?'ゴースト（ごく弱く）':'ゴーストノート（ごく短く・弱く）','0',bGhost, isDrum?ns.every(x=>x.vel<=.3):ns.every(x=>x.gh));
     if(isArp){ h+='<hr>'; row('高さ',[[-12,'1オクターブ下'],[0,'そのまま'],[12,'1オクターブ上']],n.oc||0,v=>{ ns.forEach(x=>{ if(v) x.oc=v; else delete x.oc; }); commitNotes(); });
-      add('弾き方・鳴らす小節…','',()=>{ bClose(); $('blkDeco').hidden=false; blkSelBar(); }); }
+      if(!BSIDE()) add('弾き方・鳴らす小節…','',()=>{ bClose(); $('blkDeco').hidden=false; blkSelBar(); }); }
   } else {
     if(PR.clip && PR.clip.fam===blkFam(BLKE.kind)) add('ここに貼り付け',BK('V'),()=>{ const p=bPos(x,y); if(p&&p.s){ const g=blkGrid(); bPasteAt(p.s.off+Math.floor((p.x-p.s.x0)/g+1e-6)*g, p.s); } });
     add('ここに音を置く','ダブルクリック',()=>bPlaceAt(x,y)); add('すべて選ぶ',BK('A'),bSelAll);
@@ -1210,3 +1210,67 @@ document.addEventListener('keydown',e=>{ if(!BLKE || $('blkEd').hidden || $('pat
   if(kl==='b') return go(()=>{ PR.blkLock=!PR.blkLock; blkModeUI(); toast(PR.blkLock?'鉛筆を固定しました（B で戻す）':'鉛筆の固定を外しました'); });
   if(k==='?') return go(()=>bKeys(innerWidth/2-240,90));
   if(k==='+'||k==='=') return go(()=>zoomBtn(1.25)); if(k==='-') return go(()=>zoomBtn(.8)); },true);
+// ---------- ピアノロール：広い画面では左に「選んだ音の設定」の枠（MuseScore のパレットのように、分類ごとに開け閉め） ----------
+const BSIDE=()=>matchMedia('(min-width:900px)').matches;
+{ const st=document.createElement('style'); st.textContent=`#blkEd .bwrap{flex:1;min-height:0;display:flex}
+#blkEd .bwrap>.bscroll{flex:1;min-width:0}
+#blkSide{display:none}
+@media (min-width:900px){
+#blkSide{display:block;flex:none;width:252px;overflow:auto;overscroll-behavior:contain;border-right:1px solid var(--line);background:color-mix(in srgb,var(--ink) 3%,var(--surface));font-size:.8rem;user-select:none;-webkit-user-select:none}
+#blkEd .bdeco{display:none!important}}
+#blkSide .sh{position:sticky;top:0;z-index:1;padding:10px 12px 8px;background:inherit;border-bottom:1px solid var(--line);font-weight:800}
+#blkSide .sh small{display:block;font-weight:700;color:var(--muted);font-size:.7rem;margin-top:2px}
+#blkSide details{border-bottom:1px solid var(--line)}
+#blkSide summary{list-style:none;cursor:pointer;padding:8px 12px;font-weight:800;display:flex;align-items:center;gap:6px}
+#blkSide summary::-webkit-details-marker{display:none}
+#blkSide summary::before{content:'';width:0;height:0;border:4.5px solid transparent;border-left:6px solid currentColor;border-right:0;transition:transform .12s}
+#blkSide details[open]>summary::before{transform:rotate(90deg)}
+#blkSide summary .cur{margin-left:auto;font-weight:700;color:var(--muted);font-size:.7rem;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#blkSide .grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line);margin:0 10px 10px}
+#blkSide .grid button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px;padding:4px 2px;border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}
+#blkSide .grid button i{font-style:normal;font-size:1.05rem;font-weight:800;line-height:1.1}
+#blkSide .grid button span{font-size:.62rem;font-weight:700;line-height:1.25;color:var(--muted);text-align:center}
+#blkSide .grid button:hover{background:color-mix(in srgb,var(--d) 10%,var(--surface))}
+#blkSide .grid button.on{background:var(--ink);color:var(--surface)}
+#blkSide .grid button.on span{color:color-mix(in srgb,var(--surface) 80%,transparent)}
+#blkSide.off .grid button,#blkSide.off .vel{opacity:.4;pointer-events:none}
+#blkSide .vel{display:flex;align-items:center;gap:8px;padding:0 12px 10px;font-weight:700}
+#blkSide .vel input{flex:1;min-width:0}
+#blkSide .vel b{min-width:2.2em;text-align:right;font-variant-numeric:tabular-nums}
+#blkSide .clr{margin:0 10px 10px;width:calc(100% - 20px);border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;font-weight:700;padding:6px;border-radius:8px;cursor:pointer}`; document.head.appendChild(st); }
+const BFX=[
+  ['弾き方',[['fall','↘','フォール','最後に一気に下がる'],['up','⤒','転回','1つ上の和音の音へ'],['scoop','↗','しゃくり','下からずり上げる']]],
+  ['次のコードへつなぐ',[['nx','⇢','音階で\nつなぐ','次のコードへ音階でつなぐ'],['nt','→','次の上の音','次のコードの上の音を先に弾く'],['ntd','→↓','その1つ下','次のコードの上の音の1つ下の音階'],['ntu','→↑','その1つ上','次のコードの上の音の1つ上の音階']]],
+  ['音をずらす',[['dn','↓1','1つ下','1つ下の音階'],['dn2','↓2','2つ下','2つ下の音階'],['su','↑1','1つ上','1つ上の音階'],['su2','↑2','2つ上','2つ上の音階'],['cd','♭','半音下','半音下'],['cu','♯','半音上','半音上'],['p0','P','ペンタへ','5音の音階（ペンタ）の音に寄せる'],['pu','P↑','ペンタ↑','5音の音階で1つ上'],['pd','P↓','ペンタ↓','5音の音階で1つ下']]],
+  ['飾り（元の音へ戻る）',[['dnr','↓↑','下へ\n行って戻る','元→下→元'],['upr','↑↓','上へ\n行って戻る','元→上→元'],['grc','♪♭','半音下\nから','半音下から入る（装飾音）'],['grs','♪','上の音\nから','上の音から入る（装飾音）'],['trl','tr','トリル','上の音と交互']]]];
+const BDYN=[['pp',.25],['p',.4],['mp',.55],['mf',.7],['f',.85],['ff',1]];
+let BFOLD={}; try{ BFOLD=JSON.parse(localStorage.getItem('blkSideFold')||'{}')||{}; }catch(_){}
+const bFxOf=n=>n.fall?'fall':n.up?'up':n.scoop?'scoop':n.nx?'nx':n.nt?n.nt:(nbKind(n)||'');
+function bSetFx(v){ const ns=selNotes(); if(!ns.length) return; const same=ns.every(x=>bFxOf(x)===v); if(same) v='';   // 同じものをもう一度押すと外す
+  ns.forEach(x=>{ delete x.fall; delete x.up; delete x.dn; delete x.scoop; delete x.nx; delete x.nt;
+    if(v==='fall'||v==='up'||v==='scoop'||v==='nx') x[v]=true; else if(v==='nt'||v==='ntd'||v==='ntu') x.nt=v; else if(v) x.dn=v==='dn'?true:v; }); commitNotes(); }
+function bSide(){ const el=$('blkSide'); if(!el || !BLKE || !BSIDE()) return; const kind=BLKE.kind, isDrum=isDrumK(kind), isArp=isArpK(kind), ns=selNotes(), n=ns[ns.length-1], k=ns.length;
+  const sc=el.scrollTop, F={}; let id=0; const fn=f=>{ const q='s'+(id++); F[q]=f; return q; };
+  const tile=(on,ico,lab,tip,f)=>`<button class="${on?'on':''}" data-f="${fn(f)}" title="${esc(tip||lab.replace(/\n/g,''))}"><i>${ico}</i><span>${esc(lab).replace(/\n/g,'<br>')}</span></button>`;
+  const sec=(key,title,cur,body)=>`<details data-k="${key}"${BFOLD[key]?'':' open'}><summary>${title}${cur?`<span class="cur">${esc(cur)}</span>`:''}</summary>${body}</details>`;
+  let h=`<div class="sh">${k?(k>1?`選んだ${k}個の音`:'選んだ音'):'選んだ音の設定'}<small>${k?'押すと変わります（もう一度で外す）':'ロールの音を選ぶと使えます'}</small></div>`;
+  if(isArp){ const cur=n?bFxOf(n):'';
+    BFX.forEach(([t,L],gi)=>{ const hit=L.find(x=>x[0]===cur); h+=sec('fx'+gi,t,hit?hit[2].replace(/\n/g,''):'',`<div class="grid">${L.map(([v,ico,lab,tip])=>tile(n&&ns.every(x=>bFxOf(x)===v),ico,lab,tip,()=>bSetFx(v))).join('')}</div>`); });
+    if(n && ns.some(x=>bFxOf(x))) h+=`<button class="clr" data-f="${fn(()=>bSetFx(''))}">飾りを外す</button>`; }
+  if(!isDrum){ const L=[[.25,'1/4'],[.5,'1/2'],[1,'1'],[2,'2'],[4,'1拍'],[8,'2拍'],[16,'1小節']];
+    h+=sec('len','長さ',n?(n.gh?'ゴースト':(L.find(x=>x[0]===n.len)||[0,n.len+'マス'])[1]):'',`<div class="grid">${L.map(([v,l],i)=>tile(n&&!n.gh&&ns.every(x=>!x.gh&&x.len===v),l,(i<4?'マス':'')+`（${i+1}）`,`長さ ${l}${i<4?'マス':''}（数字キー ${i+1}）`,()=>bSetLen(v))).join('')}${tile(n&&ns.every(x=>x.gh),'◌','ゴースト（0）','ごく短く・弱く（0 キー）',bGhost)}</div>`); }
+  { const v0=n?Math.round(n.vel*127):0, hit=n?BDYN.find(([,v])=>Math.abs(v-n.vel)<.02):null;
+    h+=sec('vel','強さ',n?(hit?hit[0]+' ':'')+v0:'',`<div class="grid">${BDYN.map(([l,v])=>tile(n&&ns.every(x=>Math.abs(x.vel-v)<.02),`<em style="font-family:serif;font-weight:900">${l}</em>`,'',`強さ ${Math.round(v*127)}`,()=>{ ns.forEach(x=>x.vel=v); commitNotes(); })).join('')}${isDrum?tile(n&&ns.every(x=>x.vel<=.3),'◌','ゴースト（0）','ごく弱く（0 キー）',bGhost):''}</div>
+      <label class="vel"><input type="range" min="1" max="127" value="${v0||100}" id="bsVel"><b>${v0||''}</b></label>`); }
+  if(isArp){ const O=[[-12,'↓8va','1オクターブ下'],[0,'—','そのまま'],[12,'↑8va','1オクターブ上']];
+    h+=sec('oc','高さ',n&&n.oc?(n.oc>0?'1オクターブ上':'1オクターブ下'):'',`<div class="grid">${O.map(([v,ico,l])=>tile(n&&ns.every(x=>(x.oc||0)===v),ico,l,l,()=>{ ns.forEach(x=>{ if(v) x.oc=v; else delete x.oc; }); commitNotes(); })).join('')}</div>`);
+    const W=[['','毎','毎回'],['step','小','上の音の動きが小さいとき'],['down','↓大','上の音が大きく下がるとき'],['same','＝','上の音が次も同じとき'],['move','≠','上の音が次で変わるとき']];
+    h+=sec('when','鳴らす小節',n&&n.when?(W.find(x=>x[0]===n.when)||[])[2]:'',`<div class="grid">${W.map(([v,ico,l])=>tile(n&&ns.every(x=>(x.when||'')===v),ico,l.replace('上の音','').replace('とき',''),(WHEN_KINDS.find(x=>x[0]===v)||[,l])[1],()=>{ ns.forEach(x=>{ if(v) x.when=v; else delete x.when; }); commitNotes(); })).join('')}</div>`); }
+  el.innerHTML=h; el.classList.toggle('off',!k); el.scrollTop=sc;
+  el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ const f=F[b.dataset.f]; if(f) f(); });
+  el.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{ if(d.open) delete BFOLD[d.dataset.k]; else BFOLD[d.dataset.k]=1; try{ localStorage.setItem('blkSideFold',JSON.stringify(BFOLD)); }catch(_){} }));
+  const vi=$('bsVel'); if(vi){ const out=vi.nextElementSibling; vi.oninput=()=>{ const v=+vi.value; out.textContent=v; ns.forEach(q=>q.vel=v/127);
+      document.querySelectorAll('#bRoll .prn.sel').forEach(e=>{ e.style.setProperty('--v',v/127); const b=e.querySelector('b'); if(b) b.style.height=Math.round(v/127*100)+'%'; }); };
+    vi.onchange=()=>commitNotes(); } }
+{ const d=drawBlk; drawBlk=function(){ const r=d.apply(this,arguments); bSide(); return r; }; }
+addEventListener('resize',()=>{ if(BLKE) bSide(); });
