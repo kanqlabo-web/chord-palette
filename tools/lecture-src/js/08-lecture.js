@@ -63,7 +63,8 @@ function lecLocalMembers(f){ lecGet(lecPath()).then(d=>{ const m={}; for(let i=0
 body.lec-on .app{padding-bottom:calc(var(--lecH,56px) + 14px)}
 body.lec-child #toTitle{display:none}
 /* 講義版の画面は、チュートリアル中の画面と同じくらい少なく（メニュー・次のレベルへ・進行ライブラリ・PRO などは出さない） */
-body.lec #menuBtn,body.lec .badges,body.lec .libbtn,body.lec .slothead .right,body.lec .lane .mix{visibility:hidden}
+body.lec #menuBtn,body.lec .badges{display:none!important}
+body.lec .libbtn,body.lec .slothead .right,body.lec .lane .mix{visibility:hidden}
 body.lec #lvBig,body.lec #moodTip{display:none!important}
 body.lec .lane canvas{display:none}   /* 伴奏は名前の行だけ（小節ごとの絵は出さない） */`;
   const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
