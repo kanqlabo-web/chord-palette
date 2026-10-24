@@ -93,7 +93,7 @@ const TUT={on:false, i:0, backup:null, wait:null, timer:null, loopLen:Infinity, 
 const nmN=d=>nameOf(d,numK(),false).replace('-5','♭5'), nm=d=>state.label==='alpha'?chordText(d).replace('-5','♭5'):nmN(d), al=d=>chordText(d);
 // 説明文の中のコードの数字（1・4・6m・5/7・3(7) など）を、ローマ数字の設定ならⅠ・Ⅳ…に置きかえる
 const ROM7=['','Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ'];
-const DEG_RE=/(?<![0-9A-Za-zⅠ-Ⅻ.(♭♯+\-]|LEVEL |レベル|Key |キー|BPM |レベル[0-9]・|LEVEL [0-9]・)([1-7])(m♭5|m-5|m)?(\(7\))?(?:\/([1-7]))?(?![0-9]|つ|小節|拍|度|回|番|音|分|秒|人|枚|文字|段|行|周|個|本|歩|ミリ|%|:|\.|・M|th|・9|〜|～|~| ?や ?M)/g;
+const DEG_RE=/(?<![0-9A-Za-zⅠ-Ⅻ.(♭♯+\-]|LEVEL |レベル|Key |キー|BPM |レベル[0-9]・|LEVEL [0-9]・)([1-7])(dim|m♭5|m-5|m)?(\(7\))?(?:\/([1-7]))?(?![0-9]|つ|小節|拍|度|回|番|音|分|秒|人|枚|文字|段|行|周|個|本|歩|ミリ|%|:|\.|・M|th|・9|〜|～|~| ?や ?M)/g;
 const SC7=[0,0,2,4,5,7,9,11];
 function romanize(root){ const alpha=state.label==='alpha'; if(!root||(!alpha&&numK()!=='roman')) return;
   const conv=(m,d,q,sev,b)=>alpha ? nameOf({o:SC7[+d],q:q?(q==='m'?'m':'m-5'):'maj',x:sev?'7':'',b:b?SC7[+b]:null},'alpha',false).replace('-5','♭5')
@@ -149,7 +149,7 @@ const SLIDES=[
        <section class="a" style="--dl:.5"><h3>${ico('sun')} 明るい</h3><div class="chips7">${[0,3,4].map((d,k)=>tc(d,'bright',.8+k*.15)).join('')}</div></section>
        <section class="a" style="--dl:1.2"><h3>${ico('moon')} 暗い</h3><div class="chips7">${[1,2,5,6].map((d,k)=>tc(d,'dark',1.5+k*.15)).join('')}</div></section>
      </div>
-     <p class="sub a" style="--dl:2.4">7m♭5 には変なのがついていますが、気にしなくて大丈夫です</p>`},
+     <p class="sub a" style="--dl:2.4">7dim には変なのがついていますが、気にしなくて大丈夫です</p>`},
   {html:()=>`<div class="eyebrow a">作り方</div>
      <h2 class="a" style="--dl:.1">この7個を好きにつなげると<br>コード進行のできあがり</h2>
      <div class="chips7">${[0,1,2,3,4,5,6].map((d,k)=>tc(d,'',.5+k*.08)).join('')}</div>
@@ -274,8 +274,8 @@ const MOOD=[
      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${listenBtn('calm').replace('聴いてみる','しっとり版')}${listenBtn('drive').replace('聴いてみる','ノリノリ版')}</div>`},
   moodSlide('①','明るい・元気','明るいコードで<br>まっすぐ進む','bright',['明るいコード（1・4・5）だけ。迷いのない元気な響きに。','テンポは速め（BPM 110〜130）がおすすめ。']),
   moodSlide('②','切ない','暗いコードから<br>始めてみる','sad',['6m で始めると、出だしから切ない雰囲気に（小室進行）。','最後は 1 で明るく着地。切ないのに前向き。']),
-  moodSlide('③','エモい・泣ける','4 から始めて<br>6m に着地','emo',['4 → 5 と上がって盛り上げてから、暗い 6m に落とす（王道進行）。','5 → 3m → 6m と、となりへ下りる動きでしっとり着地。']),
-  moodSlide('④','おしゃれ','コードの響きを<br>少し変えてみる','chic',['2m7・1M7 のように 7 や M7 を足すと、大人っぽい響きに。','レベル5以降で、自分でもこうした響きに変えられるようになります。']),
+  moodSlide('③','エモい・泣ける','4 から始めて<br>6m に着地','emo',['4 → 5 と上がって盛り上げてから、暗い 6m に落とす（王道進行）。','5 → 3m と下りてから、6m にストンと着地。しっとり切なく終わります。']),
+  moodSlide('④','おしゃれ','コードの響きを<br>少し変えてみる','chic',['2m7・1M7 のように 7 や M7 を足すと、大人っぽい響きに。','レベル6以降で、自分でもこうした響きに変えられるようになります。']),
   {html:()=>`<div class="eyebrow a">まとめ</div>
      <h2 class="a" style="--dl:.1">雰囲気づくりの4つのコツ</h2>
      <div class="roles">
@@ -385,11 +385,11 @@ const L_SLIDES={
      ${listenBtn('long8')}`},
     {coach:'task', task:'long'}],
   tension:[
-    {steps:2, enter:bindHear, html:()=>`<div class="eyebrow a">テンションコード</div>
+    {steps:2, enter:bindHear, html:()=>`<div class="eyebrow a">数字のついたコード</div>
      <div class="chordbig pop" style="--dl:.2"><span>Am</span><span class="tn">7</span></div>
      <p class="a" style="--dl:.7" data-upto="0">このように、コードには<br>後ろに数字がつくことがあります。</p>
      <h2 data-st="1" data-dl=".2">この数字は、ざっくり言うと<br>『オシャレレベル』です</h2>
-     <p class="sub" data-st="1" data-dl=".8">（正確には『テンション』と呼びます）</p>
+     <p class="sub" data-st="1" data-dl=".8">（正確には、7 は『セブンス』、9・11・13 は『テンション』と呼びます）</p>
      <p data-st="2" data-dl=".2">数字が大きいほど、また数が多いほど、<br><b>オシャレな響き</b>になります。</p>
      <div class="chips7" data-st="2" data-dl=".5">${[SP(9,'m'),SP(9,'m','7'),SP(9,'m','9'),SP(9,'m','11')].map((d,k)=>hearChip(d,.6+k*.15)).join('')}</div>
      <p class="sub" data-st="2" data-dl="1.3">タップすると鳴らせます</p>`},
@@ -454,7 +454,7 @@ const L_SLIDES={
     {html:()=>`<div class="eyebrow a">1小節に2つのコード</div>
      <h2 class="a" style="--dl:.1">1小節の前半と後半で<br>コードを変える</h2>
      ${segExHTML('half',.4)}
-     <div class="exnote"><p class="a" style="--dl:1.2;--fn:var(--d)">コードの切り替わりが細かくなると、進行に勢いが出ます。</p><p class="a" style="--dl:1.5;--fn:var(--ink)">あいだに入る、つなぎ役のコードを「経過和音（けいかわおん）」と呼びます。</p><p class="a" style="--dl:1.8;--fn:var(--t)">置いてあるコードの<b>右側</b>にドラッグすると、3拍目からのコードを入れられます。</p></div>
+     <div class="exnote"><p class="a" style="--dl:1.2;--fn:var(--d)">1小節に2つのコードを入れると、コードの切り替わりが細かくなって、進行に勢いが出ます。</p><p class="a" style="--dl:1.5;--fn:var(--t)">置いてあるコードの<b>右側</b>にドラッグすると、3拍目からのコードを入れられます。</p></div>
      ${listenBtn('half')}`},
     {html:()=>`<div class="eyebrow a">組み合わせる①</div>
      <h2 class="a" style="--dl:.1">分数コードを挟んで<br>なめらかに</h2>
@@ -462,6 +462,7 @@ const L_SLIDES={
      <p class="sub a" style="--dl:.6">もとの進行</p>
      ${insExHTML('halfSlash',1,1.7)}
      <p class="a" style="--dl:2.4">5/7 と 1/5 を挟むと、ベースが<br><b>ド→シ→ラ→ソ→ファ</b> と1歩ずつ下ります。</p>
+     <p class="sub a" style="--dl:2.7">このように、ベースを1歩ずつつなぐために挟むコードを<br>「経過和音（けいかわおん）」と呼びます。</p>
      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${listenBtn('halfBase').replace('聴いてみる','もとの進行')}${listenBtn('halfSlash').replace('聴いてみる','挟んだ進行')}</div>`},
     {html:()=>`<div class="eyebrow a">組み合わせる②</div>
      <h2 class="a" style="--dl:.1">m を外したコードを挟んで<br>おしゃれに</h2>
@@ -525,7 +526,7 @@ const LEVELS=[
   {name:'雰囲気をつくる', goal:'明るい・切ない・力強い……。ねらった雰囲気にするコツを、実例と実践で覚えましょう。', unlock:'伴奏とテンポ・進行ライブラリ', chips:[['明るい','--t'],['切ない','--s'],['力強い','--d'],['穏やか','--warn']], deck:()=>MOOD.filter((_,k)=>k!==8), noClear:true},
   {name:'キーを変える（移調）', goal:'同じ進行を、別の高さ（キー）で鳴らしてみましょう。ジャンルによって、よく使われるキーも違います。', unlock:'キーの変更', chips:[['Key C','--t'],['Key G','--s'],['Key E','--d']], deck:()=>L_KEY},
   {name:'進行を長くする', goal:'4つの進行をもとに、8小節の進行を作ってみましょう。', unlock:'8小節・16小節', chips:[['8小節','--t'],['16小節','--s']], deck:()=>L_SLIDES.long},
-  {name:'テンションコード', goal:'コードに数字をつけて、洗練された響きにしてみましょう。', unlock:'テンションコード', chips:[['Am7','--t'],['FM7','--s'],['G9','--d']], deck:()=>L_SLIDES.tension},
+  {name:'数字のついたコード', goal:'コードに数字をつけて、洗練された響きにしてみましょう。', unlock:'数字のついたコード', chips:[['Am7','--t'],['FM7','--s'],['G9','--d']], deck:()=>L_SLIDES.tension},
   {name:'分数コード', goal:'コードの構成音を知り、ベースの音を変えてつながりをなめらかにしましょう。', unlock:'分数コード', chips:[['C/E','--t'],['G/B','--d']], deck:()=>L_SLIDES.slash},
   {name:'明るいコードと暗いコードを入れ替える', goal:'m を外したり、m をつけたりして、進行にメリハリをつけましょう。', unlock:'明るい・暗いの入れ替え', chips:[['E7','--d'],['D7','--d'],['Fm','--s']], deck:()=>L_SLIDES.flip},
   {name:'1小節に2つのコード', goal:'1小節の中でコードを切り替えて、進行に勢いをつけましょう。分数コードや入れ替えたコードとも組み合わせます。', unlock:'1小節に2つのコード・PROモード', chips:[['3m｜6m','--t'],['2m｜5','--d']], deck:()=>L_SLIDES.split},
@@ -586,7 +587,7 @@ const WHERE={
      {t:()=>$('keyBadge'), x:'いまのキーは、ここに表示されます。'}],
   5:[{menu:'barChips', x:'設定メニュー（≡）の<b>「小節数」</b>で 8・16 を選べます。'},
      {t:()=>document.querySelector('.slotwrap'), x:'8小節以上にすると、マスの上に小さな四角が出ます。<br>タップすると、表示する小節を切り替えられます。'}],
-  6:[tapSlot('7・M7・9 などの<b>テンションコード</b>を選べます。')],
+  6:[tapSlot('7・M7・9 など、<b>数字のついたコード</b>を選べます。')],
   7:[tapSlot('スロットで「響き」と「ベース」を選んで、<b>分数コード</b>にできます。')],
   8:[tapSlot('2(7)・3(7)・4m など、<b>明るい・暗いを入れ替えたコード</b>も選べます。')],
   9:[{t:()=>slotsEl, x:'置いてあるコードの<b>右側</b>にコードをドラッグすると、<br>3拍目からのコードを入れられます。'},

@@ -26,16 +26,16 @@ const DEG=[
   {deg:'Ⅳ',num:'4',fn:'S',q:'',  iv:[0,4,7]},
   {deg:'Ⅴ',num:'5',fn:'D',q:'',  iv:[0,4,7]},
   {deg:'Ⅵm',num:'6m',fn:'T',q:'m', iv:[0,3,7]},
-  {deg:'Ⅶm-5',num:'7m-5',fn:'D',q:'m-5',iv:[0,3,6]},
+  {deg:'Ⅶdim',num:'7dim',fn:'D',q:'m-5',iv:[0,3,6]},
 ];
 const keyObj=()=>KEYS.find(k=>k.id===state.key)||KEYS[0];
 // ---- コードの表し方 ----
 // マスの値は「数字（ダイアトニックの何番目か）」または「PROモードで作ったコード {o:キーからの半音, q:種類, x:テンション, b:分数コードのベース(半音) or null}」
 const QUAL={maj:[0,4,7],m:[0,3,7],sus2:[0,2,7],sus4:[0,5,7],'5':[0,7],'m-5':[0,3,6],aug:[0,4,8],b5:[0,4,6],ms5:[0,3,8]};
-const QUAL_LABEL={maj:'なし',m:'m',sus2:'sus2',sus4:'sus4','5':'5','m-5':'m-5',aug:'aug',b5:'(♭5)',ms5:'m(♯5)'};
+const QUAL_LABEL={maj:'なし',m:'m',sus2:'sus2',sus4:'sus4','5':'5','m-5':'dim',aug:'aug',b5:'(♭5)',ms5:'m(♯5)'};
 const QUAL_ORDER=['maj','m','sus2','sus4','5','m-5','aug','b5','ms5'];
 const EXT={'':[], '6':[9], '7':[10], 'M7':[11], 'add9':[14], 'add11':[17], '69':[9,14], '9':[10,14], 'M9':[11,14], '7add11':[10,17], '11':[10,14,17], '13':[10,14,21], 'M13':[11,14,21], '7b9':[10,13], '7s9':[10,15], '7b13':[10,20], 'dim7':[9], 'addb9':[13]};
-const EXT_LABEL={'':'なし','6':'6','7':'7','M7':'M7','add9':'add9','add11':'add11','69':'6(9)','9':'7(9)','M9':'M7(9)','7add11':'7add11','11':'7(9,11)','13':'7(9,13)','M13':'M7(9,13)','7b9':'7(♭9)','7s9':'7(♯9)','7b13':'7(♭13)','dim7':'dim7','addb9':'add♭9'};
+const EXT_LABEL={'':'なし','6':'6','7':'7','M7':'M7','add9':'add9','add11':'add11','69':'6(9)','9':'7(9)','M9':'M7(9)','7add11':'7(11)','11':'7(9,11)','13':'7(9,13)','M13':'M7(9,13)','7b9':'7(♭9)','7s9':'7(♯9)','7b13':'7(♭13)','dim7':'dim7','addb9':'add♭9'};
 const EXT_ORDER=['','6','7','M7','add9','add11','69','9','M9','7add11','11','13','M13','7b9','7s9','7b13','dim7','addb9'];
 const NUM_OF=['1','♭2','2','♭3','3','4','♯4','5','♭6','6','♭7','7'];
 const ROM_OF=['Ⅰ','♭Ⅱ','Ⅱ','♭Ⅲ','Ⅲ','Ⅳ','♯Ⅳ','Ⅴ','♭Ⅵ','Ⅵ','♭Ⅶ','Ⅶ'];
@@ -47,19 +47,31 @@ function specOf(v){
   if(isNum(v)) return {o:STEPS[v], q:DEG[v].q===''?'maj':DEG[v].q, x:'', b:null};
   return v;
 }
-// 分数コードのベース名：コードのルートの文字から度数ぶん数えて綴る（A の3度 → C♯）
-const LETTERS=['C','D','E','F','G','A','B'], NAT=[0,2,4,5,7,9,11], REL_LETTER=[0,1,1,2,2,3,4,4,5,5,6,6];
-function spellRel(rootName,rootPc,rel){
-  const li=(LETTERS.indexOf(rootName[0])+REL_LETTER[rel])%7, pc=(rootPc+rel)%12;
-  const d=((pc-NAT[li]+18)%12)-6;
-  return LETTERS[li]+({'-2':'♭♭','-1':'♭','0':'','1':'♯','2':'♯♯'}[d]??'');
+// ---- 音名のつづり（楽典どおり）：キーの音階の何番目の音を、♯・♭でどれだけ変えたものかで書く ----
+const LETTERS=['C','D','E','F','G','A','B'], NAT=[0,2,4,5,7,9,11], ACC={'-2':'♭♭','-1':'♭','0':'','1':'♯','2':'♯♯'}, ROMN=['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ'];
+// キーの外の根音：ふつうは ♭2・♭3・♯4・♭6・♭7（同主短調などから借りてきたコード）
+// 減三和音・増三和音・dim7 は、次のコードへ半音で上がる音（導音）の上にできるので ♯1・♯2・♯4・♯5・♯6
+// 例外はコードの sp に 'b'（♭で書く：半音で下りていく dim7 など）／'#'（♯で書く）／'k'（ベースをキーの音としてつづる：Fdim/B など）を持たせる
+const LOW_DEG={1:[1,-1],3:[2,-1],6:[3,1],8:[5,-1],10:[6,-1]}, UP_DEG={1:[0,1],3:[1,1],6:[3,1],8:[4,1],10:[5,1]};
+function degOf(off,sp){   // キー基準の半音 → [音階の何番目(0〜6), ♯♭(-2〜2)]
+  const di=STEPS.indexOf(off); if(di>=0) return [di,0];
+  if(sp && /b/.test(sp.sp||'')) return off===6?[4,-1]:LOW_DEG[off];
+  if(sp && (/#/.test(sp.sp||'')||sp.q==='m-5'||sp.q==='aug'||sp.x==='dim7')) return UP_DEG[off];
+  return LOW_DEG[off];
 }
-function noteName(off){       // キー基準の半音 → 音名（キーの音階にある音はその綴り）
-  const k=keyObj(), di=STEPS.indexOf(off);
-  if(di>=0) return k.sc[di];
-  const pc=(k.pc+off)%12, flatKey=k.id.includes('♭')||k.id==='F';
-  return off===6 && !flatKey ? SHARP_NAMES[pc] : (flatKey||true ? FLAT_NAMES[pc] : SHARP_NAMES[pc]);
+function degLetter(dg){ const k=keyObj(), L=k.sc[dg[0]][0], pc=(k.pc+STEPS[dg[0]]+dg[1]+24)%12, d=((pc-NAT[LETTERS.indexOf(L)]+18)%12)-6; return L+(ACC[d]??''); }
+const degNum=(dg,kind)=>(ACC[dg[1]]??'')+(kind==='roman'?ROMN[dg[0]]:String(dg[0]+1));
+function noteName(off,sp){ return degLetter(degOf(off,sp)); }   // キー基準の半音 → 音名
+// コードの構成音が、根音から数えて何度か（0=1度 … 6=7度）。分数コードのベースのつづりに使う（A の3度 → C♯、Caug の5度 → G♯）
+const TONE_DEG={maj:{4:2,7:4},m:{3:2,7:4},sus2:{2:1,7:4},sus4:{5:3,7:4},'5':{7:4},'m-5':{3:2,6:4},aug:{4:2,8:4},b5:{4:2,6:4},ms5:{3:2,8:4}};
+const EXT_DEG={'6':{9:5},'7':{10:6},'M7':{11:6},'add9':{2:1},'add11':{5:3},'69':{9:5,2:1},'9':{10:6,2:1},'M9':{11:6,2:1},'7add11':{10:6,5:3},'11':{10:6,2:1,5:3},'13':{10:6,2:1,9:5},'M13':{11:6,2:1,9:5},'7b9':{10:6,1:1},'7s9':{10:6,3:1},'7b13':{10:6,8:5},'dim7':{9:6},'addb9':{1:1}};
+const toneDeg=(sp,rel)=>rel===0?0:((TONE_DEG[sp.q]||TONE_DEG.maj)[rel]??(EXT_DEG[sp.x]||{})[rel]);
+function bassDeg(sp){   // 分数コードのベース：構成音ならコードの度数どおり、構成音でなければキーの音としてつづる
+  const n=/k/.test(sp.sp||'')?undefined:toneDeg(sp,(sp.b-sp.o+12)%12); if(n===undefined) return degOf(sp.b);
+  const di=(degOf(sp.o,sp)[0]+n)%7; return [di,((sp.b-STEPS[di]+18)%12)-6];
 }
+// 根音から数えた度数の名前（♭3・♯5・♭♭7 など）。構成音でない音は ♭2・♭3・♯4・♭6・♭7
+const relName=(sp,rel)=>{ const n=toneDeg(sp,rel); return n===undefined?NUM_OF[rel]:(ACC[((rel-NAT[n]+18)%12)-6]??'')+(n+1); };
 // マスに置いたときの役割：Ⅰ・Ⅳ・Ⅴ 以外は、前後のコードとの関係で決まる
 function ctxRole(v,prev,next,minor){
   const sp=specOf(v), o=sp.o, q=sp.q;
@@ -117,23 +129,25 @@ function fnOf(v){ return isNum(v) ? DEG[v].fn : (FN_OF[v.o]||'X'); }
 function suffix(sp,html,kind){
   let t='';
   if(sp.x==='dim7') return 'dim7';   // m-5 に 6度（減7度）をのせたもの
+  if(sp.q==='m-5' && !sp.x) return 'dim';   // 減三和音
+  if(sp.q==='m-5' && sp.x==='7') return html?'m<sup>7(♭5)</sup>':'m7(♭5)';   // ハーフディミニッシュ
   if(sp.q==='m'||sp.q==='m-5'||sp.q==='ms5') t+='m';
   if(sp.q==='5') return t+(kind==='alpha'?'5':'(5)')+(sp.x==='add9'?'add9':'');
   const susFirst=(sp.q==='sus2'||sp.q==='sus4') && /^add/.test(sp.x||'');   // sus4add♭9 のように、add は sus のうしろに書く
   if(susFirst) t+=sp.q;
   if(sp.x){ const x=EXT_LABEL[sp.x]||sp.x; t+= kind==='alpha'||x.includes('(') ? x : html ? `<sup>${x}</sup>` : `(${x})`; }
-  if(sp.q==='m-5') t+= html?'<sup>-5</sup>':'-5';
+  if(sp.q==='m-5') t+= html?'<sup>(♭5)</sup>':'(♭5)';   // m7(♭5)＝ハーフディミニッシュ
   if((sp.q==='sus2'||sp.q==='sus4') && !susFirst) t+=sp.q;
-  if(sp.q==='aug') t+='aug';
+  if(sp.q==='aug') t+= !sp.x ? 'aug' : html?'<sup>(♯5)</sup>':'(♯5)';   // 7 などがつくときは 7(♯5)
   if(sp.q==='b5') t+=html?'<sup>(♭5)</sup>':'(♭5)';
   if(sp.q==='ms5') t+=html?'<sup>(♯5)</sup>':'(♯5)';
   return t;
 }
 function nameOf(v,kind,html){
   const sp=specOf(v);
-  const head = kind==='alpha' ? noteName(sp.o) : kind==='roman' ? ROM_OF[sp.o] : NUM_OF[sp.o];
-  let t=head+suffix(sp,html,kind);
-  if(sp.b!==null&&sp.b!==undefined) t+='/'+(kind==='alpha'?spellRel(noteName(sp.o),(keyObj().pc+sp.o)%12,(sp.b-sp.o+12)%12):kind==='roman'?ROM_OF[sp.b]:NUM_OF[sp.b]);
+  const sh=dg=>kind==='alpha'?degLetter(dg):degNum(dg,kind);
+  let t=sh(degOf(sp.o,sp))+suffix(sp,html,kind);
+  if(sp.b!==null&&sp.b!==undefined) t+='/'+sh(bassDeg(sp));
   return t;
 }
 function chordHTML(v){ return nameOf(v,'alpha',true); }

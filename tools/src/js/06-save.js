@@ -29,8 +29,8 @@ function unpackSong(o){ if(!o||!Array.isArray(o.slots)) return false;
 const b64e=str=>{ const u=new TextEncoder().encode(str); let b=''; u.forEach(c=>b+=String.fromCharCode(c)); return btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); };
 const b64d=t=>{ const b=atob(t.replace(/-/g,'+').replace(/_/g,'/')); return new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0))); };
 // 短いリンク：「#c=コード,コード,…&t=テンポ&y=伴奏スタイル…」。初期値と同じものは書かない
-const tokE=v=> v==null?'_' : isNum(v)?String(v) : '~'+[v.o,v.q,v.x||'',v.b??''].map(x=>encodeURIComponent(String(x))).join('.').replace(/\.+$/,'');
-const tokD=t=>{ if(t==='_'||t==='') return null; if(t[0]!=='~') return +t; const [o,q,x,b]=t.slice(1).split('.').map(decodeURIComponent); return {o:+o,q:q??'',x:x||'',b:(b===undefined||b==='')?null:+b}; };
+const tokE=v=> v==null?'_' : isNum(v)?String(v) : '~'+[v.o,v.q,v.x||'',v.b??'',v.sp||''].map(x=>encodeURIComponent(String(x))).join('.').replace(/\.+$/,'');
+const tokD=t=>{ if(t==='_'||t==='') return null; if(t[0]!=='~') return +t; const [o,q,x,b,s]=t.slice(1).split('.').map(decodeURIComponent); const v={o:+o,q:q??'',x:x||'',b:(b===undefined||b==='')?null:+b}; if(s) v.sp=s; return v; };
 const MIX0=m=>!m||Object.values(m).every(c=>!c||((c.v??1)===1&&!c.m&&!c.s));
 function shortHash(o){ const P=[];
   const segs=o.segs||[], ant=o.ant||[];

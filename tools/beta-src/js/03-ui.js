@@ -392,6 +392,7 @@ function openEditor(i,h=0){
 const curSpec=()=>{ const v=getV(edIndex,edHalf); return (v===null||v===undefined)?{o:0,q:'maj',x:'',b:null}:{...specOf(v)}; };
 function pickField(f,val){
   const sp=curSpec();
+  if(f==='o') delete sp.sp;   // ルートを変えたら、つづりの指定（♯・♭）は外す
   if(f==='o' && sp.b!==null && sp.b!==undefined) sp.b=(sp.b+val-sp.o+12)%12;   // ルートを変えてもベースの度数（関係）は保つ
   if(f==='br') sp.b = val===0 ? null : (sp.o+val)%12;                         // ベースはコードのルートから数えた度数
   else sp[f]=val;
@@ -463,7 +464,7 @@ function renderEditor(full){
   wheel($('edQual'), QUAL_ORDER.map(q=>[q,QUAL_LABEL[q]]), sp.q, 'q');
   wheel($('edExt'), EXT_ORDER.map(x=>[x,EXT_LABEL[x]]), sp.x, 'x');
   $('edExt').parentNode.classList.toggle('off', sp.q==='5');
-  wheel($('edBass'), offs.map(o=>[o,NUM_OF[o]]), (sp.b===null||sp.b===undefined)?0:(sp.b-sp.o+12)%12, 'br');
+  wheel($('edBass'), offs.map(o=>[o,relName(sp,o)]), (sp.b===null||sp.b===undefined)?0:(sp.b-sp.o+12)%12, 'br');
 }
 $('closeEd').onclick=closeAll;
 $('edPlay').onclick=()=>{ const v=getV(edIndex,edHalf); if(v!=null) preview(v); };
@@ -711,7 +712,7 @@ function openVar(i,h){
     $('varNow').className='varnow '+rl; $('varNow').innerHTML=`<b>${nameOf(v,state.label,true)}</b><small>${nameOf(v,state.label==='alpha'?numK():'alpha',false)}</small><i>${rl}</i>`;
     wheel($('varKind'), kinds.map((x,k)=>[k, nameOf(x,state.label,false)]), ki, k=>apply(kinds[k], nowB));
     const tones=[...new Set(QUAL[sp.q]||[0,4,7])];
-    wheel($('varBassW'), tones.map(iv=>{ const b=iv?(sp.o+iv)%12:null; return [b, `${NUM_OF[(iv?b:sp.o)%12]}${iv?'':'（そのまま）'}`]; }), nowB, b=>apply(kinds[ki], b));
+    wheel($('varBassW'), tones.map(iv=>{ const b=iv?(sp.o+iv)%12:null; return [b, `${degNum(iv?bassDeg({...sp,b}):degOf(sp.o,sp),'num')}${iv?'':'（そのまま）'}`]; }), nowB, b=>apply(kinds[ki], b));
   }
   $('varSheet').classList.add('on'); scrim.classList.add('on');
 }
