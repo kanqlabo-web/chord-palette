@@ -268,9 +268,14 @@ let TRK_SEL=null, TRK_STY=false;   // ミキサーを開いているトラック
 const TP=document.querySelector('.app>.transport'), TP_MARK=document.createComment('transport');
 function tpIn(){ if(TP && TP.parentNode!==$('dFoot')){ TP.parentNode.insertBefore(TP_MARK,TP); $('dFoot').appendChild(TP); } }
 function tpOut(){ if(TP_MARK.parentNode) TP_MARK.parentNode.replaceChild(TP,TP_MARK); }
-function openTracks(){ trk.hidden=false; tpIn(); renderTracks(); requestAnimationFrame(dawFrame); }
-function closeTracks(){ trk.hidden=true; tpOut(); TRK_SEL=null; $('dInsp').hidden=true; renderAll(); }
-$('dClose').onclick=closeTracks;
+// トラック画面を開いているあいだは履歴を1つ積んでおき、ブラウザの「戻る」（iPhone の左はしからのスワイプなど）ではアプリを離れずに、ミキサー → トラック画面の順に閉じる
+function openTracks(){ trk.hidden=false; tpIn(); renderTracks(); requestAnimationFrame(dawFrame); if(!(history.state&&history.state.daw)) try{ history.pushState({daw:1},''); }catch(e){} }
+function closeTracks(fromPop){ trk.hidden=true; tpOut(); TRK_SEL=null; $('dInsp').hidden=true; renderAll(); if(fromPop!==true && history.state&&history.state.daw) history.back(); }
+$('dClose').onclick=()=>closeTracks();
+addEventListener('popstate',()=>{ if(trk.hidden) return;
+  const over=['pickScr','blkEd'].some(id=>{ const e=$(id); return e && !e.hidden; });
+  if(over || TRK_SEL){ try{ history.pushState({daw:1},''); }catch(e){} if(!over){ TRK_SEL=null; renderTracks(); } return; }
+  closeTracks(true); });
 $('dMix').onclick=()=>{ TRK_SEL = TRK_SEL ? null : trackList()[0].kind; renderTracks(); };
 $('bpm').addEventListener('input',()=>applyMix());   // エコーの間隔をテンポに合わせる
 
@@ -408,7 +413,7 @@ function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=tru
   p.style.setProperty('--tc',tkColor(kind));
   const rng=(f,label,min,max,val,txt)=>`<label class="dirow"><span>${label}<output>${txt}</output></span><input type="range" min="${min}" max="${max}" step=".01" value="${val}" data-f="${f}"></label>`;
   const sndName = tkInst(kind)||'';
-  p.innerHTML=`<div class="dititle"><button class="ditb" id="diSnd" ><div class="dipic">${tkIco(kind)}</div><b>${esc(sndName)}${ICO.chev}</b><small>タップして楽器を変える</small></button></div>
+  p.innerHTML=`<div class="dititle"><button class="ditb" id="diSnd" ><div class="dipic">${tkIco(kind)}</div><b>${esc(sndName.replace(/（.*）$/,""))}${ICO.chev}</b>${/（.*）$/.test(sndName)?`<span class="dipar">${esc(sndName.match(/（.*）$/)[0])}</span>`:""}<small>タップして楽器を変える</small></button></div>
     <div class="disec"><div class="dib"><button class="dilink" id="diPick"><span>${isDrumK(kind)?'パターン・フィルインを選ぶ':isBassK(kind)?'パターンを選ぶ':'パターン・音域を選ぶ'}</span>${ICO.chev}</button></div></div>
     <div class="disec"><h3>出力</h3><div class="dib">
       ${rng('v','音量',0,1.5,x.v??1,Math.round((x.v??1)*100))}
@@ -541,10 +546,12 @@ function pickRow(el,head,label,sub,ico,cv,open){ el.classList.remove('chips','gp
 #pickScr .phd h2{flex:1;text-align:center;margin:0;font-family:var(--display);font-weight:900;font-size:1.1rem}
 #pickScr .phd button{min-width:44px;height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:700;cursor:pointer;display:grid;place-items:center;padding:0 12px}
 #pickScr .phd .pok{background:var(--t);border-color:var(--t);color:#fff}
-#pickScr .tpane{flex:1;height:auto;border:0;border-radius:0;margin:0;grid-template-columns:minmax(110px,30%) 1fr;padding-bottom:env(safe-area-inset-bottom,0px)}
+#pickScr .tpane{flex:1;height:auto;border:0;border-radius:0;margin:0;grid-template-columns:minmax(126px,34%) 1fr;padding-bottom:env(safe-area-inset-bottom,0px)}
 #pickScr .tpane .tpi{padding:14px 16px}
 #pickScr .tpane .tpi canvas{width:96px;height:36px}
-#pickScr .tpane .tpc{padding:16px 12px 16px 16px;font-size:.9rem}
+#pickScr .tpane .tpc{padding:16px 8px 16px 12px;font-size:.84rem}
+@media (max-width:500px){#pickScr .tpane .tpi{padding:12px 10px;gap:10px}#pickScr .tpane .tpi canvas{width:64px;height:30px}}
+#trk .dipar{display:block;font-size:.8rem;font-weight:700;color:var(--t);margin-top:-2px}
 @media (min-width:760px){ #pickScr .tpane{grid-template-columns:240px 1fr} }
 .prow1{display:flex;align-items:center;gap:12px;width:100%;border:1.5px solid var(--line);border-radius:14px;background:var(--surface);padding:10px 12px;cursor:pointer;text-align:left;font:inherit;color:var(--ink)}
 .prow1>svg:first-child{width:30px;height:30px;color:var(--t);flex:none}
@@ -962,25 +969,25 @@ editTrackPattern=function(kind,scene){ openBlk(kind, scene, '', 0, null); };
 // トラック画面は横にスクロールさせない（ページは上の四角で切りかえる）。ミキサーの開け閉めのあとも、いまのページの位置にもどす
 { const st=document.createElement('style'); st.textContent=`#trk .dscroll{overflow-x:hidden;overflow-y:auto}
 .mbtn{display:inline-grid;place-items:center}.mbtn svg{width:12px;height:12px}`; document.head.appendChild(st); }
-// スワイプでミキサーを開け閉め（指について動く）：トラックの頭（M・S・楽器の絵）や左のはしを右へ → そのトラックのミキサー、どこでも左へ → 閉じる
+// スワイプでミキサーを開け閉め（指について動く）：トラックの頭（M・S・楽器の絵）を右へ → そのトラックのミキサー、どこでも左へ → 閉じる（左のはしはブラウザの「戻る」とぶつかるので使わない）
 // スライダー・入力欄・色の帯（.dtl）の上では反応しない。タップで開け閉めしたときも横にすべらせる
 { const ins=$('dInsp'), body=ins.parentElement; let G=null, busy=false;
   const W=()=>ins.offsetWidth||Math.min(340,innerWidth*.68);
-  const setX=(x,anim)=>{ ins.style.transition=anim?'margin-left .22s ease':'none'; ins.style.marginLeft=x+'px'; };
+  const setX=(x,anim)=>{ ins.style.transition=anim?'margin-left .14s cubic-bezier(.2,.9,.25,1)':'none'; ins.style.marginLeft=x+'px'; };
   const rt=renderTracks;
   renderTracks=function(){
     const was=ins.hidden;
     if(!was && !TRK_SEL && !trk.hidden && !busy && !G){ busy=true; setX(-W(),true);   // 閉じるときは左へすべらせてから
-      setTimeout(()=>{ busy=false; rt.apply(this,arguments); setX(0,false); },220); return; }
+      setTimeout(()=>{ busy=false; rt.apply(this,arguments); setX(0,false); },140); return; }
     const r=rt.apply(this,arguments);
     if(was && !ins.hidden && !G){ setX(-W(),false); requestAnimationFrame(()=>requestAnimationFrame(()=>setX(0,true))); }   // 開くときは左から出す
     return r; };
   const settle=open=>{ const w=W(); setX(open?0:-w,true);
-    setTimeout(()=>{ G=null; if(!open){ TRK_SEL=null; busy=true; rt(); busy=false; setX(0,false); } },230); };
+    setTimeout(()=>{ G=null; if(!open){ TRK_SEL=null; busy=true; rt(); busy=false; setX(0,false); } },150); };
   body.addEventListener('touchstart',e=>{ if(G||busy) return; const t=e.touches[0];
     if(e.touches.length!==1 || e.target.closest('input,textarea,select,.dtl')) return;
     const row=e.target.closest('.dtrack'), tg=e.target;
-    const g={x:t.clientX, y:t.clientY, at:Date.now(), kind:row?row.dataset.kind:null, edge:t.clientX<28, open:!!TRK_SEL, mode:null, dx:0};
+    const g={x:t.clientX, y:t.clientY, at:Date.now(), kind:row?row.dataset.kind:null, edge:false, open:!!TRK_SEL, mode:null, dx:0};
     const mv=ev=>{ const p=ev.touches[0], dx=p.clientX-g.x, dy=p.clientY-g.y; g.dx=dx;
       if(!g.mode){ if(Math.abs(dx)<10 && Math.abs(dy)<10) return;
         if(Math.abs(dx)<Math.abs(dy)*1.3) g.mode='no';
