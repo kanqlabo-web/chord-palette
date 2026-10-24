@@ -183,7 +183,7 @@ function keyTone(m,t,dur,v,inst){
     OUT=distChain(BUS); const mute=dur<.12;
     const g=playZone(LOADED.eguitar,m,t,Math.max(dur,.06),.9*Math.pow(v,1.1),mute?.05:.1,mute?900:5000,false); OUT=null; return g; }
   const fx=INST_FX[I], set=LOADED[I];
-  OUT=playing?BUS:null;
+  OUT=(playing||PREV)?BUS:null;
   PAN = state.wide ? (PAN_NEXT??0) : null;   // 左右の広がり（位置は playEvents で決める）
   const lv0=.36*(fx?fx.gain:1)*Math.pow(v,1.6), dd=Math.max(dur*((fx&&fx.hold)||1),.08);
   const g = fx&&set&&playZone(set,m,t,dd,lv0,fx.rel,Math.max(fx.cutMin||0,900+9000*v*v),fx.loop,fx.atk); PAN=null;
@@ -194,7 +194,7 @@ function keyTone(m,t,dur,v,inst){
       G.linearRampToValueAtTime(lv0*(up?1:.78),Math.max(a+.01,e-.03)); G.setTargetAtTime(0,e,.06); }catch(e){} }
   const r = g || synthTone(m,t,dur,.34*Math.pow(v,1.3)); OUT=null; return r;
 }
-function bassTone(m,t,dur,vel=1){ if(CAPTURE){ CAPTURE.push({k:'bass',n:m,t,d:dur,v:vel}); return null; } OUT=playing?bassBus:null; const r=bassTone_(m,t,dur,vel); OUT=null; return r; }
+function bassTone(m,t,dur,vel=1){ if(CAPTURE){ CAPTURE.push({k:'bass',n:m,t,d:dur,v:vel}); return null; } OUT=(playing||PREV)?bassBus:null; const r=bassTone_(m,t,dur,vel); OUT=null; return r; }
 let lastBassVoice=null;
 function bassTone_(m,t,dur,vel=1){
   const nm=state.bassSnd||'bass', fx=BASS_FX[nm]||BASS_FX.bass;   // シンセ系の音色で「エレキベース」のときは軽いシンセベースを使う
@@ -349,12 +349,20 @@ function preview(d){
   if(playing||d===null||d===undefined) return;
   whenRunning(()=>{ if(!playing) previewNow(d); });
 }
+let PREV=false;   // コードをタップして鳴らしているところ
+// タップで鳴らすときの左右の位置（演奏中の決め方と同じ：鍵盤は低い音ほど左、弦楽器は低い順に まん中・左・右…、ほかはまん中）
+function previewPan(m,srt){ const I=state.inst;
+  if(PIANOISH.has(I)) return Math.max(-.35,Math.min(.35,(m-62)/40));
+  if(/^strings/.test(I)){ const ri=srt.indexOf(m), wd=.45*Math.max(.15,Math.min(1,(m-36)/42)); return ri<=0 ? 0 : (ri%2 ? -wd : wd); }
+  return 0; }
 function previewNow(d){
   // チュートリアルの中でタップして鳴らすコードは、いつもピアノ＋ベース
   const sv=TUT.on?{inst:state.inst,bass:state.bass,bassSnd:state.bassSnd}:null; if(sv) Object.assign(state,{inst:'piano',bass:true,bassSnd:'bass'});
-  try{ const t=ctx.currentTime+.02, {tones,bass,strings}=chordNotes(d,null);
-    (strings||[...tones.slice(0,4),tones[9]]).filter(m=>m!=null).forEach((m,i,a)=>keyTone(m,t+i*.02,.9,i===a.length-1?.62:.5)); if(state.bass) bassTone(bass,t,.9); }
-  finally{ if(sv) Object.assign(state,sv); }
+  // 演奏中と同じ出口（楽器ごとのミックス）を通し、左右の位置も演奏中と同じ決め方で置く
+  PREV=true;
+  try{ const t=ctx.currentTime+.02, {tones,bass,strings}=chordNotes(d,null), ns=(strings||[...tones.slice(0,4),tones[9]]).filter(m=>m!=null), srt=[...new Set(ns)].sort((a,b)=>a-b);
+    ns.forEach((m,i,a)=>{ PAN_NEXT=previewPan(m,srt); keyTone(m,t+i*.02,.9,i===a.length-1?.62:.5); }); PAN_NEXT=null; if(state.bass) bassTone(bass,t,.9); }
+  finally{ PREV=false; if(sv) Object.assign(state,sv); }
 }
 
 // ---------- scheduler ----------
