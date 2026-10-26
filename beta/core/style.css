@@ -791,3 +791,27 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .mn span{pointer-events:none;overflow:hidden}
 .mn.drag{opacity:.85;box-shadow:0 3px 10px rgba(0,0,0,.3)}
 .mph{position:absolute;top:0;bottom:0;width:2px;background:var(--warn);pointer-events:none}
+/* メロディの数字（丸で囲む。コードの数字と区別する） */
+.mdeg{font-style:normal;display:inline-grid;place-items:center;width:1.45em;height:1.45em;border-radius:50%;border:1.5px solid currentColor;font-size:.82em;font-weight:800;line-height:1;font-family:var(--body)}
+.modepanel .mroll .mlab span{gap:1px;color:var(--ink)}
+.mn span{font-size:.72rem}
+.degrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.degrow span{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:1.2rem;color:var(--d)}
+.degrow small{font-size:.7rem;color:var(--muted)}
+.kb12{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;width:100%;max-width:420px}
+.kb12 button{height:64px;border-radius:6px;border:1.5px solid var(--line);background:var(--surface);display:flex;align-items:flex-end;justify-content:center;padding:0 0 4px;cursor:pointer}
+.kb12 button.kbb{background:var(--ink);border-color:var(--ink);height:48px}
+.kb12 button.mk{background:color-mix(in srgb,var(--d) 22%,var(--surface));border-color:var(--d)}
+.kb12 button.kbb.mk{background:var(--d)}
+.kb12 small{font-size:.6rem;color:var(--ink)}
+.pplay.on{opacity:.6}
+/* メロディガイド */
+.mguide{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:.72rem;flex:none}
+.mguide b{font-family:var(--display);font-size:.78rem}
+.mguide span{display:inline-flex;align-items:center;gap:4px}
+.mguide span::before{content:"";width:14px;height:3px;border-radius:2px;background:currentColor}
+.mguide small{flex-basis:100%;color:var(--muted)}
+.g-ok{color:var(--s)}.g-jump{color:var(--t)}.g-far{color:var(--d)}
+.mgsvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.mgsvg line{stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.mgsvg .g-ok{stroke:var(--s)}.mgsvg .g-jump{stroke:var(--t)}.mgsvg .g-far{stroke:var(--d);stroke-dasharray:4 3}
