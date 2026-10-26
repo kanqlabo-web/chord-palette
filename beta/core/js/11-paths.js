@@ -138,7 +138,7 @@ PD.mode=PD.mode||'c';
 const MODES=[['c','コード'],['r','リズム'],['m','メロディ']];
 const MODE_NEED={r:'R2',m:'M1'};
 function buildModeSw(){ if($('modeSw')) return; const top=document.querySelector('.app>.top'); if(!top) return;
-  const sw=document.createElement('div'); sw.id='modeSw'; sw.className='modesw'; sw.setAttribute('role','tablist'); top.appendChild(sw);
+  const sw=document.createElement('div'); sw.id='modeSw'; sw.className='modesw'; sw.setAttribute('role','tablist'); top.insertBefore(sw,top.querySelector('.badges'));
   const pn=document.createElement('div'); pn.id='modePanel'; pn.className='modepanel'; $('palette').after(pn); }
 function drawModeSw(){ const sw=$('modeSw'); if(!sw) return;
   sw.innerHTML=MODES.map(([k,lab])=>`<button role="tab" data-m="${k}" aria-selected="${PD.mode===k}">${MODE_NEED[k]&&!pDone(MODE_NEED[k])?ico('lock',11)+' ':''}${lab}</button>`).join('');
