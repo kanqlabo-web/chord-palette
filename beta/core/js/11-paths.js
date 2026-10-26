@@ -7,7 +7,8 @@ const PTH_KEY=STK('chord-palette-paths');
 const PD=(()=>{ let d={}; try{ d=JSON.parse(localStorage.getItem(PTH_KEY))||{}; }catch(e){} return d; })();
 PD.done=PD.done||{};
 PD.drum=PD.drum||{on:false, v:{36:Array(16).fill(0),38:Array(16).fill(0),42:Array(16).fill(0)}};
-PD.mel=PD.mel||{on:false, n:{}};   // n：マス（16分の位置）→ 行（ペンタトニックの何番目か）
+PD.mel=PD.mel||{on:false};   // notes：[{st：16分の位置, r：行（ペンタトニックの何番目か）, len：16分いくつ}]
+if(!PD.mel.notes){ const o=PD.mel.n||{}, ks=Object.keys(o).map(Number).sort((a,b)=>a-b); PD.mel.notes=ks.map((g,i)=>({st:g, r:o[g], len:Math.min(4,(ks[i+1]??g+4)-g)})); delete PD.mel.n; }   // 前の形（マス→行）から読みかえ
 const P_X='<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 const pthSave=()=>{ try{ localStorage.setItem(PTH_KEY,JSON.stringify(PD)); }catch(e){} };
 
@@ -156,9 +157,11 @@ function drawPanel(){ const el=$('modePanel'); if(!el) return; const k=PD.mode;
   k==='r' ? drawRhy(el) : drawMel(el); }
 
 const DR_ROWS=[[42,'ハイハット','h'],[38,'スネア','s'],[36,'キック','k']];
+// 縦の画面でも大きく見えるよう、1小節を「1・2拍」「3・4拍」の2段に折り返す
 function drawRhy(el){ const v=PD.drum.v;
+  const half=h=>`<div class="phalf"><div class="pbeats"><span></span>${[0,1].map(b=>`<b>${h*2+b+1}拍</b>`).join('')}</div>${DR_ROWS.map(([n,lab,c])=>`<div class="prow big ${c}"><span>${lab}</span>${v[n].slice(h*8,h*8+8).map((x,k)=>{ const s=h*8+k; return `<i data-n="${n}" data-s="${s}" class="${x?'on':''}${s%4===0?' bt':''}"></i>`; }).join('')}</div>`).join('')}</div>`;
   el.innerHTML=`<div class="mphead"><b>ドラム</b><small>マスをタップして音を置きます。この1小節を、曲のあいだくり返します。</small></div>
-    <div class="pgrid">${DR_ROWS.map(([n,lab,c])=>`<div class="prow big ${c}"><span>${lab}</span>${v[n].map((x,s)=>`<i data-n="${n}" data-s="${s}" class="${x?'on':''}${s%4===0?' bt':''}"></i>`).join('')}</div>`).join('')}</div>
+    <div class="pgrid">${half(0)}${half(1)}</div>
     <div class="chips"><button class="chip" data-on aria-pressed="${!!PD.drum.on}">曲のドラムをこれにする</button><button class="chip" data-pre="8">8ビートを入れる</button><button class="chip" data-pre="0">ぜんぶ消す</button></div>`;
   el.querySelectorAll('.pgrid i').forEach(c=>c.onclick=()=>{ const n=+c.dataset.n, s=+c.dataset.s; v[n][s]=v[n][s]?0:1; if(v[n][s]){ ensureAudio(); ensureSounds(); drum(n,ctx.currentTime+.01,1); } pthSave(); drawRhy(el); });
   el.querySelector('[data-on]').onclick=()=>{ PD.drum.on=!PD.drum.on; pthSave(); drawRhy(el); toast(PD.drum.on?'曲のドラムを、打ち込んだドラムにしました':'もとの伴奏のドラムに戻しました'); };
@@ -175,30 +178,71 @@ const melInst=()=>PD.mel.inst, melLoad=()=>{ if(!CHIP_V[melInst()]) loadSet(SETO
 const melPitch=r=>melBase()+PENT[r];
 function cellAt(g){ const L=slotSteps(), i=Math.floor(g/L), off=g%L; return cellsOf(i).find(x=>off>=x.off&&off<x.off+x.len); }
 function chordPcsAt(g){ const c=cellAt(g); if(!c||c.v==null) return null; const sp=specOf(c.v), r=(keyObj().pc+sp.o)%12; return (QUAL[sp.q]||[0,4,7]).map(x=>(r+x)%12); }
-const melLen=g=>{ const T=state.bars*slotSteps(); let k=2; while(k<4 && g+k<T && PD.mel.n[g+k]==null) k+=2; return k; };   // 次の音まで（長くても1拍）
-function drawMel(el){ const T=state.bars*slotSteps(), cols=T/2, kp=keyObj().pc, rows=PENT.map((_,r)=>r).reverse();
-  const sc=el.querySelector('.mscroll'), x0=sc?sc.scrollLeft:0;
-  el.innerHTML=`<div class="mphead"><b>メロディ</b><small>光っているのは、そのとき鳴っているコードの音です。拍の頭（太い線）は光る音にすると落ち着きます。</small></div>
-    <div class="mgrid"><div class="mlab"><span class="mch"></span>${rows.map(r=>`<span>${PENT_NM[r%5]}${r>=5?'<sup>↑</sup>':''}</span>`).join('')}</div><div class="mscroll"><div class="mcols" style="--n:${cols}">${
-      Array.from({length:cols},(_,c)=>{ const g=c*2, pcs=chordPcsAt(g)||[], ce=cellAt(g), head=ce&&ce.v!=null&&(g%slotSteps())===ce.off;
-        return `<div class="mcol${g%16===0?' bar':g%4===0?' bt':''}" data-c="${g}"><span class="mch">${head?bigHTML(ce.v):''}</span>${rows.map(r=>{ const lit=pcs.includes((kp+PENT[r])%12), on=PD.mel.n[g]===r;
-          return `<i data-g="${g}" data-r="${r}" class="${lit?'lit':''}${on?' on':''}"></i>`; }).join('')}</div>`; }).join('')}</div></div></div>
-    <div class="chips"><button class="chip" data-on aria-pressed="${!!PD.mel.on}">メロディを鳴らす</button><button class="chip" data-clr>ぜんぶ消す</button></div>
-    <div class="chips"><span class="small" style="align-self:center">楽器</span>${MEL_INSTS.map(([k,n])=>`<button class="chip" data-inst="${k}" aria-pressed="${melInst()===k}">${n}</button>`).join('')}</div>`;
+// ---- メロディの編集（PRO の演奏の編集画面と同じ考え方の、小さなピアノロール） ----
+// ・空いているマスをタップ：音を置く（長さは前に置いた音と同じ）　・音をタップ：消す
+// ・音をドラッグ：動かす（左右＝タイミング、上下＝高さ）　・音の右はしをドラッグ：長さを変える
+// ・同じときに鳴るのは1音だけ（歌と同じ）。重なった音は消える
+const MEL_ROWS_N=PENT.length;
+const MU={cw:16, G:2, last:2, hist:[]};   // cw：16分1つの幅　G：マス目（2＝8分、1＝16分）　last：前に置いた音の長さ
+const melT=()=>state.bars*slotSteps();
+const melSnap=()=>{ MU.hist.push(JSON.stringify(PD.mel.notes)); if(MU.hist.length>40) MU.hist.shift(); };
+function melFix(keep){ const T=melT(); let ns=PD.mel.notes.filter(n=>n.st>=0&&n.st<T);
+  ns.forEach(n=>n.len=Math.max(1,Math.min(n.len,T-n.st)));
+  if(keep) ns=ns.filter(n=>n===keep || n.st+n.len<=keep.st || n.st>=keep.st+keep.len);   // 動かした音と重なる音は消す
+  ns.sort((a,b)=>a.st-b.st); ns.forEach((n,i)=>{ const nx=ns[i+1]; if(nx && n.st+n.len>nx.st) n.len=Math.max(1,nx.st-n.st); });
+  PD.mel.notes=ns; }
+const melHear=r=>{ ensureAudio(); melLoad(); keyTone(melPitch(r),ctx.currentTime+.01,.32,.8,melInst()); };
+function drawMel(el){ const T=melT(), L=slotSteps(), kp=keyObj().pc, R=MEL_ROWS_N;
+  const sc0=el.querySelector('.mscroll'), x0=sc0?sc0.scrollLeft:0;
+  const W0=(el.clientWidth||360)-44; MU.cw=Math.max(16, Math.floor(W0/T)); const cw=MU.cw, W=T*cw;
+  const rowTop=r=>((R-1-r)/R*100)+'%', rh=(100/R)+'%';
+  // コードの音の帯（コードごと）と、小節番号・コード名
+  let lit='', head='';
+  for(let i=0;i<state.bars;i++) cellsOf(i).forEach(c=>{ if(c.v==null||!c.len) return; const x=(i*L+c.off)*cw, w=c.len*cw, sp=specOf(c.v), rt=(kp+sp.o)%12, pcs=(QUAL[sp.q]||[0,4,7]).map(q=>(rt+q)%12);
+    head+=`<span class="mchn" style="left:${x}px;width:${w}px">${bigHTML(c.v)}</span>`;
+    PENT.forEach((p,r)=>{ if(pcs.includes((kp+p)%12)) lit+=`<div class="mlit" style="left:${x}px;width:${w}px;top:${rowTop(r)};height:${rh}"></div>`; }); });
+  for(let b=0;b<T/16;b++) head+=`<span class="mbarn" style="left:${b*16*cw}px">${b+1}</span>`;
+  const notes=PD.mel.notes.map((n,i)=>`<div class="mn" data-i="${i}" style="left:${n.st*cw}px;width:${Math.max(6,n.len*cw-2)}px;top:${rowTop(n.r)};height:${rh}"><span>${PENT_NM[n.r%5]}</span></div>`).join('');
+  const lines=`repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px ${16*cw}px),repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 35%,transparent) 0 1px,transparent 1px ${4*cw}px),repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px ${MU.G*cw}px),repeating-linear-gradient(180deg,transparent 0 calc(100%/${R} - 1px),var(--line) calc(100%/${R} - 1px) calc(100%/${R}))`;
+  el.innerHTML=`<div class="mphead"><b>メロディ</b><small>空いているマスをタップで音を置く・音をタップで消す・ドラッグで動かす・右はしで長さ。光っているのは、いま鳴っているコードの音です。</small></div>
+    <div class="mtools"><button class="chip" data-undo${MU.hist.length?'':' disabled'}>元に戻す</button><button class="chip" data-g aria-pressed="${MU.G===1}">細かいマス</button><button class="chip" data-on aria-pressed="${!!PD.mel.on}">メロディを鳴らす</button>
+      <select class="chip" data-inst aria-label="メロディの楽器">${MEL_INSTS.map(([k,n])=>`<option value="${k}"${melInst()===k?' selected':''}>${n}</option>`).join('')}</select><button class="chip" data-clr>ぜんぶ消す</button></div>
+    <div class="mroll"><div class="mlab"><span class="mhd"></span>${PENT.map((_,r)=>R-1-r).map(r=>`<span>${PENT_NM[r%5]}${r>=5?'<sup>↑</sup>':''}</span>`).join('')}</div>
+      <div class="mscroll"><div class="mbox" style="width:${W}px"><div class="mhd">${head}</div>
+        <div class="marea" id="mArea" style="background-image:${lines}">${lit}${notes}<div class="mph" id="mPh" hidden></div></div></div></div></div>`;
   el.querySelector('.mscroll').scrollLeft=x0;
-  el.querySelectorAll('[data-inst]').forEach(b=>b.onclick=()=>{ PD.mel.inst=b.dataset.inst; pthSave(); ensureAudio(); melLoad(); drawMel(el); setTimeout(()=>keyTone(melPitch(5),ctx.currentTime+.05,.4,.8,melInst()),150); });
-  el.querySelectorAll('.mgrid i').forEach(c=>c.onclick=()=>{ const g=+c.dataset.g, r=+c.dataset.r;
-    if(PD.mel.n[g]===r) delete PD.mel.n[g]; else { PD.mel.n[g]=r; ensureAudio(); melLoad(); keyTone(melPitch(r),ctx.currentTime+.01,.3,.8,melInst()); }
-    PD.mel.on=true; pthSave(); drawMel(el); });
+  el.querySelector('[data-undo]').onclick=()=>{ const s=MU.hist.pop(); if(s==null) return; PD.mel.notes=JSON.parse(s); pthSave(); drawMel(el); };
+  el.querySelector('[data-g]').onclick=()=>{ MU.G=MU.G===1?2:1; MU.last=Math.max(MU.G,MU.last); drawMel(el); };
   el.querySelector('[data-on]').onclick=()=>{ PD.mel.on=!PD.mel.on; pthSave(); drawMel(el); };
-  el.querySelector('[data-clr]').onclick=()=>{ PD.mel.n={}; pthSave(); drawMel(el); };
-  melLoad();
+  el.querySelector('[data-clr]').onclick=()=>{ if(!PD.mel.notes.length) return; melSnap(); PD.mel.notes=[]; pthSave(); drawMel(el); };
+  el.querySelector('[data-inst]').onchange=e=>{ PD.mel.inst=e.target.value; pthSave(); ensureAudio(); melLoad(); setTimeout(()=>melHear(5),150); };
+  melBind(el); melLoad();
+}
+function melBind(el){ const A=$('mArea'); let D=null;
+  const pos=e=>{ const b=A.getBoundingClientRect(); return {s:(e.clientX-b.left)/MU.cw, r:MEL_ROWS_N-1-Math.max(0,Math.min(MEL_ROWS_N-1,Math.floor((e.clientY-b.top)/b.height*MEL_ROWS_N))), rh:b.height/MEL_ROWS_N}; };
+  const done=keep=>{ melFix(keep); PD.mel.on=true; pthSave(); drawMel(el); };
+  A.onpointerdown=e=>{ if(e.pointerType==='mouse'&&e.button!==0) return; const ne=e.target.closest('.mn'), p=pos(e);
+    if(ne){ e.preventDefault(); const n=PD.mel.notes[+ne.dataset.i], b=ne.getBoundingClientRect(), edge=(b.right-e.clientX)<Math.max(10,Math.min(18,b.width*.4));
+      try{ A.setPointerCapture(e.pointerId); }catch(_){}
+      D={mode:edge?'len':'press', n, el:ne, sx:e.clientX, sy:e.clientY, st:n.st, r:n.r, len:n.len, rh:p.rh, pid:e.pointerId, snap:JSON.stringify(PD.mel.notes)}; return; }
+    D={mode:'tap', sx:e.clientX, sy:e.clientY, p, pid:e.pointerId}; };   // 空いた所：指を動かしたらスクロール、動かさずに離したら音を置く
+  A.onpointermove=e=>{ if(!D||D.pid!==e.pointerId) return; const dx=e.clientX-D.sx, dy=e.clientY-D.sy, far=Math.hypot(dx,dy)>6, cw=MU.cw, G=MU.G;
+    if(D.mode==='tap'){ if(far) D=null; return; }
+    if(D.mode==='press'){ if(!far) return; D.mode='move'; D.el.classList.add('drag'); }
+    if(D.mode==='move'){ const st=Math.max(0,Math.min(melT()-1,D.st+Math.round(dx/cw/G)*G)), r=Math.max(0,Math.min(MEL_ROWS_N-1,D.r-Math.round(dy/D.rh)));
+      if(r!==D.n.r) melHear(r); D.n.st=st; D.n.r=r; D.el.style.left=(st*cw)+'px'; D.el.style.top=((MEL_ROWS_N-1-r)/MEL_ROWS_N*100)+'%'; D.el.querySelector('span').textContent=PENT_NM[r%5]; return; }
+    if(D.mode==='len'){ D.n.len=Math.max(1,Math.min(melT()-D.n.st,Math.round((D.len*cw+dx)/cw/G)*G||G)); D.el.style.width=Math.max(6,D.n.len*cw-2)+'px'; } };
+  const up=e=>{ const d=D; if(!d||d.pid!==e.pointerId) return; D=null;
+    if(d.mode==='tap'){ const G=MU.G, st=Math.floor(d.p.s/G)*G; if(st>=melT()) return; melSnap(); const n={st, r:d.p.r, len:MU.last}; PD.mel.notes.push(n); melHear(n.r); done(n); return; }
+    if(d.mode==='press'){ MU.hist.push(d.snap); PD.mel.notes=PD.mel.notes.filter(x=>x!==d.n); done(); return; }   // タップで消す
+    if(d.mode==='move'||d.mode==='len'){ MU.hist.push(d.snap); if(d.mode==='len') MU.last=d.n.len; done(d.n); } };
+  A.onpointerup=up; A.onpointercancel=e=>{ if(D&&D.mode==='tap') D=null; else up(e); };
 }
 // 再生中は、いま鳴っているマスを光らせる
 function pMark(g,t){ if(PD.mode==='c'||document.hidden) return; const el=$('modePanel'); if(!el) return;
   setTimeout(()=>{ if(!playing) return; el.querySelectorAll('.now').forEach(e=>e.classList.remove('now'));
     if(PD.mode==='r') el.querySelectorAll(`.pgrid i[data-s="${g%16}"]`).forEach(e=>e.classList.add('now'));
-    else if(g%2===0){ const c=el.querySelector(`.mcol[data-c="${g}"]`); if(c){ c.classList.add('now'); const sc=el.querySelector('.mscroll'), x=c.offsetLeft-sc.scrollLeft; if(x<0||x>sc.clientWidth-30) sc.scrollLeft=c.offsetLeft-30; } } },
+    else { const ph=$('mPh'), sc=el.querySelector('.mscroll'); if(ph&&sc){ const x=g*MU.cw; ph.hidden=false; ph.style.left=x+'px'; if(x<sc.scrollLeft||x>sc.scrollLeft+sc.clientWidth-20) sc.scrollLeft=x-20; } } },
     Math.max(0,(t-ctx.currentTime)*1000)); }
 
 // ---------- 再生に重ねる ----------
@@ -206,7 +250,7 @@ const _pthStep=scheduleStep;
 scheduleStep=function(g,t){
   const live=!TUT.on && !CAPTURE && !LIB.bk && !ENDED_EARLY;
   if(live) pMark(g,t);
-  if(live && PD.mel.on && pDone('M1')){ const r=PD.mel.n[g]; if(r!=null) keyTone(melPitch(r),t,melLen(g)*stepDur()*.92,.8,melInst()); }
+  if(live && PD.mel.on && pDone('M1')) PD.mel.notes.forEach(n=>{ if(n.st===g) keyTone(melPitch(n.r),t,n.len*stepDur()*.92,.8,melInst()); });
   if(!(live && PD.drum.on && pDone('R2'))) return _pthStep(g,t);
   const o=state.drum; DRUMS.__pth={name:'打ち込んだドラム', V:PD.drum.v, bass:(DRUMS[o]||{}).bass}; state.drum='__pth';   // この1マスのあいだだけ差しかえる
   try{ return _pthStep(g,t); } finally { state.drum=o; delete DRUMS.__pth; }

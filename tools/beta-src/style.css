@@ -759,3 +759,30 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .mlock{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;color:var(--muted)}
 .mlock h2{font-family:var(--display);font-weight:900;font-size:1.1rem;margin:0;color:var(--ink)}
 .mlock p{margin:0;font-size:.86rem;line-height:1.6}
+/* ドラム：2段に折り返す */
+.modepanel .pgrid{gap:14px}
+.phalf{display:flex;flex-direction:column;gap:6px}
+.pbeats{display:grid;grid-template-columns:4.2em 1fr 1fr;font-size:.7rem;color:var(--muted)}
+.pbeats b{font-weight:700;padding-left:2px}
+.phalf .prow,.phalf .prow:has(span){grid-template-columns:4.2em repeat(8,minmax(0,1fr));gap:3px}
+.modepanel .phalf .prow.big i{aspect-ratio:auto;height:min(6.4vh,56px);max-height:none;border-radius:7px}
+/* メロディ：ピアノロール */
+.mtools{display:flex;gap:6px;flex-wrap:wrap;flex:none}
+.mtools .chip{flex:none;padding:6px 10px;font-size:.78rem}
+.mtools .chip:disabled{opacity:.45}
+.mtools select.chip{appearance:none;-webkit-appearance:none;padding-right:12px}
+.mroll{flex:1;min-height:0;display:flex;gap:4px}
+.modepanel .mroll .mlab{display:flex;flex-direction:column;gap:0;width:2.4em;flex:none}
+.modepanel .mroll .mlab span{flex:1;min-height:0;height:auto;display:flex;align-items:center;font-size:.72rem;color:var(--muted)}
+.modepanel .mroll .mlab .mhd{flex:none;height:22px}
+.modepanel .mroll .mscroll{flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;display:block}
+.mbox{height:100%;display:flex;flex-direction:column}
+.mbox>.mhd{position:relative;height:22px;flex:none}
+.mchn{position:absolute;top:0;height:22px;display:flex;align-items:center;padding-left:6px;font-size:.78rem;font-weight:800;white-space:nowrap;overflow:hidden}
+.mbarn{position:absolute;top:-2px;font-size:.58rem;color:var(--muted);transform:translateX(-50%)}
+.marea{position:relative;flex:1;min-height:0;background-color:var(--surface);border:1px solid var(--line);border-radius:8px;touch-action:pan-x;overflow:hidden}
+.mlit{position:absolute;background:color-mix(in srgb,var(--warn) 30%,transparent);pointer-events:none}
+.mn{position:absolute;margin-left:1px;border-radius:6px;background:var(--d);color:#fff;display:flex;align-items:center;padding-left:4px;font-size:.66rem;font-weight:800;touch-action:none;cursor:grab;box-shadow:inset -4px 0 0 rgba(0,0,0,.18);box-sizing:border-box;border:1px solid color-mix(in srgb,var(--d) 70%,#000)}
+.mn span{pointer-events:none;overflow:hidden}
+.mn.drag{opacity:.85;box-shadow:0 3px 10px rgba(0,0,0,.3)}
+.mph{position:absolute;top:0;bottom:0;width:2px;background:var(--warn);pointer-events:none}
