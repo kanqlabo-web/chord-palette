@@ -331,8 +331,11 @@ const SEEN_KEY=STK('chord-palette-tutseen');
 let TSEEN=new Set(); try{ TSEEN=new Set(JSON.parse(localStorage.getItem(SEEN_KEY)||'[]')); }catch(e){}
 function markSeen(){ const sl=DECK[TUT.i]; if(!sl||sl.sid==null||TSEEN.has(sl.sid)) return; TSEEN.add(sl.sid); try{ localStorage.setItem(SEEN_KEY,JSON.stringify([...TSEEN])); }catch(e){} }
 function revTerms(){ const st=$('tutStage'); if(!st) return []; const tx=st.textContent, now=curSid(), ok=a=>a<now&&TSEEN.has(a);
-  const L=GLOSS.filter(g=>ok(g.at) && (g.q?g.q(st):g.re.test(tx)));
-  return L; }
+  const has=new Set(GLOSS.filter(g=>ok(g.at) && (g.q?g.q(st):g.re.test(tx))));
+  // 出した説明の中に出てくる言葉も、いっしょに出す（「コード進行＝コードを順番に…」なら「コード」も）
+  const inText=(g,x)=>g.re?g.re.test(x):x.includes(g.t.replace(/（.*）/,''));
+  for(let more=true;more;){ more=false; GLOSS.forEach(g=>{ if(!has.has(g)&&ok(g.at)&&[...has].some(h=>inText(g,h.x))){ has.add(g); more=true; } }); }
+  return GLOSS.filter(g=>has.has(g)); }
 function openRev(){ const L=revTerms(); if(!L.length) return;
   $('revList').innerHTML=L.map(g=>`<div class="revitem"><b>${g.t}</b><p>${g.x}</p>${g.c?`<div class="revchips">${g.c()}</div>`:''}</div>`).join('');
   $('revWrap').hidden=false; bindHear(); }
