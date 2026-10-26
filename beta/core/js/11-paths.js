@@ -167,7 +167,11 @@ function drawRhy(el){ const v=PD.drum.v;
 
 // メロディ：キーのペンタトニック（ド・レ・ミ・ソ・ラ）を2オクターブ。8分のマス（16分の位置で偶数だけ）
 const PENT=[0,2,4,7,9,12,14,16,19,21], PENT_NM=['ド','レ','ミ','ソ','ラ'];
-const melBase=()=>{ const pc=keyObj().pc; return 72+(pc>5?pc-12:pc); };
+const melBase=()=>{ const pc=keyObj().pc; return 60+(pc>5?pc-12:pc); };   // ド〜ラ↑ ＝ C4〜A5（歌の高さ）
+// メロディの楽器（鉄琴は倍音が濁ってずれて聞こえるので使わない）
+const MEL_INSTS=[['sax','サックス'],['trumpet','トランペット'],['epiano','エレピ'],['piano','ピアノ'],['chipsq','8bit']];
+PD.mel.inst=MEL_INSTS.some(x=>x[0]===PD.mel.inst)?PD.mel.inst:'sax';
+const melInst=()=>PD.mel.inst, melLoad=()=>{ if(!CHIP_V[melInst()]) loadSet(SETOF(melInst())); };
 const melPitch=r=>melBase()+PENT[r];
 function cellAt(g){ const L=slotSteps(), i=Math.floor(g/L), off=g%L; return cellsOf(i).find(x=>off>=x.off&&off<x.off+x.len); }
 function chordPcsAt(g){ const c=cellAt(g); if(!c||c.v==null) return null; const sp=specOf(c.v), r=(keyObj().pc+sp.o)%12; return (QUAL[sp.q]||[0,4,7]).map(x=>(r+x)%12); }
@@ -179,14 +183,16 @@ function drawMel(el){ const T=state.bars*slotSteps(), cols=T/2, kp=keyObj().pc, 
       Array.from({length:cols},(_,c)=>{ const g=c*2, pcs=chordPcsAt(g)||[], ce=cellAt(g), head=ce&&ce.v!=null&&(g%slotSteps())===ce.off;
         return `<div class="mcol${g%16===0?' bar':g%4===0?' bt':''}" data-c="${g}"><span class="mch">${head?bigHTML(ce.v):''}</span>${rows.map(r=>{ const lit=pcs.includes((kp+PENT[r])%12), on=PD.mel.n[g]===r;
           return `<i data-g="${g}" data-r="${r}" class="${lit?'lit':''}${on?' on':''}"></i>`; }).join('')}</div>`; }).join('')}</div></div></div>
-    <div class="chips"><button class="chip" data-on aria-pressed="${!!PD.mel.on}">メロディを鳴らす</button><button class="chip" data-clr>ぜんぶ消す</button></div>`;
+    <div class="chips"><button class="chip" data-on aria-pressed="${!!PD.mel.on}">メロディを鳴らす</button><button class="chip" data-clr>ぜんぶ消す</button></div>
+    <div class="chips"><span class="small" style="align-self:center">楽器</span>${MEL_INSTS.map(([k,n])=>`<button class="chip" data-inst="${k}" aria-pressed="${melInst()===k}">${n}</button>`).join('')}</div>`;
   el.querySelector('.mscroll').scrollLeft=x0;
+  el.querySelectorAll('[data-inst]').forEach(b=>b.onclick=()=>{ PD.mel.inst=b.dataset.inst; pthSave(); ensureAudio(); melLoad(); drawMel(el); setTimeout(()=>keyTone(melPitch(5),ctx.currentTime+.05,.4,.8,melInst()),150); });
   el.querySelectorAll('.mgrid i').forEach(c=>c.onclick=()=>{ const g=+c.dataset.g, r=+c.dataset.r;
-    if(PD.mel.n[g]===r) delete PD.mel.n[g]; else { PD.mel.n[g]=r; ensureAudio(); loadSet('glock'); keyTone(melPitch(r),ctx.currentTime+.01,.3,.8,'glock'); }
+    if(PD.mel.n[g]===r) delete PD.mel.n[g]; else { PD.mel.n[g]=r; ensureAudio(); melLoad(); keyTone(melPitch(r),ctx.currentTime+.01,.3,.8,melInst()); }
     PD.mel.on=true; pthSave(); drawMel(el); });
   el.querySelector('[data-on]').onclick=()=>{ PD.mel.on=!PD.mel.on; pthSave(); drawMel(el); };
   el.querySelector('[data-clr]').onclick=()=>{ PD.mel.n={}; pthSave(); drawMel(el); };
-  loadSet('glock');
+  melLoad();
 }
 // 再生中は、いま鳴っているマスを光らせる
 function pMark(g,t){ if(PD.mode==='c'||document.hidden) return; const el=$('modePanel'); if(!el) return;
@@ -200,7 +206,7 @@ const _pthStep=scheduleStep;
 scheduleStep=function(g,t){
   const live=!TUT.on && !CAPTURE && !LIB.bk && !ENDED_EARLY;
   if(live) pMark(g,t);
-  if(live && PD.mel.on && pDone('M1')){ const r=PD.mel.n[g]; if(r!=null) keyTone(melPitch(r),t,melLen(g)*stepDur()*.92,.8,'glock'); }
+  if(live && PD.mel.on && pDone('M1')){ const r=PD.mel.n[g]; if(r!=null) keyTone(melPitch(r),t,melLen(g)*stepDur()*.92,.8,melInst()); }
   if(!(live && PD.drum.on && pDone('R2'))) return _pthStep(g,t);
   const o=state.drum; DRUMS.__pth={name:'打ち込んだドラム', V:PD.drum.v, bass:(DRUMS[o]||{}).bass}; state.drum='__pth';   // この1マスのあいだだけ差しかえる
   try{ return _pthStep(g,t); } finally { state.drum=o; delete DRUMS.__pth; }
@@ -216,6 +222,8 @@ levelClear=function(n){ const b=pOpenSet(), r=_pthClear.apply(this,arguments), o
   if(n===3 && !PD.inv3){ PD.inv3=true; pthSave(); pInvite('リズムとメロディの道もあります','コードの道と同じように、好きなところから進められます。ドラムやメロディを自分で作れるようになります。',pOpenSet().filter(x=>x[0]!=='C')); }
   else if(opened.length) pInvite('ほかの道のレベルが開きました','',opened);
   return r; };
+// 上の「Key」「楽器」の表示はなくしたので、キーのレベルのあとの案内からも外す
+if(WHERE[4]) WHERE[4]=WHERE[4].filter(st=>!/keyBadge/.test(String(st.t)));
 // レベルの解説は、コードの画面で行う（課題でパレットやマスを使うため）
 const _pthOpenTut=openTutorial; openTutorial=function(){ if(PD.mode!=='c') setMode('c'); return _pthOpenTut.apply(this,arguments); };
 // 曲（コード・小節数・キー）が変わったら、メロディの画面も描き直す
