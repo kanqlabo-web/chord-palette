@@ -1,4 +1,18 @@
 <title>{{TITLE}}</title>
+<script>
+/* 意図しない拡大（ピンチ・ダブルタップ）を禁止。iPhone の Safari は viewport の user-scalable=no を無視するので、ジェスチャー自体を止める。
+   アプリの読み込みが途中で失敗しても効くように、いちばん最初に置く。音を並べる画面の2本指の拡大（07-tracks.js）は自前で touch を見るので、これとは別に動く */
+(function(){
+  ['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
+  document.addEventListener('touchmove',e=>{ if(e.touches.length>1 || (e.scale!==undefined && e.scale!==1)) e.preventDefault(); },{passive:false});
+  // すばやく2回目に触れたときは拡大させず、その代わりにタップ（クリック）として扱う
+  let last=0;
+  document.addEventListener('touchend',e=>{ const now=Date.now(), quick=now-last<350; last=now;
+    if(!quick || e.touches.length) return; const t=e.target; if(t.closest && t.closest('input,textarea,select,.proll')) return;
+    e.preventDefault(); const c=t.closest && !t.closest('.slot,.tile') && t.closest('button,a,label,[data-hear],[data-pair],[data-kd],.opt,.tc,.chip,[role=button]'); if(c) c.click(); },{passive:false});
+  document.addEventListener('wheel',e=>{ if(e.ctrlKey) e.preventDefault(); },{passive:false});   // PCのトラックパッドのピンチ
+})();
+</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

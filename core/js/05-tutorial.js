@@ -809,15 +809,7 @@ $('lvBig').onclick=()=>{ if(LVL<LV_MAX) startLevel(LVL+1); };
 $('moodTip').onclick=e=>{ $('moodTip').hidden=true; MOODPOP.pending=false; if(e.target.id!=='moodTipX') startLevel(MOODPOP.level); };
 window.addEventListener('resize',()=>{ if(TUT.on && !$('coach').hidden && DECK[TUT.i].coach) runCoach(DECK[TUT.i].coach); });
 
-// ピンチズームを禁止（iPhone の Safari は viewport の指定を無視するので、ジェスチャー自体を止める）
-['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
-// iPhone のダブルタップ拡大を確実に止める：すばやく2回目に触れたときは拡大させず、その代わりにタップ（クリック）として扱う
-let lastTouchEnd=0;
-document.addEventListener('touchend',e=>{ const now=Date.now(), quick=now-lastTouchEnd<350; lastTouchEnd=now;
-  if(!quick || e.touches.length) return; const t=e.target; if(t.closest && t.closest('input,textarea,select,.proll')) return;
-  e.preventDefault(); const c=t.closest && !t.closest('.slot,.tile') && t.closest('button,a,label,[data-hear],[data-pair],[data-kd],.opt,.tc,.chip,[role=button]'); if(c) c.click(); },{passive:false});
-document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});
-document.addEventListener('wheel',e=>{ if(e.ctrlKey) e.preventDefault(); },{passive:false});   // PCのトラックパッドのピンチ
+// ピンチ・ダブルタップでの拡大の禁止は head.html（いちばん最初に読むところ）にある
 document.body.classList.toggle('pro',!!state.pro);
 if(!state.sOff){ const st=styleNow(); if(st) state.sOff=sOffOf(st); }
 renderAll(); frame(); ensureSounds();

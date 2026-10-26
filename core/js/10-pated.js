@@ -37,7 +37,7 @@ const peSnap=()=>peDrum()?1:PE.grid;
 #peEd .ptb svg{width:16px;height:16px}
 #peEd .psep{width:1px;height:22px;background:var(--line);margin:0 2px}
 #peEd .pgap{flex:1}
-#peEd select.ptb{padding:0 6px;font-weight:700}
+#peEd select.ptb{padding:0 6px;font-weight:700;font-size:16px}   /* iPhone は16px未満の入力欄で自動拡大するため */
 #peEd .pbody{flex:1;min-height:0;display:flex;position:relative}
 #peScenes{display:none}
 #peEd .pmain{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}

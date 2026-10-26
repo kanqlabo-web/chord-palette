@@ -5,6 +5,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>body{margin:0}[hidden]{display:none!important}</style>
 <title>コード進行パレット</title>
+<script>
+/* 意図しない拡大（ピンチ・ダブルタップ）を禁止。iPhone の Safari は viewport の user-scalable=no を無視するので、ジェスチャー自体を止める。
+   アプリの読み込みが途中で失敗しても効くように、いちばん最初に置く。音を並べる画面の2本指の拡大（07-tracks.js）は自前で touch を見るので、これとは別に動く */
+(function(){
+  ['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
+  document.addEventListener('touchmove',e=>{ if(e.touches.length>1 || (e.scale!==undefined && e.scale!==1)) e.preventDefault(); },{passive:false});
+  // すばやく2回目に触れたときは拡大させず、その代わりにタップ（クリック）として扱う
+  let last=0;
+  document.addEventListener('touchend',e=>{ const now=Date.now(), quick=now-last<350; last=now;
+    if(!quick || e.touches.length) return; const t=e.target; if(t.closest && t.closest('input,textarea,select,.proll')) return;
+    e.preventDefault(); const c=t.closest && !t.closest('.slot,.tile') && t.closest('button,a,label,[data-hear],[data-pair],[data-kd],.opt,.tc,.chip,[role=button]'); if(c) c.click(); },{passive:false});
+  document.addEventListener('wheel',e=>{ if(e.ctrlKey) e.preventDefault(); },{passive:false});   // PCのトラックパッドのピンチ
+})();
+</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -69,7 +83,7 @@
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>すべての機能で始める</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
     <p class="mpnote">音の出るアプリです。iPhoneで音が出ないときは、消音モードを解除してください。</p>
-    <p class="appver">ver 5.24.022（2026-10-27）</p>
+    <p class="appver">ver 5.24.023（2026-10-27）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -138,7 +152,7 @@
   <div class="sec"><h3>リセット</h3>
     <div class="chips"><button class="chip" id="resetSlots">マスを空にする</button><button class="chip" id="resetAll">設定もすべて最初に戻す</button></div>
     <p class="small" style="margin:0">セーブデータとマイ演奏は消えません。</p></div>
-  <p class="appver">ver 5.24.022（2026-10-27）</p>
+  <p class="appver">ver 5.24.023（2026-10-27）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -194,10 +208,10 @@
 <script src="core/js/02-mypattern.js?v=7af0d949"></script>
 <script src="core/js/03-ui.js?v=cbdcbbf4"></script>
 <script src="core/js/04-audio.js?v=94cb3842"></script>
-<script src="core/js/05-tutorial.js?v=b321b6a9"></script>
+<script src="core/js/05-tutorial.js?v=7cc28798"></script>
 <script src="core/js/06-save.js?v=20df99dd"></script>
 <script src="core/js/07-tracks.js?v=c23f6af0"></script>
 <script src="core/js/09-phrase.js?v=892bcec2"></script>
-<script src="core/js/10-pated.js?v=24a42cb4"></script>
+<script src="core/js/10-pated.js?v=aca03d9f"></script>
 </body>
 </html>
