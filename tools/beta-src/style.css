@@ -674,3 +674,56 @@ body.tutlite .slot.warn{box-shadow:none}
 body.tutlite .tile.dual{background:color-mix(in srgb,var(--muted) 10%,var(--surface));border-color:color-mix(in srgb,var(--muted) 40%,var(--line))}
 body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body.tutlite .slothead .right,body.tutlite .pages{visibility:hidden}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}.tutstage .a,.tutstage .pop,.brk span,.flow .arr{animation-duration:.01s!important;animation-delay:0s!important}}
+/* ベータ版（試作）：3本の道の地図と、ドラム・メロディの打ち込み */
+.pthmap{position:fixed;inset:0;z-index:55;background:var(--bg);overflow-y:auto;padding:14px max(12px,env(safe-area-inset-left,0px)) 24px}
+.pthmap>*{max-width:560px;margin-left:auto;margin-right:auto}
+.phead{display:flex;justify-content:space-between;align-items:flex-start}
+.phead h2{font-family:var(--display);font-weight:900;font-size:1.3rem;margin:2px 0 0}
+.psub{font-size:.85rem;color:var(--muted);line-height:1.6;margin:6px auto 12px}
+.ptools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.ptool{border:2px solid var(--warn);background:color-mix(in srgb,var(--warn) 16%,var(--surface));border-radius:14px;padding:10px 8px;font-family:var(--display);font-weight:900;font-size:.9rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.ptool small{font-family:var(--body);font-weight:400;font-size:.68rem;color:var(--muted)}
+.ptool.lock{border-color:var(--line);background:var(--surface);color:var(--muted)}
+.pcols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pcol{display:flex;flex-direction:column;gap:6px}
+.pcol h3{font-family:var(--display);font-size:.9rem;margin:0 0 2px;text-align:center}
+.pcol:nth-child(1) h3{color:var(--t)}.pcol:nth-child(2) h3{color:var(--s)}.pcol:nth-child(3) h3{color:var(--d)}
+.plv{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:7px 6px;text-align:left;display:flex;flex-direction:column;gap:2px;cursor:pointer;min-height:64px}
+.plv i{font-style:normal;font-size:.62rem;color:var(--muted);letter-spacing:.04em}
+.plv b{font-size:.78rem;line-height:1.35}
+.plv .pst{font-size:.6rem;color:var(--muted);line-height:1.4}
+.plv .pst.go{color:var(--s);font-weight:700}.plv .pst.done{color:var(--warnText);font-weight:700}
+.plv.done{border-color:var(--warn)}
+.plv.lock{opacity:.6;background:var(--lane)}
+.pdemo{width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:10px 8px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.pdemo small{font-size:.75rem;color:var(--muted)}
+.prow{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:2px;width:100%;align-items:center}
+.prow:has(span){grid-template-columns:4.2em repeat(16,minmax(0,1fr))}
+.prow span{font-size:.62rem;color:var(--muted);white-space:nowrap}
+.prow i{height:18px;border-radius:4px;background:var(--lane);border-left:1px solid transparent}
+.prow i.bt{box-shadow:inset 2px 0 0 var(--muted)}
+.prow i.on{background:var(--ink)}
+.prow.k i.on{background:var(--t)}.prow.s i.on{background:var(--d)}.prow.h i.on{background:var(--s)}
+.prow i.now{outline:2px solid var(--warn);outline-offset:-1px}
+.prow.big i{height:34px;cursor:pointer}
+.pgrid{display:flex;flex-direction:column;gap:5px;margin:8px 0 10px}
+.mdemo{display:flex;flex-direction:column;gap:2px;width:70%}
+.mrow{display:grid;grid-template-columns:2em repeat(8,1fr);gap:2px;align-items:center}
+.mrow span,.mlab span{font-size:.7rem;color:var(--muted)}
+.mrow i,.mcol i{height:20px;border-radius:4px;background:var(--lane)}
+.mrow i.lit,.mcol i.lit{background:color-mix(in srgb,var(--warn) 38%,var(--surface))}
+.mrow i.bt{box-shadow:inset 2px 0 0 var(--muted)}
+.mgrid{display:flex;gap:4px;margin:8px 0 10px}
+.mlab{display:flex;flex-direction:column;gap:2px;flex:none;width:2.2em}
+.mlab span{height:26px;display:flex;align-items:center}
+.mlab sup{font-size:.55rem}
+.mscroll{overflow-x:auto;flex:1;min-width:0}
+.mcols{display:grid;grid-template-columns:repeat(var(--n),26px);gap:2px}
+.mcol{display:flex;flex-direction:column;gap:2px}
+.mcol i{height:26px;cursor:pointer}
+.mcol.bt i{box-shadow:inset 2px 0 0 var(--muted)}
+.mcol.bar i{box-shadow:inset 3px 0 0 var(--ink)}
+.mcol i.on{background:var(--d)}
+.mcol i.lit.on{background:var(--d)}
+.psheet .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.lvnext.pthbtn{border-style:dashed}
