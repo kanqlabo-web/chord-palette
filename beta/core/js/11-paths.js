@@ -157,9 +157,9 @@ function drawPanel(){ const el=$('modePanel'); if(!el) return; const k=PD.mode;
   k==='r' ? drawRhy(el) : drawMel(el); }
 
 const DR_ROWS=[[42,'ハイハット','h'],[38,'スネア','s'],[36,'キック','k']];
-// 縦の画面でもマスが小さくならないよう、1小節を1段のまま横にスクロールする（メロディの画面と同じ）
+// 1小節を1段のまま、画面の幅に収める（スクロールしない。マスは縦に大きく）
 function drawRhy(el){ const v=PD.drum.v, sc0=el.querySelector('.dscroll'), x0=sc0?sc0.scrollLeft:0;
-  el.innerHTML=`<div class="mphead"><b>ドラム</b><small>マスをタップして音を置きます。この1小節を、曲のあいだくり返します。横にスクロールできます。</small></div>
+  el.innerHTML=`<div class="mphead"><b>ドラム</b><small>マスをタップして音を置きます。この1小節を、曲のあいだくり返します。</small></div>
     <div class="droll"><div class="dlab"><span></span>${DR_ROWS.map(([n,lab])=>`<span>${lab}</span>`).join('')}</div>
       <div class="dscroll"><div class="pgrid dgrid"><div class="dbeats">${[1,2,3,4].map(b=>`<b>${b}拍</b>`).join('')}</div>${DR_ROWS.map(([n,lab,c])=>`<div class="prow big ${c}">${v[n].map((x,s)=>`<i data-n="${n}" data-s="${s}" class="${x?'on':''}${s%4===0?' bt':''}"></i>`).join('')}</div>`).join('')}</div></div></div>
     <div class="chips"><button class="chip" data-on aria-pressed="${!!PD.drum.on}">曲のドラムをこれにする</button><button class="chip" data-pre="8">8ビートを入れる</button><button class="chip" data-pre="0">ぜんぶ消す</button></div>`;
@@ -242,7 +242,7 @@ function melBind(el){ const A=$('mArea'); let D=null;
 // 再生中は、いま鳴っているマスを光らせる
 function pMark(g,t){ if(PD.mode==='c'||document.hidden) return; const el=$('modePanel'); if(!el) return;
   setTimeout(()=>{ if(!playing) return; el.querySelectorAll('.now').forEach(e=>e.classList.remove('now'));
-    if(PD.mode==='r'){ const cs=el.querySelectorAll(`.pgrid i[data-s="${g%16}"]`); cs.forEach(e=>e.classList.add('now')); const sc=el.querySelector('.dscroll'), c=cs[0]; if(sc&&c){ const x=c.offsetLeft; if(x<sc.scrollLeft||x>sc.scrollLeft+sc.clientWidth-c.offsetWidth) sc.scrollLeft=x-8; } }
+    if(PD.mode==='r'){ const cs=el.querySelectorAll(`.pgrid i[data-s="${g%16}"]`); cs.forEach(e=>e.classList.add('now')); }
     else { const ph=$('mPh'), sc=el.querySelector('.mscroll'); if(ph&&sc){ const x=g*MU.cw; ph.hidden=false; ph.style.left=x+'px'; if(x<sc.scrollLeft||x>sc.scrollLeft+sc.clientWidth-20) sc.scrollLeft=x-20; } } },
     Math.max(0,(t-ctx.currentTime)*1000)); }
 
