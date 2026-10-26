@@ -182,7 +182,7 @@ function drawModeSw(){ const sw=$('modeSw'); if(!sw) return;
   sw.querySelectorAll('button').forEach(b=>b.onclick=()=>setMode(b.dataset.m)); }
 function setMode(k){ buildModeSw(); PD.mode=k; pthSave(); closeAll(); const pm=$('pthMap'); if(pm) pm.hidden=true;
   document.body.classList.toggle('mode-r',k==='r'); document.body.classList.toggle('mode-m',k==='m');
-  drawModeSw(); drawPanel(); if(k==='c') renderAll(); else buildMenu(); }
+  drawModeSw(); drawPanel(); if(k==='c') renderAll(); else buildMenu(); histBtns(); }
 function drawPanel(){ const el=$('modePanel'); if(!el) return; const k=PD.mode;
   if(k==='c'){ el.innerHTML=''; return; }
   if(!pDone(MODE_NEED[k])){ const need=(k==='r'?['R1','R2']:['M1']).find(x=>!pDone(x)), l=P_ALL().find(x=>x.id===need);
@@ -227,10 +227,12 @@ function cellAt(g){ const L=slotSteps(), i=Math.floor(g/L), off=g%L; return cell
 // ・空いているマスをタップ：音を置く（長さは前に置いた音と同じ）　・音をタップ：消す
 // ・音をドラッグ：動かす（左右＝タイミング、上下＝高さ）　・音の右はしをドラッグ：長さを変える
 // ・同じときに鳴るのは1音だけ（歌と同じ）。重なった音は消える
-const MU={cw:16, G:2, last:2, hist:[]};   // cw：16分1つの幅　G：マス目（2＝8分、1＝16分）　last：前に置いた音の長さ
+const MU={cw:16, G:2, last:2, hist:[], fut:[]};   // hist・fut：元に戻す・やり直す（下の ↶ ↷ ボタン）   // cw：16分1つの幅　G：マス目（2＝8分、1＝16分）　last：前に置いた音の長さ
 PD.mel.guide=PD.mel.guide!==false;
 const melT=()=>state.bars*slotSteps();
-const melSnap=()=>{ MU.hist.push(JSON.stringify(PD.mel.notes)); if(MU.hist.length>40) MU.hist.shift(); };
+const melSnap=s=>{ MU.hist.push(s||JSON.stringify(PD.mel.notes)); if(MU.hist.length>40) MU.hist.shift(); MU.fut=[]; };
+function melUndo(dir){ const from=dir<0?MU.hist:MU.fut, to=dir<0?MU.fut:MU.hist, x=from.pop(); if(x==null) return; to.push(JSON.stringify(PD.mel.notes)); PD.mel.notes=JSON.parse(x); melSnapRows(); pthSave(); drawPanel(); }
+function melClear(){ if(!PD.mel.notes.length) return; melSnap(); PD.mel.notes=[]; pthSave(); drawPanel(); toast('メロディをぜんぶ消しました（↶で戻せます）'); }
 function melFix(keep){ const T=melT(); let ns=PD.mel.notes.filter(n=>n.st>=0&&n.st<T);
   ns.forEach(n=>n.len=Math.max(1,Math.min(n.len,T-n.st)));
   if(keep) ns=ns.filter(n=>n===keep || n.st+n.len<=keep.st || n.st>=keep.st+keep.len);   // 動かした音と重なる音は消す
@@ -264,20 +266,12 @@ function drawMel(el){ melSnapRows(); const T=melT(), L=slotSteps(), kp=keyObj().
   const lines=`repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px ${16*cw}px),repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 35%,transparent) 0 1px,transparent 1px ${4*cw}px),repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px ${MU.G*cw}px),repeating-linear-gradient(180deg,transparent 0 calc(100%/${R} - 1px),var(--line) calc(100%/${R} - 1px) calc(100%/${R}))`;
   const gline = !guide ? '' : `<div class="mguide"><b>メロディガイド</b><span class="g-ok">となりの音</span><span class="g-jump">跳べる音（1・3・5どうし）</span><small>${ref?'最後に置いた音の次に行ける音を、色で出しています。':'音を置くと、次に行ける音を色で出します。'}</small></div>`;
   el.innerHTML=`<div class="mphead"><b>メロディ</b><small>空いているマスをタップで音を置く・音をタップで消す・ドラッグで動かす・右はしで長さ。${lit4?'光っているのは、いま鳴っているコードの音です。':''}</small></div>
-    <div class="mtools"><button class="chip" data-undo${MU.hist.length?'':' disabled'}>元に戻す</button><button class="chip" data-g aria-pressed="${MU.G===1}">細かいマス</button>${pDone('M2')?`<button class="chip" data-five aria-pressed="${melFive()}">5つの音だけ</button>`:''}${pDone('M3')?`<button class="chip" data-guide aria-pressed="${!!PD.mel.guide}">ガイド</button>`:''}<button class="chip" data-on aria-pressed="${!!PD.mel.on}">メロディを鳴らす</button>
-      <select class="chip" data-inst aria-label="メロディの楽器">${MEL_INSTS.map(([k,n])=>`<option value="${k}"${melInst()===k?' selected':''}>${n}</option>`).join('')}</select><button class="chip" data-clr>ぜんぶ消す</button></div>
     ${gline}
     <div class="mroll"><div class="mlab"><span class="mhd"></span>${[...ROWS].reverse().map(o=>`<span>${melLab(o)}</span>`).join('')}</div>
       <div class="mscroll"><div class="mbox" style="width:${W}px"><div class="mhd">${head}</div>
         <div class="marea" id="mArea" style="background-image:${lines}">${lit}${gband}${notes}<div class="mph" id="mPh" hidden></div></div></div></div></div>`;
   el.querySelector('.mscroll').scrollLeft=x0;
-  el.querySelector('[data-undo]').onclick=()=>{ const s=MU.hist.pop(); if(s==null) return; PD.mel.notes=JSON.parse(s); melSnapRows(); pthSave(); drawMel(el); };
-  el.querySelector('[data-g]').onclick=()=>{ MU.G=MU.G===1?2:1; MU.last=Math.max(MU.G,MU.last); drawMel(el); };
-  const f=el.querySelector('[data-five]'); if(f) f.onclick=()=>{ melSnap(); PD.mel.five=!melFive(); const had=PD.mel.notes.some(n=>!melRows().includes(n.o)); melSnapRows(); melFix(); pthSave(); drawMel(el); if(had) toast('4と7の音は、すぐ下の音に動かしました'); };
-  const gb=el.querySelector('[data-guide]'); if(gb) gb.onclick=()=>{ PD.mel.guide=!PD.mel.guide; pthSave(); drawMel(el); };
-  el.querySelector('[data-on]').onclick=()=>{ PD.mel.on=!PD.mel.on; pthSave(); drawMel(el); };
-  el.querySelector('[data-clr]').onclick=()=>{ if(!PD.mel.notes.length) return; melSnap(); PD.mel.notes=[]; pthSave(); drawMel(el); };
-  el.querySelector('[data-inst]').onchange=e=>{ PD.mel.inst=e.target.value; pthSave(); ensureAudio(); melLoad(); setTimeout(()=>melHear(7),150); };
+  histBtns();
   melBind(el); melLoad();
 }
 function melBind(el){ const A=$('mArea'), ROWS=melRows(), R=ROWS.length; let D=null;
@@ -296,8 +290,8 @@ function melBind(el){ const A=$('mArea'), ROWS=melRows(), R=ROWS.length; let D=n
     if(D.mode==='len'){ D.n.len=Math.max(1,Math.min(melT()-D.n.st,Math.round((D.len*cw+dx)/cw/G)*G||G)); D.el.style.width=Math.max(6,D.n.len*cw-2)+'px'; } };
   const up=e=>{ const d=D; if(!d||d.pid!==e.pointerId) return; D=null;
     if(d.mode==='tap'){ const G=MU.G, st=Math.floor(d.p.s/G)*G; if(st>=melT()) return; melSnap(); const n={st, o:d.p.o, len:MU.last}; PD.mel.notes.push(n); MU.ref=n; melHear(n.o); done(n); return; }
-    if(d.mode==='press'){ MU.hist.push(d.snap); PD.mel.notes=PD.mel.notes.filter(x=>x!==d.n); MU.ref=PD.mel.notes.filter(x=>x.st<d.n.st).pop()||null; done(); return; }   // タップで消す
-    if(d.mode==='move'||d.mode==='len'){ MU.ref=d.n; MU.hist.push(d.snap); if(d.mode==='len') MU.last=d.n.len; done(d.n); } };
+    if(d.mode==='press'){ melSnap(d.snap); PD.mel.notes=PD.mel.notes.filter(x=>x!==d.n); MU.ref=PD.mel.notes.filter(x=>x.st<d.n.st).pop()||null; done(); return; }   // タップで消す
+    if(d.mode==='move'||d.mode==='len'){ MU.ref=d.n; melSnap(d.snap); if(d.mode==='len') MU.last=d.n.len; done(d.n); } };
   A.onpointerup=up; A.onpointercancel=e=>{ if(D&&D.mode==='tap') D=null; else up(e); };
 }
 // 再生中は、いま鳴っているマスを光らせる
@@ -362,7 +356,7 @@ function pthMenu(){ const k=PD.mode, dr=$('drawer'); if(!dr) return;
       return `<button data-lv="${l.id}"${open||done?'':' class="lock"'}><span class="lvtag">${pName(l.id)}</span><b>${l.name}${done?'<span class="chapdone" aria-label="クリア">✓</span>':''}</b><small>${!l.deck?'準備中':!pOpen(l.id)?pReq(l.id).filter(r=>!pDone(r)).map(pName).join('・')+' が必要':(l.unlock||'')}</small></button>`; }).join('')}</div></details>
     <button class="lvnext pthbtn" style="margin-top:8px" data-map><i>試作</i><b>3本の道の地図</b><small>コード・リズム・メロディのつながりを見る</small></button></div>`;
   const setHTML = k==='r' ? (pDone('R2')?`<div class="sec"><h3>ドラム</h3><div class="chips" data-set="on"></div><h3 style="margin-top:10px">ドラムの音</h3><div class="chips" data-set="kit"></div></div>`:'')
-    : (pDone('M1')?`<div class="sec"><h3>メロディ</h3><div class="chips" data-set="mon"></div><h3 style="margin-top:10px">メロディの楽器</h3><div class="chips" data-set="inst"></div>${pDone('M2')?'<h3 style="margin-top:10px">使う音</h3><div class="chips" data-set="five"></div>':''}${pDone('M3')?'<h3 style="margin-top:10px">メロディガイド</h3><div class="chips" data-set="guide"></div>':''}</div>`:'');
+    : (pDone('M1')?`<div class="sec"><h3>メロディ</h3><div class="chips" data-set="mon"></div><h3 style="margin-top:10px">メロディの楽器</h3><div class="chips" data-set="inst"></div>${pDone('M2')?'<h3 style="margin-top:10px">使う音</h3><div class="chips" data-set="five"></div>':''}${pDone('M3')?'<h3 style="margin-top:10px">メロディガイド</h3><div class="chips" data-set="guide"></div>':''}<h3 style="margin-top:10px">マスの細かさ</h3><div class="chips" data-set="grid"></div><div class="chips" style="margin-top:10px"><button class="chip" data-mclr>メロディをぜんぶ消す</button></div></div>`:'');
   box.hidden=false; box.innerHTML=lvHTML+setHTML;
   const redraw=()=>{ pthSave(); drawPanel(); pthMenu(); };
   const C=(sel,opts,cur,f)=>{ const el=box.querySelector(`[data-set="${sel}"]`); if(el) chips(el,opts,cur,v=>{ f(v); redraw(); }); };
@@ -370,13 +364,18 @@ function pthMenu(){ const k=PD.mode, dr=$('drawer'); if(!dr) return;
   C('kit',Object.entries(KITS).map(([id,n])=>[id,n]),state.kit,v=>{ state.kit=v; ensureSounds(); save(); if(!playing) previewKit(); });
   C('mon',[[true,'メロディを鳴らす'],[false,'鳴らさない']],!!PD.mel.on,v=>PD.mel.on=v);
   C('inst',MEL_INSTS,melInst(),v=>{ PD.mel.inst=v; ensureAudio(); melLoad(); setTimeout(()=>melHear(7),150); });
-  C('five',[[true,'5つの音だけ'],[false,'7つの音']],melFive(),v=>{ PD.mel.five=v; melSnapRows(); melFix(); });
+  C('five',[[true,'5つの音だけ'],[false,'7つの音']],melFive(),v=>{ melSnap(); PD.mel.five=v; melSnapRows(); melFix(); });
   C('guide',[[true,'表示する'],[false,'表示しない']],!!PD.mel.guide,v=>PD.mel.guide=v);
+  C('grid',[[2,'8分（ふつう）'],[1,'16分（細かい）']],MU.G,v=>{ MU.G=v; MU.last=Math.max(MU.G,MU.last); });
+  const mc=box.querySelector('[data-mclr]'); if(mc) mc.onclick=()=>{ drawer.classList.remove('on'); scrim.classList.remove('on'); melClear(); };
   box.querySelectorAll('[data-go],[data-lv]').forEach(b=>b.onclick=()=>{ const id=b.dataset.go||b.dataset.lv, l=P_ALL().find(x=>x.id===id);
     if(!l||!l.deck){ toast('このレベルは準備中です'); return; } if(!pOpen(id)&&!pDone(id)){ toast(`${pReq(id).filter(r=>!pDone(r)).map(pName).join('・')} をクリアすると挑戦できます`); return; }
     drawer.classList.remove('on'); scrim.classList.remove('on'); openTutorial(pDeck(l)); });
   box.querySelector('[data-map]').onclick=openPathMap;
 }
+// メロディの画面では、下の ↶ ↷ ボタンでメロディを元に戻す・やり直す
+const _pthHistGo=histGo; histGo=function(dir){ if(PD.mode==='m' && !TUT.on) return melUndo(dir); return _pthHistGo.apply(this,arguments); };
+const _pthHistBtns=histBtns; histBtns=function(){ const r=_pthHistBtns.apply(this,arguments); if(PD.mode==='m' && !TUT.on && $('undoBtn')){ $('undoBtn').disabled=!MU.hist.length; $('redoBtn').disabled=!MU.fut.length; } return r; };
 const _pthMenu=buildMenu; buildMenu=function(){ const r=_pthMenu.apply(this,arguments); try{ pthMenu(); }catch(e){} return r; };
 
 buildModeSw(); setMode(PD.mode);
