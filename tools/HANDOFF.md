@@ -17,7 +17,7 @@
 - `tools/src/` が本体: `head.html`・`style.css`・`body.html`・`js/01-music.js` 〜 `js/06-save.js`
   - JS はふつうの `<script>` を順に読む形。トップレベルの変数は共有されるが、**関数の巻き上げはファイルをまたがない**（後のファイルの関数を、前のファイルの読み込み中に呼ばない）
   - 保存データのキーは `STK('chord-palette-v3')` のように書く（版ごとに `''`・`cpbeta-`・`cplec-` が前に付く）。音源の場所は `CP.snd`
-- `tools/beta-src/`: ベータ版で**差しかえるファイルだけ**を置く（同じ名前のファイルが本体の代わりになる。5.24.000 で全部 src へ移したので、今は空）
+- `tools/beta-src/`: ベータ版で**差しかえるファイルだけ**を置く（同じ名前のファイルが本体の代わりになる。5.24.003 から: チュートリアルのステージ分け・おさらいパネル・進み具合バーを試し中で、`body.html`・`style.css`・`js/05-tutorial.js` を差しかえ。本体を直すときは、この3つにも同じ直しを入れる）
 - `tools/lecture-src/`: 講義版で足すファイル（`js/08-lecture.js`）。本体＋これ
 - `tools/build.py` が、`index.html`＋`core/`、`beta/index.html`＋`beta/core/`（差しかえ分だけ）、`lecture/` を作る。`window.CP_CONF={store,snd,kind}` で版を見分ける。最後に JS をつなげて `node --check` する
 - **直すのは tools/ の中だけ**（index.html や core/ を直接直さない）
