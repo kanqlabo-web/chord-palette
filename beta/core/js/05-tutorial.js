@@ -330,21 +330,8 @@ function curSid(){ const sl=DECK[TUT.i]||{}, n=DECK.lv||1; return sl.sid!=null?s
 const SEEN_KEY=STK('chord-palette-tutseen');
 let TSEEN=new Set(); try{ TSEEN=new Set(JSON.parse(localStorage.getItem(SEEN_KEY)||'[]')); }catch(e){}
 function markSeen(){ const sl=DECK[TUT.i]; if(!sl||sl.sid==null||TSEEN.has(sl.sid)) return; TSEEN.add(sl.sid); try{ localStorage.setItem(SEEN_KEY,JSON.stringify([...TSEEN])); }catch(e){} }
-// 7つのコード：ページにコードが出てきたら、そのコードを解説する（進行そのものの解説は出さない）（作り方のページ＝104 で紹介ずみ）
-const CHORD_AT=104, ROLE_AT=108, DEG_Q=['','m','m','','','m','dim'];
-const CHORD_X=[['明るいコード。','役割はトニック（主役）。'],['暗いコード。','役割はサブドミナント（脇役）。'],['暗いコード。','トニック（主役）にも、ドミナント（緊張感）にもなれます。'],
-  ['明るいコード。','役割はサブドミナント（脇役）。'],['明るいコード。','役割はドミナント（緊張感）。'],['暗いコード。','役割はトニック（主役）。ときどきサブドミナントにも。'],
-  ['少し変わった暗いコード。','役割はドミナント（緊張感）。ときどきサブドミナントにも。']];
-const CHORD_R=['T','S','T dash','S','D','T','D'];
-function pageDegs(st){ const set=new Set();
-  st.querySelectorAll('.tc[data-hear]').forEach(e=>{ const d=+e.dataset.hear; if(e.dataset.hear!==''&&d>=0&&d<7) set.add(d); });
-  const w=document.createTreeWalker(st,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&&n.parentElement.closest('.eyebrow,.tc,.L')?2:1});
-  while(w.nextNode()){ const v=w.currentNode.nodeValue; for(const m of v.matchAll(DEG_RE)){ const d=+m[1]-1; if(/ステージ ?$/.test(v.slice(0,m.index))) continue; if(!m[3]&&!m[4]&&(m[2]||'')===DEG_Q[d]) set.add(d); } }
-  return set; }
 function revTerms(){ const st=$('tutStage'); if(!st) return []; const tx=st.textContent, now=curSid(), ok=a=>a<now&&TSEEN.has(a);
   const L=GLOSS.filter(g=>ok(g.at) && (g.q?g.q(st):g.re.test(tx)));
-  if(ok(CHORD_AT)){ const ds=pageDegs(st);
-    [...ds].sort((a,b)=>a-b).forEach(d=>L.push({t:`${nmN(d)}（${al(d)}）`, x:CHORD_X[d][0]+(ok(ROLE_AT)?CHORD_X[d][1]:''), c:()=>tc(d,ok(ROLE_AT)?CHORD_R[d]:(DEG_Q[d]?'dark':'bright'))})); }
   return L; }
 function openRev(){ const L=revTerms(); if(!L.length) return;
   $('revList').innerHTML=L.map(g=>`<div class="revitem"><b>${g.t}</b><p>${g.x}</p>${g.c?`<div class="revchips">${g.c()}</div>`:''}</div>`).join('');
