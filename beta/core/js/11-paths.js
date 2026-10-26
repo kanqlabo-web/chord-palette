@@ -157,12 +157,13 @@ function drawPanel(){ const el=$('modePanel'); if(!el) return; const k=PD.mode;
   k==='r' ? drawRhy(el) : drawMel(el); }
 
 const DR_ROWS=[[42,'ハイハット','h'],[38,'スネア','s'],[36,'キック','k']];
-// 縦の画面でも大きく見えるよう、1小節を「1・2拍」「3・4拍」の2段に折り返す
-function drawRhy(el){ const v=PD.drum.v;
-  const half=h=>`<div class="phalf"><div class="pbeats"><span></span>${[0,1].map(b=>`<b>${h*2+b+1}拍</b>`).join('')}</div>${DR_ROWS.map(([n,lab,c])=>`<div class="prow big ${c}"><span>${lab}</span>${v[n].slice(h*8,h*8+8).map((x,k)=>{ const s=h*8+k; return `<i data-n="${n}" data-s="${s}" class="${x?'on':''}${s%4===0?' bt':''}"></i>`; }).join('')}</div>`).join('')}</div>`;
-  el.innerHTML=`<div class="mphead"><b>ドラム</b><small>マスをタップして音を置きます。この1小節を、曲のあいだくり返します。</small></div>
-    <div class="pgrid">${half(0)}${half(1)}</div>
+// 縦の画面でもマスが小さくならないよう、1小節を1段のまま横にスクロールする（メロディの画面と同じ）
+function drawRhy(el){ const v=PD.drum.v, sc0=el.querySelector('.dscroll'), x0=sc0?sc0.scrollLeft:0;
+  el.innerHTML=`<div class="mphead"><b>ドラム</b><small>マスをタップして音を置きます。この1小節を、曲のあいだくり返します。横にスクロールできます。</small></div>
+    <div class="droll"><div class="dlab"><span></span>${DR_ROWS.map(([n,lab])=>`<span>${lab}</span>`).join('')}</div>
+      <div class="dscroll"><div class="pgrid dgrid"><div class="dbeats">${[1,2,3,4].map(b=>`<b>${b}拍</b>`).join('')}</div>${DR_ROWS.map(([n,lab,c])=>`<div class="prow big ${c}">${v[n].map((x,s)=>`<i data-n="${n}" data-s="${s}" class="${x?'on':''}${s%4===0?' bt':''}"></i>`).join('')}</div>`).join('')}</div></div></div>
     <div class="chips"><button class="chip" data-on aria-pressed="${!!PD.drum.on}">曲のドラムをこれにする</button><button class="chip" data-pre="8">8ビートを入れる</button><button class="chip" data-pre="0">ぜんぶ消す</button></div>`;
+  el.querySelector('.dscroll').scrollLeft=x0;
   el.querySelectorAll('.pgrid i').forEach(c=>c.onclick=()=>{ const n=+c.dataset.n, s=+c.dataset.s; v[n][s]=v[n][s]?0:1; if(v[n][s]){ ensureAudio(); ensureSounds(); drum(n,ctx.currentTime+.01,1); } pthSave(); drawRhy(el); });
   el.querySelector('[data-on]').onclick=()=>{ PD.drum.on=!PD.drum.on; pthSave(); drawRhy(el); toast(PD.drum.on?'曲のドラムを、打ち込んだドラムにしました':'もとの伴奏のドラムに戻しました'); };
   el.querySelectorAll('[data-pre]').forEach(b=>b.onclick=()=>{ const p=b.dataset.pre==='8'; DR_ROWS.forEach(([n])=>PD.drum.v[n]=p?nz(P8[n]):Array(16).fill(0)); if(p) PD.drum.on=true; pthSave(); drawRhy(el); });
@@ -241,7 +242,7 @@ function melBind(el){ const A=$('mArea'); let D=null;
 // 再生中は、いま鳴っているマスを光らせる
 function pMark(g,t){ if(PD.mode==='c'||document.hidden) return; const el=$('modePanel'); if(!el) return;
   setTimeout(()=>{ if(!playing) return; el.querySelectorAll('.now').forEach(e=>e.classList.remove('now'));
-    if(PD.mode==='r') el.querySelectorAll(`.pgrid i[data-s="${g%16}"]`).forEach(e=>e.classList.add('now'));
+    if(PD.mode==='r'){ const cs=el.querySelectorAll(`.pgrid i[data-s="${g%16}"]`); cs.forEach(e=>e.classList.add('now')); const sc=el.querySelector('.dscroll'), c=cs[0]; if(sc&&c){ const x=c.offsetLeft; if(x<sc.scrollLeft||x>sc.scrollLeft+sc.clientWidth-c.offsetWidth) sc.scrollLeft=x-8; } }
     else { const ph=$('mPh'), sc=el.querySelector('.mscroll'); if(ph&&sc){ const x=g*MU.cw; ph.hidden=false; ph.style.left=x+'px'; if(x<sc.scrollLeft||x>sc.scrollLeft+sc.clientWidth-20) sc.scrollLeft=x-20; } } },
     Math.max(0,(t-ctx.currentTime)*1000)); }
 

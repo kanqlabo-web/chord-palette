@@ -759,13 +759,18 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .mlock{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;color:var(--muted)}
 .mlock h2{font-family:var(--display);font-weight:900;font-size:1.1rem;margin:0;color:var(--ink)}
 .mlock p{margin:0;font-size:.86rem;line-height:1.6}
-/* ドラム：2段に折り返す */
-.modepanel .pgrid{gap:14px}
-.phalf{display:flex;flex-direction:column;gap:6px}
-.pbeats{display:grid;grid-template-columns:4.2em 1fr 1fr;font-size:.7rem;color:var(--muted)}
-.pbeats b{font-weight:700;padding-left:2px}
-.phalf .prow,.phalf .prow:has(span){grid-template-columns:4.2em repeat(8,minmax(0,1fr));gap:3px}
-.modepanel .phalf .prow.big i{aspect-ratio:auto;height:min(6.4vh,56px);max-height:none;border-radius:7px}
+/* ドラム：1段のまま横にスクロール（1マス 40px 以上） */
+.droll{flex:1;min-height:0;display:flex;gap:6px;align-items:center}
+.dlab{display:flex;flex-direction:column;gap:8px;flex:none;width:4.4em}
+.dlab span{height:min(11vh,84px);display:flex;align-items:center;font-size:.74rem;color:var(--muted)}
+.dlab span:first-child{height:18px}
+.dscroll{flex:1;min-width:0;overflow-x:auto;overflow-y:hidden}
+.modepanel .pgrid.dgrid{display:flex;flex-direction:column;gap:8px;width:max(100%,calc(16 * 42px));margin:0}
+.dbeats{display:grid;grid-template-columns:repeat(4,1fr);height:18px;font-size:.72rem;color:var(--muted)}
+.dbeats b{font-weight:700;padding-left:3px}
+.modepanel .dgrid .prow,.modepanel .dgrid .prow:has(span){grid-template-columns:repeat(16,minmax(0,1fr));gap:3px}
+.modepanel .dgrid .prow.big i{aspect-ratio:auto;height:min(11vh,84px);max-height:none;border-radius:7px}
+.modepanel .dgrid .prow i:nth-child(4n+1){margin-left:3px}
 /* メロディ：ピアノロール */
 .mtools{display:flex;gap:6px;flex-wrap:wrap;flex:none}
 .mtools .chip{flex:none;padding:6px 10px;font-size:.78rem}
