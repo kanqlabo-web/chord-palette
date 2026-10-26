@@ -176,8 +176,12 @@ function lofiDrum(dest){ if(!(LOFI&&LOFI.ctx===ctx)) lofiBase(); let n=LOFI.drum
   const inp=ctx.createGain(); const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3200;
   const sh=ctx.createWaveShaper(); const k=2.5, N=1024, c=new Float32Array(N); for(let i=0;i<N;i++){ const x=i/(N-1)*2-1; c[i]=Math.tanh(k*x)/Math.tanh(k); } sh.curve=c;
   const g=ctx.createGain(); g.gain.value=.8; inp.connect(lp); lp.connect(sh); sh.connect(g); g.connect(dest); LOFI.drum.set(dest,inp); return inp; }
+// 人が弾くような強弱のゆらぎ：1音ずつバラバラではなく、数秒かけてゆっくり強く・弱くなる（コード・ベース・ドラムで別々に）
+const HUM={}, HUM_AMP=.08;
+function humV(k,t){ if(CAPTURE||!playing) return 1; const c=HUM[k]||(HUM[k]={p1:Math.random()*6.28,p2:Math.random()*6.28,T1:3.3+Math.random(),T2:8+Math.random()*2});
+  return 1+HUM_AMP*(Math.sin(t*6.283/c.T1+c.p1)*.6+Math.sin(t*6.283/c.T2+c.p2)*.4); }
 function keyTone(m,t,dur,v,inst){
-  v=Math.max(.05,Math.min(1,v)); if(CAPTURE){ CAPTURE.push({k:PARTN===0?'key':'key'+(PARTN+1),n:m,t,d:dur,v}); return null; }
+  v*=humV('k',t); v=Math.max(.05,Math.min(1,v)); if(CAPTURE){ CAPTURE.push({k:PARTN===0?'key':'key'+(PARTN+1),n:m,t,d:dur,v}); return null; }
   const BUS=PARTN===0?compBus:PARTN===1?compBus2:xBus(PARTN);
   const I=inst||state.inst;
   if(I==='epcity' && LOADED.epcity){
@@ -207,7 +211,7 @@ function keyTone(m,t,dur,v,inst){
       G.linearRampToValueAtTime(lv0*(up?1:.78),Math.max(a+.01,e-.03)); G.setTargetAtTime(0,e,.06); }catch(e){} }
   const r = g || synthTone(m,t,dur,.34*Math.pow(v,1.3),I); OUT=null; return r;
 }
-function bassTone(m,t,dur,vel=1){ if(CAPTURE){ CAPTURE.push({k:'bass',n:m,t,d:dur,v:vel}); return null; } OUT=(playing||PREV)?bassBus:null; const r=bassTone_(m,t,dur,vel); OUT=null; return r; }
+function bassTone(m,t,dur,vel=1){ vel*=humV('b',t); if(CAPTURE){ CAPTURE.push({k:'bass',n:m,t,d:dur,v:vel}); return null; } OUT=(playing||PREV)?bassBus:null; const r=bassTone_(m,t,dur,vel); OUT=null; return r; }
 let lastBassVoice=null;
 function bassTone_(m,t,dur,vel=1){
   const nm=state.bassSnd||'bass', fx=BASS_FX[nm]||BASS_FX.bass;   // シンセ系の音色で「エレキベース」のときは軽いシンセベースを使う
@@ -230,7 +234,7 @@ function legatoVoice(lv,m,t,dur){
   lv.end=t+dur;
 }
 const DRUM_VOL={36:1.15,37:.75,75:1.1,38:.9,42:.3,44:.3,46:.22,49:.28,51:.26,50:.8,47:.8,45:.85};
-function drum(note,t,vel=1){ if(CAPTURE){ CAPTURE.push({k:'drum',n:note,t,d:.1,v:vel}); return; } OUT=playing?drumBus:null; drumIn(note,t,vel); OUT=null; }
+function drum(note,t,vel=1){ vel*=humV('d',t); if(CAPTURE){ CAPTURE.push({k:'drum',n:note,t,d:.1,v:vel}); return; } OUT=playing?drumBus:null; drumIn(note,t,vel); OUT=null; }
 // ドラムの音ごとの大きさの調整（ほかのキットとそろえる）。シティポップのドラムは JCLive の音源で、キックとスネアが大きめなので下げる
 const KIT_GAIN={city:{36:.62,38:.75,42:.55,44:.6,46:.5,49:.3,51:.4}};
 const KIT_ALIAS={cityA:'city',cityB:'city',cityD:'city'}; const fixKit=v=>KIT_ALIAS[v]||v;
