@@ -294,31 +294,18 @@ const MOOD=[
   {coach:'mood'},
 ];
 // ================= ステージ（長いレベルを区切る）と、おさらい =================
-// レベル1・2（続けて進む）とレベル3を、いくつかのステージに分ける。区切りごとに「ステージクリア」とおさらいを出す
+// レベル1・2（続けて進む）とレベル3を、いくつかのステージに分ける。次のステージに入ったら、左上のバーで「クリア」を短く知らせる
 SLIDES.forEach((s,i)=>s.stg=i<5?1:i<7?2:i<11?3:4);
 MOOD.forEach((s,i)=>s.stg=i<5?1:i<10?2:3);
 const STG12={label:'LEVEL 1・2', goal:'自分の進行を作る', list:[
-  {name:'コードって何？', done:'コードの見方がわかりましたね。', recap:['コード＝いくつかの音を同時に鳴らした「和音」','ド〜シを 1〜7 の数字で表す','「m」が付くと暗いコード']},
-  {name:'並べて鳴らす', done:'自分でコードを鳴らせましたね。', recap:['コードをマスへドラッグして置く','再生ボタンで鳴らせる','だいたい4つか8つで一周する']},
-  {name:'コードの役割', done:'コードの役割がわかりましたね。', recap:['コードには、それぞれ役割がある','<b style="color:var(--t)">T</b> は主役、<b style="color:var(--s)">S</b> は脇役、<b style="color:var(--d)">D</b> は緊張感','T→S→D→T のような流れで、進行ができる']},
+  {name:'コードって何？'},
+  {name:'並べて鳴らす'},
+  {name:'コードの役割'},
   {name:'実例で聴く', recap:['有名な進行も、T・S・D の流れでできている','お手本どおりでなくても、聴いてよければOK']}]};
 const STAGES={1:STG12, 2:STG12, 3:{label:'LEVEL 3', goal:'ねらった雰囲気の進行を作る', list:[
-  {name:'4つのコツ', done:'雰囲気づくりのコツがわかりましたね。', recap:['明るいコードと暗いコードの割合','始まりと終わりのコード','コードどうしの距離と、リズム・テンポ']},
-  {name:'実例を聴く', done:'いろいろな雰囲気を聴けましたね。', recap:['明るい・切ない・エモいは、コード選びで作れる','4つのコツを組み合わせると、ねらった雰囲気に近づく']},
+  {name:'4つのコツ'},
+  {name:'実例を聴く'},
   {name:'作ってみる'}]}};
-const IC_CHECK='<svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const stageClear=(n,k)=>({stageClear:k, stg:k, html:()=>{ const S=STAGES[n], st=S.list[k-1], rest=S.list.length-k;
-  return `<div class="stgok pop" style="--dl:.1">${IC_CHECK}</div>
-     <div class="eyebrow a" style="--dl:.3">STAGE ${k} CLEAR</div>
-     <h2 class="a" style="--dl:.4">ステージクリア！</h2>
-     ${st.done?`<p class="a" style="--dl:.5">${st.done}</p>`:''}
-     <div class="okcard recap a" style="--dl:.7"><b>ここまでのおさらい</b>${st.recap.map(t=>`<span>・${t}</span>`).join('')}</div>
-     ${rest>0?`<p class="sub a" style="--dl:.9">あと${rest}ステージで、${S.label} クリアです</p>`:''}`; }});
-// ステージが変わる所に「ステージクリア」をはさむ（レベル1の最後は、レベル2へ進む前にはさむ）
-function addStageClears(n,d){ if(!STAGES[n]) return d; const out=[]; let prev=0;
-  d.forEach(x=>{ if(x.stg&&prev&&x.stg!==prev) out.push(stageClear(n,prev)); if(x.stg) prev=x.stg; out.push(x); });
-  if(n===1&&prev) out.push(stageClear(n,prev));
-  return out; }
 // おさらい：いま開いているページに出てくる言葉だけを出す（上から下りてくるパネル）
 const roleIs=(st,L)=>[...st.querySelectorAll('.tc b,.roles .L,.flow .tc b')].some(b=>b.textContent.trim()===L);
 const GLOSS=[
@@ -589,7 +576,7 @@ const LEVELS=[
 // レベルの解説を組み立てる（タイトル → 本編 → クリア）。review=true は見返し用（クリア扱いにしない）
 function levelDeck(n,review){
   const l=LEVELS[n-1], body=l.deck().map(x=>({...x})); body.forEach(x=>{ delete x.last; delete x.finish; });
-  const d = addStageClears(n, n===1 ? body : [lvTitle(n), ...body]);
+  const d = n===1 ? body : [lvTitle(n), ...body];
   if(!l.noClear){ const c={...lvClear(n)}; c.finish=()=>{ endTutorial(n!==1); if(n===1){ state.guide=false; renderAll(); } if(!review){ levelClear(n); showWhere(n); } }; if(review){ c.html=()=>`<div class="eyebrow a">LEVEL ${n}</div><h2 class="a" style="--dl:.1">見返し終わりました</h2>`; c.finish=()=>endTutorial(true); } d.push(c); }
   d.lv=n; d.review=!!review; d.onEnd=()=>endTutorial(true);
   if(n===1 && !review) d.onEnd=()=>{ levelClear(1); DECK=levelDeck(2); TUT.lvNow=2; showSlide(0); };   // そのままレベル2へ
@@ -619,18 +606,19 @@ let DECK=SLIDES;
 function tutDots(){
   const n=DECK.lv||(DECK[0]&&DECK[0].stg?1:0), S=STAGES[n], cur=DECK[TUT.i]||{}, el=$('tutDots');
   let segs, top, sub;
-  if(!S){ const real=DECK.filter(x=>!x.stageClear), f=Math.max(0,real.indexOf(cur)+1)/real.length;
+  if(!S){ const real=DECK, f=Math.max(0,real.indexOf(cur)+1)/real.length;
     segs=[{f, done:f>=1&&!!cur.last}]; top=n?`<b>LEVEL ${n}</b>`:''; sub=n&&LEVELS[n-1]?LEVELS[n-1].name:''; }
   else {
     let k=0; for(let j=TUT.i;j>=0&&!k;j--) k=DECK[j].stg||0; for(let j=TUT.i;j<DECK.length&&!k;j++) k=DECK[j].stg||0;
     const allDone=!DECK.some(x=>x.stg); if(allDone) k=S.list.length;   // おさらいだけのデッキ（レベル3の最後など）
-    const items=DECK.filter(x=>x.stg===k&&!x.stageClear), pos=items.indexOf(cur);
-    const f=allDone||cur.stageClear||(cur.last&&!cur.stg)?1:Math.max(0,pos+1)/Math.max(1,items.length);
-    segs=S.list.map((_,j)=>j+1<k?{f:1,done:1}:j+1===k?{f,done:f>=1}:{f:0});
+    const items=DECK.filter(x=>x.stg===k), pos=items.indexOf(cur);
+    const f=allDone||(cur.last&&!cur.stg)?1:Math.max(0,pos+1)/Math.max(1,items.length);
+    segs=S.list.map((_,j)=>j+1<k?{f:1,done:1}:j+1===k?{f,done:allDone||(cur.last&&!cur.stg)}:{f:0});   // 黄色にするのは、次のステージに入ってから
     top=`${S.label}<b>ステージ ${k} / ${S.list.length}</b>`; sub=`${S.list[k-1].name}<i>|</i>ゴール：${S.goal}`; }
-  const key=segs.map(s=>s.f).join(), f0=TUT.lastBar&&TUT.lastBar.n===n&&TUT.lastBar.segs.length===segs.length?TUT.lastBar.segs:segs.map(()=>0);
-  el.innerHTML=`<div class="tp-top">${top}</div><div class="tp-bar">${segs.map((s,j)=>`<i class="${s.done?'done':''}" style="--f:${s.f};--f0:${Math.min(f0[j]||0,s.f)}"></i>`).join('')}${IC_FLAG}</div>`; $('tpSub').innerHTML=sub;
-  TUT.lastBar={n,segs:segs.map(s=>s.f)};
+  const same=TUT.lastBar&&TUT.lastBar.S===S&&TUT.lastBar.segs.length===segs.length, f0=same?TUT.lastBar.segs:segs.map(()=>0);
+  const kNow=S?segs.filter(x=>x.done).length:0, cleared=S&&same&&kNow>TUT.lastBar.k?kNow:0;   // いまステージを終えたところ
+  el.innerHTML=`<div class="tp-top">${top}</div><div class="tp-bar">${segs.map((s,j)=>`<i class="${s.done?'done':''}" style="--f:${s.f};--f0:${Math.min(f0[j]||0,s.f)}"></i>`).join('')}${IC_FLAG}</div>`; $('tpSub').innerHTML=(cleared?`<em class="tp-clear">ステージ${cleared} クリア！</em>`:'')+sub;
+  TUT.lastBar={S,k:kNow,segs:segs.map(s=>s.f)};
   closeRev(); const rb=$('tutRev'); if(rb) rb.hidden=!revTerms().length;
 }
 function tutStopAudio(){ TUT.onLoopEnd=null; TUT.playingEx=null; document.querySelectorAll('.tut [data-ti].now').forEach(e=>e.classList.remove('now')); clearTimeout(TUT.stopT); TUT.stopping=false; if(playing) stop(); document.querySelectorAll('.listen.on').forEach(b=>b.classList.remove('on')); }
