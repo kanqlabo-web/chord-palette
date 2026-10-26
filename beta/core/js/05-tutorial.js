@@ -314,15 +314,14 @@ const GLOSS=[
   {t:'コード進行', at:101, re:/進行/, x:'コードを順番につなげたもの。だいたい4つか8つで一周します。'},
   {t:'コードの数字', at:102, q:st=>!!st.querySelector('.tc')||/数字/.test(st.textContent), x:'ド＝1、レ＝2 … シ＝7。コードの数字は音の高さを表します。'},
   {t:'明るいコード・暗いコード', at:101, re:/明るい|暗い|[1-7]m/, x:'何も付いていなければ明るいコード、「m」が付いていれば暗いコードです。', c:()=>tc(0,'bright')+tc(5,'dark')},
-  {t:'7dim', at:103, re:/7dim/, x:'少し変わった暗いコードです。いまは気にしなくて大丈夫です。', c:()=>tc(6,'dark')},
   {t:'トニック（T）', at:108, q:st=>/トニック/.test(st.textContent)||roleIs(st,'T'), x:'主役。いちばん安定していて、帰ってくる場所です。', c:()=>tc(0,'T')+tc(5,'T')},
   {t:'サブドミナント（S）', at:108, q:st=>/サブドミナント/.test(st.textContent)||roleIs(st,'S'), x:'脇役。変化や彩りを出します。', c:()=>tc(3,'S')+tc(1,'S')},
   {t:'ドミナント（D）', at:108, q:st=>/(^|[^ブ])ドミナント/.test(st.textContent)||roleIs(st,'D'), x:'緊張感があり、トニックに行きたい気持ちがとても強いコードです。', c:()=>tc(4,'D')+tc(6,'D')},
   {t:'カデンツ', at:110, re:/カデンツ|役割の流れ/, x:'役割の流れのこと。T→D→T、T→S→T、T→S→D→T の3つがお手本です。'},
   {t:'進行ガイド', at:114, re:/進行ガイド|黄色い線/, x:'マスの上に、役割の流れを線で表す目印です。黄色い線は「お手本と違うよ」の目印です。'},
-  {t:'小室進行', at:111, re:/小室進行/, x:'6m → 4 → 5 → 1。少し切ない、ドラマチックな進行です。'},
-  {t:'王道進行', at:112, re:/王道進行/, x:'4 → 5 → 3m → 6m。J-POP でよく使われる、切ない進行です。'},
-  {t:'カノン進行', at:113, re:/カノン進行/, x:'1 → 5 → 6m → 3m → 4 → 1 → 4 → 5。8つのコードでできた長い進行です。'},
+  {t:'小室進行', at:111, degs:[5,3,4,0], re:/小室進行/, x:'6m → 4 → 5 → 1。少し切ない、ドラマチックな進行です。'},
+  {t:'王道進行', at:112, degs:[3,4,2,5], re:/王道進行/, x:'4 → 5 → 3m → 6m。J-POP でよく使われる、切ない進行です。'},
+  {t:'カノン進行', at:113, degs:[0,4,5,2,3,0,3,4], re:/カノン進行/, x:'1 → 5 → 6m → 3m → 4 → 1 → 4 → 5。8つのコードでできた長い進行です。'},
   {t:'テンポ', at:304, re:/テンポ/, x:'曲の速さです。数字が大きいほど速くなります。'},
   {t:'伴奏スタイル', at:304, re:/伴奏/, x:'コードに合わせて鳴る、楽器の演奏のしかたです。'},
   {t:'小節', at:500, re:/小節/, x:'曲の区切りです。このアプリでは、1マスが1小節です。'},
@@ -330,8 +329,26 @@ const GLOSS=[
 ];
 // いまのページの順番（sid のないタイトル・クリアの画面は、レベルの始まり・終わりとして数える）
 function curSid(){ const sl=DECK[TUT.i]||{}, n=DECK.lv||1; return sl.sid!=null?sl.sid:n*100+(TUT.i?99:0); }
-function revTerms(){ const st=$('tutStage'); if(!st) return []; const tx=st.textContent, now=curSid();
-  return GLOSS.filter(g=>g.at<now && (g.q?g.q(st):g.re.test(tx))); }
+// 説明したページを実際に見たかどうか（途中のレベルから始めた人には、見ていない言葉を出さない）
+const SEEN_KEY=STK('chord-palette-tutseen');
+let TSEEN=new Set(); try{ TSEEN=new Set(JSON.parse(localStorage.getItem(SEEN_KEY)||'[]')); }catch(e){}
+function markSeen(){ const sl=DECK[TUT.i]; if(!sl||sl.sid==null||TSEEN.has(sl.sid)) return; TSEEN.add(sl.sid); try{ localStorage.setItem(SEEN_KEY,JSON.stringify([...TSEEN])); }catch(e){} }
+// 7つのコード：ページや、出てきた進行の説明にコードがあれば、そのコードも解説する（作り方のページ＝104 で紹介ずみ）
+const CHORD_AT=104, ROLE_AT=108, DEG_Q=['','m','m','','','m','dim'];
+const CHORD_X=[['明るいコード。','役割はトニック（主役）。'],['暗いコード。','役割はサブドミナント（脇役）。'],['暗いコード。','トニック（主役）にも、ドミナント（緊張感）にもなれます。'],
+  ['明るいコード。','役割はサブドミナント（脇役）。'],['明るいコード。','役割はドミナント（緊張感）。'],['暗いコード。','役割はトニック（主役）。ときどきサブドミナントにも。'],
+  ['少し変わった暗いコード。','役割はドミナント（緊張感）。ときどきサブドミナントにも。']];
+const CHORD_R=['T','S','T dash','S','D','T','D'];
+function pageDegs(st){ const set=new Set();
+  st.querySelectorAll('.tc[data-hear]').forEach(e=>{ const d=+e.dataset.hear; if(e.dataset.hear!==''&&d>=0&&d<7) set.add(d); });
+  const w=document.createTreeWalker(st,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&&n.parentElement.closest('.eyebrow,.tc,.L')?2:1});
+  while(w.nextNode()){ const v=w.currentNode.nodeValue; for(const m of v.matchAll(DEG_RE)){ const d=+m[1]-1; if(/ステージ ?$/.test(v.slice(0,m.index))) continue; if(!m[3]&&!m[4]&&(m[2]||'')===DEG_Q[d]) set.add(d); } }
+  return set; }
+function revTerms(){ const st=$('tutStage'); if(!st) return []; const tx=st.textContent, now=curSid(), ok=a=>a<now&&TSEEN.has(a);
+  const L=GLOSS.filter(g=>ok(g.at) && (g.q?g.q(st):g.re.test(tx)));
+  if(ok(CHORD_AT)){ const ds=pageDegs(st); L.forEach(g=>(g.degs||[]).forEach(d=>ds.add(d)));
+    [...ds].sort((a,b)=>a-b).forEach(d=>L.push({t:`${nmN(d)}（${al(d)}）`, x:CHORD_X[d][0]+(ok(ROLE_AT)?CHORD_X[d][1]:''), c:()=>tc(d,ok(ROLE_AT)?CHORD_R[d]:(DEG_Q[d]?'dark':'bright'))})); }
+  return L; }
 function openRev(){ const L=revTerms(); if(!L.length) return;
   $('revList').innerHTML=L.map(g=>`<div class="revitem"><b>${g.t}</b><p>${g.x}</p>${g.c?`<div class="revchips">${g.c()}</div>`:''}</div>`).join('');
   $('revWrap').hidden=false; bindHear(); }
@@ -624,7 +641,7 @@ function tutDots(){
   el.innerHTML=`<div class="tp-top">${top}</div><div class="tp-bar">${segs.map((s,j)=>`<i class="${s.done?'done':''}" style="--f:${s.f};--f0:${Math.min(f0[j]||0,s.f)}"></i>`).join('')}${IC_FLAG}</div>`; $('tpSub').innerHTML=(cleared?`<em class="tp-clear">ステージ${cleared} クリア！</em>`:'')+sub;
   clearTimeout(TUT.clrT); if(cleared) TUT.clrT=setTimeout(()=>{ const e=document.querySelector('#tpSub .tp-clear'); if(e) e.remove(); },2600);   // 消えたら場所も詰める
   TUT.lastBar={S,k:kNow,segs:segs.map(s=>s.f)};
-  closeRev(); const rb=$('tutRev'); if(rb) rb.hidden=!revTerms().length;
+  markSeen(); closeRev(); const rb=$('tutRev'); if(rb) rb.hidden=!revTerms().length;
 }
 function tutStopAudio(){ TUT.onLoopEnd=null; TUT.playingEx=null; document.querySelectorAll('.tut [data-ti].now').forEach(e=>e.classList.remove('now')); clearTimeout(TUT.stopT); TUT.stopping=false; if(playing) stop(); document.querySelectorAll('.listen.on').forEach(b=>b.classList.remove('on')); }
 function tutLoad(degs,segs,ant){ state.slots=Array.from({length:16},(_,j)=>degs[j]??null); state.segs=Array.from({length:16},(_,j)=>segs&&segs[j]?JSON.parse(JSON.stringify(segs[j])):[]); state.bars=degs.length<=4?4:8; state.len=4; state.ant=Array.from({length:16},(_,j)=>ant&&ant[j]||null); page=0; renderAll(); }
