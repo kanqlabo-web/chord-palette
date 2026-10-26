@@ -22,7 +22,8 @@ function mkEcho(){ const inp=ctx.createGain(), d=ctx.createDelay(2), fb=ctx.crea
   inp.connect(hp); hp.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(out); out.connect(master); return {in:inp,d}; }
 // リバーブ：部屋の響き（ノイズを少しずつ小さくした響きを、左右で少し変えて作る）
 function mkReverb(){ const sr=ctx.sampleRate, n=Math.floor(sr*2.4), ir=ctx.createBuffer(2,n,sr);
-  for(let c=0;c<2;c++){ const d=ir.getChannelData(c); for(let i=0;i<n;i++){ const x=i/sr; d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.2)*Math.exp(-x*1.6)*(x<.012?x/.012:1); } }
+  // 本物の部屋のように、高い音から先に消えていく（ノイズをだんだん強くこもらせる）
+  for(let c=0;c<2;c++){ const d=ir.getChannelData(c); let lp=0; for(let i=0;i<n;i++){ const x=i/sr; lp+=(1-Math.exp(-2*Math.PI*(9000*Math.exp(-x*2.2)+900)/sr))*((Math.random()*2-1)-lp); d[i]=lp*Math.pow(1-i/n,2.2)*Math.exp(-x*1.6)*(x<.012?x/.012:1)*1.6; } }
   const cv=ctx.createConvolver(); cv.buffer=ir; const g=ctx.createGain(); g.gain.value=.8; cv.connect(g); g.connect(master); return cv; }
 // 足した楽器の音の入口（なければ作る）
 // 足したドラム・ベースの出口（トラックごとのチャンネル）
@@ -31,12 +32,19 @@ const XB={}; function xBus(k){ const t=(state.xtr||[])[k-2]; if(!t) return compB
   if(!XB[t.id]){ XB[t.id]=ctx.createGain(); XB[t.id].connect(c.inp); applyMix(); } return XB[t.id]; }
 // 最後の音量の整え方：まとめる（軽いコンプ）→ 音割れ止め（リミッター）→ それでも越えた分だけ丸める。
 // ブラウザのコンプは自動で音量を持ち上げるため、そのぶんをすぐ後ろで下げてから次へ渡す
-const MASTER_CFG={trim:.5, glue:{th:-16,ratio:2.5,knee:8,atk:.006,rel:.18}, lim:{th:-4,ratio:20,knee:0,atk:.0015,rel:.09}, out:1};
+// 圧縮は弱め（音の大きさの抑揚を残すと、長く聴いても疲れにくい）
+let MEQ=null;
+const MASTER_CFG={trim:.33, glue:{th:-12,ratio:1.6,knee:8,atk:.006,rel:.18}, lim:{th:-4,ratio:20,knee:0,atk:.0015,rel:.09}, out:1};
 function mkMaster(inp){ const C=MASTER_CFG, mkC=o=>{ const c=ctx.createDynamicsCompressor(); c.threshold.value=o.th; c.ratio.value=o.ratio; c.knee.value=o.knee; c.attack.value=o.atk; c.release.value=o.rel; return c; };
   const pre=ctx.createGain(); pre.gain.value=C.trim; const glue=mkC(C.glue), lim=mkC(C.lim), out=ctx.createGain(); out.gain.value=C.out;
   const sc=ctx.createWaveShaper(), N=4096, cv=new Float32Array(N); for(let i=0;i<N;i++){ const x=(i/(N-1)*2-1)*2, a=Math.abs(x); cv[i]=Math.sign(x)*(a<.9?a:.9+.1*Math.tanh((a-.9)/.1)); } sc.curve=cv;
   const half=ctx.createGain(); half.gain.value=.5;   // 丸める曲線は −2〜2 を受けるので、半分にしてから通す
-  inp.connect(pre); pre.connect(glue); glue.connect(lim); lim.connect(out); out.connect(half); half.connect(sc); return sc; }
+  // スマホでは鳴らない 40Hz 以下を切り、低音を少し控えめに（低音がコンプを動かして全体を押しつぶさないように）。MEQ はスタイルごとに強すぎる高音を下げる所
+  let n=inp; const add=x=>{ n.connect(x); n=x; }; for(const q of [.54,1.31]){ const h=ctx.createBiquadFilter(); h.type='highpass'; h.frequency.value=40; h.Q.value=q; add(h); }
+  const ls=ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=110; ls.gain.value=-3.5; add(ls);
+  MEQ={mid:ctx.createBiquadFilter(), top:ctx.createBiquadFilter()}; MEQ.mid.type='peaking'; MEQ.mid.frequency.value=2200; MEQ.mid.Q.value=1.1; MEQ.mid.gain.value=0;
+  MEQ.top.type='highshelf'; MEQ.top.frequency.value=6500; MEQ.top.gain.value=0; add(MEQ.mid); add(MEQ.top);
+  n.connect(pre); pre.connect(glue); glue.connect(lim); lim.connect(out); out.connect(half); half.connect(sc); return sc; }
 function ensureAudio(noResume){
   if(ctx && ctx.state==='closed') ctx=null;
   if(!ctx){
@@ -248,6 +256,8 @@ function cityDrum(dest,note){
     c={kick:kLp, snare:sBody, other:oHp}; CITYD.m.set(dest,c); }
   return note===36?c.kick : (note===38||note===37)?c.snare : c.other; }
 function drumIn(note,t,vel=1){
+  // 毎回まったく同じ音だと機械っぽく疲れるので、強さとタイミングを少しだけ揺らす（ハイハットは大きめに）
+  if(ctx&&!CAPTURE){ const hat=note===42||note===44||note===46; vel*=1+(Math.random()-.5)*(hat?.4:.16); t=Math.max(ctx.currentTime,t+(Math.random()-.5)*(hat?.008:.004)); }
   if(state.kit==='synth'){ chipDrum(note,t,vel); return; }   // ピコピコドラムは 8bit の音に
   // ローファイ：専用音源にある音は、加工が焼き込み済みなのでそのまま最後まで鳴らす
   const LZ=state.kit==='lofi'&&LOADED['kit-lofi']&&LOADED['kit-lofi'][note];

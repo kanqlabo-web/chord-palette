@@ -568,6 +568,7 @@ function applyMix(){ if(!ctx||!drumBus) return;
   const pro=!!state.pro, solo=pro&&mixChs().some(c=>mixOf(c).s), t=ctx.currentTime, T=(p,v)=>p.setTargetAtTime(v,t,.03);
   const st=styleNow()||{}, sm=st.mix, sfx=(typeof STYLE_FX!=='undefined'&&STYLE_FX[st.id])||{};
   if(ECHO) T(ECHO.d.delayTime, Math.min(1.5,60/state.bpm*.75));   // エコーは付点8分
+  if(MEQ){ T(MEQ.mid.gain, st.id===2?-3.5:0); T(MEQ.top.gain, st.id===15?-4:0); }   // ロックの 2kHz・疾走系の高音を少し下げる
   mixChs().forEach(c=>{ const ch=CHAN[c]; if(!ch) return; const x=mixOf(c);
     // ビギナーは伴奏スタイルの音量バランスとミックス、PRO はトラックごとの設定
     const f = pro ? x : (sfx[c]||{});
