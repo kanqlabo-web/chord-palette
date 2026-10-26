@@ -166,9 +166,9 @@ const SLIDES=[
   {html:()=>`<div class="eyebrow a">7つのコードの役割</div>
      <h2 class="a" style="--dl:.1">7つのコードは<br>こう分けられます</h2>
      <div class="roles">
-       <section class="T a" style="--dl:.5"><span class="L">T</span><div><h3>トニック</h3></div><div class="cs">${[0,5,2].map((d,k)=>tc(d,'T'+(d===2?' dash':''),.8+k*.12)).join('')}</div></section>
-       <section class="S a" style="--dl:1.1"><span class="L">S</span><div><h3>サブドミナント</h3></div><div class="cs">${[3,1].map((d,k)=>tc(d,'S',1.4+k*.12)).join('')}</div></section>
-       <section class="D a" style="--dl:1.7"><span class="L">D</span><div><h3>ドミナント</h3></div><div class="cs">${[4,6,2].map((d,k)=>tc(d,'D'+(d===2?' dash':''),2+k*.12)).join('')}</div></section>
+       <section class="T a" style="--dl:.5"><span class="L">T</span><div><h3>トニック<small>（主役）</small></h3></div><div class="cs">${[0,5,2].map((d,k)=>tc(d,'T'+(d===2?' dash':''),.8+k*.12)).join('')}</div></section>
+       <section class="S a" style="--dl:1.1"><span class="L">S</span><div><h3>サブドミナント<small>（脇役）</small></h3></div><div class="cs">${[3,1].map((d,k)=>tc(d,'S',1.4+k*.12)).join('')}</div></section>
+       <section class="D a" style="--dl:1.7"><span class="L">D</span><div><h3>ドミナント<small>（緊張感）</small></h3></div><div class="cs">${[4,6,2].map((d,k)=>tc(d,'D'+(d===2?' dash':''),2+k*.12)).join('')}</div></section>
      </div>
      <p class="sub a" style="--dl:2.6">点線の <b>3m</b> は、T にも D にもなれます</p>
      <p class="sub a" style="--dl:2.9">6m と 7dim は、ときどき S にもなります</p>`},
@@ -180,12 +180,12 @@ const SLIDES=[
   {html:()=>`<div class="eyebrow a">実例①　小室進行</div>
      <h2 class="a" style="--dl:.1">6m → 4 → 5 → 1</h2>
      ${exampleHTML(EX.komuro)}
-     <div class="exnote"><p class="a" style="--dl:1.4;--fn:var(--t)">お手本③（T→S→D→T）そのままの形。</p><p class="a" style="--dl:1.7;--fn:var(--t)">始まりの T を <b>1</b> ではなく、同じトニックの <b>6m</b> にすると、少し切ないドラマチックな雰囲気に。</p></div>
+     <div class="exnote"><p class="a" style="--dl:1.4;--fn:var(--t)">お手本③（T→S→D→T）そのままの形。</p><p class="a" style="--dl:1.7;--fn:var(--t)">始まりの T を <b>1</b> ではなく、同じトニック（主役）の <b>6m</b> にすると、少し切ないドラマチックな雰囲気に。</p></div>
      ${listenBtn('komuro')}`},
   {html:()=>`<div class="eyebrow a">実例②　王道進行</div>
      <h2 class="a" style="--dl:.1">4 → 5 → 3m → 6m</h2>
      ${exampleHTML(EX.ohdo)}
-     <div class="exnote"><p class="a" style="--dl:1.4;--fn:var(--s)"><b>始まりが T でなくても OK。</b>くり返すと 6m（T）から 4 に戻り、T→S→D→T の流れになります。</p><p class="a" style="--dl:1.8;--fn:var(--d)"><b>同じ役割が続いても OK。</b>5→3m は D→D。2つのドミナントで引っぱって、6m（T）に着地します。</p></div>
+     <div class="exnote"><p class="a" style="--dl:1.4;--fn:var(--s)"><b>始まりが T でなくても OK。</b>くり返すと 6m（T）から 4 に戻り、T→S→D→T の流れになります。</p><p class="a" style="--dl:1.8;--fn:var(--d)"><b>同じ役割が続いても OK。</b>5→3m は D→D。2つのドミナント（緊張感）で引っぱって、6m（T）に着地します。</p></div>
      ${listenBtn('ohdo')}`},
   {html:()=>`<div class="eyebrow a">実例③　カノン進行</div>
      <h2 class="a" style="--dl:.1">流れを組み合わせると<br>長い進行も作れます</h2>
@@ -760,7 +760,7 @@ function runCoach(kind){
   } else if(kind==='weird'){
     tutStopAudio(); tutLoad([6,3,2,1]);
     coach(slotsEl, 'では次は、こんなコードを<br>鳴らしてみます……', [backBtn()]);
-    TUT.onLoopEnd=()=>coach(slotsEl, '<b>なんか、違和感がありますね……。</b>', [backBtn(),['もう一度聴く',()=>{ tutStopAudio(); runCoach('weird'); },true],['つぎへ',()=>{ tutStopAudio(); showSlide(TUT.i+1); }]]);
+    TUT.onLoopEnd=()=>coach(slotsEl, '<b>なんだか、落ち着かないまま<br>終わった感じがしませんか？</b><br><small>ピンとこなくても大丈夫。理由はこのあと説明します。</small>', [backBtn(),['もう一度聴く',()=>{ tutStopAudio(); runCoach('weird'); },true],['つぎへ',()=>{ tutStopAudio(); showSlide(TUT.i+1); }]]);
     play();
   }
 }

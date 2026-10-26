@@ -421,6 +421,7 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 .roles section.T{--fn:var(--t)}.roles section.S{--fn:var(--s)}.roles section.D{--fn:var(--d)}
 .roles .L{font-family:var(--display);font-weight:900;font-size:2rem;color:var(--fn);text-align:center}
 .roles h3{margin:0;font-size:.95rem}.roles p{font-size:.8rem;line-height:1.5;color:var(--muted)}
+.roles h3 small{display:block;font-size:.75rem;font-weight:700;color:var(--fn)}
 .roles .cs{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:150px}
 .roles .cs .tc{min-width:40px;padding:4px 6px}.roles .cs .tc b{font-size:1rem}
 .flows{display:flex;flex-direction:column;gap:12px;width:100%}
