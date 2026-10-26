@@ -725,5 +725,34 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
 .mcol.bar i{box-shadow:inset 3px 0 0 var(--ink)}
 .mcol i.on{background:var(--d)}
 .mcol i.lit.on{background:var(--d)}
-.psheet .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .lvnext.pthbtn{border-style:dashed}
+/* コード・リズム・メロディの切り替え（メイン画面の上） */
+.app>.top{flex-wrap:wrap;height:auto;row-gap:6px}
+.modesw{flex-basis:100%;display:grid;grid-template-columns:repeat(3,1fr);background:var(--lane);border-radius:12px;padding:3px;gap:3px}
+.modesw button{border:0;background:transparent;border-radius:9px;padding:6px 0;font-family:var(--display);font-weight:900;font-size:.88rem;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px}
+.modesw button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.modesw button[data-m="c"][aria-selected="true"]{color:var(--t)}.modesw button[data-m="r"][aria-selected="true"]{color:var(--s)}.modesw button[data-m="m"][aria-selected="true"]{color:var(--d)}
+.modepanel{display:none;min-height:0;flex-direction:column;gap:8px;overflow:hidden}
+body.mode-r .modepanel,body.mode-m .modepanel{display:flex}
+body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,body.mode-m .app>.slotwrap,body.mode-r .app>.lane,body.mode-m .app>.lane{display:none}
+@media (min-width:820px) and (min-aspect-ratio:5/4){
+  .app>.modepanel{grid-column:1;grid-row:2/-1}
+  body.mode-r .app>.slotwrap,body.mode-m .app>.slotwrap{display:flex}
+  body.mode-r .app>.lane:not([hidden]),body.mode-m .app>.lane:not([hidden]){display:flex}
+}
+.mphead{display:flex;flex-direction:column;gap:2px}
+.mphead b{font-family:var(--display);font-weight:900;font-size:1rem}
+.mphead small{font-size:.76rem;color:var(--muted);line-height:1.5}
+.modepanel .pgrid{flex:1;justify-content:center;gap:8px}
+.modepanel .prow.big i{height:auto;aspect-ratio:1/2.2;max-height:70px}
+.modepanel .chips{display:flex;flex-wrap:wrap;gap:6px}
+.modepanel .mgrid{flex:1;min-height:0;margin:0}
+.modepanel .mlab,.modepanel .mcol{display:flex;flex-direction:column;gap:2px}
+.modepanel .mlab span,.modepanel .mcol i{flex:1;min-height:18px;height:auto}
+.modepanel .mlab .mch,.modepanel .mcol .mch{flex:none;height:22px;min-height:22px;font-size:.78rem;font-weight:700;white-space:nowrap;overflow:visible;color:var(--ink)}
+.modepanel .mcols{height:100%;grid-template-columns:repeat(var(--n),30px)}
+.modepanel .mscroll{display:flex}
+.mcol.now i{outline:2px solid var(--warn);outline-offset:-1px}
+.mlock{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;color:var(--muted)}
+.mlock h2{font-family:var(--display);font-weight:900;font-size:1.1rem;margin:0;color:var(--ink)}
+.mlock p{margin:0;font-size:.86rem;line-height:1.6}

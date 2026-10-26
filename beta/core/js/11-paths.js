@@ -63,7 +63,7 @@ function openPathMap(){ let el=$('pthMap'); if(!el){ el=document.createElement('
     el.hidden=true; openTutorial(pDeck(l)); });
   el.querySelectorAll('.ptool').forEach(b=>b.onclick=()=>{ const t=b.dataset.tool, need=t==='drum'?'R2':'M1';
     if(!pDone(need)){ toast(`${pName(need)} をクリアすると使えます`); return; }
-    el.hidden=true; t==='drum'?openDrumEd():openMelEd(); });
+    el.hidden=true; setMode(t==='drum'?'r':'m'); });
 }
 // ほかの道への案内：あるレベルをクリアすると、新しく挑戦できるようになるレベル
 const pAllIds=()=>[...LEVELS.map((_,k)=>'C'+(k+1)), ...P_ALL().map(l=>l.id)];
@@ -80,7 +80,7 @@ function pDeck(l){
     ...l.deck(),
     {last:true, btn:l.unlock?'使ってみる':'とじる', html:()=>`<div class="eyebrow a">${pName(l.id)} CLEAR</div><h2 class="a" style="--dl:.1">${l.name}　クリア！</h2>
       ${l.unlock?`<div class="okcard a" style="--dl:.5"><b>アンロック：${l.unlock}</b></div>`:''}${pOpenedHTML(pWillOpen(l.id))}<p class="a" style="--dl:.9">${l.unlock?'今の曲に重ねて、自由に作ってみましょう。':'地図から、次のレベルを選びましょう。'}</p>`,
-     finish:()=>{ pLoopStop(); endTutorial(true); pClear(l.id); if(l.id==='R2') openDrumEd(); else if(l.id==='M1') openMelEd(); else openPathMap(); }}];
+     finish:()=>{ pLoopStop(); endTutorial(true); pClear(l.id); drawModeSw(); if(l.id==='R2') setMode('r'); else if(l.id==='M1') setMode('m'); else openPathMap(); }}];
   d.onEnd=()=>{ pLoopStop(); endTutorial(true); };
   return d;
 }
@@ -132,61 +132,74 @@ const M1_DECK=[
     <p class="a" style="--dl:.7">間のマスは、どの音でもかまいません。並んでいる音はどれも外れにくい音です。</p>`},
 ];
 
-// ---------- 打ち込み画面（下から出るシート） ----------
-function pSheet(id,title,body){ let el=$(id); if(!el){ el=document.createElement('div'); el.id=id; el.className='sheet psheet'; document.body.appendChild(el); }
-  el.innerHTML=`<h2>${title}<button class="iconbtn" data-x aria-label="閉じる">${P_X}</button></h2>${body}`;
-  closeAll(); requestAnimationFrame(()=>{ el.classList.add('on'); scrim.classList.add('on'); });
-  const shut=()=>{ el.classList.remove('on'); scrim.classList.remove('on'); scrim.removeEventListener('click',shut); };
-  el.querySelector('[data-x]').onclick=shut; scrim.addEventListener('click',shut);
-  return el; }
-const playChip=()=>`<button class="chip main" data-play>${ico(playing?'stop':'play',12)} ${playing?'止める':'曲を再生'}</button>`;
-const hookPlay=el=>{ const b=el.querySelector('[data-play]'); if(b) b.onclick=()=>{ $('play').click(); setTimeout(()=>{ b.outerHTML=playChip(); hookPlay(el); },60); }; };
+// ---------- コード・リズム・メロディの画面の切り替え（メイン画面の上のレバー） ----------
+// リズム・メロディの画面は、パレットの場所に出す（スマホではマスと演奏の帯も隠す。PC では右側のマス・帯はそのまま）
+PD.mode=PD.mode||'c';
+const MODES=[['c','コード'],['r','リズム'],['m','メロディ']];
+const MODE_NEED={r:'R2',m:'M1'};
+function buildModeSw(){ if($('modeSw')) return; const top=document.querySelector('.app>.top'); if(!top) return;
+  const sw=document.createElement('div'); sw.id='modeSw'; sw.className='modesw'; sw.setAttribute('role','tablist'); top.appendChild(sw);
+  const pn=document.createElement('div'); pn.id='modePanel'; pn.className='modepanel'; $('palette').after(pn); }
+function drawModeSw(){ const sw=$('modeSw'); if(!sw) return;
+  sw.innerHTML=MODES.map(([k,lab])=>`<button role="tab" data-m="${k}" aria-selected="${PD.mode===k}">${MODE_NEED[k]&&!pDone(MODE_NEED[k])?ico('lock',11)+' ':''}${lab}</button>`).join('');
+  sw.querySelectorAll('button').forEach(b=>b.onclick=()=>setMode(b.dataset.m)); }
+function setMode(k){ buildModeSw(); PD.mode=k; pthSave(); closeAll(); const pm=$('pthMap'); if(pm) pm.hidden=true;
+  document.body.classList.toggle('mode-r',k==='r'); document.body.classList.toggle('mode-m',k==='m');
+  drawModeSw(); drawPanel(); if(k==='c') renderAll(); }
+function drawPanel(){ const el=$('modePanel'); if(!el) return; const k=PD.mode;
+  if(k==='c'){ el.innerHTML=''; return; }
+  if(!pDone(MODE_NEED[k])){ const need=(k==='r'?['R1','R2']:['M1']).find(x=>!pDone(x)), l=P_ALL().find(x=>x.id===need);
+    el.innerHTML=`<div class="mlock">${ico('lock',22)}<h2>${k==='r'?'ドラムを自分で作る画面です':'メロディを自分で作る画面です'}</h2>
+      <p>${k==='r'?'リズムの道のレベル1・2':'メロディの道のレベル1'}をクリアすると使えます。</p>
+      <button class="chip main" data-go>${pName(need)}「${l.name}」をはじめる</button><button class="chip" data-map>3本の道の地図を見る</button></div>`;
+    el.querySelector('[data-go]').onclick=()=>openTutorial(pDeck(l)); el.querySelector('[data-map]').onclick=openPathMap; return; }
+  k==='r' ? drawRhy(el) : drawMel(el); }
 
 const DR_ROWS=[[42,'ハイハット','h'],[38,'スネア','s'],[36,'キック','k']];
-function openDrumEd(){
-  const draw=()=>{ const v=PD.drum.v;
-    el.querySelector('.pgrid').innerHTML=DR_ROWS.map(([n,lab,c])=>`<div class="prow big ${c}"><span>${lab}</span>${v[n].map((x,s)=>`<i data-n="${n}" data-s="${s}" class="${x?'on':''}${s%4===0?' bt':''}"></i>`).join('')}</div>`).join('');
-    el.querySelectorAll('.pgrid i').forEach(c=>c.onclick=()=>{ const n=+c.dataset.n, s=+c.dataset.s; v[n][s]=v[n][s]?0:1; if(v[n][s]){ ensureAudio(); ensureSounds(); drum(n,ctx.currentTime+.01,1); } pthSave(); draw(); });
-    el.querySelector('[data-on]').setAttribute('aria-pressed',PD.drum.on); };
-  const el=pSheet('pDrumEd','ドラムを打ち込む',`<p class="small">マスをタップして音を置きます。1小節を、曲のあいだくり返します。</p>
-    <div class="pgrid"></div>
-    <div class="chips"><button class="chip" data-on aria-pressed="false">曲のドラムをこれにする</button>${playChip()}</div>
-    <div class="chips"><button class="chip" data-pre="8">8ビートを入れる</button><button class="chip" data-pre="0">ぜんぶ消す</button></div>`);
-  el.querySelector('[data-on]').onclick=()=>{ PD.drum.on=!PD.drum.on; pthSave(); draw(); toast(PD.drum.on?'曲のドラムを、打ち込んだドラムにしました':'もとの伴奏のドラムに戻しました'); };
-  el.querySelectorAll('[data-pre]').forEach(b=>b.onclick=()=>{ const p=b.dataset.pre==='8'; DR_ROWS.forEach(([n])=>PD.drum.v[n]=p?nz(P8[n]):Array(16).fill(0)); if(p) PD.drum.on=true; pthSave(); draw(); });
-  hookPlay(el); draw();
+function drawRhy(el){ const v=PD.drum.v;
+  el.innerHTML=`<div class="mphead"><b>ドラム</b><small>マスをタップして音を置きます。この1小節を、曲のあいだくり返します。</small></div>
+    <div class="pgrid">${DR_ROWS.map(([n,lab,c])=>`<div class="prow big ${c}"><span>${lab}</span>${v[n].map((x,s)=>`<i data-n="${n}" data-s="${s}" class="${x?'on':''}${s%4===0?' bt':''}"></i>`).join('')}</div>`).join('')}</div>
+    <div class="chips"><button class="chip" data-on aria-pressed="${!!PD.drum.on}">曲のドラムをこれにする</button><button class="chip" data-pre="8">8ビートを入れる</button><button class="chip" data-pre="0">ぜんぶ消す</button></div>`;
+  el.querySelectorAll('.pgrid i').forEach(c=>c.onclick=()=>{ const n=+c.dataset.n, s=+c.dataset.s; v[n][s]=v[n][s]?0:1; if(v[n][s]){ ensureAudio(); ensureSounds(); drum(n,ctx.currentTime+.01,1); } pthSave(); drawRhy(el); });
+  el.querySelector('[data-on]').onclick=()=>{ PD.drum.on=!PD.drum.on; pthSave(); drawRhy(el); toast(PD.drum.on?'曲のドラムを、打ち込んだドラムにしました':'もとの伴奏のドラムに戻しました'); };
+  el.querySelectorAll('[data-pre]').forEach(b=>b.onclick=()=>{ const p=b.dataset.pre==='8'; DR_ROWS.forEach(([n])=>PD.drum.v[n]=p?nz(P8[n]):Array(16).fill(0)); if(p) PD.drum.on=true; pthSave(); drawRhy(el); });
 }
 
 // メロディ：キーのペンタトニック（ド・レ・ミ・ソ・ラ）を2オクターブ。8分のマス（16分の位置で偶数だけ）
 const PENT=[0,2,4,7,9,12,14,16,19,21], PENT_NM=['ド','レ','ミ','ソ','ラ'];
 const melBase=()=>{ const pc=keyObj().pc; return 72+(pc>5?pc-12:pc); };
 const melPitch=r=>melBase()+PENT[r];
-function chordPcsAt(g){ const L=slotSteps(), i=Math.floor(g/L), off=g%L, c=cellsOf(i).find(x=>off>=x.off&&off<x.off+x.len);
-  if(!c||c.v==null) return null; const sp=specOf(c.v), r=(keyObj().pc+sp.o)%12; return (QUAL[sp.q]||[0,4,7]).map(x=>(r+x)%12); }
+function cellAt(g){ const L=slotSteps(), i=Math.floor(g/L), off=g%L; return cellsOf(i).find(x=>off>=x.off&&off<x.off+x.len); }
+function chordPcsAt(g){ const c=cellAt(g); if(!c||c.v==null) return null; const sp=specOf(c.v), r=(keyObj().pc+sp.o)%12; return (QUAL[sp.q]||[0,4,7]).map(x=>(r+x)%12); }
 const melLen=g=>{ const T=state.bars*slotSteps(); let k=2; while(k<4 && g+k<T && PD.mel.n[g+k]==null) k+=2; return k; };   // 次の音まで（長くても1拍）
-function openMelEd(){
-  const T=state.bars*slotSteps(), cols=T/2;
-  const draw=()=>{ const kp=keyObj().pc, rows=PENT.map((_,r)=>r).reverse();
-    el.querySelector('.mgrid').innerHTML=`<div class="mlab">${rows.map(r=>`<span>${PENT_NM[r%5]}${r>=5?'<sup>↑</sup>':''}</span>`).join('')}</div><div class="mscroll"><div class="mcols" style="--n:${cols}">${
-      Array.from({length:cols},(_,c)=>{ const g=c*2, pcs=chordPcsAt(g)||[];
-        return `<div class="mcol${g%16===0?' bar':g%4===0?' bt':''}">${rows.map(r=>{ const lit=pcs.includes((kp+PENT[r])%12), on=PD.mel.n[g]===r;
-          return `<i data-g="${g}" data-r="${r}" class="${lit?'lit':''}${on?' on':''}"></i>`; }).join('')}</div>`; }).join('')}</div></div>`;
-    el.querySelectorAll('.mgrid i').forEach(c=>c.onclick=()=>{ const g=+c.dataset.g, r=+c.dataset.r;
-      if(PD.mel.n[g]===r) delete PD.mel.n[g]; else { PD.mel.n[g]=r; ensureAudio(); loadSet('glock'); keyTone(melPitch(r),ctx.currentTime+.01,.3,.8,'glock'); }
-      PD.mel.on=true; pthSave(); const sc=el.querySelector('.mscroll').scrollLeft; draw(); el.querySelector('.mscroll').scrollLeft=sc; });
-    el.querySelector('[data-on]').setAttribute('aria-pressed',PD.mel.on); };
-  const el=pSheet('pMelEd','メロディを置く',`<p class="small">光っているのは、そのとき鳴っているコードの音です。拍の頭（太い線）は光る音にすると落ち着きます。</p>
-    <div class="mgrid"></div>
-    <div class="chips"><button class="chip" data-on aria-pressed="false">メロディを鳴らす</button>${playChip()}<button class="chip" data-clr>ぜんぶ消す</button></div>`);
-  el.querySelector('[data-on]').onclick=()=>{ PD.mel.on=!PD.mel.on; pthSave(); draw(); };
-  el.querySelector('[data-clr]').onclick=()=>{ PD.mel.n={}; pthSave(); draw(); };
-  hookPlay(el); loadSet('glock'); draw();
+function drawMel(el){ const T=state.bars*slotSteps(), cols=T/2, kp=keyObj().pc, rows=PENT.map((_,r)=>r).reverse();
+  const sc=el.querySelector('.mscroll'), x0=sc?sc.scrollLeft:0;
+  el.innerHTML=`<div class="mphead"><b>メロディ</b><small>光っているのは、そのとき鳴っているコードの音です。拍の頭（太い線）は光る音にすると落ち着きます。</small></div>
+    <div class="mgrid"><div class="mlab"><span class="mch"></span>${rows.map(r=>`<span>${PENT_NM[r%5]}${r>=5?'<sup>↑</sup>':''}</span>`).join('')}</div><div class="mscroll"><div class="mcols" style="--n:${cols}">${
+      Array.from({length:cols},(_,c)=>{ const g=c*2, pcs=chordPcsAt(g)||[], ce=cellAt(g), head=ce&&ce.v!=null&&(g%slotSteps())===ce.off;
+        return `<div class="mcol${g%16===0?' bar':g%4===0?' bt':''}" data-c="${g}"><span class="mch">${head?bigHTML(ce.v):''}</span>${rows.map(r=>{ const lit=pcs.includes((kp+PENT[r])%12), on=PD.mel.n[g]===r;
+          return `<i data-g="${g}" data-r="${r}" class="${lit?'lit':''}${on?' on':''}"></i>`; }).join('')}</div>`; }).join('')}</div></div></div>
+    <div class="chips"><button class="chip" data-on aria-pressed="${!!PD.mel.on}">メロディを鳴らす</button><button class="chip" data-clr>ぜんぶ消す</button></div>`;
+  el.querySelector('.mscroll').scrollLeft=x0;
+  el.querySelectorAll('.mgrid i').forEach(c=>c.onclick=()=>{ const g=+c.dataset.g, r=+c.dataset.r;
+    if(PD.mel.n[g]===r) delete PD.mel.n[g]; else { PD.mel.n[g]=r; ensureAudio(); loadSet('glock'); keyTone(melPitch(r),ctx.currentTime+.01,.3,.8,'glock'); }
+    PD.mel.on=true; pthSave(); drawMel(el); });
+  el.querySelector('[data-on]').onclick=()=>{ PD.mel.on=!PD.mel.on; pthSave(); drawMel(el); };
+  el.querySelector('[data-clr]').onclick=()=>{ PD.mel.n={}; pthSave(); drawMel(el); };
+  loadSet('glock');
 }
+// 再生中は、いま鳴っているマスを光らせる
+function pMark(g,t){ if(PD.mode==='c'||document.hidden) return; const el=$('modePanel'); if(!el) return;
+  setTimeout(()=>{ if(!playing) return; el.querySelectorAll('.now').forEach(e=>e.classList.remove('now'));
+    if(PD.mode==='r') el.querySelectorAll(`.pgrid i[data-s="${g%16}"]`).forEach(e=>e.classList.add('now'));
+    else if(g%2===0){ const c=el.querySelector(`.mcol[data-c="${g}"]`); if(c){ c.classList.add('now'); const sc=el.querySelector('.mscroll'), x=c.offsetLeft-sc.scrollLeft; if(x<0||x>sc.clientWidth-30) sc.scrollLeft=c.offsetLeft-30; } } },
+    Math.max(0,(t-ctx.currentTime)*1000)); }
 
 // ---------- 再生に重ねる ----------
 const _pthStep=scheduleStep;
 scheduleStep=function(g,t){
   const live=!TUT.on && !CAPTURE && !LIB.bk && !ENDED_EARLY;
+  if(live) pMark(g,t);
   if(live && PD.mel.on && pDone('M1')){ const r=PD.mel.n[g]; if(r!=null) keyTone(melPitch(r),t,melLen(g)*stepDur()*.92,.8,'glock'); }
   if(!(live && PD.drum.on && pDone('R2'))) return _pthStep(g,t);
   const o=state.drum; DRUMS.__pth={name:'打ち込んだドラム', V:PD.drum.v, bass:(DRUMS[o]||{}).bass}; state.drum='__pth';   // この1マスのあいだだけ差しかえる
@@ -203,9 +216,15 @@ levelClear=function(n){ const b=pOpenSet(), r=_pthClear.apply(this,arguments), o
   if(n===3 && !PD.inv3){ PD.inv3=true; pthSave(); pInvite('リズムとメロディの道もあります','コードの道と同じように、好きなところから進められます。ドラムやメロディを自分で作れるようになります。',pOpenSet().filter(x=>x[0]!=='C')); }
   else if(opened.length) pInvite('ほかの道のレベルが開きました','',opened);
   return r; };
+// レベルの解説は、コードの画面で行う（課題でパレットやマスを使うため）
+const _pthOpenTut=openTutorial; openTutorial=function(){ if(PD.mode!=='c') setMode('c'); return _pthOpenTut.apply(this,arguments); };
+// 曲（コード・小節数・キー）が変わったら、メロディの画面も描き直す
+const _pthRender=renderAll; renderAll=function(){ const r=_pthRender.apply(this,arguments); if(PD.mode!=='c') drawPanel(); drawModeSw(); return r; };
 // 説明のスライドを切り替えたときは、小さなループも止める
 const _pthTutStop=tutStopAudio; tutStopAudio=function(){ pLoopStop(); return _pthTutStop.apply(this,arguments); };
 
 // 設定メニューの「レベル」に、地図への入口を足す
 (()=>{ const acc=$('lvAcc'); if(!acc) return; const b=document.createElement('button'); b.className='lvnext pthbtn'; b.style.marginTop='8px';
   b.innerHTML='<i>試作</i><b>3本の道（コード・リズム・メロディ）</b><small>好きな道からレベルを進められます</small>'; b.onclick=openPathMap; acc.after(b); })();
+
+buildModeSw(); setMode(PD.mode);
