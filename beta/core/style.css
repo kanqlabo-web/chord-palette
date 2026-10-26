@@ -760,16 +760,16 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .mlock h2{font-family:var(--display);font-weight:900;font-size:1.1rem;margin:0;color:var(--ink)}
 .mlock p{margin:0;font-size:.86rem;line-height:1.6}
 /* ドラム：1段のまま画面の幅に収める（縦に長いマス） */
-.droll{flex:1;min-height:0;display:flex;gap:6px;align-items:center}
-.dlab{display:flex;flex-direction:column;gap:8px;flex:none;width:4.6em;white-space:nowrap}
-.dlab span{height:min(14vh,110px);display:flex;align-items:center;font-size:.74rem;color:var(--muted)}
+.droll{flex:1;min-height:0;display:flex;gap:4px;align-items:center}
+.dlab{display:flex;flex-direction:column;gap:8px;flex:none;white-space:nowrap}
+.dlab span{height:40px;display:flex;align-items:center;font-size:.66rem;color:var(--muted)}
 .dlab span:first-child{height:18px}
 .dscroll{flex:1;min-width:0;overflow:hidden}
 .modepanel .pgrid.dgrid{display:flex;flex-direction:column;gap:8px;width:100%;margin:0}
 .dbeats{display:grid;grid-template-columns:repeat(4,1fr);height:18px;font-size:.72rem;color:var(--muted)}
 .dbeats b{font-weight:700;padding-left:3px}
 .modepanel .dgrid .prow,.modepanel .dgrid .prow:has(span){grid-template-columns:repeat(16,minmax(0,1fr));gap:2px}
-.modepanel .dgrid .prow.big i{aspect-ratio:auto;height:min(14vh,110px);max-height:none;border-radius:5px}
+.modepanel .dgrid .prow.big i{aspect-ratio:auto;height:40px;max-height:none;border-radius:5px}
 .modepanel .dgrid .prow i:nth-child(4n+1):not(:first-child){margin-left:4px}
 /* メロディ：ピアノロール */
 .mtools{display:flex;gap:6px;flex-wrap:wrap;flex:none}

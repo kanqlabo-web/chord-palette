@@ -298,7 +298,7 @@ function melBind(el){ const A=$('mArea'), ROWS=melRows(), R=ROWS.length; let D=n
 function pMark(g,t){ if(PD.mode==='c'||document.hidden) return; const el=$('modePanel'); if(!el) return;
   setTimeout(()=>{ if(!playing) return; el.querySelectorAll('.now').forEach(e=>e.classList.remove('now'));
     if(PD.mode==='r'){ const cs=el.querySelectorAll(`.pgrid i[data-s="${g%16}"]`); cs.forEach(e=>e.classList.add('now')); }
-    else { const ph=$('mPh'), sc=el.querySelector('.mscroll'); if(ph&&sc){ const x=g*MU.cw; ph.hidden=false; ph.style.left=x+'px'; if(x<sc.scrollLeft||x>sc.scrollLeft+sc.clientWidth-20) sc.scrollLeft=x-20; } } },
+    else { const ph=$('mPh'), sc=el.querySelector('.mscroll'); if(ph&&sc){ const x=g*MU.cw; ph.hidden=false; ph.style.left=x+'px'; if(PD.mel.follow!==false&&(x<sc.scrollLeft||x>sc.scrollLeft+sc.clientWidth-20)) sc.scrollLeft=x-20; } } },
     Math.max(0,(t-ctx.currentTime)*1000)); }
 
 // ---------- 再生に重ねる ----------
@@ -356,7 +356,7 @@ function pthMenu(){ const k=PD.mode, dr=$('drawer'); if(!dr) return;
       return `<button data-lv="${l.id}"${open||done?'':' class="lock"'}><span class="lvtag">${pName(l.id)}</span><b>${l.name}${done?'<span class="chapdone" aria-label="クリア">✓</span>':''}</b><small>${!l.deck?'準備中':!pOpen(l.id)?pReq(l.id).filter(r=>!pDone(r)).map(pName).join('・')+' が必要':(l.unlock||'')}</small></button>`; }).join('')}</div></details>
     <button class="lvnext pthbtn" style="margin-top:8px" data-map><i>試作</i><b>3本の道の地図</b><small>コード・リズム・メロディのつながりを見る</small></button></div>`;
   const setHTML = k==='r' ? (pDone('R2')?`<div class="sec"><h3>ドラム</h3><div class="chips" data-set="on"></div><h3 style="margin-top:10px">ドラムの音</h3><div class="chips" data-set="kit"></div></div>`:'')
-    : (pDone('M1')?`<div class="sec"><h3>メロディ</h3><div class="chips" data-set="mon"></div><h3 style="margin-top:10px">メロディの楽器</h3><div class="chips" data-set="inst"></div>${pDone('M2')?'<h3 style="margin-top:10px">使う音</h3><div class="chips" data-set="five"></div>':''}${pDone('M3')?'<h3 style="margin-top:10px">メロディガイド</h3><div class="chips" data-set="guide"></div>':''}<h3 style="margin-top:10px">マスの細かさ</h3><div class="chips" data-set="grid"></div><div class="chips" style="margin-top:10px"><button class="chip" data-mclr>メロディをぜんぶ消す</button></div></div>`:'');
+    : (pDone('M1')?`<div class="sec"><h3>メロディ</h3><div class="chips" data-set="mon"></div><h3 style="margin-top:10px">メロディの楽器</h3><div class="chips" data-set="inst"></div>${pDone('M2')?'<h3 style="margin-top:10px">使う音</h3><div class="chips" data-set="five"></div>':''}${pDone('M3')?'<h3 style="margin-top:10px">メロディガイド</h3><div class="chips" data-set="guide"></div>':''}<h3 style="margin-top:10px">再生中の画面</h3><div class="chips" data-set="follow"></div><h3 style="margin-top:10px">マスの細かさ</h3><div class="chips" data-set="grid"></div><div class="chips" style="margin-top:10px"><button class="chip" data-mclr>メロディをぜんぶ消す</button></div></div>`:'');
   box.hidden=false; box.innerHTML=lvHTML+setHTML;
   const redraw=()=>{ pthSave(); drawPanel(); pthMenu(); };
   const C=(sel,opts,cur,f)=>{ const el=box.querySelector(`[data-set="${sel}"]`); if(el) chips(el,opts,cur,v=>{ f(v); redraw(); }); };
@@ -366,6 +366,7 @@ function pthMenu(){ const k=PD.mode, dr=$('drawer'); if(!dr) return;
   C('inst',MEL_INSTS,melInst(),v=>{ PD.mel.inst=v; ensureAudio(); melLoad(); setTimeout(()=>melHear(7),150); });
   C('five',[[true,'5つの音だけ'],[false,'7つの音']],melFive(),v=>{ melSnap(); PD.mel.five=v; melSnapRows(); melFix(); });
   C('guide',[[true,'表示する'],[false,'表示しない']],!!PD.mel.guide,v=>PD.mel.guide=v);
+  C('follow',[[true,'鳴っている所を追いかける'],[false,'動かさない']],PD.mel.follow!==false,v=>PD.mel.follow=v);
   C('grid',[[2,'8分（ふつう）'],[1,'16分（細かい）']],MU.G,v=>{ MU.G=v; MU.last=Math.max(MU.G,MU.last); });
   const mc=box.querySelector('[data-mclr]'); if(mc) mc.onclick=()=>{ drawer.classList.remove('on'); scrim.classList.remove('on'); melClear(); };
   box.querySelectorAll('[data-go],[data-lv]').forEach(b=>b.onclick=()=>{ const id=b.dataset.go||b.dataset.lv, l=P_ALL().find(x=>x.id===id);
