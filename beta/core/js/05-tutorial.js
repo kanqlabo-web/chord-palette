@@ -295,8 +295,9 @@ const MOOD=[
 ];
 // ================= ステージ（長いレベルを区切る）と、おさらい =================
 // レベル1・2（続けて進む）とレベル3を、いくつかのステージに分ける。次のステージに入ったら、左上のバーで「クリア」を短く知らせる
-SLIDES.forEach((s,i)=>s.stg=i<5?1:i<7?2:i<11?3:4);
-MOOD.forEach((s,i)=>s.stg=i<5?1:i<10?2:3);
+SLIDES.forEach((s,i)=>{ s.stg=i<5?1:i<7?2:i<11?3:4; s.sid=100+i; });
+MOOD.forEach((s,i)=>{ s.stg=i<5?1:i<10?2:3; s.sid=300+i; });
+// sid：説明の順番（レベル×100＋そのレベルの何枚目か）。おさらいは「このページより前で説明した言葉」だけを出すのに使う
 const STG12={label:'LEVEL 1・2', goal:'自分の進行を作る', list:[
   {name:'コードって何？'},
   {name:'並べて鳴らす'},
@@ -309,25 +310,28 @@ const STAGES={1:STG12, 2:STG12, 3:{label:'LEVEL 3', goal:'ねらった雰囲気�
 // おさらい：いま開いているページに出てくる言葉だけを出す（上から下りてくるパネル）
 const roleIs=(st,L)=>[...st.querySelectorAll('.tc b,.roles .L,.flow .tc b')].some(b=>b.textContent.trim()===L);
 const GLOSS=[
-  {t:'コード', re:/コード/, x:'いくつかの音を同時に鳴らした「和音」のことです。'},
-  {t:'コード進行', re:/進行/, x:'コードを順番につなげたもの。だいたい4つか8つで一周します。'},
-  {t:'コードの数字', q:st=>!!st.querySelector('.tc')||/数字/.test(st.textContent), x:'ド＝1、レ＝2 … シ＝7。コードの数字は音の高さを表します。'},
-  {t:'明るいコード・暗いコード', re:/明るい|暗い|[1-7]m/, x:'何も付いていなければ明るいコード、「m」が付いていれば暗いコードです。', c:()=>tc(0,'bright')+tc(5,'dark')},
-  {t:'7dim', re:/7dim/, x:'少し変わった暗いコードです。いまは気にしなくて大丈夫です。', c:()=>tc(6,'dark')},
-  {t:'トニック（T）', q:st=>/トニック/.test(st.textContent)||roleIs(st,'T'), x:'主役。いちばん安定していて、帰ってくる場所です。', c:()=>tc(0,'T')+tc(5,'T')},
-  {t:'サブドミナント（S）', q:st=>/サブドミナント/.test(st.textContent)||roleIs(st,'S'), x:'脇役。変化や彩りを出します。', c:()=>tc(3,'S')+tc(1,'S')},
-  {t:'ドミナント（D）', q:st=>/(^|[^ブ])ドミナント/.test(st.textContent)||roleIs(st,'D'), x:'緊張感があり、トニックに行きたい気持ちがとても強いコードです。', c:()=>tc(4,'D')+tc(6,'D')},
-  {t:'カデンツ', re:/カデンツ|役割の流れ/, x:'役割の流れのこと。T→D→T、T→S→T、T→S→D→T の3つがお手本です。'},
-  {t:'進行ガイド', re:/進行ガイド|黄色い線/, x:'マスの上に、役割の流れを線で表す目印です。黄色い線は「お手本と違うよ」の目印です。'},
-  {t:'小室進行', re:/小室進行/, x:'6m → 4 → 5 → 1。少し切ない、ドラマチックな進行です。'},
-  {t:'王道進行', re:/王道進行/, x:'4 → 5 → 3m → 6m。J-POP でよく使われる、切ない進行です。'},
-  {t:'カノン進行', re:/カノン進行/, x:'1 → 5 → 6m → 3m → 4 → 1 → 4 → 5。8つのコードでできた長い進行です。'},
-  {t:'テンポ', re:/テンポ/, x:'曲の速さです。数字が大きいほど速くなります。'},
-  {t:'伴奏スタイル', re:/伴奏/, x:'コードに合わせて鳴る、楽器の演奏のしかたです。'},
-  {t:'小節', re:/小節/, x:'曲の区切りです。このアプリでは、1マスが1小節です。'},
-  {t:'キー', re:/キー/, x:'進行全体の高さです。キーを変えると、同じ進行を高くしたり低くしたりできます。'},
+  {t:'コード', at:101, re:/コード/, x:'いくつかの音を同時に鳴らした「和音」のことです。'},
+  {t:'コード進行', at:101, re:/進行/, x:'コードを順番につなげたもの。だいたい4つか8つで一周します。'},
+  {t:'コードの数字', at:102, q:st=>!!st.querySelector('.tc')||/数字/.test(st.textContent), x:'ド＝1、レ＝2 … シ＝7。コードの数字は音の高さを表します。'},
+  {t:'明るいコード・暗いコード', at:101, re:/明るい|暗い|[1-7]m/, x:'何も付いていなければ明るいコード、「m」が付いていれば暗いコードです。', c:()=>tc(0,'bright')+tc(5,'dark')},
+  {t:'7dim', at:103, re:/7dim/, x:'少し変わった暗いコードです。いまは気にしなくて大丈夫です。', c:()=>tc(6,'dark')},
+  {t:'トニック（T）', at:108, q:st=>/トニック/.test(st.textContent)||roleIs(st,'T'), x:'主役。いちばん安定していて、帰ってくる場所です。', c:()=>tc(0,'T')+tc(5,'T')},
+  {t:'サブドミナント（S）', at:108, q:st=>/サブドミナント/.test(st.textContent)||roleIs(st,'S'), x:'脇役。変化や彩りを出します。', c:()=>tc(3,'S')+tc(1,'S')},
+  {t:'ドミナント（D）', at:108, q:st=>/(^|[^ブ])ドミナント/.test(st.textContent)||roleIs(st,'D'), x:'緊張感があり、トニックに行きたい気持ちがとても強いコードです。', c:()=>tc(4,'D')+tc(6,'D')},
+  {t:'カデンツ', at:110, re:/カデンツ|役割の流れ/, x:'役割の流れのこと。T→D→T、T→S→T、T→S→D→T の3つがお手本です。'},
+  {t:'進行ガイド', at:114, re:/進行ガイド|黄色い線/, x:'マスの上に、役割の流れを線で表す目印です。黄色い線は「お手本と違うよ」の目印です。'},
+  {t:'小室進行', at:111, re:/小室進行/, x:'6m → 4 → 5 → 1。少し切ない、ドラマチックな進行です。'},
+  {t:'王道進行', at:112, re:/王道進行/, x:'4 → 5 → 3m → 6m。J-POP でよく使われる、切ない進行です。'},
+  {t:'カノン進行', at:113, re:/カノン進行/, x:'1 → 5 → 6m → 3m → 4 → 1 → 4 → 5。8つのコードでできた長い進行です。'},
+  {t:'テンポ', at:304, re:/テンポ/, x:'曲の速さです。数字が大きいほど速くなります。'},
+  {t:'伴奏スタイル', at:304, re:/伴奏/, x:'コードに合わせて鳴る、楽器の演奏のしかたです。'},
+  {t:'小節', at:500, re:/小節/, x:'曲の区切りです。このアプリでは、1マスが1小節です。'},
+  {t:'キー', at:400, re:/キー/, x:'進行全体の高さです。キーを変えると、同じ進行を高くしたり低くしたりできます。'},
 ];
-function revTerms(){ const st=$('tutStage'); if(!st) return []; const tx=st.textContent; return GLOSS.filter(g=>g.q?g.q(st):g.re.test(tx)); }
+// いまのページの順番（sid のないタイトル・クリアの画面は、レベルの始まり・終わりとして数える）
+function curSid(){ const sl=DECK[TUT.i]||{}, n=DECK.lv||1; return sl.sid!=null?sl.sid:n*100+(TUT.i?99:0); }
+function revTerms(){ const st=$('tutStage'); if(!st) return []; const tx=st.textContent, now=curSid();
+  return GLOSS.filter(g=>g.at<now && (g.q?g.q(st):g.re.test(tx))); }
 function openRev(){ const L=revTerms(); if(!L.length) return;
   $('revList').innerHTML=L.map(g=>`<div class="revitem"><b>${g.t}</b><p>${g.x}</p>${g.c?`<div class="revchips">${g.c()}</div>`:''}</div>`).join('');
   $('revWrap').hidden=false; bindHear(); }
@@ -575,7 +579,7 @@ const LEVELS=[
 ];
 // レベルの解説を組み立てる（タイトル → 本編 → クリア）。review=true は見返し用（クリア扱いにしない）
 function levelDeck(n,review){
-  const l=LEVELS[n-1], body=l.deck().map(x=>({...x})); body.forEach(x=>{ delete x.last; delete x.finish; });
+  const l=LEVELS[n-1], body=l.deck().map((x,k)=>({sid:n*100+k,...x})); body.forEach(x=>{ delete x.last; delete x.finish; });
   const d = n===1 ? body : [lvTitle(n), ...body];
   if(!l.noClear){ const c={...lvClear(n)}; c.finish=()=>{ endTutorial(n!==1); if(n===1){ state.guide=false; renderAll(); } if(!review){ levelClear(n); showWhere(n); } }; if(review){ c.html=()=>`<div class="eyebrow a">LEVEL ${n}</div><h2 class="a" style="--dl:.1">見返し終わりました</h2>`; c.finish=()=>endTutorial(true); } d.push(c); }
   d.lv=n; d.review=!!review; d.onEnd=()=>endTutorial(true);
