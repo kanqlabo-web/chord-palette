@@ -158,7 +158,7 @@ const M3_DECK=[
   {html:()=>`<h2 class="a">となりの音へ、順々に</h2><p class="a" style="--dl:.3">音は、<b>となりの音へ順々に</b>移動するようにしてみましょう。</p>${MEX('melStep',M_STEP)}`},
   {html:()=>`<h2 class="a">跳ぶなら ${melLab(0)}${melLab(4)}${melLab(7)} どうし</h2><p class="a" style="--dl:.3">音を跳ぶときは、<b>${melLab(0)}・${melLab(4)}・${melLab(7)}（ドミソ）</b>のどれかから、どれかへ跳ぶと、違和感なく跳べます。</p>${MEX('melLeap',M_LEAP)}`},
   {html:()=>`<h2 class="a">跳ぶのは、ほどほどに</h2><p class="a" style="--dl:.3">音を跳ばすと、インパクトや躍動感のあるメロディを作れます。でも、跳ばしすぎるとしつこくなります。</p>
-    <p class="a" style="--dl:.7">作りたい曲調に合わせて調整しましょう。メロディの画面に、つながりを色で教える<b>メロディガイド</b>が出るようになります。</p>`},
+    <p class="a" style="--dl:.7">作りたい曲調に合わせて調整しましょう。メロディの画面に、次に行ける音を色で教える<b>メロディガイド</b>が出るようになります。</p>`},
 ];
 const M4_DECK=[
   {html:()=>`<h2 class="a">コードをつくっている音</h2><p class="a" style="--dl:.3">コードをつくっている音を<b>構成音</b>といいます。たとえば「1」のコードの構成音は、<b>${melLab(0)}・${melLab(4)}・${melLab(7)}（ド・ミ・ソ）</b>の3つです。</p>
@@ -237,12 +237,13 @@ function melFix(keep){ const T=melT(); let ns=PD.mel.notes.filter(n=>n.st>=0&&n.
   ns.sort((a,b)=>a.st-b.st); ns.forEach((n,i)=>{ const nx=ns[i+1]; if(nx && n.st+n.len>nx.st) n.len=Math.max(1,nx.st-n.st); });
   PD.mel.notes=ns; }
 const melHear=o=>{ ensureAudio(); melLoad(); keyTone(melPitch(o),ctx.currentTime+.01,.32,.8,melInst()); };
-// メロディガイド（メロディ3のあと）：となりの音へのつながりを3つに分ける
-//  ok：となりの音へ順々（同じ音も）　jump：1・3・5 どうしの跳び（自然）　far：そのほかの跳び
+// メロディガイド（メロディ3のあと）：最後に置いた音から、次に行ける音をマスに出す
+//  となりの音（順々）＝緑　1・3・5 どうしの跳び先＝青（今の音が 1・3・5 のときだけ）
 const TRIAD=new Set([0,4,7]);
-function melLink(a,b){ const R=melRows(), i=R.indexOf(a.o), j=R.indexOf(b.o);
-  if(Math.abs(i-j)<=1) return 'ok';
-  return TRIAD.has(((a.o%12)+12)%12)&&TRIAD.has(((b.o%12)+12)%12) ? 'jump' : 'far'; }
+function melNextRows(o){ const R=melRows(), i=R.indexOf(o), step=[R[i-1],R[i],R[i+1]].filter(x=>x!=null);
+  const jump=TRIAD.has(((o%12)+12)%12) ? R.filter(x=>TRIAD.has(((x%12)+12)%12) && !step.includes(x)) : [];
+  return {step, jump}; }
+const melRef=()=>{ const ns=PD.mel.notes; return (MU.ref && ns.includes(MU.ref)) ? MU.ref : ns[ns.length-1]||null; };
 function drawMel(el){ melSnapRows(); const T=melT(), L=slotSteps(), kp=keyObj().pc, ROWS=melRows(), R=ROWS.length, lit4=pDone('M4'), guide=pDone('M3')&&PD.mel.guide;
   const sc0=el.querySelector('.mscroll'), x0=sc0?sc0.scrollLeft:0;
   const W0=(el.clientWidth||360)-44; MU.cw=Math.max(16, Math.floor(W0/T)); const cw=MU.cw, W=T*cw;
@@ -254,20 +255,21 @@ function drawMel(el){ melSnapRows(); const T=melT(), L=slotSteps(), kp=keyObj().
     if(lit4) ROWS.forEach((o,k)=>{ if(pcs.includes((kp+o)%12)) lit+=`<div class="mlit" style="left:${x}px;width:${w}px;top:${rowTop(k)};height:${rh}"></div>`; }); });
   for(let b=0;b<T/16;b++) head+=`<span class="mbarn" style="left:${b*16*cw}px">${b+1}</span>`;
   const notes=PD.mel.notes.map((n,i)=>`<div class="mn" data-i="${i}" style="left:${n.st*cw}px;width:${Math.max(6,n.len*cw-2)}px;top:${rowTop(ri(n.o))};height:${rh}"><span>${melDeg(n.o)}</span></div>`).join('');
-  // ガイド：となりどうしの音を線で結ぶ（色でつながりの良し悪し）
-  let gsvg='', cnt={ok:0,jump:0,far:0};
-  if(guide){ const ns=PD.mel.notes, yc=o=>(R-1-ri(o)+.5)/R*100;
-    for(let i=1;i<ns.length;i++){ const a=ns[i-1], b=ns[i]; if(b.st-(a.st+a.len)>4) continue; const k=melLink(a,b); cnt[k]++;
-      gsvg+=`<line class="g-${k}" x1="${(a.st+a.len)*cw-3}" y1="${yc(a.o)}" x2="${b.st*cw+3}" y2="${yc(b.o)}"/>`; } }
+  // ガイド：基準の音のあと（次の音まで。なければ2拍）に、行ける音の行を色の帯で出す
+  let gband='';
+  const ref=guide&&melRef();
+  if(ref){ const x=(ref.st+ref.len)*cw, nx=PD.mel.notes.find(n=>n.st>=ref.st+ref.len), end=Math.min(T,nx?nx.st:ref.st+ref.len+8), w=(end-ref.st-ref.len)*cw, {step,jump}=melNextRows(ref.o);
+    if(w>0){ step.forEach(o=>gband+=`<div class="mnext g-ok" style="left:${x}px;width:${w}px;top:${rowTop(ri(o))};height:${rh}"></div>`);
+      jump.forEach(o=>gband+=`<div class="mnext g-jump" style="left:${x}px;width:${w}px;top:${rowTop(ri(o))};height:${rh}"></div>`); } }
   const lines=`repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px ${16*cw}px),repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 35%,transparent) 0 1px,transparent 1px ${4*cw}px),repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px ${MU.G*cw}px),repeating-linear-gradient(180deg,transparent 0 calc(100%/${R} - 1px),var(--line) calc(100%/${R} - 1px) calc(100%/${R}))`;
-  const gline = !guide ? '' : `<div class="mguide"><b>メロディガイド</b><span class="g-ok">順々 ${cnt.ok}</span><span class="g-jump">1・3・5の跳び ${cnt.jump}</span><span class="g-far">そのほかの跳び ${cnt.far}</span>${cnt.far?'<small>オレンジの跳びは、1・3・5どうしにすると自然になります</small>':''}</div>`;
+  const gline = !guide ? '' : `<div class="mguide"><b>メロディガイド</b><span class="g-ok">となりの音</span><span class="g-jump">跳べる音（1・3・5どうし）</span><small>${ref?'最後に置いた音の次に行ける音を、色で出しています。':'音を置くと、次に行ける音を色で出します。'}</small></div>`;
   el.innerHTML=`<div class="mphead"><b>メロディ</b><small>空いているマスをタップで音を置く・音をタップで消す・ドラッグで動かす・右はしで長さ。${lit4?'光っているのは、いま鳴っているコードの音です。':''}</small></div>
     <div class="mtools"><button class="chip" data-undo${MU.hist.length?'':' disabled'}>元に戻す</button><button class="chip" data-g aria-pressed="${MU.G===1}">細かいマス</button>${pDone('M2')?`<button class="chip" data-five aria-pressed="${melFive()}">5つの音だけ</button>`:''}${pDone('M3')?`<button class="chip" data-guide aria-pressed="${!!PD.mel.guide}">ガイド</button>`:''}<button class="chip" data-on aria-pressed="${!!PD.mel.on}">メロディを鳴らす</button>
       <select class="chip" data-inst aria-label="メロディの楽器">${MEL_INSTS.map(([k,n])=>`<option value="${k}"${melInst()===k?' selected':''}>${n}</option>`).join('')}</select><button class="chip" data-clr>ぜんぶ消す</button></div>
     ${gline}
     <div class="mroll"><div class="mlab"><span class="mhd"></span>${[...ROWS].reverse().map(o=>`<span>${melLab(o)}</span>`).join('')}</div>
       <div class="mscroll"><div class="mbox" style="width:${W}px"><div class="mhd">${head}</div>
-        <div class="marea" id="mArea" style="background-image:${lines}">${lit}${gsvg?`<svg class="mgsvg" viewBox="0 0 ${W} 100" preserveAspectRatio="none" aria-hidden="true">${gsvg}</svg>`:''}${notes}<div class="mph" id="mPh" hidden></div></div></div></div></div>`;
+        <div class="marea" id="mArea" style="background-image:${lines}">${lit}${gband}${notes}<div class="mph" id="mPh" hidden></div></div></div></div></div>`;
   el.querySelector('.mscroll').scrollLeft=x0;
   el.querySelector('[data-undo]').onclick=()=>{ const s=MU.hist.pop(); if(s==null) return; PD.mel.notes=JSON.parse(s); melSnapRows(); pthSave(); drawMel(el); };
   el.querySelector('[data-g]').onclick=()=>{ MU.G=MU.G===1?2:1; MU.last=Math.max(MU.G,MU.last); drawMel(el); };
@@ -280,7 +282,7 @@ function drawMel(el){ melSnapRows(); const T=melT(), L=slotSteps(), kp=keyObj().
 }
 function melBind(el){ const A=$('mArea'), ROWS=melRows(), R=ROWS.length; let D=null;
   const pos=e=>{ const b=A.getBoundingClientRect(), k=Math.max(0,Math.min(R-1,Math.floor((e.clientY-b.top)/b.height*R))); return {s:(e.clientX-b.left)/MU.cw, o:ROWS[R-1-k], rh:b.height/R}; };
-  const done=keep=>{ melFix(keep); PD.mel.on=true; pthSave(); drawMel(el); };
+  const done=keep=>{ melFix(keep); if(MU.ref&&!PD.mel.notes.includes(MU.ref)) MU.ref=null; PD.mel.on=true; pthSave(); drawMel(el); };
   A.onpointerdown=e=>{ if(e.pointerType==='mouse'&&e.button!==0) return; const ne=e.target.closest('.mn'), p=pos(e);
     if(ne){ e.preventDefault(); const n=PD.mel.notes[+ne.dataset.i], b=ne.getBoundingClientRect(), edge=(b.right-e.clientX)<Math.max(10,Math.min(18,b.width*.4));
       try{ A.setPointerCapture(e.pointerId); }catch(_){}
@@ -293,9 +295,9 @@ function melBind(el){ const A=$('mArea'), ROWS=melRows(), R=ROWS.length; let D=n
       if(o!==D.n.o) melHear(o); D.n.st=st; D.n.o=o; D.el.style.left=(st*cw)+'px'; D.el.style.top=((R-1-k)/R*100)+'%'; D.el.querySelector('span').textContent=melDeg(o); return; }
     if(D.mode==='len'){ D.n.len=Math.max(1,Math.min(melT()-D.n.st,Math.round((D.len*cw+dx)/cw/G)*G||G)); D.el.style.width=Math.max(6,D.n.len*cw-2)+'px'; } };
   const up=e=>{ const d=D; if(!d||d.pid!==e.pointerId) return; D=null;
-    if(d.mode==='tap'){ const G=MU.G, st=Math.floor(d.p.s/G)*G; if(st>=melT()) return; melSnap(); const n={st, o:d.p.o, len:MU.last}; PD.mel.notes.push(n); melHear(n.o); done(n); return; }
-    if(d.mode==='press'){ MU.hist.push(d.snap); PD.mel.notes=PD.mel.notes.filter(x=>x!==d.n); done(); return; }   // タップで消す
-    if(d.mode==='move'||d.mode==='len'){ MU.hist.push(d.snap); if(d.mode==='len') MU.last=d.n.len; done(d.n); } };
+    if(d.mode==='tap'){ const G=MU.G, st=Math.floor(d.p.s/G)*G; if(st>=melT()) return; melSnap(); const n={st, o:d.p.o, len:MU.last}; PD.mel.notes.push(n); MU.ref=n; melHear(n.o); done(n); return; }
+    if(d.mode==='press'){ MU.hist.push(d.snap); PD.mel.notes=PD.mel.notes.filter(x=>x!==d.n); MU.ref=PD.mel.notes.filter(x=>x.st<d.n.st).pop()||null; done(); return; }   // タップで消す
+    if(d.mode==='move'||d.mode==='len'){ MU.ref=d.n; MU.hist.push(d.snap); if(d.mode==='len') MU.last=d.n.len; done(d.n); } };
   A.onpointerup=up; A.onpointercancel=e=>{ if(D&&D.mode==='tap') D=null; else up(e); };
 }
 // 再生中は、いま鳴っているマスを光らせる
