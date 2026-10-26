@@ -182,7 +182,7 @@ function drawModeSw(){ const sw=$('modeSw'); if(!sw) return;
   sw.querySelectorAll('button').forEach(b=>b.onclick=()=>setMode(b.dataset.m)); }
 function setMode(k){ buildModeSw(); PD.mode=k; pthSave(); closeAll(); const pm=$('pthMap'); if(pm) pm.hidden=true;
   document.body.classList.toggle('mode-r',k==='r'); document.body.classList.toggle('mode-m',k==='m');
-  drawModeSw(); drawPanel(); if(k==='c') renderAll(); }
+  drawModeSw(); drawPanel(); if(k==='c') renderAll(); else buildMenu(); }
 function drawPanel(){ const el=$('modePanel'); if(!el) return; const k=PD.mode;
   if(k==='c'){ el.innerHTML=''; return; }
   if(!pDone(MODE_NEED[k])){ const need=(k==='r'?['R1','R2']:['M1']).find(x=>!pDone(x)), l=P_ALL().find(x=>x.id===need);
@@ -342,5 +342,41 @@ const _pthTutStop=tutStopAudio; tutStopAudio=function(){ pLoopStop(); return _pt
 // 設定メニューの「レベル」に、地図への入口を足す
 (()=>{ const acc=$('lvAcc'); if(!acc) return; const b=document.createElement('button'); b.className='lvnext pthbtn'; b.style.marginTop='8px';
   b.innerHTML='<i>試作</i><b>3本の道（コード・リズム・メロディ）</b><small>好きな道からレベルを進められます</small>'; b.onclick=openPathMap; acc.after(b); })();
+
+// ---------- 設定メニュー（≡）を、今の画面（コード・リズム・メロディ）に合わせる ----------
+// リズム・メロディの画面では、コードだけの項目（コードの表示・進行ガイド・色の意味・ライブラリ・PRO など）を隠し、
+// その道のレベルと、その画面の設定を出す。書き出し・セーブデータ・リセットはどの画面でも出す
+const secsBy=t=>[...document.querySelectorAll('#drawer .sec')].filter(x=>{ const h=x.querySelector('h3'); return h && h.textContent.trim().startsWith(t); });   // 見出しには改行用の <wbr> が入っている
+const secBy=t=>secsBy(t)[0];
+const C_ONLY=['コードの切り替え','コードの表示','進行ガイド','色の意味','コード進行ライブラリ','PRO'];
+function pthMenu(){ const k=PD.mode, dr=$('drawer'); if(!dr) return;
+  let box=$('pthSecs'); if(!box){ box=document.createElement('div'); box.id='pthSecs'; const lv=secBy('レベル'); if(!lv) return; lv.after(box); }
+  const lv=secBy('レベル'); if(lv) lv.hidden = k!=='c';
+  if(k==='c'){ box.innerHTML=''; box.hidden=true; ['コードの表示','色の意味','コード進行ライブラリ'].forEach(t=>secsBy(t).forEach(x=>x.hidden=false)); return; }   // ほかは元の buildMenu がレベルに合わせて出し分ける
+  C_ONLY.forEach(t=>secsBy(t).forEach(x=>x.hidden=true)); const an=$('accNote'); if(an) an.hidden=true;
+  if(k==='r') ['キー','小節数'].forEach(t=>secsBy(t).forEach(x=>x.hidden=true));   // ドラムは1小節のくり返しなので、キー・小節数は使わない
+  const list=P_LV[k], next=list.find(l=>!pDone(l.id)&&pOpen(l.id)&&l.deck), nDone=list.filter(l=>pDone(l.id)).length;
+  const lvHTML=`<div class="sec"><h3>${k==='r'?'リズム':'メロディ'}のレベル <small style="color:var(--muted);font-weight:400">${nDone} / ${list.length} クリア</small></h3>
+    ${next?`<button class="lvnext" data-go="${next.id}"><i>${nDone?'つづきから':'はじめから'} ・ ${pName(next.id)}</i><b>${next.name}</b><small>${next.unlock?'クリアすると：'+next.unlock:'　'}</small></button>`:''}
+    <details class="acc" style="margin-top:8px"><summary><span>レベル一覧（クリアしたレベルは見返せます）</span></summary><div class="acclist">${list.map(l=>{ const done=pDone(l.id), open=pOpen(l.id)&&!!l.deck;
+      return `<button data-lv="${l.id}"${open||done?'':' class="lock"'}><span class="lvtag">${pName(l.id)}</span><b>${l.name}${done?'<span class="chapdone" aria-label="クリア">✓</span>':''}</b><small>${!l.deck?'準備中':!pOpen(l.id)?pReq(l.id).filter(r=>!pDone(r)).map(pName).join('・')+' が必要':(l.unlock||'')}</small></button>`; }).join('')}</div></details>
+    <button class="lvnext pthbtn" style="margin-top:8px" data-map><i>試作</i><b>3本の道の地図</b><small>コード・リズム・メロディのつながりを見る</small></button></div>`;
+  const setHTML = k==='r' ? (pDone('R2')?`<div class="sec"><h3>ドラム</h3><div class="chips" data-set="on"></div><h3 style="margin-top:10px">ドラムの音</h3><div class="chips" data-set="kit"></div></div>`:'')
+    : (pDone('M1')?`<div class="sec"><h3>メロディ</h3><div class="chips" data-set="mon"></div><h3 style="margin-top:10px">メロディの楽器</h3><div class="chips" data-set="inst"></div>${pDone('M2')?'<h3 style="margin-top:10px">使う音</h3><div class="chips" data-set="five"></div>':''}${pDone('M3')?'<h3 style="margin-top:10px">メロディガイド</h3><div class="chips" data-set="guide"></div>':''}</div>`:'');
+  box.hidden=false; box.innerHTML=lvHTML+setHTML;
+  const redraw=()=>{ pthSave(); drawPanel(); pthMenu(); };
+  const C=(sel,opts,cur,f)=>{ const el=box.querySelector(`[data-set="${sel}"]`); if(el) chips(el,opts,cur,v=>{ f(v); redraw(); }); };
+  C('on',[[true,'打ち込んだドラムで鳴らす'],[false,'伴奏のドラムで鳴らす']],!!PD.drum.on,v=>PD.drum.on=v);
+  C('kit',Object.entries(KITS).map(([id,n])=>[id,n]),state.kit,v=>{ state.kit=v; ensureSounds(); save(); if(!playing) previewKit(); });
+  C('mon',[[true,'メロディを鳴らす'],[false,'鳴らさない']],!!PD.mel.on,v=>PD.mel.on=v);
+  C('inst',MEL_INSTS,melInst(),v=>{ PD.mel.inst=v; ensureAudio(); melLoad(); setTimeout(()=>melHear(7),150); });
+  C('five',[[true,'5つの音だけ'],[false,'7つの音']],melFive(),v=>{ PD.mel.five=v; melSnapRows(); melFix(); });
+  C('guide',[[true,'表示する'],[false,'表示しない']],!!PD.mel.guide,v=>PD.mel.guide=v);
+  box.querySelectorAll('[data-go],[data-lv]').forEach(b=>b.onclick=()=>{ const id=b.dataset.go||b.dataset.lv, l=P_ALL().find(x=>x.id===id);
+    if(!l||!l.deck){ toast('このレベルは準備中です'); return; } if(!pOpen(id)&&!pDone(id)){ toast(`${pReq(id).filter(r=>!pDone(r)).map(pName).join('・')} をクリアすると挑戦できます`); return; }
+    drawer.classList.remove('on'); scrim.classList.remove('on'); openTutorial(pDeck(l)); });
+  box.querySelector('[data-map]').onclick=openPathMap;
+}
+const _pthMenu=buildMenu; buildMenu=function(){ const r=_pthMenu.apply(this,arguments); try{ pthMenu(); }catch(e){} return r; };
 
 buildModeSw(); setMode(PD.mode);
