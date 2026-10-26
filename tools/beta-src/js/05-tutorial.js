@@ -618,6 +618,7 @@ function tutDots(){
   const same=TUT.lastBar&&TUT.lastBar.S===S&&TUT.lastBar.segs.length===segs.length, f0=same?TUT.lastBar.segs:segs.map(()=>0);
   const kNow=S?segs.filter(x=>x.done).length:0, cleared=S&&same&&kNow>TUT.lastBar.k?kNow:0;   // いまステージを終えたところ
   el.innerHTML=`<div class="tp-top">${top}</div><div class="tp-bar">${segs.map((s,j)=>`<i class="${s.done?'done':''}" style="--f:${s.f};--f0:${Math.min(f0[j]||0,s.f)}"></i>`).join('')}${IC_FLAG}</div>`; $('tpSub').innerHTML=(cleared?`<em class="tp-clear">ステージ${cleared} クリア！</em>`:'')+sub;
+  clearTimeout(TUT.clrT); if(cleared) TUT.clrT=setTimeout(()=>{ const e=document.querySelector('#tpSub .tp-clear'); if(e) e.remove(); },2600);   // 消えたら場所も詰める
   TUT.lastBar={S,k:kNow,segs:segs.map(s=>s.f)};
   closeRev(); const rb=$('tutRev'); if(rb) rb.hidden=!revTerms().length;
 }
