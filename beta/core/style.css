@@ -906,3 +906,40 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .slothead .right{flex:0 1 auto;min-width:0}
 .slothead #progName{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:400px){ body.pro .slothead #progName{display:none} }   /* PRO の狭い画面は「コードを編集」を優先 */
+/* 口ドラム・型から選ぶ・コードの音から選ぶ・上下で決める */
+.dkuchi{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.dkline{display:grid;grid-template-columns:repeat(8,1fr);gap:3px}
+.dkslot{height:64px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0;cursor:pointer;position:relative}
+.dkslot.bt{margin-left:3px}
+.dkslot small{position:absolute;top:2px;left:4px;font-size:.56rem;color:var(--muted)}
+.dkslot b{font-size:.74rem;writing-mode:vertical-rl;letter-spacing:-.05em;margin-top:6px}
+.dkslot em{position:absolute;bottom:1px;right:3px;font-size:.56rem;font-style:normal;color:var(--muted)}
+.dkslot[aria-pressed=true]{background:color-mix(in srgb,var(--warn) 30%,var(--surface));border-color:var(--warn)}
+.dkpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dkpad button{height:64px;border:1.5px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.dkpad b{font-size:1.05rem}
+.dkpad small{font-size:.62rem;color:var(--muted)}
+.dparts{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;justify-content:center}
+.dprow small{font-size:.72rem;font-weight:700;color:var(--ch)}
+.dprow>div{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:3px}
+.dprow button{border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:5px 2px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-size:.72rem}
+.dprow button[aria-pressed=true]{border-color:var(--ch);box-shadow:0 0 0 1.5px var(--ch)}
+.dprow .cdots{gap:1.5px}.dprow .cdots i{width:5px;height:5px;border-width:1px}.dprow .cdots i.bt{margin-left:2px}
+.mchord{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.mcbar{display:flex;gap:4px}
+.mcbar>small{width:1.2em;font-size:.68rem;color:var(--muted);padding-top:18px}
+.mcbar>div{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.mcbeat{display:flex;flex-direction:column;gap:3px;border-radius:8px;padding:2px}
+.mchd{height:16px;font-size:.72rem;font-weight:700;overflow:hidden;white-space:nowrap}
+.mcbeat button{height:32px;border-radius:9px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mcbeat button[aria-pressed=true]{background:var(--d);border-color:var(--d);color:#fff}
+.mcbeat .mcno{height:22px;font-size:.62rem;color:var(--muted)}
+.mcbeat .mcno[aria-pressed=true]{background:var(--line);border-color:var(--line);color:var(--ink)}
+.svarw{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.svarw p{grid-column:1/-1;margin:0;font-size:.78rem;color:var(--muted)}
+.svarw button{height:46px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);display:flex;align-items:center;gap:6px;padding:0 10px;cursor:pointer}
+.svarw button b{font-size:1.1rem;width:1.6em}
+.svarw button span{flex:1;text-align:left;font-size:.76rem}
+.svarw .ar-same{grid-column:1/-1}
+.svarw .ar-jup,.svarw .ar-jdn{border-color:var(--t)}
+.svarw .ar-up,.svarw .ar-dn{border-color:var(--s)}
