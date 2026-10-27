@@ -899,3 +899,10 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .svk.lit{background:color-mix(in srgb,var(--warn) 30%,var(--surface))}
 .svk.g-ok{border-color:var(--s);box-shadow:0 0 0 1.5px var(--s)}
 .svk.g-jump{border-color:var(--t);box-shadow:0 0 0 1.5px var(--t)}
+/* マスの上の行：曲名・案内・探す・進行名を1行に収める（あふれたら案内と進行名を「…」で省く） */
+.slothead>span:first-child{flex:1 1 auto;min-width:0;display:flex;align-items:center}
+.slothead #hint{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slothead .libbtn{flex:none;display:inline-flex;align-items:center;gap:3px;padding:2px 9px 2px 8px}
+.slothead .right{flex:0 1 auto;min-width:0}
+.slothead #progName{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:400px){ body.pro .slothead #progName{display:none} }   /* PRO の狭い画面は「コードを編集」を優先 */
