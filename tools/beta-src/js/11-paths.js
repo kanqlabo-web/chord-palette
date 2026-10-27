@@ -380,4 +380,30 @@ const _pthHistGo=histGo; histGo=function(dir){ if(PD.mode==='m' && !TUT.on) retu
 const _pthHistBtns=histBtns; histBtns=function(){ const r=_pthHistBtns.apply(this,arguments); if(PD.mode==='m' && !TUT.on && $('undoBtn')){ $('undoBtn').disabled=!MU.hist.length; $('redoBtn').disabled=!MU.fut.length; } return r; };
 const _pthMenu=buildMenu; buildMenu=function(){ const r=_pthMenu.apply(this,arguments); try{ pthMenu(); }catch(e){} return r; };
 
+// ---- PRO のトラック画面：打ち込んだメロディの行を足す・打ち込んだドラムを帯に描く ----
+const pDrumOn=()=>PD.drum.on && pDone('R2');
+const pMelOn=()=>pDone('M1') && PD.mel.notes.length>0;
+// 打ち込んだドラムで鳴らしているときは、ドラムの帯・名前も打ち込んだドラムにする（鳴らすときと同じ差しかえ）
+const pWithDrum=f=>{ if(!pDrumOn()) return f(); const o=state.drum; DRUMS.__pth={name:'打ち込んだドラム', V:PD.drum.v, bass:(DRUMS[o]||{}).bass}; state.drum='__pth';
+  try{ return f(); } finally { state.drum=o; delete DRUMS.__pth; } };
+const _pthRegion=drawRegion; drawRegion=function(cv,kind){ if(kind==='pmel') return pMelRegion(cv); const a=arguments; return kind==='drum' ? pWithDrum(()=>_pthRegion.apply(this,a)) : _pthRegion.apply(this,a); };
+// 打ち込んだドラム・メロディの帯をタップしたら、リズム・メロディの画面で直す
+const _pthTap=tapRegion; tapRegion=function(kind){ if(kind==='pmel'||(kind==='drum'&&pDrumOn())){ closeTracks(); setMode(kind==='pmel'?'m':'r'); return; } return _pthTap.apply(this,arguments); };
+function pMelRegion(cv){ if(!cv.clientWidth) return; const g=fit(cv), W=cv.width, H=cv.height, r=devicePixelRatio||1, T=melT(), col=colors(), c=ICO_COL.sax;
+  g.clearRect(0,0,W,H); const pad=5*r; g.globalAlpha=.16; g.fillStyle=c; rr(g,1.5*r,pad,W-3*r,H-2*pad,7*r); g.fill(); g.globalAlpha=1; g.strokeStyle=c; g.lineWidth=1.2*r; rr(g,1.5*r,pad,W-3*r,H-2*pad,7*r); g.stroke();
+  const ns=PD.mel.notes, lo=Math.min(...ns.map(n=>n.o)), hi=Math.max(...ns.map(n=>n.o)), span=Math.max(7,hi-lo), y0=pad+8*r, h=H-2*pad-16*r, nh=Math.max(3*r,Math.min(7*r,h/span)), ps=W/T;
+  g.fillStyle=col.ink; ns.forEach(n=>{ const y=y0+(1-(n.o-lo)/span)*(h-nh); rr(g,n.st*ps+1*r,y,Math.max(2*r,n.len*ps-2*r),nh,2*r); g.fill(); }); }
+function pMelRow(){ const box=$('trkList'); if(!box||trk.hidden) return; box.querySelector('.dtrack.pmel')?.remove(); if(!pMelOn()) return;
+  const rows=box.querySelectorAll('.dtrack'), last=rows[rows.length-1]; if(!last) return;
+  const row=document.createElement('div'); row.className='drow dtrack pmel'+(PD.mel.on?'':' silent'); row.dataset.kind='pmel'; row.style.setProperty('--tc',ICO_COL.sax);
+  row.innerHTML=`<div class="dh"><div class="dms2"><button data-k="m" aria-pressed="${!PD.mel.on}" aria-label="ミュート">${ICO_MUTE}</button></div>
+    <button class="dico" aria-label="メロディ">${icoInst(melInst())}<span>メロディ</span></button></div><div class="dtl"><canvas></canvas></div>`;
+  last.after(row); row.querySelector('.dtl').style.width=last.querySelector('.dtl').style.width;
+  row.querySelector('[data-k=m]').onclick=()=>{ PD.mel.on=!PD.mel.on; pthSave(); renderTracks(); };
+  row.querySelector('.dico').onclick=()=>{ closeTracks(); setMode('m'); };
+  row.querySelector('.dtl').onclick=()=>{ closeTracks(); setMode('m'); };
+  pMelRegion(row.querySelector('canvas'));
+  const hd=$('dHead'); if(hd) hd.style.height=(row.offsetTop+row.offsetHeight)+'px'; }
+const _pthDawPage=dawPage; dawPage=function(){ const r=_pthDawPage.apply(this,arguments); try{ pMelRow(); }catch(e){} return r; };
+
 buildModeSw(); setMode(PD.mode);
