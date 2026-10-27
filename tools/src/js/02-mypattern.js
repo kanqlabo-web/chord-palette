@@ -461,7 +461,7 @@ const ARP_ORDER=['piano4','popanti','drive','pballad','whole','epic','hardrock',
 // まとめて消したパターン（保存データ・共有リンクは近いものに置きかえる）
 const ARP_ALIAS={ballad:'pballad',sync16:'sync',shuff2:'shuffle',rock8:'hardrock',eighth:'drive'};
 // ビギナーの「伴奏スタイル」：ドラムとコードパターンの組み合わせ
-// id は共有リンク用の番号（並びを変えても古いリンクが同じ伴奏になるよう固定）。arp2/inst2＝上に重ねる2つ目の楽器（上もの）
+// id は共有リンク用の番号（並びを変えても古いリンクが同じ伴奏になるよう固定）。arp2/inst2＝重ねる楽器
 const STYLES=[
   {id:0, name:'ポップス（定番）', bpm:96, drum:'pop', arp:'piano4', inst:'piano', kit:'std', bass:true},
   {id:1, name:'ポップス（ノリノリ）', bpm:128, drum:'dpop', arp:'popanti', inst:'piano', kit:'std', bass:true},

@@ -441,7 +441,7 @@ function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=tru
 { const ra=renderAll; renderAll=function(){ const r=ra.apply(this,arguments); if(typeof trk!=='undefined' && !trk.hidden && !document.activeElement?.closest?.('#dInsp')) renderTracks(); return r; }; }
 addEventListener('resize',()=>{ if(!trk.hidden) renderTracks(); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{ if(!trk.hidden) renderTracks(); });
-// 楽器を足す：コード2が空いていればコード2に、そうでなければ足した楽器（state.xtr）に。足したらパターンを選ぶ画面を開く
+// 楽器を足す：重ねる楽器が空いていれば重ねる楽器に、そうでなければ足した楽器（state.xtr）に。足したらパターンを選ぶ画面を開く
 // 楽器を足す：選ぶ画面で選んで「決定」したときだけ足す。ドラム・ベースは、ないときだけ選べる
 function xPatPick(kind){ const drum=isDrumK(kind), done=()=>{ save(); renderAll(); ensureSounds(); renderTracks(); return true; };
   if(drum) openPicker('ドラムの演奏を選ぶ', ()=>patCats(kind), patOf(kind), v=>{ setPatOf(kind,v); return done(); }, false);
@@ -465,11 +465,11 @@ function addTrack(){ const hasDrum=state.drum!=='none'&&!state.drumOff, cats=()=
     save(); renderAll(); ensureSounds(); applyMix(); renderTracks(); toast('楽器を足しました'); }, false); }
 function removeTrack(kind){ const x=xOf(kind);
   if(x){ state.xtr=state.xtr.filter(t=>t!==x); if(state.mix) delete state.mix[x.id]; }
-  else if(kind==='arp2'){ // コード2をなくすと、足した楽器の1つ目がコード2になる（並びはそのまま）
+  else if(kind==='arp2'){ // 重ねる楽器をなくすと、足した楽器の1つ目が重ねる楽器になる（並びはそのまま）
     const t=(state.xtr||[]).shift(); if(t){ Object.assign(state,{arp2:t.arp, inst2:t.inst, rhLo2:t.rhLo, lhLo2:t.lhLo, rhOff2:t.rhOff||0, lhOff2:t.lhOff||0}); state.mix=state.mix||{}; state.mix.arp2=state.mix[t.id]||{v:1,m:false,s:false}; delete state.mix[t.id]; state.tk=state.tk||{}; state.tk.arp2={name:t.name,color:t.color}; } else state.arp2=''; }
   else if(kind==='bass') state.bass=false;
   else if(kind==='drum'){ state.drumOff=true; }   // 鳴らさない（ベースの「ドラムに合わせる」はそのまま）
-  else if(kind==='arp'){ // コード（1つ目）をなくすと、コード2が1つ目になる。ほかにコードの楽器がなければなくせない
+  else if(kind==='arp'){ // コード（1つ目）をなくすと、重ねる楽器が1つ目になる。ほかにコードの楽器がなければなくせない
     if(!state.arp2 || !ARPS[state.arp2]){ toast('コードの楽器は1つは残してください'); return; }
     Object.assign(state,{arp:state.arp2, inst:state.inst2||'epiano', rhLo:state.rhLo2??null, lhLo:state.lhLo2??null, rhOff:state.rhOff2||0, lhOff:state.lhOff2||0});
     state.mix=state.mix||{}; state.mix.arp=state.mix.arp2||{v:1,m:false,s:false}; state.tk=state.tk||{}; state.tk.arp=state.tk.arp2||{}; return removeTrack('arp2'); }
@@ -595,7 +595,7 @@ const STYLE_CATS=[['定番',[0,1,3,2,15]],['しっとり・やさしい',[4,5,16
 const styleSub=st=>[INSTS[st.inst], st.arp2&&st.inst2?INSTS[st.inst2]:null, st.drum==='none'?'ドラムなし':KITS[st.kit], st.bass===false?null:'ベース'].filter(Boolean).join('・');
 const styleCats=()=>STYLE_CATS.map(([h,ids])=>[h, ids.map(id=>STYLES.find(s=>s.id===id)).filter(Boolean).map(st=>({k:st.id, label:st.name, sub:styleSub(st),
   cv:cv=>{ const g=fit(cv), col=colors(), H=cv.height; drawArpBar(g,0,0,cv.width,H*.55,ARPS[st.arp],col.t,col); if(DRUMS[st.drum]) drawDrumBar(g,0,H*.58,cv.width,H*.42,DRUMS[st.drum],col); }}))]);
-// 演奏のパターンの分類（PRO）：自分で作ったもの／伴奏スタイルで使うもの／重ねる上もの／そのほか
+// 演奏のパターンの分類（PRO）：自分で作ったもの／伴奏スタイルで使うもの／重ねる楽器／そのほか
 const LAYER_PATS=new Set(['glockline','brassobb','brasshit','hornline','anilead']);
 function patCats(kind){ const drum=isDrumK(kind), src=drum?DRUMS:ARPS, order=drum?drumOrder():arpOrder(), X=xOf(kind), p2like=kind==='arp2'||!!X;
   const used={}; STYLES.forEach(st=>{ const k=drum?st.drum:st.arp; (used[k]=used[k]||[]).push(st.name); if(!drum&&st.arp2) (used[st.arp2]=used[st.arp2]||[]).push(st.name+'の重ねる楽器'); });
@@ -628,7 +628,7 @@ function bassCats(){ const col=colors(), used={}; STYLES.forEach(st=>{ if(st.bas
       pickRow(opts,'演奏',b.name,k==='auto'?(DRUMS[state.drum]||{}).pro||(DRUMS[state.drum]||{}).name||'':'',null, c=>{ const g=fit(c), col=colors(); drawBassBar(g,0,0,c.width,c.height,b.v||DRUMS[state.drum].bass||[],col.d,col); },
         ()=>openPicker('ベースの演奏を選ぶ', bassCats, k, v=>{ state.bassPat=v; state.bass=true; save(); renderAll(); renderTracks(); openSheet('bass'); return true; })); });
     else { opts.classList.add('opts'); }
-    $('part2Sec').hidden=true;   // ビギナー：2つ目の楽器は伴奏スタイルにおまかせ
+    $('part2Sec').hidden=true;   // ビギナー：重ねる楽器は伴奏スタイルにおまかせ
     if(!state.pro && (kind==='arp2'||kind==='bass')){ opts.hidden=true; opts.previousElementSibling.hidden=true; } else { opts.hidden=false; if(opts.previousElementSibling) opts.previousElementSibling.hidden=false; }   // ビギナーのベースはドラムに合わせて鳴るので、演奏は選ばない
     const X=xOf(kind), ins=kind==='arp2'?state.inst2:X?X.inst:state.inst; if(kind!=='drum' && kind!=='bass' && NO_WIDE.has(ins)) $('wideSec').hidden=true;
     return r; }; }

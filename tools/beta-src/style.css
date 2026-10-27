@@ -77,12 +77,8 @@ h1{flex:none}
 #hint.guide{color:var(--ink);font-weight:700;font-family:var(--display)}
 .slot.warn{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--warn)}
 #hint{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto}
-.edall{flex:none}
 #progName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .slothead .right{min-width:0;flex-shrink:1}
-.edall{white-space:nowrap}
-.edall{display:none;border:1.5px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:5px 12px;font-size:.78rem;font-weight:700;cursor:pointer;line-height:1.2}
-body.pro .edall{display:inline-block}
 .proedit{display:none;margin:0 auto 12px;max-width:520px}
 body.pro .proedit{display:flex;gap:8px;align-items:center}
 .proedit .chip{background:var(--ink);color:var(--bg);border-color:var(--ink);white-space:nowrap;flex:none}
@@ -141,7 +137,7 @@ body.pro .proedit{display:flex;gap:8px;align-items:center}
 .slothead b{font-family:var(--display);color:var(--ink)}
 .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
 .slots .slot{aspect-ratio:1/1.05;max-height:15vh}
-/* タブレット・PC：マスは横いっぱい・高さ控えめ、再生ボタンとBPMは横並びにしてパレットを大きく */
+/* タブレット・PC：マスは横いっぱい・高さ控えめ、再生ボタンとテンポは横並びにしてパレットを大きく */
 @media (min-width:480px){
   .slots .slot{aspect-ratio:auto;height:min(13vh,120px);max-height:none}
   .app>.transport{flex-direction:row;gap:18px}
@@ -230,7 +226,7 @@ body.pro .mix{display:inline-flex}
 .lanehead b{color:var(--ink);font-weight:700}
 .lanehead svg{margin-left:-2px}
 .lane canvas{height:28px;flex:none;width:100%;display:block;border-radius:8px}
-/* 通常モード：コードとドラムを「伴奏スタイル」としてひとまとまりに見せる。PROモード：ドラム・コード・ベースを別々に */
+/* ビギナー：コードとドラムを「伴奏スタイル」としてひとまとまりに見せる。PRO：ドラム・コード・ベースを別々に */
 body:not(.pro) #drumLane .lanehead{display:none}
 body:not(.pro) #drumLane{margin-top:-6px}
 #bassLane,#arp2Lane{display:none}
@@ -243,7 +239,7 @@ body.pro .lane{gap:2px}
 body.pro .app{gap:7px}
 body.pro .slots .slot{aspect-ratio:auto;height:min(12vh,110px);max-height:none}   /* PRO：下の4マスを少し低くして、そのぶんパレットを大きく */
 body.pro .play{width:52px;height:52px}
-body.pro .transport{gap:12px;flex-direction:row}   /* PRO：再生ボタンとBPMを1行にまとめて、パレットの場所を広く */
+body.pro .transport{gap:12px;flex-direction:row}   /* PRO：再生ボタンとテンポを1行にまとめて、パレットの場所を広く */
 body.pro .playrow{gap:10px}body.pro .bpm{flex:1;width:auto}body.pro .hbtn{width:36px;height:36px}
 .opt canvas.half{height:17px!important}
 
@@ -608,8 +604,6 @@ body.tutlite .lvbig{visibility:hidden}
 .libplay{width:38px;height:38px;background:var(--lane);color:var(--ink);font-size:.8rem}.ico{display:inline-block;vertical-align:-.15em;flex:none}
 .libplay{display:inline-flex;align-items:center;justify-content:center}.libplay.on{background:var(--ink);color:var(--bg)}
 .libuse{padding:9px 14px;background:var(--ink);color:var(--bg);font-size:.82rem}
-.libbtn{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:3px 10px;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer;margin-left:6px}
-body.tutlite .libbtn{visibility:hidden}
 .updbar{position:fixed;z-index:71;left:50%;top:max(10px,env(safe-area-inset-top,0px));transform:translateX(-50%);border:0;border-radius:999px;padding:10px 18px;font:inherit;font-size:.85rem;font-weight:700;background:var(--t);color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;white-space:nowrap}
 .toast{position:fixed;z-index:70;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:999px;padding:10px 18px;font-size:.84rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:tin .3s ease;max-width:calc(100% - 32px);text-align:center}
 .sharebox{display:flex;flex-direction:column;gap:6px}
@@ -843,10 +837,9 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .keeprow{display:flex;align-items:center;gap:10px;margin-top:6px}
 .keeprow>span{flex:none;width:3.6em;font-size:.82rem;font-weight:700;color:var(--muted)}
 .keeprow>.chips{flex:1;min-width:0}
-/* マスの上の行：曲名・案内・探す・進行名を1行に収める（あふれたら案内と進行名を「…」で省く） */
+/* マスの上の行：案内・進行名を1行に収める（あふれたら案内と進行名を「…」で省く） */
 .slothead>span:first-child{flex:1 1 auto;min-width:0;display:flex;align-items:center}
 .slothead #hint{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.slothead .libbtn{flex:none;display:inline-flex;align-items:center;gap:3px;padding:2px 9px 2px 8px}
 .slothead .right{flex:0 1 auto;min-width:0}
 .slothead #progName{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (max-width:400px){ body.pro .slothead #progName{display:none} }   /* PRO の狭い画面は「コードを編集」を優先 */
+@media (max-width:400px){ body.pro .slothead #progName{display:none} }   /* PRO の狭い画面は進行名を出さない */

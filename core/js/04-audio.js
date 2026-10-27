@@ -2,7 +2,7 @@
 let PAN=null, PAN_NEXT=null, BOWBAR=0;
 const PIANOISH=new Set(['piano','spiano','chipsq','chiptri','chipsaw','epiano','epcity','lofi','organ','clav']);   // 次に鳴らす音の左右の位置（-1=左〜1=右、null=まん中）
 let ctx=null, master, masterOut=null, noiseBuf, compBus=null, compVol=null, compBus2=null, compVol2=null, drumBus=null, bassBus=null, OUT=null, PART2=false;
-// PARTN：いま鳴らしているコード楽器（0＝コード、1＝コード2、2〜＝PRO で足した楽器 state.xtr[PARTN-2]）。PART2 は「コード以外のコード楽器」
+// PARTN：いま鳴らしているコード楽器（0＝コード、1＝重ねる楽器、2〜＝PRO で足した楽器 state.xtr[PARTN-2]）。PART2 は「コード以外のコード楽器」
 let PARTN=0, REVERB=null;
 const CHAN={};   // 楽器ごとの出口。キーは mix の名前（arp・arp2・drum・bass・足した楽器の id）
 // 出口を作る：入口 → 低音・高音（EQ）→ コンプ → 音量（2ch にそろえる）→ 左右（パン）→ マスター。音量のあとからリバーブ・エコーへ送る
@@ -685,12 +685,12 @@ function chordPart(g,t,L,s,b,dr,sd,tt){
   }
   return {i,off};
 }
-// コード楽器ごとの、演奏の途中の状態（1＝コード2、2〜＝足した楽器）
+// コード楽器ごとの、演奏の途中の状態（1＝重ねる楽器、2〜＝足した楽器）
 const newP=()=>({barTones:null,lastR:null,pushedKey:null,PUSHCONT:false,held:[],ACC:null,prev:null,prevB:null,satb:null});
 const PS={1:newP()}, P2=PS[1];
 function resetP2(){ for(const k in TIE_LAST) TIE_LAST[k]=null; SOUNDING.length=0; LAST_SOLO.length=0; for(const k in LAST_MEL) if(+k>=2) LAST_MEL[k]={}; TIE_LAST[0]=TIE_LAST[1]=null; SOUNDING[0]=[]; SOUNDING[1]=[]; LAST_SOLO[0]=LAST_SOLO[1]=null;
   for(const k in PS) Object.assign(PS[k],newP()); }
-// コード楽器 k の設定（パターン・音色）。1＝コード2、2〜＝足した楽器
+// コード楽器 k の設定（パターン・音色）。1＝重ねる楽器、2〜＝足した楽器
 const partDef=k=> k===1 ? {arp:state.arp2, inst:state.inst2||'epiano'} : (state.xtr||[])[k-2]||null;
 // コード楽器 k として f を実行する（状態を入れ替えて、同じしくみで鳴らす）
 function withPart(k,f){ if(!k) return f(); const d=partDef(k); if(!d) return; const P=PS[k]||(PS[k]=newP());
@@ -714,7 +714,7 @@ function xDrumStep(x,s,b,t,sd){ const d=DRUMS[x.drum], fm=fillModeOf(b,d), inF=f
   const sk=state.kit, sb=drumBus; state.kit=x.kit||'std'; drumBus=xChan(x.id);
   try{ for(const n in V){ const v=V[n][s]; if(v) drum(+n,tt,d.dyn?Math.pow(v,d.dyn):v); }
     if(state.fill && d.F && s===0 && b%4===0 && b>0 && d.crash0!==false) drum(49,tt,.6); } finally { state.kit=sk; drumBus=sb; } }
-// 鳴らすコード楽器の番号（コード2・足した楽器のうち、パターンがあるもの）
+// 鳴らすコード楽器の番号（重ねる楽器・足した楽器のうち、パターンがあるもの）
 const extraParts=()=>[...(state.arp2&&ARPS[state.arp2]?[1]:[]), ...(state.pro?(state.xtr||[]).map((t,i)=>t&&!t.type&&t.arp&&ARPS[t.arp]?i+2:null).filter(x=>x!=null):[])];
 function scheduleStep(g,t){
   const L=slotSteps(), s=g%16, b=LOOPN*(L*state.bars/16)+Math.floor(g/16);     // b = 進行の頭から数えて何小節目か（ドラム用。途中で長さを変えてもずれない）
@@ -729,7 +729,7 @@ function scheduleStep(g,t){
   else if(!dr.duck && compBus && !CAPTURE && s===0 && compBus.gain.value<.99){ compBus.gain.cancelScheduledValues(tt); compBus.gain.setValueAtTime(1,tt); }
   if(state.fill && dr.F && s===0 && b%4===0 && b>0 && dr.crash0!==false) drum(49,tt,.6);   // シティポップはフィルの最後（前の小節の最後の16分）でクラッシュ済み
   BOWBAR=b; const {i,off}=chordPart(g,t,L,s,b,dr,sd,tt);
-  // 2つ目の楽器（コード2・上もの）。同じコード進行を、別のパターン・別の音色で重ねる（ベースは1回だけ）。ビギナーは伴奏スタイルが決める
+  // 重ねる楽器。同じコード進行を、別のパターン・別の音色で重ねる（ベースは1回だけ）。ビギナーは伴奏スタイルが決める
   extraParts().forEach(k=>withPart(k,()=>chordPart(g,t,L,s,b,dr,sd,tt)));
   // PRO で足したベース（ベースだけ鳴らす）・ドラム（それぞれのチャンネルへ）
   if(state.pro) (state.xtr||[]).forEach((x,i)=>{ if(!x) return;

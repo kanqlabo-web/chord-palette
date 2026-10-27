@@ -93,7 +93,7 @@ body.lec #menuBtn,body.lec .badges{display:none!important}
 body.lec.lec-menu #menuBtn{display:grid!important}   /* レベル3（伴奏・ライブラリ）からはメニューを出す */
 body.lec .protag,body.lec .sec:has(#lvCount),body.lec .sec:has(#proChips){display:none!important}   /* メニューの中でも、レベル・PRO は出さない */
 body.lec #drawer .sec:not(:has(#keyChips,#barChips,#guideChips,#libOpen)),body.lec #drawer .sec .small,body.lec #accNote,body.lec #drawer .appver{display:none!important}   /* メニューは、キー・小節数・進行ガイド・ライブラリだけ */
-body.lec .libbtn,body.lec .slothead .right,body.lec .lane .mix{visibility:hidden}
+body.lec .slothead .right,body.lec .lane .mix{visibility:hidden}
 body.lec #lvBig,body.lec #moodTip{display:none!important}
 body.lec .lane canvas{display:none}   /* 伴奏は名前の行だけ（小節ごとの絵は出さない） */`;
   const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);

@@ -227,7 +227,7 @@ function showModePick(){ const el=$('modePick'); el.hidden=false; $('tsLevels').
   $('tsMid').onclick=()=>{ const box=$('tsLevels'); box.hidden=!box.hidden;
     box.innerHTML=LEVELS.map((l,k)=>`<button data-l="${k+1}"><i>LEVEL ${k+1}</i><b>${l.name}</b></button>`).join('');
     box.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const n=+b.dataset.l; MODE='step'; LVL=n-1; saveLv(); close(); startLevel(n); }); };
-  // フリーモード
+  // 「すべての機能で始める」
   $('tsFree').onclick=()=>{ MODE='free'; saveLv(); MOODPOP.pending=false; close(); toast('すべての機能を使えます'); };
 }
 if(!OPENED_SHARE) showModePick();
