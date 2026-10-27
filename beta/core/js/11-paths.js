@@ -1,6 +1,6 @@
 // ベータ版だけ（試作）：コード・リズム・メロディの3本の道
 // ・3本の道の地図（どの道から進めてもよい。ほかの道の知識が要るレベルだけ鍵がかかる）
-// ・リズム R1・R2、メロディ M1〜M4 の解説（ほかのレベルは「準備中」）
+// ・リズム R1・R2、メロディ M1〜M4 の解説
 // ・ドラムの打ち込み（R2 クリアで開く）とメロディの打ち込み（M1 で7音、M2 で5音、M3 でガイド、M4 でコードの音が光る）。今の曲に重ねて鳴らす
 // 進み具合と打ち込んだものは、曲の保存とは別に STK('chord-palette-paths') に保存する
 const PTH_KEY=STK('chord-palette-paths');
@@ -15,24 +15,12 @@ const pthSave=()=>{ try{ localStorage.setItem(PTH_KEY,JSON.stringify(PD)); }catc
 // ---------- 3本の道 ----------
 const P_LV={
   r:[{id:'R1',name:'拍と小節',req:[],deck:()=>R1_DECK},
-     {id:'R2',name:'ドラムの3つの役割',unlock:'ドラムの打ち込み',req:['R1'],deck:()=>R2_DECK},
-     {id:'R3',name:'16ビートと強弱',req:['R2']},
-     {id:'R4',name:'食い',req:['R3','C1']},
-     {id:'R5',name:'ハネるリズム',req:['R3']},
-     {id:'R6',name:'ジャンルのリズムとフィル',req:['R4','R5','C3']},
-     {id:'R7',name:'ベースを作る',req:['R2','C1']},
-     {id:'R8',name:'コード楽器の刻み',req:['R4','C3']},
-     {id:'R9',name:'自分の伴奏を作る',req:['R6','R7','R8','C7']}],
+     {id:'R2',name:'ドラムの3つの役割',unlock:'ドラムの打ち込み',req:['R1'],deck:()=>R2_DECK}],
   m:[{id:'M1',name:'音階',unlock:'メロディの打ち込み（7つの音）',req:[],deck:()=>M1_DECK},
      {id:'M2',name:'五つの音階',unlock:'5つの音だけで置く',req:['M1'],deck:()=>[...mPre(['C1']),...M2_DECK]},
      {id:'M3',name:'滑らかなメロディ',unlock:'メロディガイド',req:['M2'],deck:()=>M3_DECK},
-     {id:'M4',name:'光る音に置く',unlock:'コードの音を光らせる',req:['M3'],deck:()=>[...mPre(['C1']),...M4_DECK]},
-     {id:'M5',name:'つなぎの音',req:['M4']},
-     {id:'M6',name:'問いと答え',req:['M5','C2']},
-     {id:'M7',name:'コードに合わせてメロディを作る',req:['M6','C3']},
-     {id:'M8',name:'言葉とリズム',req:['M7','R4']},
-     {id:'M9',name:'キーの外のコードの上で',req:['M8','C8']}],
-  c:[{id:'C10',name:'メロディに合わせてコードを付ける',req:['C2','M4']}],   // 今のレベル1〜9のあとに足すコードのレベル
+     {id:'M4',name:'光る音に置く',unlock:'コードの音を光らせる',req:['M3'],deck:()=>[...mPre(['C1']),...M4_DECK]}],
+  c:[],   // 今のレベル1〜9のあとに足すコードのレベル（まだない）
 };
 const P_NAME={C:'コード',R:'リズム',M:'メロディ'};
 const pName=id=>`${P_NAME[id[0]]} ${id.slice(1)}`;
@@ -208,20 +196,20 @@ function drawRhy(el){ const v=PD.drum.v, sc0=el.querySelector('.dscroll'), x0=sc
 function drumPreset(p){ DR_ROWS.forEach(([n])=>PD.drum.v[n]=p?nz(P8[n]):Array(16).fill(0)); if(p) PD.drum.on=true; pthSave(); drawPanel(); }
 
 // リズム・メロディの画面の下：鳴らし方の切り替え・楽器（コードの画面と同じ選び方）・次のレベル
-const MEL_GROUPS=[['管楽器',['sax','trumpet']],['鍵盤',['epiano','piano']],['ゲーム機',['chipsq']]];
 const pNextLv=k=>P_LV[k].find(l=>!pDone(l.id));
 function pBar(k){ const r=k==='r', on=r?!!PD.drum.on:PD.mel.follow!==false, ik=r?state.kit:melInst(), nx=pNextLv(k);
-  const nm=r?(KITS[ik]||ik):(Object.fromEntries(MEL_INSTS)[ik]||ik), ic=r?icoKit(ik):icoInst(ik);
+  const nm=r?(KITS[ik]||ik):(INSTS[ik]||ik), ic=r?icoKit(ik):icoInst(ik);
   return `<div class="pbar"><div class="pbtns">
       <button class="pswitch" data-sw aria-pressed="${on}"><i></i><span>${r?'打ち込んだドラムで鳴らす':'鳴っている所を追いかける'}</span></button>
       <button class="pinst" data-inst><span class="pico">${ic}</span><span><small>${r?'ドラムの音':'メロディの楽器'}</small><b>${nm}</b></span></button></div>
     ${nx?`<button class="lvbig pnext" data-nx="${nx.id}"><small>NEXT</small><b>${pName(nx.id).replace(/^\S+ /,'LEVEL ')}</b><span>${nx.name}</span></button>`:''}</div>`; }
+function melPick(){ const o0=melInst(); openPicker('楽器を選ぶ', ()=>catsOf(INST_GROUPS,INSTS,icoInst), o0, v=>{ PD.mel.inst=v; pthSave(); ensureAudio(); melLoad(); setTimeout(()=>melHear(7),150); drawPanel(); });
+  PICK.pRevert=()=>{ PD.mel.inst=o0; pthSave(); drawPanel(); }; }
 function pBarBind(el,k){ const r=k==='r';
   el.querySelector('[data-sw]').onclick=()=>{ if(r){ PD.drum.on=!PD.drum.on; toast(PD.drum.on?'曲のドラムを、打ち込んだドラムにしました':'もとの伴奏のドラムに戻しました'); } else PD.mel.follow=PD.mel.follow===false; pthSave(); drawPanel(); };
   el.querySelector('[data-inst]').onclick=()=>{
     if(r) return openPicker('ドラムの音を選ぶ', ()=>catsOf(KIT_GROUPS,KITS,icoKit), state.kit, v=>{ pickKit(v); drawPanel(); });
-    const o0=melInst(); openPicker('楽器を選ぶ', ()=>catsOf(MEL_GROUPS,Object.fromEntries(MEL_INSTS),icoInst), o0, v=>{ PD.mel.inst=v; pthSave(); ensureAudio(); melLoad(); setTimeout(()=>melHear(7),150); drawPanel(); });
-    PICK.pRevert=()=>{ PD.mel.inst=o0; pthSave(); drawPanel(); }; };
+    melPick(); };
   const nb=el.querySelector('[data-nx]'); if(nb) nb.onclick=()=>{ const l=P_ALL().find(x=>x.id===nb.dataset.nx);
     if(!l.deck) return toast('このレベルは準備中です'); if(!pOpen(l.id)) return toast(`${pReq(l.id).filter(x=>!pDone(x)).map(pName).join('・')} をクリアすると挑戦できます`);
     openTutorial(pDeck(l)); }; }
@@ -238,8 +226,7 @@ const melDeg=o=>DEG7[((o%12)+12)%12]||'';
 const melLab=o=>`<i class="mdeg">${melDeg(o)}</i>${o>=12?'<sup>↑</sup>':''}`;   // コードの数字と区別するため、丸で囲む
 const melBase=()=>{ const pc=keyObj().pc; return 60+(pc>5?pc-12:pc); };   // 1〜6↑ ＝ C4〜A5（歌の高さ）
 // メロディの楽器（鉄琴は倍音が濁ってずれて聞こえるので使わない）
-const MEL_INSTS=[['sax','サックス'],['trumpet','トランペット'],['epiano','エレピ'],['piano','ピアノ'],['chipsq','8bit']];
-PD.mel.inst=MEL_INSTS.some(x=>x[0]===PD.mel.inst)?PD.mel.inst:'sax';
+PD.mel.inst=INSTS[PD.mel.inst]?PD.mel.inst:'sax';   // アプリの楽器ならどれでも
 const melInst=()=>PD.mel.inst, melLoad=()=>{ if(!CHIP_V[melInst()]) loadSet(SETOF(melInst())); };
 const melPitch=o=>melBase()+o;
 PD.mel.notes.forEach(n=>{ if(n.o==null){ n.o=PENT[n.r]??0; delete n.r; } });   // 前の形（行の番号）から読みかえ
@@ -396,7 +383,7 @@ function pthMenu(){ const k=PD.mode, dr=$('drawer'); if(!dr) return;
   C('on',[[true,'打ち込んだドラムで鳴らす'],[false,'伴奏のドラムで鳴らす']],!!PD.drum.on,v=>PD.drum.on=v);
   C('kit',Object.entries(KITS).map(([id,n])=>[id,n]),state.kit,v=>{ state.kit=v; ensureSounds(); save(); if(!playing) previewKit(); });
   C('mon',[[true,'メロディを鳴らす'],[false,'鳴らさない']],!!PD.mel.on,v=>PD.mel.on=v);
-  C('inst',MEL_INSTS,melInst(),v=>{ PD.mel.inst=v; ensureAudio(); melLoad(); setTimeout(()=>melHear(7),150); });
+  const mi=box.querySelector('[data-set="inst"]'); if(mi){ mi.innerHTML=`<button class="chip">${INSTS[melInst()]||melInst()} ・ 変える</button>`; mi.firstChild.onclick=()=>{ drawer.classList.remove('on'); scrim.classList.remove('on'); melPick(); }; }
   C('five',[[true,'5つの音だけ'],[false,'7つの音']],melFive(),v=>{ melSnap(); PD.mel.five=v; melSnapRows(); melTidy(); });
   C('guide',[[true,'表示する'],[false,'表示しない']],!!PD.mel.guide,v=>PD.mel.guide=v);
   C('follow',[[true,'鳴っている所を追いかける'],[false,'動かさない']],PD.mel.follow!==false,v=>PD.mel.follow=v);
