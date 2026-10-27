@@ -86,11 +86,11 @@ function pentaStep(m,dir,cp){ const K=keyObj().pc, P=pentaNow(), pc=x=>(((x-K)%1
 function prepNx(evs){ const xs=(evs||[]).filter(e=>e[5]==='nx').sort((a,b)=>a[0]-b[0]); xs.forEach((e,i)=>{ e[6]=xs.length-i; e[7]=xs[xs.length-1][1][0]; e[8]=xs.length; }); return evs; }   // e[6]：後ろから何番目 e[8]：全部で何音   // e[7]：最後の音の行（目標の高さの基準。みんな同じ目標へ向かう）
 let NX_V=null;
 // 鳴らす条件（ballade.mid の飾りの出方から）：いまの小節で弾いた右手のいちばん上の音 → 次のコードのいちばん上の音 の動きで決める
-//  step＝近い（下に3半音〜上に。大きく上がるときもこちら）、down＝大きく下がる（4半音以上）、same＝同じ音、move＝同じでない
-const WHEN_KINDS=[['','毎回'],['step','上の音の動きが小さいとき（または上がるとき）'],['down','上の音が大きく下がるとき（長3度以上）'],['same','上の音が次も同じとき'],['move','上の音が次で変わるとき']];
+//  step＝近い（下に3半音〜上に。大きく上がるときもこちら）、down＝大きく下がる（4半音以上）、same＝同じ音、move＝同じでない、rise＝上がる、dip＝少し下がる（1〜3半音）
+const WHEN_KINDS=[['','毎回'],['step','上の音の動きが小さいとき（または上がるとき）'],['down','上の音が大きく下がるとき（長3度以上）'],['same','上の音が次も同じとき'],['move','上の音が次で変わるとき'],['rise','上の音が次で上がるとき'],['dip','上の音が少し下がるとき（短3度まで）']];
 let NX_ANT=0;   // 次のコードを食って先に弾く長さ（chordPart が入れる）
 function whenOK(w,bt){ if(!w) return true; const T=nextTop(bt), C=bt&&bt._top; if(T==null||C==null) return false;
-  const d=T-C; return w==='same' ? d===0 : w==='down' ? d<=-4 : w==='step' ? (d!==0 && d>-4) : w==='move' ? d!==0 : true; }
+  const d=T-C; return w==='same' ? d===0 : w==='down' ? d<=-4 : w==='step' ? (d!==0 && d>-4) : w==='move' ? d!==0 : w==='rise' ? d>0 : w==='dip' ? (d<0 && d>-4) : true; }
 // 4音目の行（9）を使うパターンか
 function usesR4(pat){ if(!pat) return false; if(pat._r4!==undefined) return pat._r4; let f=false; const scan=evs=>(evs||[]).forEach(e=>{ if(e[1].includes(9)) f=true; });
   scan(pat.ev); if(pat.sit) for(const k in pat.sit) pat.sit[k].forEach(v=>scan(v.evs||v)); return pat._r4=f; }

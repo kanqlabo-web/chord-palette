@@ -1285,7 +1285,7 @@ function bSide(){ const el=$('blkSide'); if(!el || !BLKE || !BSIDE()) return; co
       <label class="vel"><input type="range" min="1" max="127" value="${v0||100}" id="bsVel"><b>${v0||''}</b></label>`); }
   if(isArp){ const O=[[-12,'↓8va','1オクターブ下'],[0,'—','そのまま'],[12,'↑8va','1オクターブ上']];
     h+=sec('oc','高さ',n&&n.oc?(n.oc>0?'1オクターブ上':'1オクターブ下'):'',`<div class="grid">${O.map(([v,ico,l])=>tile(n&&ns.every(x=>(x.oc||0)===v),ico,l,l,()=>{ ns.forEach(x=>{ if(v) x.oc=v; else delete x.oc; }); commitNotes(); })).join('')}</div>`);
-    const W=[['','毎','毎回'],['step','小','上の音の動きが小さいとき'],['down','↓大','上の音が大きく下がるとき'],['same','＝','上の音が次も同じとき'],['move','≠','上の音が次で変わるとき']];
+    const W=[['','毎','毎回'],['step','小','上の音の動きが小さいとき'],['down','↓大','上の音が大きく下がるとき'],['same','＝','上の音が次も同じとき'],['move','≠','上の音が次で変わるとき'],['rise','↑','上の音が次で上がるとき'],['dip','↓小','上の音が少し下がるとき']];
     h+=sec('when','鳴らす小節',n&&n.when?(W.find(x=>x[0]===n.when)||[])[2]:'',`<div class="grid">${W.map(([v,ico,l])=>tile(n&&ns.every(x=>(x.when||'')===v),ico,l.replace('上の音','').replace('とき',''),(WHEN_KINDS.find(x=>x[0]===v)||[,l])[1],()=>{ ns.forEach(x=>{ if(v) x.when=v; else delete x.when; }); commitNotes(); })).join('')}</div>`); }
   el.innerHTML=h; el.classList.toggle('off',!k); el.scrollTop=sc;
   el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ const f=F[b.dataset.f]; if(f) f(); });
