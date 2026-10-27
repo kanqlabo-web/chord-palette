@@ -13,9 +13,13 @@
   document.addEventListener('touchmove',e=>{ if(e.touches.length>1 || (e.scale!==undefined && e.scale!==1)) e.preventDefault(); },{passive:false});
   // すばやく2回目に触れたときは拡大させず、その代わりにタップ（クリック）として扱う
   let last=0;
-  document.addEventListener('touchend',e=>{ const now=Date.now(), quick=now-last<350; last=now;
+  const tapEnd=e=>{ const now=Date.now(), quick=now-last<350; last=now;
     if(!quick || e.touches.length) return; const t=e.target; if(t.closest && t.closest('input,textarea,select,.proll')) return;
-    e.preventDefault(); const c=t.closest && !t.closest('.slot,.tile') && t.closest('button,a,label,[data-hear],[data-pair],[data-kd],.opt,.tc,.chip,[role=button]'); if(c) c.click(); },{passive:false});
+    e.preventDefault(); const c=t.isConnected && t.closest && !t.closest('.slot,.tile') && t.closest('button,a,label,[data-hear],[data-pair],[data-kd],.opt,.tc,.chip,[role=button]'); if(c) c.click(); };
+  document.addEventListener('touchend',tapEnd,{passive:false});
+  // 触った所が指を離す前に描き直されると（メロディの画面など）、touchend は外れた要素に届き document まで来ない。触った要素にも直接つけて受ける
+  document.addEventListener('touchstart',e=>{ const t=e.target; if(t.nodeType!==1) return;
+    t.addEventListener('touchend',ev=>{ if(!t.isConnected) tapEnd(ev); },{passive:false,once:true}); },{passive:true,capture:true});
   document.addEventListener('wheel',e=>{ if(e.ctrlKey) e.preventDefault(); },{passive:false});   // PCのトラックパッドのピンチ
 })();
 </script>
@@ -83,7 +87,7 @@
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>すべての機能で始める</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
     <p class="mpnote">音の出るアプリです。iPhoneで音が出ないときは、消音モードを解除してください。</p>
-    <p class="appver">ver 5.24.028（2026-10-27）</p>
+    <p class="appver">ver 5.24.029（2026-10-27）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -152,7 +156,7 @@
   <div class="sec"><h3>リセット</h3>
     <div class="chips"><button class="chip" id="resetSlots">マスを空にする</button><button class="chip" id="resetAll">設定もすべて最初に戻す</button></div>
     <p class="small" style="margin:0">セーブデータとマイ演奏は消えません。</p></div>
-  <p class="appver">ver 5.24.028（2026-10-27）</p>
+  <p class="appver">ver 5.24.029（2026-10-27）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
