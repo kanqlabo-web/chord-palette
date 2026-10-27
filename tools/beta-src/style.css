@@ -834,3 +834,5 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .pinst small{font-size:.66rem;color:var(--muted)}
 .pinst b{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .modepanel .lvbig.pnext{grid-column:auto;grid-row:auto;flex:none;align-self:stretch;height:auto;width:min(30vw,128px);aspect-ratio:auto;padding:8px}
+/* 「すべての機能で始める」：レベルに関する案内（設定のレベル欄・道の地図・リズム／メロディのレベル）を出さない。タイトル画面へ は残す */
+.freemode .sec:has(#lvNext)>h3,.freemode #lvNext,.freemode #lvAcc,.freemode .pthbtn,.freemode #pthSecs>.sec:first-child{display:none!important}

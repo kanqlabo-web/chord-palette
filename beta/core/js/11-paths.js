@@ -36,7 +36,8 @@ const P_LV={
 };
 const P_NAME={C:'コード',R:'リズム',M:'メロディ'};
 const pName=id=>`${P_NAME[id[0]]} ${id.slice(1)}`;
-const pDone=id=> id[0]==='C' ? UL()>=+id.slice(1) : !!PD.done[id];
+// 「すべての機能で始める」では、どの道のレベルもクリア済みとして扱う（鍵や案内を出さない）
+const pDone=id=> MODE==='free' || id[0]==='C' ? UL()>=+id.slice(1) : !!PD.done[id];
 const C_EXTRA={7:['M4']};   // コード7（分数コード）は、構成音をメロディ4で習ってから
 const P_ALL=()=>[...P_LV.r,...P_LV.m,...P_LV.c];
 const pReq=id=> P_LV.c.some(l=>l.id===id) ? P_LV.c.find(l=>l.id===id).req : id[0]==='C' ? [...(+id.slice(1)>1?['C'+(+id.slice(1)-1)]:[]), ...(C_EXTRA[+id.slice(1)]||[])] : (P_ALL().find(l=>l.id===id)||{}).req||[];

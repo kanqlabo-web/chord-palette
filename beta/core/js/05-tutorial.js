@@ -601,7 +601,8 @@ function startLevel(n,review){ $('moodTip').hidden=true; MOODPOP.pending=false; 
 function levelClear(n){ if(LVL>=n) return; LVL=n; saveLv();
   if(MODE!=='free'){ if(n===2){ MOODPOP.level=3; MOODPOP.pending=true; } }   // 全レベルクリアの案内は showWhere(9) の中で
   renderAll(); }
-function renderLevels(){ const el=$('levelList'); if(!el) return;
+function renderLevels(){ document.body.classList.toggle('freemode',MODE==='free');   // すべての機能で始めたときは、レベルの案内を隠す（style.css）
+  const el=$('levelList'); if(!el) return;
   const nx=Math.min(LVL+1,LV_MAX), all=LVL>=LV_MAX;
   $('lvCount').textContent=`${LVL} / ${LV_MAX} クリア`;
   $('lvNext').innerHTML = all ? '<i>ALL CLEAR</i><b>全レベルクリア</b><small>一覧から好きなレベルを見返せます</small>' : `<i>${LVL?'つづきから':'はじめから'} ・ LEVEL ${nx}</i><b>${LEVELS[nx-1].name}</b><small>${LEVELS[nx-1].unlock?'クリアすると：'+LEVELS[nx-1].unlock:LEVELS[nx-1].goal}</small>`;
@@ -678,7 +679,8 @@ function endTutorial(restore){
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio(); closeCoach();
   $('tut').hidden=true; TUT.on=false;
   if(restore && TUT.backup){ state=JSON.parse(TUT.backup); document.body.classList.toggle('pro',!!state.pro); }
-  else { const b=JSON.parse(TUT.backup); state={...b, slots:Array(16).fill(null), segs:Array.from({length:16},()=>[]), bars:4, len:4, label:'num', guide:true}; document.body.classList.toggle('pro',!!state.pro); }
+  else { const b=JSON.parse(TUT.backup); state={...b, slots:Array.from({length:16},(_,j)=>(TUT.mine&&TUT.mine[j])??null), segs:Array.from({length:16},()=>[]), bars:4, len:4, label:'num', guide:true}; document.body.classList.toggle('pro',!!state.pro); }
+  TUT.mine=null;   // レベル1で自分で並べたコードは、クリア後のマスに残す（上の slots）
   page=0; selected=null; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save();
   histReset();
 }
@@ -786,13 +788,14 @@ function runCoach(kind){
     tutLoad([]);
     const done=()=>[0,1,2,3].every(k=>state.slots[k]!==null&&state.slots[k]!==undefined);
     const show=()=>coach([palette,slotsEl], done() ? 'いいですね！4つ並びました。' : (wideLayout()?'左のパレットから、右の4つのマスに':'上のパレットから、下の4つのマスに')+'好きなコードをドラッグしてはめてみましょう。<br><small>（タップして選んでから、マスをタップしてもOK）</small>', done()?[backBtn(),nextBtn()]:[backBtn(),['あとで',()=>showSlide(TUT.i+1),true]]);
-    show(); let was=done(); TUT.wait=setInterval(()=>{ const d=done(); if(d!==was){ was=d; show(); } },300);
+    const keep=()=>{ if(done()) TUT.mine=[0,1,2,3].map(k=>state.slots[k]); };
+    show(); keep(); let was=done(); TUT.wait=setInterval(()=>{ const d=done(); keep(); if(d!==was){ was=d; show(); } },300);
   } else if(kind==='play'){
     if(![0,1,2,3].every(k=>state.slots[k]!=null)) tutLoad([0,4,5,3]);
     coach($('play'), `再生ボタン（${IC_PLAY.replace('class="ic"','class="ic" style="width:.8em;height:.8em"')}）を押して、さっそく再生してみましょう。`, [backBtn()]);
     TUT.wait=setInterval(()=>{ if(playing){ clearInterval(TUT.wait);
-      coach($('play'), ico('note',13)+' 再生中……', [backBtn()]);
-      TUT.onLoopEnd=()=>coach($('play'),'どうですか？<br>いい曲はできましたか？', [backBtn(),nextBtn()]); } },200);
+      coach([$('play'),slotsEl], ico('note',13)+' 再生中……', [backBtn()]);   // 鳴っているマスが見えるように、吹き出しはマスからずらす
+      TUT.onLoopEnd=()=>coach([$('play'),slotsEl],'どうですか？<br>いい曲はできましたか？', [backBtn(),nextBtn()]); } },200);
   } else if(kind==='mood'){
     // 実践編：画面はふだんと同じ（色・帯もそのまま）で、説明はほかのチュートリアルと同じ吹き出しで出す
     tutStopAudio(); document.body.classList.remove('tutlite'); TUT.practice=true;
@@ -832,7 +835,7 @@ function runCoach(kind){
     play();
   }
 }
-// アニメーションが終わるまでは「つぎへ」を薄くして「スキップ」にする（押すとアニメーションを飛ばす）
+// アニメーションが終わるまでは「つぎへ」を薄くして「ぜんぶ表示」にする（押すとアニメーションを飛ばす）
 function animEnd(){
   const st=$('tutStage'), now=performance.now(); let mx=0;
   st.querySelectorAll('.a,.pop,.brk span,.flow .arr').forEach(e=>{ if(e.closest('[hidden]')) return;
@@ -845,7 +848,7 @@ function setBusy(){
   const st=$('tutStage'), nb=$('tutNext'); st.classList.remove('skip');
   clearTimeout(TUT.busyT);
   const t=animEnd();
-  if(t>0.05){ nb.classList.add('busy'); nb.textContent='スキップ'; TUT.busyT=setTimeout(clearBusy,t*1000); }
+  if(t>0.05){ nb.classList.add('busy'); nb.textContent='ぜんぶ表示'; TUT.busyT=setTimeout(clearBusy,t*1000); }
   else clearBusy();
 }
 function clearBusy(){ const nb=$('tutNext'), sl=DECK[TUT.i]; nb.classList.remove('busy');
@@ -882,3 +885,7 @@ window.addEventListener('resize',()=>{ if(TUT.on && !$('coach').hidden && DECK[T
 document.body.classList.toggle('pro',!!state.pro);
 if(!state.sOff){ const st=styleNow(); if(st) state.sOff=sOffOf(st); }
 renderAll(); frame(); ensureSounds();
+// マスが空のまま再生したら、コードを置く案内を出す（ドラムなどはそのまま鳴らす）
+$('play').addEventListener('click',()=>{ if(!playing || TUT.on || TUT.practice || !$('coach').hidden) return;
+  const n=Math.min(16,state.bars||4); if(state.slots.slice(0,n).some(v=>v!=null)) return;
+  toast('マスにコードを置いてみましょう'); });
