@@ -303,11 +303,19 @@ function pMark(g,t){ if(PD.mode==='c'||document.hidden) return; const el=$('mode
     Math.max(0,(t-ctx.currentTime)*1000)); }
 
 // ---------- 再生に重ねる ----------
+const _pthStop=stop; stop=function(){ const r=_pthStop.apply(this,arguments); try{ pDuck(false,ctx?ctx.currentTime:0); }catch(e){} return r; };
+// メロディを鳴らしているときは伴奏を控えめに：メロディは自分の出口（pmel）から出し、全体（master）を下げた分だけメロディの出口を上げる
+const DUCK=.6, MB={ctx:null, bus:null, d:1};
+function pMelOut(f){ if(MB.ctx!==ctx){ MB.ctx=ctx; const ch=mkChan('pmel'); ch.vol.gain.value=MB.d<1?1/DUCK:1; ch.send.gain.value=.16; MB.bus=ctx.createGain(); MB.bus.connect(ch.inp); }
+  const sv=compBus; compBus=MB.bus; try{ f(); } finally { compBus=sv; } }
+function pDuck(on,t){ if(!ctx||!master) return; const d=on?DUCK:1; if(MB.d===d) return; MB.d=d; const at=Math.max(ctx.currentTime,t-.02);
+  master.gain.setTargetAtTime(.85*d,at,.05); if(MB.ctx===ctx&&CHAN.pmel) CHAN.pmel.vol.gain.setTargetAtTime(1/d,at,.05); }
 const _pthStep=scheduleStep;
 scheduleStep=function(g,t){
   const live=!TUT.on && !CAPTURE && !LIB.bk && !ENDED_EARLY;
   if(live) pMark(g,t);
-  if(live && PD.mel.on && pDone('M1')) PD.mel.notes.forEach(n=>{ if(n.st===g) keyTone(melPitch(n.o),t,n.len*stepDur()*.92,.8,melInst()); });
+  const melOn=live && PD.mel.on && pDone('M1') && PD.mel.notes.length>0; pDuck(melOn,t);
+  if(melOn) pMelOut(()=>PD.mel.notes.forEach(n=>{ if(n.st===g) keyTone(melPitch(n.o),t,n.len*stepDur()*.92,.8,melInst()); }));
   // 解説のお手本（EX の mel）：進行に合わせてメロディも鳴らす
   const ex=TUT.on&&TUT.playingEx&&EX[TUT.playingEx]; if(ex&&ex.mel&&!CAPTURE) ex.mel.forEach(n=>{ if(n.st===g) keyTone(melPitch(n.o),t,n.len*stepDur()*.92,.85,melInst()); });
   if(!(live && PD.drum.on && pDone('R2'))) return _pthStep(g,t);
