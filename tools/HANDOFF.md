@@ -192,7 +192,7 @@
 ## 選ぶ画面（β, 5.22.006〜）
 - 07-tracks.js 末尾: twoPane(左カテゴリ/右リスト), pickRow(1行の要約ボタン), openPicker(title,catsFn,cur,onPick,live)=全画面 #pickScr。タップは選ぶだけ、「決定」で onPick、✕はキャンセル。live（音色：タイトルで自動判定）はタップで鳴らして聴き比べ、✕で開いた時の state に戻す。
 - groupPick を上書きして、楽器・ドラム音は全部 openPicker 経由。STYLE_CATS がスタイルの分類、patCats(kind) が PRO の演奏パターン分類。
-- 未対応: 「2つ目の楽器」(P2PATS) と PRO ベースのパターンはまだチップ表示。
+- PRO のベースの演奏も openPicker（`bassCats`：マイ演奏／基本／動きのある演奏／伴奏スタイルの演奏）。ビギナーのベースのシートでは演奏を出さない（ドラムに合わせて鳴るため）。03-ui.js の P2PATS（`#part2Sec`）は 07-tracks.js の openSheet で常に隠していて、画面には出ない
 - シート(#sheet)は下の「決定」(#sheetOk)で確定。✕・外側・Esc は sheetRestore() で開いた時の state(JSON) に戻す（07-tracks.js 末尾）。シート内で選んでもシートは閉じず openSheet(kind) で描き直す。
 - トラック画面（β, 5.22.008〜）: 横スクロールなし。dawBarW＝4マスで画面幅。メイン画面の #pages を .dtop の .dsp へ移し（tpIn/tpOut）、page と dScroll.scrollLeft を同期（dawPage, renderSlots ラッパー）。再生中は鳴っているページへ切りかえ。
 - 帯タップ＝openBlk(kind,scene,where,x0,x1)：全画面ピアノロール #blkEd。曲の全マスを blkSegs()（各コードの位置で sceneAt が返す場面 key と off）で並べ、横スクロール（BSW=18px/16分）。音を触るとその場面（PR.scene）の notes を編集→commitNotes（ラッパーで描き直し）。同じ場面の所はいっしょに変わる。組み込みは開いた時点で newMy コピー、未変更で決定ならコピーを消す。✕＝開いた時の state に戻す。空白のドラッグはスクロール、音のドラッグは移動・長さ（touchstart で preventDefault）。再生中のページ追従は「ページが進んだときだけ」(dawPlayPg)。

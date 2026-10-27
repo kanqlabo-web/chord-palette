@@ -605,6 +605,16 @@ function patCats(kind){ const drum=isDrumK(kind), src=drum?DRUMS:ARPS, order=dru
   const cats=[['マイ演奏',my.map(it)], ['伴奏スタイルの演奏',rest.filter(k=>used[k]&&!LAYER_PATS.has(k)).map(it)], ['重ねる楽器の演奏',rest.filter(k=>LAYER_PATS.has(k)).map(it)], ['そのほか',rest.filter(k=>!used[k]&&!LAYER_PATS.has(k)).map(it)]];
   if(drum) cats.forEach(c=>c[1]=c[1].filter(x=>x.k!=='none'));   // 「なし」はトラックをなくすことで（PRO）
   return cats; }
+// ベースの演奏の分類（PRO）：自分で作ったもの／基本（ドラムに合わせる・ルートの刻み）／動きのある演奏／伴奏スタイルの演奏
+const BASS_BASIC=['whole','half','q','e8','r5','oct'];
+function bassCats(){ const col=colors(), used={}; STYLES.forEach(st=>{ if(st.bass!==false) (used['d_'+st.drum]=used['d_'+st.drum]||[]).push(st.name); });
+  const it=k=>{ const b=BASSES[k], my=/^my\d+$/.test(k);
+    return {k, label:my?b.name.replace(/（自分用）$/,''):b.name, sub:k==='auto'?'伴奏スタイルのドラムに合ったベース':used[k]?used[k].join('・')+'で使う':'',
+      del:my?()=>{ delMyPat('bass',k); if(PICK){ PICK.cur=PICK.cur0=state.bassPat||'auto'; drawPicker(); } }:null,
+      cv:c=>{ const g=fit(c); drawBassBar(g,0,0,c.width,c.height,b.v||DRUMS[state.drum].bass||[],col.d,col); }}; };
+  const ks=Object.keys(BASSES), my=myKeys(BASSES).filter(k=>!(listOf('bass')[+k.slice(2)]||{}).tmp);
+  return [['マイ演奏',my.map(it)], ['基本',['auto',...BASS_BASIC].filter(k=>BASSES[k]).map(it)],
+    ['動きのある演奏',ks.filter(k=>k!=='auto'&&!BASS_BASIC.includes(k)&&!/^(my\d+|d_)/.test(k)).map(it)], ['伴奏スタイルの演奏',ks.filter(k=>/^d_/.test(k)).map(it)]]; }
 { const os=openSheet; openSheet=function(kind){ sheetSnap(); const r=os.apply(this,arguments); const opts=$('opts');
     if(!state.pro && (kind==='arp'||kind==='drum'||kind==='style')) requestAnimationFrame(()=>{ const st=styleNow();
       pickRow(opts,'伴奏スタイル',st?st.name:'（組み合わせ中）',st?styleSub(st):'',null, st?c=>{ const g=fit(c), col=colors(), H=c.height; drawArpBar(g,0,0,c.width,H*.55,ARPS[st.arp],col.t,col); if(DRUMS[st.drum]) drawDrumBar(g,0,H*.58,c.width,H*.42,DRUMS[st.drum],col); }:null,
@@ -614,9 +624,12 @@ function patCats(kind){ const drum=isDrumK(kind), src=drum?DRUMS:ARPS, order=dru
     else if(state.pro && kind!=='bass' && kind!=='style') requestAnimationFrame(()=>{ if(sheetKind!==kind) return; const k=patOf(kind)||'', drum=kind==='drum', src=drum?DRUMS:ARPS;
       pickRow(opts,'演奏',k&&src[k]?patName(src[k]):'なし（使わない）','',null, k&&src[k]?c=>{ const g=fit(c), col=colors(); if(drum) drawDrumBar(g,0,0,c.width,c.height,src[k],col); else drawArpBar(g,0,0,c.width,c.height,src[k],col.t,col); }:null,
         ()=>openPicker(drum?'ドラムの演奏を選ぶ':'演奏を選ぶ', ()=>patCats(kind), k, v=>{ setPatOf(kind,v); save(); renderAll(); ensureSounds(); renderTracks(); openSheet(kind); return true; })); });
+    else if(state.pro && kind==='bass') requestAnimationFrame(()=>{ if(sheetKind!=='bass') return; const k=state.bassPat||'auto', b=BASSES[k]||BASSES.auto;
+      pickRow(opts,'演奏',b.name,k==='auto'?(DRUMS[state.drum]||{}).pro||(DRUMS[state.drum]||{}).name||'':'',null, c=>{ const g=fit(c), col=colors(); drawBassBar(g,0,0,c.width,c.height,b.v||DRUMS[state.drum].bass||[],col.d,col); },
+        ()=>openPicker('ベースの演奏を選ぶ', bassCats, k, v=>{ state.bassPat=v; state.bass=true; save(); renderAll(); renderTracks(); openSheet('bass'); return true; })); });
     else { opts.classList.add('opts'); }
     $('part2Sec').hidden=true;   // ビギナー：2つ目の楽器は伴奏スタイルにおまかせ
-    if(!state.pro && kind==='arp2'){ opts.hidden=true; opts.previousElementSibling.hidden=true; } else { opts.hidden=false; if(opts.previousElementSibling) opts.previousElementSibling.hidden=false; }
+    if(!state.pro && (kind==='arp2'||kind==='bass')){ opts.hidden=true; opts.previousElementSibling.hidden=true; } else { opts.hidden=false; if(opts.previousElementSibling) opts.previousElementSibling.hidden=false; }   // ビギナーのベースはドラムに合わせて鳴るので、演奏は選ばない
     const X=xOf(kind), ins=kind==='arp2'?state.inst2:X?X.inst:state.inst; if(kind!=='drum' && kind!=='bass' && NO_WIDE.has(ins)) $('wideSec').hidden=true;
     return r; }; }
 const NO_WIDE=new Set(['epcity','lofi','dist']);   // 左右に広げても変わらない音色
