@@ -264,6 +264,9 @@ body.pro .playrow{gap:10px}body.pro .bpm{flex:1;width:auto}body.pro .hbtn{width:
 /* transport */
 .transport{display:flex;flex-direction:column;align-items:center;gap:6px}
 .playrow{display:flex;align-items:center;gap:22px}
+/* テンポがまだ出ないレベル：横並びのときはテンポの場所を取らず、再生の列を真ん中に */
+body.pro .transport .bpm.accOff{display:none}body.pro .transport{justify-content:center}
+@media (min-width:480px){.app>.transport .bpm.accOff{display:none}.app>.transport{justify-content:center}}
 body.pro .moodtip{display:none}
 .hbtn{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
 .hbtn:disabled,.chip.hb:disabled{opacity:.3;cursor:default}
