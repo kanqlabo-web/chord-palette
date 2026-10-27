@@ -38,10 +38,10 @@ function pthMapHTML(){
     const st = done ? '<span class="pst done">クリア</span>' : !open ? `<span class="pst">${ico('lock',11)} ${miss.map(pName).join('・')} が必要</span>` : ready ? '<span class="pst go">挑戦できます</span>' : '<span class="pst">準備中</span>';
     return `<button class="plv${done?' done':''}${open?'':' lock'}" data-p="${l.id}"><i>${pName(l.id)}</i><b>${l.name}</b>${st}</button>`; }).join('')}</div>`;
   const C=[...LEVELS.map((l,k)=>({id:'C'+(k+1),name:l.name})), ...P_LV.c];
-  const tool=(id,need,label)=>`<button class="ptool${pDone(need)?'':' lock'}" data-tool="${id}">${pDone(need)?'':ico('lock',12)+' '}${label}${pDone(need)?'':`<small>${pName(need)} をクリアすると使えます</small>`}</button>`;
+  const tool=(id,need,label)=>`<button class="pthtool${pDone(need)?'':' lock'}" data-tool="${id}">${pDone(need)?'':ico('lock',12)+' '}${label}${pDone(need)?'':`<small>${pName(need)} をクリアすると使えます</small>`}</button>`;
   return `<div class="phead"><div><div class="eyebrow">試作</div><h2>3本の道</h2></div><button class="iconbtn" id="pthClose" aria-label="閉じる">${P_X}</button></div>
     <p class="psub">どの道から進めてもかまいません。ほかの道の知識が要るレベルだけ、鍵がかかっています。</p>
-    <div class="ptools">${tool('drum','R2','ドラムを打ち込む')}${tool('mel','M1','メロディを置く')}</div>
+    <div class="pthtools">${tool('drum','R2','ドラムを打ち込む')}${tool('mel','M1','メロディを置く')}</div>
     <div class="pcols">${col('c','コード',C)}${col('r','リズム',P_LV.r)}${col('m','メロディ',P_LV.m)}</div>`;
 }
 function openPathMap(){ let el=$('pthMap'); if(!el){ el=document.createElement('div'); el.id='pthMap'; el.className='pthmap'; document.body.appendChild(el); }
@@ -52,7 +52,7 @@ function openPathMap(){ let el=$('pthMap'); if(!el){ el=document.createElement('
     if(id[0]==='C'&&+id.slice(1)<=LEVELS.length){ el.hidden=true; startLevel(+id.slice(1), pDone(id)); return; }
     const l=P_ALL().find(x=>x.id===id); if(!l||!l.deck){ toast('このレベルは準備中です'); return; }
     el.hidden=true; openTutorial(pDeck(l)); });
-  el.querySelectorAll('.ptool').forEach(b=>b.onclick=()=>{ const t=b.dataset.tool, need=t==='drum'?'R2':'M1';
+  el.querySelectorAll('.pthtool').forEach(b=>b.onclick=()=>{ const t=b.dataset.tool, need=t==='drum'?'R2':'M1';
     if(!pDone(need)){ toast(`${pName(need)} をクリアすると使えます`); return; }
     el.hidden=true; setMode(t==='drum'?'r':'m'); });
 }
@@ -183,13 +183,13 @@ function drawPanel(){ const el=$('modePanel'); if(!el) return; const k=PD.mode;
 
 const DR_ROWS=[[42,'ハイハット','h'],[38,'スネア','s'],[36,'キック','k']];
 // 1小節を1段のまま、画面の幅に収める（スクロールしない。マスは縦に大きく）
-function drawRhy(el){ const v=PD.drum.v, sc0=el.querySelector('.dscroll'), x0=sc0?sc0.scrollLeft:0;
+function drawRhy(el){ const v=PD.drum.v, sc0=el.querySelector('.pdscroll'), x0=sc0?sc0.scrollLeft:0;
   el.innerHTML=`<div class="mphead"><b>ドラム</b><small>マスをタップして音を置きます。この1小節を、曲のあいだくり返します。</small></div>
     <div class="droll">
-      <div class="dscroll"><div class="pgrid dgrid"><div class="dbeats">${[1,2,3,4].map(b=>`<b>${b}拍</b>`).join('')}</div>${DR_ROWS.map(([n,lab,c])=>`<div class="prow big ${c}">${v[n].map((x,s)=>`<i data-n="${n}" data-s="${s}" class="${x?'on':''}${s%4===0?' bt':''}"></i>`).join('')}</div>`).join('')}</div></div>
+      <div class="pdscroll"><div class="pgrid dgrid"><div class="dbeats">${[1,2,3,4].map(b=>`<b>${b}拍</b>`).join('')}</div>${DR_ROWS.map(([n,lab,c])=>`<div class="prow big ${c}">${v[n].map((x,s)=>`<i data-n="${n}" data-s="${s}" class="${x?'on':''}${s%4===0?' bt':''}"></i>`).join('')}</div>`).join('')}</div></div>
       <div class="dleg">${DR_ROWS.map(([n,lab,c])=>`<span class="${c}"><i></i>${lab}</span>`).join('')}</div></div>
     ${pBar('r')}`;
-  el.querySelector('.dscroll').scrollLeft=x0;
+  el.querySelector('.pdscroll').scrollLeft=x0;
   el.querySelectorAll('.pgrid i').forEach(c=>c.onclick=()=>{ const n=+c.dataset.n, s=+c.dataset.s; v[n][s]=v[n][s]?0:1; if(v[n][s]){ ensureAudio(); ensureSounds(); drum(n,ctx.currentTime+.01,1); } pthSave(); drawRhy(el); });
   pBarBind(el,'r');
 }
@@ -199,7 +199,7 @@ function drumPreset(p){ DR_ROWS.forEach(([n])=>PD.drum.v[n]=p?nz(P8[n]):Array(16
 const pNextLv=k=>P_LV[k].find(l=>!pDone(l.id));
 function pBar(k){ const r=k==='r', on=r?!!PD.drum.on:PD.mel.follow!==false, ik=r?state.kit:melInst(), nx=pNextLv(k);
   const nm=r?(KITS[ik]||ik):(INSTS[ik]||ik), ic=r?icoKit(ik):icoInst(ik);
-  return `<div class="pbar"><div class="pbtns">
+  return `<div class="pthbar"><div class="pbtns">
       <button class="pswitch" data-sw aria-pressed="${on}"><i></i><span>${r?'打ち込んだドラムで鳴らす':'鳴っている所を追いかける'}</span></button>
       <button class="pinst" data-inst><span class="pico">${ic}</span><span><small>${r?'ドラムの音':'メロディの楽器'}</small><b>${nm}</b></span></button></div>
     ${nx?`<button class="lvbig pnext" data-nx="${nx.id}"><small>NEXT</small><b>${pName(nx.id).replace(/^\S+ /,'LEVEL ')}</b><span>${nx.name}</span></button>`:''}</div>`; }

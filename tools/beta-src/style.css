@@ -677,10 +677,10 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
 .phead{display:flex;justify-content:space-between;align-items:flex-start}
 .phead h2{font-family:var(--display);font-weight:900;font-size:1.3rem;margin:2px 0 0}
 .psub{font-size:.85rem;color:var(--muted);line-height:1.6;margin:6px auto 12px}
-.ptools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-.ptool{border:2px solid var(--warn);background:color-mix(in srgb,var(--warn) 16%,var(--surface));border-radius:14px;padding:10px 8px;font-family:var(--display);font-weight:900;font-size:.9rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
-.ptool small{font-family:var(--body);font-weight:400;font-size:.68rem;color:var(--muted)}
-.ptool.lock{border-color:var(--line);background:var(--surface);color:var(--muted)}
+.pthtools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.pthtool{border:2px solid var(--warn);background:color-mix(in srgb,var(--warn) 16%,var(--surface));border-radius:14px;padding:10px 8px;font-family:var(--display);font-weight:900;font-size:.9rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.pthtool small{font-family:var(--body);font-weight:400;font-size:.68rem;color:var(--muted)}
+.pthtool.lock{border-color:var(--line);background:var(--surface);color:var(--muted)}
 .pcols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .pcol{display:flex;flex-direction:column;gap:6px}
 .pcol h3{font-family:var(--display);font-size:.9rem;margin:0 0 2px;text-align:center}
@@ -761,7 +761,7 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .dlab{display:flex;flex-direction:column;gap:8px;flex:none;white-space:nowrap}
 .dlab span{height:40px;display:flex;align-items:center;font-size:.66rem;color:var(--muted)}
 .dlab span:first-child{height:18px}
-.dscroll{flex:none;min-width:0;overflow:hidden}
+.pdscroll{flex:none;min-width:0;overflow:hidden}
 .dleg{display:flex;justify-content:center;gap:16px;font-size:.74rem;color:var(--muted)}
 .dleg span{display:flex;align-items:center;gap:5px}
 .dleg i{width:12px;height:12px;border-radius:3px}
@@ -806,7 +806,7 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .kb12 button.mk{background:color-mix(in srgb,var(--d) 22%,var(--surface));border-color:var(--d)}
 .kb12 button.kbb.mk{background:var(--d)}
 .kb12 small{font-size:.6rem;color:var(--ink)}
-.pplay.on{opacity:.6}
+.chip.pplay.on{opacity:.6}
 /* メロディガイド */
 .mguide{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:.72rem;flex:none}
 .mguide b{font-family:var(--display);font-size:.78rem}
@@ -817,7 +817,7 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .mnext{position:absolute;pointer-events:none;border-radius:4px;background:color-mix(in srgb,currentColor 26%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,currentColor 70%,transparent)}
 #pthSecs{display:contents}   /* 設定メニューの並び（すき間）をそのまま使う */
 /* リズム・メロディの画面の下：切り替え・楽器・次のレベル */
-.pbar{display:flex;align-items:stretch;gap:10px;flex:none}
+.pthbar{display:flex;align-items:stretch;gap:10px;flex:none}
 .pbtns{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;justify-content:center}
 .pswitch,.pinst{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:6px 12px;border:1.5px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .pswitch span{font-size:.84rem;font-weight:700}
