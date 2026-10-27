@@ -123,7 +123,7 @@ const IC_STOP='<svg class="ic" viewBox="0 0 12 12" aria-hidden="true"><rect x="2
 function listenBtn(key){ return `<button class="listen a" style="--dl:1.6" data-ex="${key}">${IC_PLAY}<span>聴いてみる</span></button>`; }
 const SLIDES=[
   {html:()=>`<div class="eyebrow a">LEVEL 1</div>
-     <div class="chips7">${[0,3,4,5].map((d,k)=>`<span class="floaty" style="animation-delay:${k*.4}s;display:inline-block">${tc(d,'',.2+k*.15)}</span>`).join('')}</div>
+     <div class="chips7">${[0,3,4,5].map((d,k)=>`<span class="floaty" style="animation-delay:${k*.4}s;display:inline-block">${tc(d,'',.2+k*.15).replace(/ data-hear="[^"]*"/,'')}</span>`).join('')}</div>
      <h2 class="a" style="--dl:.8">こんにちは！</h2>
      <p class="a" style="--dl:1.1">このアプリは『コード進行』が<br>（たぶん）作れるようになるアプリです。</p>`},
   // 1枚の画面のまま「つぎへ」で説明を足していく（steps＝追加で見せる段階の数）
@@ -136,7 +136,7 @@ const SLIDES=[
      <p class="sub a" style="--dl:1.6" data-upto="0">コード＝いくつかの音を同時に鳴らした「和音」のこと</p>
      <p data-st="2" data-dl="1.5" data-dur="1">何も付いていなければ<b>明るい</b>コード<br>「m」が付いていれば<b>暗い</b>コードです</p>`},
   {steps:1, html:()=>`<div class="eyebrow a">音の高さ</div>
-     <h2 class="a" style="--dl:.1" data-upto="0">ドレミファソラシは<br>アルファベットで書きます</h2>
+     <h2 class="a" style="--dl:.1" data-upto="0">コードの音の高さは<br>ドレミファソラシドと対応しています</h2>
      <p data-st="1">でも、覚えるのがめんどくさいので…</p>
      <h2 data-st="1" data-dl="1.1">全部、数字に<br>しちゃいましょう！</h2>
      <div class="scale" id="tutScale">${['ド','レ','ミ','ファ','ソ','ラ','シ'].map((j,k)=>`<div class="a" style="--dl:${.5+k*.1};--k:${k}"><small>${j}</small><b><span class="alpha">${'CDEFGAB'[k]}</span><span class="num">${k+1}</span></b></div>`).join('')}</div>
@@ -227,7 +227,7 @@ const moodSlide=(no,title,h,key,notes)=>({html:()=>`<div class="eyebrow a">雰�
 const BRIGHT=new Set([0,3,4]), DARK=new Set([1,2,5,6]);
 const pdist=(a,b)=>{ const d=Math.abs(a-b)%7; return Math.min(d,7-d); };   // 数字どうしの距離（1と5は3、1と2mは1）
 const PRACTICE={
-  bright:{name:'明るい・元気', sub:'晴れた日の朝みたいに', style:'ポップス（定番）', bpm:120,
+  bright:{name:'明るい・元気', na:'な', sub:'晴れた日の朝みたいに', style:'ポップス（定番）', bpm:120,
     hint:'明るいコード（1・4・5）を多めに使って、1 から始めてみましょう。',
     check:q=>q.filter(d=>BRIGHT.has(d)).length>=3, ok:'明るいコードが多くて、元気でまっすぐな響きになっています。', ng:'暗いコードが多めです。1・4・5 を増やしてみましょう。'},
   sad:{name:'切ない', sub:'夕暮れの帰り道みたいに', style:'バラード', bpm:80,
@@ -236,7 +236,7 @@ const PRACTICE={
   strong:{name:'力強い', sub:'サビで盛り上がるように', style:'ロック', bpm:128,
     hint:'数字が離れたコードへ跳んでみましょう（1→4、6m→2m、5→1 など）。',
     check:q=>q.filter((d,k)=>pdist(d,q[(k+1)%q.length])===3).length>=2, ok:'大きく跳ぶ動きが多くて、力強く進んでいます。', ng:'となり同士の動きが多めです。1→4、6m→2m のように跳んでみましょう。'},
-  calm:{name:'穏やか', sub:'ゆっくり流れる雲みたいに', style:'しっとり', bpm:76,
+  calm:{name:'穏やか', na:'な', sub:'ゆっくり流れる雲みたいに', style:'しっとり', bpm:76,
     hint:'となりの数字へ進んでみましょう（1→2m、4→3m、6m→5 など）。',
     check:q=>q.filter((d,k)=>pdist(d,q[(k+1)%q.length])===1).length>=2, ok:'となりへ進む動きが多くて、なめらかで穏やかです。', ng:'跳ぶ動きが多めです。1→2m、4→3m のように、となりへ進んでみましょう。'},
 };
@@ -274,8 +274,8 @@ const MOOD=[
      <p class="a" style="--dl:1">伴奏スタイルとテンポ（速さ）を変えるだけで、<br>しっとりにも、ノリノリにもなります。</p>
      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${listenBtn('calm').replace('聴いてみる','しっとり版')}${listenBtn('drive').replace('聴いてみる','ノリノリ版')}</div>`},
   moodSlide('①','明るい・元気','明るいコードで<br>まっすぐ進む','bright',['明るいコード（1・4・5）だけ。迷いのない元気な響きに。','テンポ（速さ）は速め（110〜130くらい）がおすすめ。']),
-  moodSlide('②','切ない','暗いコードから<br>始めてみる','sad',['6m で始めると、出だしから切ない雰囲気に（小室進行）。','最後は 1 で明るく着地。切ないのに前向き。']),
-  moodSlide('③','エモい・泣ける','4 から始めて<br>6m に着地','emo',['4 → 5 と上がって盛り上げてから、暗い 6m に落とす（王道進行）。','5 → 3m と下りてから、6m にストンと着地。しっとり切なく終わります。']),
+  moodSlide('②','切ない','暗いコードから<br>始めてみる','sad',['6m で始めると、出だしから切ない雰囲気に。','最後は 1 で明るく着地。切ないのに前向き。']),
+  moodSlide('③','エモい・泣ける','4 から始めて<br>6m に着地','emo',['4 → 5 と上がって盛り上げてから、暗い 6m に落とす。','5 → 3m と下りてから、6m にストンと着地。しっとり切なく終わります。']),
   moodSlide('④','おしゃれ','コードの響きを<br>少し変えてみる','chic',['2m7・1M7 のように 7 や M7 を足すと、大人っぽい響きに。','レベル6以降で、自分でもこうした響きに変えられるようになります。']),
   {html:()=>`<div class="eyebrow a">まとめ</div>
      <h2 class="a" style="--dl:.1">雰囲気づくりの4つのコツ</h2>
@@ -302,27 +302,27 @@ const STG12={label:'LEVEL 1・2', goal:'自分の進行を作る', list:[
   {name:'コードって何？'},
   {name:'並べて鳴らす'},
   {name:'コードの役割'},
-  {name:'実例で聴く', recap:['有名な進行も、T・S・D の流れでできている','お手本どおりでなくても、聴いてよければOK']}]};
+  {name:'実例で聴く'}],
+  recap:['コード進行は、コードを順番につなげたもの','『カデンツ』にコードを当てはめて、コード進行をつくる']};
 const STAGES={1:STG12, 2:STG12, 3:{label:'LEVEL 3', goal:'ねらった雰囲気の進行を作る', list:[
   {name:'4つのコツ'},
   {name:'実例を聴く'},
   {name:'作ってみる'}]}};
-// おさらい：いま開いているページに出てくる言葉だけを出す（上から下りてくるパネル）
-const roleIs=(st,L)=>[...st.querySelectorAll('.tc b,.roles .L,.flow .tc b')].some(b=>b.textContent.trim()===L);
+// おさらい：前のページで説明して、このページでは説明なしで使っている言葉だけを出す（上から下りてくるパネル）
 const GLOSS=[
-  {t:'コード', at:101, re:/コード/, x:'いくつかの音を同時に鳴らした「和音」のことです。'},
-  {t:'コード進行', at:101, re:/進行/, x:'コードを順番につなげたもの。だいたい4つか8つで一周します。'},
-  {t:'コードの数字', at:102, q:st=>!!st.querySelector('.tc')||/数字/.test(st.textContent), x:'ド＝1、レ＝2 … シ＝7。コードの数字は音の高さを表します。'},
-  {t:'明るいコード・暗いコード', at:101, re:/明るい|暗い|[1-7]m/, x:'何も付いていなければ明るいコード、「m」が付いていれば暗いコードです。', c:()=>tc(0,'bright')+tc(5,'dark')},
-  {t:'トニック（T）', at:108, q:st=>/トニック/.test(st.textContent)||roleIs(st,'T'), x:'主役。いちばん安定していて、帰ってくる場所です。', c:()=>tc(0,'T')+tc(5,'T')},
-  {t:'サブドミナント（S）', at:108, q:st=>/サブドミナント/.test(st.textContent)||roleIs(st,'S'), x:'脇役。変化や彩りを出します。', c:()=>tc(3,'S')+tc(1,'S')},
-  {t:'ドミナント（D）', at:108, q:st=>/(^|[^ブ])ドミナント/.test(st.textContent)||roleIs(st,'D'), x:'緊張感があり、トニックに行きたい気持ちがとても強いコードです。', c:()=>tc(4,'D')+tc(6,'D')},
-  {t:'カデンツ', at:110, re:/カデンツ|役割の流れ/, x:'役割の流れのこと。T→D→T、T→S→T、T→S→D→T の3つがお手本です。'},
-  {t:'進行ガイド', at:114, re:/進行ガイド|黄色い線/, x:'マスの上に、役割の流れを線で表す目印です。黄色い線は「お手本と違うよ」の目印です。'},
-  {t:'テンポ', at:304, re:/テンポ/, x:'曲の速さです。数字が大きいほど速くなります。'},
-  {t:'伴奏スタイル', at:304, re:/伴奏/, x:'コードに合わせて鳴る、楽器の演奏のしかたです。'},
-  {t:'小節', at:500, re:/小節/, x:'曲の区切りです。このアプリでは、1マスが1小節です。'},
-  {t:'キー', at:400, re:/キー/, x:'進行全体の高さです。キーを変えると、同じ進行を高くしたり低くしたりできます。'},
+  {t:'コード', at:101, x:'いくつかの音を同時に鳴らしたもの。和音。じゃーんってやつ'},
+  {t:'コード進行', at:101, x:'コードを順番につなげたもの。だいたい4つか8つで一周します。'},
+  {t:'コードの数字', at:102, x:'ド＝1、レ＝2 … シ＝7。コードの数字は音の高さを表します。'},
+  {t:'明るいコード・暗いコード', at:101, x:'何も付いていなければ明るいコード、「m」が付いていれば暗いコードです。', c:()=>tc(0,'bright')+tc(5,'dark')},
+  {t:'トニック（T）', at:108, x:'主役。いちばん安定していて、帰ってくる場所です。', c:()=>tc(0,'T')+tc(5,'T')},
+  {t:'サブドミナント（S）', at:108, x:'脇役。変化や彩りを出します。', c:()=>tc(3,'S')+tc(1,'S')},
+  {t:'ドミナント（D）', at:108, x:'緊張感があり、トニックに行きたい気持ちがとても強いコードです。', c:()=>tc(4,'D')+tc(6,'D')},
+  {t:'カデンツ', at:110, x:'役割の流れのこと。T→D→T、T→S→T、T→S→D→T の3つがお手本です。'},
+  {t:'進行ガイド', at:114, x:'マスの上に、役割の流れを線で表す目印です。黄色い線は「お手本と違うよ」の目印です。'},
+  {t:'テンポ', at:304, x:'曲の速さです。数字が大きいほど速くなります。'},
+  {t:'伴奏スタイル', at:304, x:'コードに合わせて鳴る、楽器の演奏のしかたです。'},
+  {t:'小節', at:500, x:'曲の区切りです。このアプリでは、1マスが1小節です。'},
+  {t:'キー', at:400, x:'進行全体の高さです。キーを変えると、同じ進行を高くしたり低くしたりできます。'},
 ];
 // いまのページの順番（sid のないタイトル・クリアの画面は、レベルの始まり・終わりとして数える）
 function curSid(){ const sl=DECK[TUT.i]||{}, n=DECK.lv||1; return sl.sid!=null?sl.sid:n*100+(TUT.i?99:0); }
@@ -330,12 +330,17 @@ function curSid(){ const sl=DECK[TUT.i]||{}, n=DECK.lv||1; return sl.sid!=null?s
 const SEEN_KEY=STK('chord-palette-tutseen');
 let TSEEN=new Set(); try{ TSEEN=new Set(JSON.parse(localStorage.getItem(SEEN_KEY)||'[]')); }catch(e){}
 function markSeen(){ const sl=DECK[TUT.i]; if(!sl||sl.sid==null||TSEEN.has(sl.sid)) return; TSEEN.add(sl.sid); try{ localStorage.setItem(SEEN_KEY,JSON.stringify([...TSEEN])); }catch(e){} }
-function revTerms(){ const st=$('tutStage'); if(!st) return []; const tx=st.textContent, now=curSid(), ok=a=>a<now&&TSEEN.has(a);
-  const has=new Set(GLOSS.filter(g=>ok(g.at) && (g.q?g.q(st):g.re.test(tx))));
-  // 出した説明の中に出てくる言葉も、いっしょに出す（「コード進行＝コードを順番に…」なら「コード」も）
-  const inText=(g,x)=>g.re?g.re.test(x):x.includes(g.t.replace(/（.*）/,''));
-  for(let more=true;more;){ more=false; GLOSS.forEach(g=>{ if(!has.has(g)&&ok(g.at)&&[...has].some(h=>inText(g,h.x))){ has.add(g); more=true; } }); }
-  return GLOSS.filter(g=>has.has(g)); }
+// ページごとの言葉（キーは sid）。ここにない言葉は出さない。説明したページ（at）を見ていない言葉も出さない
+const REV=(()=>{ const CD='コード', PR='コード進行', NUM='コードの数字', BD='明るいコード・暗いコード', TT='トニック（T）', SS='サブドミナント（S）', DD='ドミナント（D）';
+  return {102:[CD], 103:[CD], 104:[CD],
+  108:[CD,PR], 109:[CD,NUM], 110:[CD,PR,NUM,TT,SS,DD], 111:[PR,NUM,BD,TT], 112:[PR,NUM,BD,DD], 113:[PR,NUM,BD], 114:[PR,NUM,TT,SS,DD,'カデンツ'],
+  300:[CD,NUM,BD], 301:[CD,NUM,BD], 302:[CD,BD], 303:[CD,NUM,BD], 304:[PR,NUM,BD], 305:[CD,NUM,BD,'テンポ'], 306:[CD,PR,NUM,BD], 307:[PR,NUM,BD], 309:[CD,BD,'テンポ','伴奏スタイル'], 310:[PR,BD],
+  400:[CD,NUM], 401:[NUM,'キー'], 402:['キー'], 500:[PR,NUM],
+  600:[CD], 601:[NUM], 700:[CD], 701:[CD,NUM], 702:[CD,NUM],
+  800:[CD,NUM,BD], 801:[NUM,BD], 802:[NUM,'進行ガイド'], 804:[NUM,BD],
+  900:[CD,'小節'], 901:[PR,NUM], 902:[PR,NUM,'小節']}; })();
+function revTerms(){ const sl=DECK[TUT.i]||{}, L=REV[sl.sid]||[], now=curSid();
+  return GLOSS.filter(g=>L.includes(g.t) && g.at<now && TSEEN.has(g.at)); }
 function openRev(){ const L=revTerms(); if(!L.length) return;
   $('revList').innerHTML=L.map(g=>`<div class="revitem"><b>${g.t}</b><p>${g.x}</p>${g.c?`<div class="revchips">${g.c()}</div>`:''}</div>`).join('');
   $('revWrap').hidden=false; bindHear(); }
@@ -404,10 +409,7 @@ const TASKS={
     text:'2つ並んだ 4 の<b>うしろの方を 4m</b> にして、「4 → 4m → 1」を作ってみましょう。', hint:'3つ目の 4 をタップして、4m を選びます',
     check:()=>{ const v=state.slots[2]; return tokOf(state.slots[1])===3 && v!=null&&!isNum(v)&&specOf(v).o===5&&specOf(v).q==='m'; },
     ok:'明るい 4 から暗い 4m へ。切なさが一瞬だけ差し込みました。', ng:'3つ目の 4 をタップして、4m を選んでみましょう。'},
-  key:{load:[0,5,1,4], style:'ポップス（定番）', bpm:96, keys:['C','G','D','A','E','F'],
-    text:'下のボタンで<b>キーを変えて</b>、再生してみましょう。マスの数字はそのまま、アルファベットだけが変わります。', hint:'どのキーが好みか聴き比べてみましょう',
-    check:()=>state.key!=='C',
-    ok:'同じ進行のまま、高さだけが変わりました。', ng:'下のボタンで、C 以外のキーを選んでみましょう。'},
+  key:{load:[0,5,1,4], style:'ポップス（定番）', bpm:96, keys:['C','G','D','A','E','F']},
   smooth:{load:[3,0,4,5], style:'ポップス（定番）', bpm:92,
     text:'「4 → 1 → 5 → 6m」は、ベースが大きく跳んでいます。コードをタップして<b>ベースの音を変え</b>、なめらかにしてみましょう。', hint:'どのコードのベースを変えると、となりのベースに近づくか考えてみましょう',
     check:()=>[0,1,2,3].some(k=>{ const v=state.slots[k]; return v!=null&&!isNum(v)&&specOf(v).b!=null; }) && bassLeap()<bassLeap([3,0,4,5]),
@@ -593,7 +595,7 @@ function levelDeck(n,review){
     else d.push({last:true, btn:'はじめる', html:()=>`<div class="eyebrow a">LEVEL 1・2 CLEAR</div>
      <h2 class="a" style="--dl:.1">＼ レベル1・2 クリア！ ／</h2>
      <div class="okcard a" style="--dl:.5"><b>アンロック：進行ガイド</b></div>
-     <div class="okcard recap plain a" style="--dl:.7"><b>ステージ4のおさらい</b>${STG12.list[3].recap.map(t=>`<span>・${t}</span>`).join('')}</div>
+     <div class="okcard recap plain a" style="--dl:.7"><b>レベル1・2のおさらい</b>${STG12.recap.map(t=>`<span>・${t}</span>`).join('')}</div>
      <p class="a" style="--dl:.9">では、自由にコード進行を作ってみましょう！</p>`, finish:()=>{ endTutorial(false); levelClear(2); showWhere(2); }}); }
   return d;
 }
@@ -805,8 +807,8 @@ function runCoach(kind){
       tutLoadEx({degs:[],style:m.style,bpm:m.bpm}); TUT.moodInit=true; }
     const tgt=()=>[palette,slotsEl], quit=['やめる',()=>endTutorial(true),true];
     const show=()=>{
-      if(playing) coach([slotsEl,$('play')], `${ico('note',13)} 再生中……<br>「${m.name}」な感じになっているかな？`, [quit]);
-      else if(!moodDone()) coach(tgt(), `お題：<b>「${m.name}」</b>な進行を作ってみましょう。<br><small>ヒント：${m.hint}</small>`, [backBtn(),quit]);
+      if(playing) coach([slotsEl,$('play')], `${ico('note',13)} 再生中……<br>「${m.name}」${m.na||''}感じになっているかな？`, [quit]);
+      else if(!moodDone()) coach(tgt(), `お題：<b>「${m.name}」${m.na||''}進行</b>を作ってみましょう。<br><small>ヒント：${m.hint}</small>`, [backBtn(),quit]);
       else coach([slotsEl,$('play')], `4つ並びました！<br>再生して、<b>「${m.name}」</b>になっているか聴いてみましょう。`, [backBtn(),quit]); };
     show(); let was='';
     TUT.wait=setInterval(()=>{ const k=(playing?'p':'')+(moodDone()?'d':''); if(k===was) return; was=k;
