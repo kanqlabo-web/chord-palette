@@ -234,7 +234,7 @@ const melT=()=>state.bars*slotSteps();
 const melSnap=s=>{ MU.hist.push(s||JSON.stringify(PD.mel.notes)); if(MU.hist.length>40) MU.hist.shift(); MU.fut=[]; };
 function melUndo(dir){ const from=dir<0?MU.hist:MU.fut, to=dir<0?MU.fut:MU.hist, x=from.pop(); if(x==null) return; to.push(JSON.stringify(PD.mel.notes)); PD.mel.notes=JSON.parse(x); melSnapRows(); pthSave(); drawPanel(); }
 function melClear(){ if(!PD.mel.notes.length) return; melSnap(); PD.mel.notes=[]; pthSave(); drawPanel(); toast('メロディをぜんぶ消しました（↶で戻せます）'); }
-function melFix(keep){ const T=melT(); let ns=PD.mel.notes.filter(n=>n.st>=0&&n.st<T);
+function melTidy(keep){ const T=melT(); let ns=PD.mel.notes.filter(n=>n.st>=0&&n.st<T);
   ns.forEach(n=>n.len=Math.max(1,Math.min(n.len,T-n.st)));
   if(keep) ns=ns.filter(n=>n===keep || n.st+n.len<=keep.st || n.st>=keep.st+keep.len);   // 動かした音と重なる音は消す
   ns.sort((a,b)=>a.st-b.st); ns.forEach((n,i)=>{ const nx=ns[i+1]; if(nx && n.st+n.len>nx.st) n.len=Math.max(1,nx.st-n.st); });
@@ -277,7 +277,7 @@ function drawMel(el){ melSnapRows(); const T=melT(), L=slotSteps(), kp=keyObj().
 }
 function melBind(el){ const A=$('mArea'), ROWS=melRows(), R=ROWS.length; let D=null;
   const pos=e=>{ const b=A.getBoundingClientRect(), k=Math.max(0,Math.min(R-1,Math.floor((e.clientY-b.top)/b.height*R))); return {s:(e.clientX-b.left)/MU.cw, o:ROWS[R-1-k], rh:b.height/R}; };
-  const done=keep=>{ melFix(keep); if(MU.ref&&!PD.mel.notes.includes(MU.ref)) MU.ref=null; PD.mel.on=true; pthSave(); drawMel(el); };
+  const done=keep=>{ melTidy(keep); if(MU.ref&&!PD.mel.notes.includes(MU.ref)) MU.ref=null; PD.mel.on=true; pthSave(); drawMel(el); };
   A.onpointerdown=e=>{ if(e.pointerType==='mouse'&&e.button!==0) return; const ne=e.target.closest('.mn'), p=pos(e);
     if(ne){ e.preventDefault(); const n=PD.mel.notes[+ne.dataset.i], b=ne.getBoundingClientRect(), edge=(b.right-e.clientX)<Math.max(10,Math.min(18,b.width*.4));
       try{ A.setPointerCapture(e.pointerId); }catch(_){}
@@ -365,7 +365,7 @@ function pthMenu(){ const k=PD.mode, dr=$('drawer'); if(!dr) return;
   C('kit',Object.entries(KITS).map(([id,n])=>[id,n]),state.kit,v=>{ state.kit=v; ensureSounds(); save(); if(!playing) previewKit(); });
   C('mon',[[true,'メロディを鳴らす'],[false,'鳴らさない']],!!PD.mel.on,v=>PD.mel.on=v);
   C('inst',MEL_INSTS,melInst(),v=>{ PD.mel.inst=v; ensureAudio(); melLoad(); setTimeout(()=>melHear(7),150); });
-  C('five',[[true,'5つの音だけ'],[false,'7つの音']],melFive(),v=>{ melSnap(); PD.mel.five=v; melSnapRows(); melFix(); });
+  C('five',[[true,'5つの音だけ'],[false,'7つの音']],melFive(),v=>{ melSnap(); PD.mel.five=v; melSnapRows(); melTidy(); });
   C('guide',[[true,'表示する'],[false,'表示しない']],!!PD.mel.guide,v=>PD.mel.guide=v);
   C('follow',[[true,'鳴っている所を追いかける'],[false,'動かさない']],PD.mel.follow!==false,v=>PD.mel.follow=v);
   C('grid',[[2,'8分（ふつう）'],[1,'16分（細かい）']],MU.G,v=>{ MU.G=v; MU.last=Math.max(MU.G,MU.last); });
