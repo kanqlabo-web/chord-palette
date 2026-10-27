@@ -593,10 +593,11 @@ function playBass(list,s,t0,bt,sd,room=16,nextV=null){ list.forEach(([st,iv,len,
     if(nextV===null||nextV===undefined){ n=bt.slash?12:bt.fifth; }
     else {
       // 次のコードのルートに一番近い「今のコードの音」（ルート・3度・5度・オクターブ）を選ぶ。今の和音とぶつからない
+      //  次の小節の頭と同じ音（オクターブちがいも）は選ばない（「ドドー」と重なって聞こえるので）
       const pc=bassPcOf(nextV), cand=bt.slash?[0,12]:[0,bt.third,bt.fifth,12].filter(x=>x<=12);
-      let best=12, bd=99;
-      cand.forEach(c=>{ const m=bt.bass+c; for(const o of [-12,0,12]){ const d=Math.abs(m-(28+((pc-4+12)%12)+o)); if(d<bd&&c!==0){ bd=d; best=c; } } });
-      n=best; }
+      let best=null, bd=99;
+      cand.forEach(c=>{ const m=bt.bass+c; if(c===0||((m%12)+12)%12===pc) return; for(const o of [-12,0,12]){ const d=Math.abs(m-(28+((pc-4+12)%12)+o)); if(d<bd){ bd=d; best=c; } } });
+      n=best??(bt.slash?12:bt.fifth); }
   } else if(iv==='-12'){ n=-12; }
   else if(iv==='-5'){ n = bt.slash ? -12 : bt.fifth-12; }
   else if(typeof iv==='string'){ n = bt.slash ? 12 : iv==='3'?bt.third : iv==='5'?bt.fifth : iv==='6'?sixthOf(bt) : iv==='7'?bt.seventh : 0; }
