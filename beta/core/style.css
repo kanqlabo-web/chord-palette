@@ -760,11 +760,16 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .mlock h2{font-family:var(--display);font-weight:900;font-size:1.1rem;margin:0;color:var(--ink)}
 .mlock p{margin:0;font-size:.86rem;line-height:1.6}
 /* ドラム：1段のまま画面の幅に収める（縦に長いマス） */
-.droll{flex:1;min-height:0;display:flex;gap:4px;align-items:center}
+.droll{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:10px}
 .dlab{display:flex;flex-direction:column;gap:8px;flex:none;white-space:nowrap}
 .dlab span{height:40px;display:flex;align-items:center;font-size:.66rem;color:var(--muted)}
 .dlab span:first-child{height:18px}
-.dscroll{flex:1;min-width:0;overflow:hidden}
+.dscroll{flex:none;min-width:0;overflow:hidden}
+.dleg{display:flex;justify-content:center;gap:16px;font-size:.74rem;color:var(--muted)}
+.dleg span{display:flex;align-items:center;gap:5px}
+.dleg i{width:12px;height:12px;border-radius:3px}
+.modepanel .dgrid .prow.h i:not(.on){background:color-mix(in srgb,var(--s) 9%,var(--line))}.modepanel .dgrid .prow.s i:not(.on){background:color-mix(in srgb,var(--d) 9%,var(--line))}.modepanel .dgrid .prow.k i:not(.on){background:color-mix(in srgb,var(--t) 9%,var(--line))}
+.dleg .h i{background:var(--s)}.dleg .s i{background:var(--d)}.dleg .k i{background:var(--t)}
 .modepanel .pgrid.dgrid{display:flex;flex-direction:column;gap:8px;width:100%;margin:0}
 .dbeats{display:grid;grid-template-columns:repeat(4,1fr);height:18px;font-size:.72rem;color:var(--muted)}
 .dbeats b{font-weight:700;padding-left:3px}

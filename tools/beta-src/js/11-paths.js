@@ -196,8 +196,9 @@ const DR_ROWS=[[42,'ハイハット','h'],[38,'スネア','s'],[36,'キック','
 // 1小節を1段のまま、画面の幅に収める（スクロールしない。マスは縦に大きく）
 function drawRhy(el){ const v=PD.drum.v, sc0=el.querySelector('.dscroll'), x0=sc0?sc0.scrollLeft:0;
   el.innerHTML=`<div class="mphead"><b>ドラム</b><small>マスをタップして音を置きます。この1小節を、曲のあいだくり返します。</small></div>
-    <div class="droll"><div class="dlab"><span></span>${DR_ROWS.map(([n,lab])=>`<span>${lab}</span>`).join('')}</div>
-      <div class="dscroll"><div class="pgrid dgrid"><div class="dbeats">${[1,2,3,4].map(b=>`<b>${b}拍</b>`).join('')}</div>${DR_ROWS.map(([n,lab,c])=>`<div class="prow big ${c}">${v[n].map((x,s)=>`<i data-n="${n}" data-s="${s}" class="${x?'on':''}${s%4===0?' bt':''}"></i>`).join('')}</div>`).join('')}</div></div></div>
+    <div class="droll">
+      <div class="dscroll"><div class="pgrid dgrid"><div class="dbeats">${[1,2,3,4].map(b=>`<b>${b}拍</b>`).join('')}</div>${DR_ROWS.map(([n,lab,c])=>`<div class="prow big ${c}">${v[n].map((x,s)=>`<i data-n="${n}" data-s="${s}" class="${x?'on':''}${s%4===0?' bt':''}"></i>`).join('')}</div>`).join('')}</div></div>
+      <div class="dleg">${DR_ROWS.map(([n,lab,c])=>`<span class="${c}"><i></i>${lab}</span>`).join('')}</div></div>
     <div class="chips"><button class="chip" data-on aria-pressed="${!!PD.drum.on}">曲のドラムをこれにする</button><button class="chip" data-pre="8">8ビートを入れる</button><button class="chip" data-pre="0">ぜんぶ消す</button></div>`;
   el.querySelector('.dscroll').scrollLeft=x0;
   el.querySelectorAll('.pgrid i').forEach(c=>c.onclick=()=>{ const n=+c.dataset.n, s=+c.dataset.s; v[n][s]=v[n][s]?0:1; if(v[n][s]){ ensureAudio(); ensureSounds(); drum(n,ctx.currentTime+.01,1); } pthSave(); drawRhy(el); });
