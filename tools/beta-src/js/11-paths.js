@@ -258,7 +258,7 @@ function melNextRows(o){ const R=melRows(), i=R.indexOf(o), step=[R[i-1],R[i],R[
 const melRef=()=>{ const ns=PD.mel.notes; return (MU.ref && ns.includes(MU.ref)) ? MU.ref : ns[ns.length-1]||null; };
 function drawMel(el){ melSnapRows(); const T=melT(), L=slotSteps(), kp=keyObj().pc, ROWS=melRows(), R=ROWS.length, lit4=pDone('M4'), guide=pDone('M3')&&PD.mel.guide;
   const sc0=el.querySelector('.mscroll'), x0=sc0?sc0.scrollLeft:0;
-  const W0=(el.clientWidth||360)-44; MU.cw=Math.max(16, Math.floor(W0/(PD.mview==='bar'?L:T))); const cw=MU.cw, W=T*cw;
+  const W0=(el.clientWidth||360)-44; MU.cw=Math.max(16, Math.floor(W0/T)); const cw=MU.cw, W=T*cw;
   const ri=o=>ROWS.indexOf(o), rowTop=k=>((R-1-k)/R*100)+'%', rh=(100/R)+'%';
   // コードの音の帯（メロディ4のあと）と、小節番号・コード名
   let lit='', head='';
