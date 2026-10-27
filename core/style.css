@@ -347,7 +347,40 @@ input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:28px}
 /* ---- チュートリアル ---- */
 .tut{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;
   padding:calc(env(safe-area-inset-top,0px) + 10px) max(18px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 14px) max(18px,env(safe-area-inset-left,0px))}
-.tutbar{display:flex;align-items:center;justify-content:space-between;gap:10px;height:32px}
+.tutbar{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:4px 10px;min-height:32px;position:relative}
+/* 左上の進み具合（ステージごとのバーとゴール） */
+.tutprog{flex:1;min-width:0;max-width:340px;display:flex;flex-direction:column;gap:5px;padding-top:2px}
+.tp-top{white-space:nowrap;display:flex;gap:8px;font-size:.68rem;font-weight:700;color:var(--muted);letter-spacing:.04em}.tp-top b{color:var(--ink)}
+.tp-bar{display:flex;align-items:center;gap:4px}.tp-bar svg{flex:none;margin-left:2px}
+.tp-bar i{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden;position:relative}
+.tp-bar i::after{content:'';position:absolute;left:0;top:0;bottom:0;width:calc(var(--f)*100%);background:var(--ink);border-radius:3px;animation:tpGrow .5s ease both}
+.tp-bar i.done::after{background:var(--warn)}
+@keyframes tpGrow{from{width:calc(var(--f0)*100%)}}
+.tp-sub{flex:1 0 100%;font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tp-sub i{font-style:normal;color:var(--line);margin:0 6px}
+.tutrev{flex:none;height:34px;padding:0 12px;border-radius:17px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:5px;cursor:pointer}
+.tutrev:focus-visible{outline:2px solid var(--t);outline-offset:2px}
+/* おさらい：上から下りてくるパネル */
+.revwrap{position:absolute;inset:0;z-index:5}
+.revscrim{position:absolute;inset:0;border:0;padding:0;background:rgba(10,14,20,.4);animation:revFade .25s ease both;cursor:pointer}
+.revpanel{position:absolute;left:0;right:0;top:0;margin:0 auto;max-width:560px;max-height:80%;box-sizing:border-box;background:var(--surface);border-radius:0 0 24px 24px;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.2);animation:revDrop .32s cubic-bezier(.2,.9,.3,1.1) both}
+.revhead{display:flex;align-items:center;gap:8px}.revhead b{flex:1;font-family:var(--display);font-weight:900;font-size:1.2rem}
+.revhead button{width:40px;height:40px;border:0;border-radius:20px;background:var(--bg);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.revsub{margin:0;font-size:.75rem;color:var(--muted)}
+.revlist{overflow-y:auto;display:flex;flex-direction:column;gap:8px;min-height:0}
+.revitem{background:var(--bg);border-radius:14px;padding:10px 12px;text-align:left}
+.revitem b{font-family:var(--display);font-weight:900;font-size:.95rem}
+.revitem p{margin:4px 0 0;font-size:.85rem;line-height:1.6;word-break:auto-phrase}
+.revchips{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}.revchips .tc{min-width:48px;padding:4px 8px;cursor:pointer}
+.revgrip{width:40px;height:4px;border-radius:2px;background:var(--line);align-self:center;flex:none}
+@keyframes revDrop{from{transform:translateY(-100%)}to{transform:none}}
+@keyframes revFade{from{opacity:0}}
+/* ステージを終えたときの「クリア！」（左上のバー） */
+.tp-clear{display:inline-block;margin-right:8px;font-size:.8rem;font-style:normal;color:var(--warnText);font-weight:900;animation:tpClear 2.6s ease both}
+@keyframes tpClear{0%{opacity:0;transform:scale(.6)}12%{opacity:1;transform:scale(1.15)}22%{transform:none}80%{opacity:1}100%{opacity:0}}
+.tp-bar i.done::after{transition:background .3s}
+.okcard.recap{text-align:left;gap:4px}.okcard.recap b{font-size:1rem}.okcard.recap span{font-size:.88rem;line-height:1.6}
+.okcard.recap.plain{background:var(--surface);border-color:var(--line)}
 .tutdots{display:flex;gap:4px;flex-wrap:wrap}
 .tutdots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
 .tutdots i.on{background:var(--ink);width:16px;border-radius:3px}

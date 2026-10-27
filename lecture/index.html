@@ -27,7 +27,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="../core/style.css?v=258624fc">
+<link rel="stylesheet" href="../core/style.css?v=cb1cc4e3">
 </head>
 <body>
 
@@ -87,7 +87,7 @@
     <div class="tslevels" id="tsLevels" hidden></div>
     <button class="mpcard free" id="tsFree"><span class="mptx"><small>音楽の経験がある人向け</small><b>すべての機能で始める</b><span>最初からすべての機能を使って、自由に作ります。</span></span><i>›</i></button>
     <p class="mpnote">音の出るアプリです。iPhoneで音が出ないときは、消音モードを解除してください。</p>
-    <p class="appver">ver 5.24.046（2026-10-28）</p>
+    <p class="appver">ver 5.25.000（2026-10-28）</p>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -102,9 +102,12 @@
   </div>
 </div>
 <div class="tut" id="tut" hidden>
-  <div class="tutbar"><div class="tutdots" id="tutDots"></div><button class="tutskip" id="tutSkip">スキップ</button></div>
+  <div class="tutbar"><div class="tutprog nophrase" id="tutDots"></div><button class="tutrev" id="tutRev"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3.2c2.2-.9 4.2-.6 6 .8 1.8-1.4 3.8-1.7 6-.8v9.6c-2.2-.9-4.2-.6-6 .8-1.8-1.4-3.8-1.7-6-.8z M8 4v9.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>おさらい</button><button class="tutskip" id="tutSkip">やめる</button><div class="tp-sub nophrase" id="tpSub"></div></div>
   <div class="tutstage" id="tutStage"></div>
   <div class="tutnav"><button class="tutbtn alt" id="tutBack">もどる</button><button class="tutbtn" id="tutNext">つぎへ</button></div>
+  <div class="revwrap" id="revWrap" hidden><button class="revscrim" id="revScrim" aria-label="おさらいを閉じる"></button>
+    <div class="revpanel" role="dialog" aria-label="おさらい"><div class="revhead"><b>おさらい</b><button id="revClose" aria-label="閉じる"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+      <p class="revsub">このページに出てくる、前に説明した言葉です。コードはタップすると鳴ります。</p><div class="revlist" id="revList"></div><i class="revgrip"></i></div></div>
 </div>
 <div class="modalpop" id="moodPop" hidden><div class="popcard" role="dialog" aria-label="次のレベルの案内">
   <div class="popchips" id="moodPopChips"></div>
@@ -156,7 +159,7 @@
   <div class="sec"><h3>リセット</h3>
     <div class="chips"><button class="chip" id="resetSlots">マスを空にする</button><button class="chip" id="resetAll">設定もすべて最初に戻す</button></div>
     <p class="small" style="margin:0">セーブデータとマイ演奏は消えません。</p></div>
-  <p class="appver">ver 5.24.046（2026-10-28）</p>
+  <p class="appver">ver 5.25.000（2026-10-28）</p>
 </aside>
 
 <div class="sheet" id="varSheet" role="dialog" aria-label="コードのバリエーション">
@@ -213,7 +216,7 @@
 <script src="../core/js/02-mypattern.js?v=7af0d949"></script>
 <script src="../core/js/03-ui.js?v=79ce1220"></script>
 <script src="../core/js/04-audio.js?v=94cb3842"></script>
-<script src="../core/js/05-tutorial.js?v=dd7d2732"></script>
+<script src="../core/js/05-tutorial.js?v=db7a181e"></script>
 <script src="../core/js/06-save.js?v=20df99dd"></script>
 <script src="../core/js/07-tracks.js?v=7124da1e"></script>
 <script src="core/js/08-lecture.js?v=5fb0a51f"></script>

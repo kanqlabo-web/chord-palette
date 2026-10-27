@@ -98,7 +98,7 @@ const SC7=[0,0,2,4,5,7,9,11];
 function romanize(root){ const alpha=state.label==='alpha'; if(!root||(!alpha&&numK()!=='roman')) return;
   const conv=(m,d,q,sev,b)=>alpha ? nameOf({o:SC7[+d],q:q?(q==='m'?'m':'m-5'):'maj',x:sev?'7':'',b:b?SC7[+b]:null},'alpha',false).replace('-5','♭5')
     : ROM7[+d]+(q||'')+(sev||'')+(b?'/'+ROM7[+b]:'');
-  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&&n.parentElement.closest('.kbd,.eyebrow,input,textarea,.tutdots,.L,.tc,.slot,.tile')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&&n.parentElement.closest('.kbd,.eyebrow,input,textarea,.tutprog,.tutdots,.L,.tc,.slot,.tile')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
   const list=[]; while(w.nextNode()) list.push(w.currentNode);
   list.forEach(n=>{ const t=n.nodeValue.replace(DEG_RE,conv); if(t!==n.nodeValue) n.nodeValue=t; }); }
 const HEAR=d=>JSON.stringify(isNum(d)?d:{b:null,...d}).replace(/"/g,'&quot;');   // タップで鳴らすためのコードの情報
@@ -123,7 +123,7 @@ const IC_STOP='<svg class="ic" viewBox="0 0 12 12" aria-hidden="true"><rect x="2
 function listenBtn(key){ return `<button class="listen a" style="--dl:1.6" data-ex="${key}">${IC_PLAY}<span>聴いてみる</span></button>`; }
 const SLIDES=[
   {html:()=>`<div class="eyebrow a">LEVEL 1</div>
-     <div class="chips7">${[0,3,4,5].map((d,k)=>`<span class="floaty" style="animation-delay:${k*.4}s;display:inline-block">${tc(d,'',.2+k*.15)}</span>`).join('')}</div>
+     <div class="chips7">${[0,3,4,5].map((d,k)=>`<span class="floaty" style="animation-delay:${k*.4}s;display:inline-block">${tc(d,'',.2+k*.15).replace(/ data-hear="[^"]*"/,'')}</span>`).join('')}</div>
      <h2 class="a" style="--dl:.8">こんにちは！</h2>
      <p class="a" style="--dl:1.1">このアプリは『コード進行』が<br>（たぶん）作れるようになるアプリです。</p>`},
   // 1枚の画面のまま「つぎへ」で説明を足していく（steps＝追加で見せる段階の数）
@@ -136,7 +136,7 @@ const SLIDES=[
      <p class="sub a" style="--dl:1.6" data-upto="0">コード＝いくつかの音を同時に鳴らした「和音」のこと</p>
      <p data-st="2" data-dl="1.5" data-dur="1">何も付いていなければ<b>明るい</b>コード<br>「m」が付いていれば<b>暗い</b>コードです</p>`},
   {steps:1, html:()=>`<div class="eyebrow a">音の高さ</div>
-     <h2 class="a" style="--dl:.1" data-upto="0">ドレミファソラシは<br>アルファベットで書きます</h2>
+     <h2 class="a" style="--dl:.1" data-upto="0">コードの音の高さは<br>ドレミファソラシドと対応しています</h2>
      <p data-st="1">でも、覚えるのがめんどくさいので…</p>
      <h2 data-st="1" data-dl="1.1">全部、数字に<br>しちゃいましょう！</h2>
      <div class="scale" id="tutScale">${['ド','レ','ミ','ファ','ソ','ラ','シ'].map((j,k)=>`<div class="a" style="--dl:${.5+k*.1};--k:${k}"><small>${j}</small><b><span class="alpha">${'CDEFGAB'[k]}</span><span class="num">${k+1}</span></b></div>`).join('')}</div>
@@ -227,7 +227,7 @@ const moodSlide=(no,title,h,key,notes)=>({html:()=>`<div class="eyebrow a">雰�
 const BRIGHT=new Set([0,3,4]), DARK=new Set([1,2,5,6]);
 const pdist=(a,b)=>{ const d=Math.abs(a-b)%7; return Math.min(d,7-d); };   // 数字どうしの距離（1と5は3、1と2mは1）
 const PRACTICE={
-  bright:{name:'明るい・元気', sub:'晴れた日の朝みたいに', style:'ポップス（定番）', bpm:120,
+  bright:{name:'明るい・元気', na:'な', sub:'晴れた日の朝みたいに', style:'ポップス（定番）', bpm:120,
     hint:'明るいコード（1・4・5）を多めに使って、1 から始めてみましょう。',
     check:q=>q.filter(d=>BRIGHT.has(d)).length>=3, ok:'明るいコードが多くて、元気でまっすぐな響きになっています。', ng:'暗いコードが多めです。1・4・5 を増やしてみましょう。'},
   sad:{name:'切ない', sub:'夕暮れの帰り道みたいに', style:'バラード', bpm:80,
@@ -236,7 +236,7 @@ const PRACTICE={
   strong:{name:'力強い', sub:'サビで盛り上がるように', style:'ロック', bpm:128,
     hint:'数字が離れたコードへ跳んでみましょう（1→4、6m→2m、5→1 など）。',
     check:q=>q.filter((d,k)=>pdist(d,q[(k+1)%q.length])===3).length>=2, ok:'大きく跳ぶ動きが多くて、力強く進んでいます。', ng:'となり同士の動きが多めです。1→4、6m→2m のように跳んでみましょう。'},
-  calm:{name:'穏やか', sub:'ゆっくり流れる雲みたいに', style:'しっとり', bpm:76,
+  calm:{name:'穏やか', na:'な', sub:'ゆっくり流れる雲みたいに', style:'しっとり', bpm:76,
     hint:'となりの数字へ進んでみましょう（1→2m、4→3m、6m→5 など）。',
     check:q=>q.filter((d,k)=>pdist(d,q[(k+1)%q.length])===1).length>=2, ok:'となりへ進む動きが多くて、なめらかで穏やかです。', ng:'跳ぶ動きが多めです。1→2m、4→3m のように、となりへ進んでみましょう。'},
 };
@@ -274,8 +274,8 @@ const MOOD=[
      <p class="a" style="--dl:1">伴奏スタイルとテンポ（速さ）を変えるだけで、<br>しっとりにも、ノリノリにもなります。</p>
      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${listenBtn('calm').replace('聴いてみる','しっとり版')}${listenBtn('drive').replace('聴いてみる','ノリノリ版')}</div>`},
   moodSlide('①','明るい・元気','明るいコードで<br>まっすぐ進む','bright',['明るいコード（1・4・5）だけ。迷いのない元気な響きに。','テンポ（速さ）は速め（110〜130くらい）がおすすめ。']),
-  moodSlide('②','切ない','暗いコードから<br>始めてみる','sad',['6m で始めると、出だしから切ない雰囲気に（小室進行）。','最後は 1 で明るく着地。切ないのに前向き。']),
-  moodSlide('③','エモい・泣ける','4 から始めて<br>6m に着地','emo',['4 → 5 と上がって盛り上げてから、暗い 6m に落とす（王道進行）。','5 → 3m と下りてから、6m にストンと着地。しっとり切なく終わります。']),
+  moodSlide('②','切ない','暗いコードから<br>始めてみる','sad',['6m で始めると、出だしから切ない雰囲気に。','最後は 1 で明るく着地。切ないのに前向き。']),
+  moodSlide('③','エモい・泣ける','4 から始めて<br>6m に着地','emo',['4 → 5 と上がって盛り上げてから、暗い 6m に落とす。','5 → 3m と下りてから、6m にストンと着地。しっとり切なく終わります。']),
   moodSlide('④','おしゃれ','コードの響きを<br>少し変えてみる','chic',['2m7・1M7 のように 7 や M7 を足すと、大人っぽい響きに。','レベル6以降で、自分でもこうした響きに変えられるようになります。']),
   {html:()=>`<div class="eyebrow a">まとめ</div>
      <h2 class="a" style="--dl:.1">雰囲気づくりの4つのコツ</h2>
@@ -293,6 +293,60 @@ const MOOD=[
    enter:()=>document.querySelectorAll('.moodpick button').forEach(b=>b.onclick=()=>{ TUT.mood=b.dataset.mood; TUT.moodInit=false; showSlide(TUT.i+1); })},
   {coach:'mood'},
 ];
+// ================= ステージ（長いレベルを区切る）と、おさらい =================
+// レベル1・2（続けて進む）とレベル3を、いくつかのステージに分ける。次のステージに入ったら、左上のバーで「クリア」を短く知らせる
+SLIDES.forEach((s,i)=>{ s.stg=i<5?1:i<7?2:i<11?3:4; s.sid=100+i; });
+MOOD.forEach((s,i)=>{ s.stg=i<5?1:i<10?2:3; s.sid=300+i; });
+// sid：説明の順番（レベル×100＋そのレベルの何枚目か）。おさらいは「このページより前で説明した言葉」だけを出すのに使う
+const STG12={label:'LEVEL 1・2', goal:'自分の進行を作る', list:[
+  {name:'コードって何？'},
+  {name:'並べて鳴らす'},
+  {name:'コードの役割'},
+  {name:'実例で聴く'}],
+  recap:['コード進行は、コードを順番につなげたもの','『カデンツ』にコードを当てはめて、コード進行をつくる']};
+const STAGES={1:STG12, 2:STG12, 3:{label:'LEVEL 3', goal:'ねらった雰囲気の進行を作る', list:[
+  {name:'4つのコツ'},
+  {name:'実例を聴く'},
+  {name:'作ってみる'}]}};
+// おさらい：前のページで説明して、このページでは説明なしで使っている言葉だけを出す（上から下りてくるパネル）
+const GLOSS=[
+  {t:'コード', at:101, x:'いくつかの音を同時に鳴らしたもの。和音。じゃーんってやつ'},
+  {t:'コード進行', at:101, x:'コードを順番につなげたもの。だいたい4つか8つで一周します。'},
+  {t:'コードの数字', at:102, x:'ド＝1、レ＝2 … シ＝7。コードの数字は音の高さを表します。'},
+  {t:'明るいコード・暗いコード', at:101, x:'何も付いていなければ明るいコード、「m」が付いていれば暗いコードです。', c:()=>tc(0,'bright')+tc(5,'dark')},
+  {t:'トニック（T）', at:108, x:'主役。いちばん安定していて、帰ってくる場所です。', c:()=>tc(0,'T')+tc(5,'T')},
+  {t:'サブドミナント（S）', at:108, x:'脇役。変化や彩りを出します。', c:()=>tc(3,'S')+tc(1,'S')},
+  {t:'ドミナント（D）', at:108, x:'緊張感があり、トニックに行きたい気持ちがとても強いコードです。', c:()=>tc(4,'D')+tc(6,'D')},
+  {t:'カデンツ', at:110, x:'役割の流れのこと。T→D→T、T→S→T、T→S→D→T の3つがお手本です。'},
+  {t:'進行ガイド', at:114, x:'マスの上に、役割の流れを線で表す目印です。黄色い線は「お手本と違うよ」の目印です。'},
+  {t:'テンポ', at:304, x:'曲の速さです。数字が大きいほど速くなります。'},
+  {t:'伴奏スタイル', at:304, x:'コードに合わせて鳴る、楽器の演奏のしかたです。'},
+  {t:'小節', at:500, x:'曲の区切りです。このアプリでは、1マスが1小節です。'},
+  {t:'キー', at:400, x:'進行全体の高さです。キーを変えると、同じ進行を高くしたり低くしたりできます。'},
+];
+// いまのページの順番（sid のないタイトル・クリアの画面は、レベルの始まり・終わりとして数える）
+function curSid(){ const sl=DECK[TUT.i]||{}, n=DECK.lv||1; return sl.sid!=null?sl.sid:n*100+(TUT.i?99:0); }
+// 説明したページを実際に見たかどうか（途中のレベルから始めた人には、見ていない言葉を出さない）
+const SEEN_KEY=STK('chord-palette-tutseen');
+let TSEEN=new Set(); try{ TSEEN=new Set(JSON.parse(localStorage.getItem(SEEN_KEY)||'[]')); }catch(e){}
+function markSeen(){ const sl=DECK[TUT.i]; if(!sl||sl.sid==null||TSEEN.has(sl.sid)) return; TSEEN.add(sl.sid); try{ localStorage.setItem(SEEN_KEY,JSON.stringify([...TSEEN])); }catch(e){} }
+// ページごとの言葉（キーは sid）。ここにない言葉は出さない。説明したページ（at）を見ていない言葉も出さない
+const REV=(()=>{ const CD='コード', PR='コード進行', NUM='コードの数字', BD='明るいコード・暗いコード', TT='トニック（T）', SS='サブドミナント（S）', DD='ドミナント（D）';
+  return {102:[CD], 103:[CD], 104:[CD],
+  108:[CD,PR], 109:[CD,NUM], 110:[CD,PR,NUM,TT,SS,DD], 111:[PR,NUM,BD,TT], 112:[PR,NUM,BD,DD], 113:[PR,NUM,BD], 114:[PR,NUM,TT,SS,DD,'カデンツ'],
+  300:[CD,NUM,BD], 301:[CD,NUM,BD], 302:[CD,BD], 303:[CD,NUM,BD], 304:[PR,NUM,BD], 305:[CD,NUM,BD,'テンポ'], 306:[CD,PR,NUM,BD], 307:[PR,NUM,BD], 309:[CD,BD,'テンポ','伴奏スタイル'], 310:[PR,BD],
+  400:[CD,NUM], 401:[NUM,'キー'], 402:['キー'], 500:[PR,NUM],
+  600:[CD], 601:[NUM], 700:[CD], 701:[CD,NUM], 702:[CD,NUM],
+  800:[CD,NUM,BD], 801:[NUM,BD], 802:[NUM,'進行ガイド'], 804:[NUM,BD],
+  900:[CD,'小節'], 901:[PR,NUM], 902:[PR,NUM,'小節']}; })();
+function revTerms(){ const sl=DECK[TUT.i]||{}, L=REV[sl.sid]||[], now=curSid();
+  return GLOSS.filter(g=>L.includes(g.t) && g.at<now && TSEEN.has(g.at)); }
+function openRev(){ const L=revTerms(); if(!L.length) return;
+  $('revList').innerHTML=L.map(g=>`<div class="revitem"><b>${g.t}</b><p>${g.x}</p>${g.c?`<div class="revchips">${g.c()}</div>`:''}</div>`).join('');
+  $('revWrap').hidden=false; bindHear(); }
+function closeRev(){ const w=$('revWrap'); if(w) w.hidden=true; }
+// 左上の進み具合：ステージごとに区切ったバー（ステージのないレベルは1本）
+const IC_FLAG='<svg width="15" height="15" viewBox="0 0 16 16" role="img" aria-label="ゴール"><path d="M4 14V2.5M4 3h7.5l-1.6 2.6L11.5 8.2H4" fill="none" stroke="var(--warn)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 // ================= レベル（全12） =================
 Object.assign(EX,{
   long8: {degs:[3,4,2,5,3,4,0,0], roles:['S','D','D','T','S','D','T','T'], groups:[{a:0,b:3,t:'1回目：6m で終わる',c:'s'},{a:4,b:7,t:'2回目：1 で終わる',c:'t',row:1}], style:'ポップス（定番）', bpm:96},
@@ -355,10 +409,7 @@ const TASKS={
     text:'2つ並んだ 4 の<b>うしろの方を 4m</b> にして、「4 → 4m → 1」を作ってみましょう。', hint:'3つ目の 4 をタップして、4m を選びます',
     check:()=>{ const v=state.slots[2]; return tokOf(state.slots[1])===3 && v!=null&&!isNum(v)&&specOf(v).o===5&&specOf(v).q==='m'; },
     ok:'明るい 4 から暗い 4m へ。切なさが一瞬だけ差し込みました。', ng:'3つ目の 4 をタップして、4m を選んでみましょう。'},
-  key:{load:[0,5,1,4], style:'ポップス（定番）', bpm:96, keys:['C','G','D','A','E','F'],
-    text:'下のボタンで<b>キーを変えて</b>、再生してみましょう。マスの数字はそのまま、アルファベットだけが変わります。', hint:'どのキーが好みか聴き比べてみましょう',
-    check:()=>state.key!=='C',
-    ok:'同じ進行のまま、高さだけが変わりました。', ng:'下のボタンで、C 以外のキーを選んでみましょう。'},
+  key:{load:[0,5,1,4], style:'ポップス（定番）', bpm:96, keys:['C','G','D','A','E','F']},
   smooth:{load:[3,0,4,5], style:'ポップス（定番）', bpm:92,
     text:'「4 → 1 → 5 → 6m」は、ベースが大きく跳んでいます。コードをタップして<b>ベースの音を変え</b>、なめらかにしてみましょう。', hint:'どのコードのベースを変えると、となりのベースに近づくか考えてみましょう',
     check:()=>[0,1,2,3].some(k=>{ const v=state.slots[k]; return v!=null&&!isNum(v)&&specOf(v).b!=null; }) && bassLeap()<bassLeap([3,0,4,5]),
@@ -534,7 +585,7 @@ const LEVELS=[
 ];
 // レベルの解説を組み立てる（タイトル → 本編 → クリア）。review=true は見返し用（クリア扱いにしない）
 function levelDeck(n,review){
-  const l=LEVELS[n-1], body=l.deck().map(x=>({...x})); body.forEach(x=>{ delete x.last; delete x.finish; });
+  const l=LEVELS[n-1], body=l.deck().map((x,k)=>({sid:n*100+k,...x})); body.forEach(x=>{ delete x.last; delete x.finish; });
   const d = n===1 ? body : [lvTitle(n), ...body];
   if(!l.noClear){ const c={...lvClear(n)}; c.finish=()=>{ endTutorial(n!==1); if(n===1){ state.guide=false; renderAll(); } if(!review){ levelClear(n); showWhere(n); } }; if(review){ c.html=()=>`<div class="eyebrow a">LEVEL ${n}</div><h2 class="a" style="--dl:.1">見返し終わりました</h2>`; c.finish=()=>endTutorial(true); } d.push(c); }
   d.lv=n; d.review=!!review; d.onEnd=()=>endTutorial(true);
@@ -544,6 +595,7 @@ function levelDeck(n,review){
     else d.push({last:true, btn:'はじめる', html:()=>`<div class="eyebrow a">LEVEL 1・2 CLEAR</div>
      <h2 class="a" style="--dl:.1">＼ レベル1・2 クリア！ ／</h2>
      <div class="okcard a" style="--dl:.5"><b>アンロック：進行ガイド</b></div>
+     <div class="okcard recap plain a" style="--dl:.7"><b>レベル1・2のおさらい</b>${STG12.recap.map(t=>`<span>・${t}</span>`).join('')}</div>
      <p class="a" style="--dl:.9">では、自由にコード進行を作ってみましょう！</p>`, finish:()=>{ endTutorial(false); levelClear(2); showWhere(2); }}); }
   return d;
 }
@@ -551,7 +603,8 @@ function startLevel(n,review){ $('moodTip').hidden=true; MOODPOP.pending=false; 
 function levelClear(n){ if(LVL>=n) return; LVL=n; saveLv();
   if(MODE!=='free'){ if(n===2){ MOODPOP.level=3; MOODPOP.pending=true; } }   // 全レベルクリアの案内は showWhere(9) の中で
   renderAll(); }
-function renderLevels(){ const el=$('levelList'); if(!el) return;
+function renderLevels(){ document.body.classList.toggle('freemode',MODE==='free');   // すべての機能で始めたときは、レベルの案内を隠す（style.css）
+  const el=$('levelList'); if(!el) return;
   const nx=Math.min(LVL+1,LV_MAX), all=LVL>=LV_MAX;
   $('lvCount').textContent=`${LVL} / ${LV_MAX} クリア`;
   $('lvNext').innerHTML = all ? '<i>ALL CLEAR</i><b>全レベルクリア</b><small>一覧から好きなレベルを見返せます</small>' : `<i>${LVL?'つづきから':'はじめから'} ・ LEVEL ${nx}</i><b>${LEVELS[nx-1].name}</b><small>${LEVELS[nx-1].unlock?'クリアすると：'+LEVELS[nx-1].unlock:LEVELS[nx-1].goal}</small>`;
@@ -561,7 +614,25 @@ function renderLevels(){ const el=$('levelList'); if(!el) return;
   el.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const n=+b.dataset.l; if(UL()<n-1){ toast(`レベル${n-1}をクリアすると挑戦できます`); return; } startLevel(n, LVL>=n); });
 }
 let DECK=SLIDES;
-function tutDots(){ $('tutDots').innerHTML=DECK.map((_,k)=>`<i class="${k===TUT.i?'on':''}"></i>`).join(''); }
+function tutDots(){
+  const n=DECK.lv||(DECK[0]&&DECK[0].stg?1:0), S=STAGES[n], cur=DECK[TUT.i]||{}, el=$('tutDots');
+  let segs, top, sub;
+  if(!S){ const real=DECK, f=Math.max(0,real.indexOf(cur)+1)/real.length;
+    segs=[{f, done:f>=1&&!!cur.last}]; top=n?`<b>LEVEL ${n}</b>`:''; sub=n&&LEVELS[n-1]?LEVELS[n-1].name:''; }
+  else {
+    let k=0; for(let j=TUT.i;j>=0&&!k;j--) k=DECK[j].stg||0; for(let j=TUT.i;j<DECK.length&&!k;j++) k=DECK[j].stg||0;
+    const allDone=!DECK.some(x=>x.stg); if(allDone) k=S.list.length;   // おさらいだけのデッキ（レベル3の最後など）
+    const items=DECK.filter(x=>x.stg===k), pos=items.indexOf(cur);
+    const f=allDone||(cur.last&&!cur.stg)?1:Math.max(0,pos+1)/Math.max(1,items.length);
+    segs=S.list.map((_,j)=>j+1<k?{f:1,done:1}:j+1===k?{f,done:allDone||(cur.last&&!cur.stg)}:{f:0});   // 黄色にするのは、次のステージに入ってから
+    top=`${S.label}<b>ステージ ${k} / ${S.list.length}</b>`; sub=`${S.list[k-1].name}<i>|</i>ゴール：${S.goal}`; }
+  const same=TUT.lastBar&&TUT.lastBar.S===S&&TUT.lastBar.segs.length===segs.length, f0=same?TUT.lastBar.segs:segs.map(()=>0);
+  const kNow=S?segs.filter(x=>x.done).length:0, cleared=S&&same&&kNow>TUT.lastBar.k?kNow:0;   // いまステージを終えたところ
+  el.innerHTML=`<div class="tp-top">${top}</div><div class="tp-bar">${segs.map((s,j)=>`<i class="${s.done?'done':''}" style="--f:${s.f};--f0:${Math.min(f0[j]||0,s.f)}"></i>`).join('')}${IC_FLAG}</div>`; $('tpSub').innerHTML=(cleared?`<em class="tp-clear">ステージ${cleared} クリア！</em>`:'')+sub;
+  clearTimeout(TUT.clrT); if(cleared) TUT.clrT=setTimeout(()=>{ const e=document.querySelector('#tpSub .tp-clear'); if(e) e.remove(); },2600);   // 消えたら場所も詰める
+  TUT.lastBar={S,k:kNow,segs:segs.map(s=>s.f)};
+  markSeen(); closeRev(); const rb=$('tutRev'); if(rb) rb.hidden=!revTerms().length;
+}
 function tutStopAudio(){ TUT.onLoopEnd=null; TUT.playingEx=null; document.querySelectorAll('.tut [data-ti].now').forEach(e=>e.classList.remove('now')); clearTimeout(TUT.stopT); TUT.stopping=false; if(playing) stop(); document.querySelectorAll('.listen.on').forEach(b=>b.classList.remove('on')); }
 function tutLoad(degs,segs,ant){ state.slots=Array.from({length:16},(_,j)=>degs[j]??null); state.segs=Array.from({length:16},(_,j)=>segs&&segs[j]?JSON.parse(JSON.stringify(segs[j])):[]); state.bars=degs.length<=4?4:8; state.len=4; state.ant=Array.from({length:16},(_,j)=>ant&&ant[j]||null); page=0; renderAll(); }
 function openTutorial(deck){
@@ -610,7 +681,8 @@ function endTutorial(restore){
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio(); closeCoach();
   $('tut').hidden=true; TUT.on=false;
   if(restore && TUT.backup){ state=JSON.parse(TUT.backup); document.body.classList.toggle('pro',!!state.pro); }
-  else { const b=JSON.parse(TUT.backup); state={...b, slots:Array(16).fill(null), segs:Array.from({length:16},()=>[]), bars:4, len:4, label:'num', guide:true}; document.body.classList.toggle('pro',!!state.pro); }
+  else { const b=JSON.parse(TUT.backup); state={...b, slots:Array.from({length:16},(_,j)=>(TUT.mine&&TUT.mine[j])??null), segs:Array.from({length:16},()=>[]), bars:4, len:4, label:'num', guide:true}; document.body.classList.toggle('pro',!!state.pro); }
+  TUT.mine=null;   // レベル1で自分で並べたコードは、クリア後のマスに残す（上の slots）
   page=0; selected=null; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm; renderAll(); save();
   histReset();
 }
@@ -718,13 +790,14 @@ function runCoach(kind){
     tutLoad([]);
     const done=()=>[0,1,2,3].every(k=>state.slots[k]!==null&&state.slots[k]!==undefined);
     const show=()=>coach([palette,slotsEl], done() ? 'いいですね！4つ並びました。' : (wideLayout()?'左のパレットから、右の4つのマスに':'上のパレットから、下の4つのマスに')+'好きなコードをドラッグしてはめてみましょう。<br><small>（タップして選んでから、マスをタップしてもOK）</small>', done()?[backBtn(),nextBtn()]:[backBtn(),['あとで',()=>showSlide(TUT.i+1),true]]);
-    show(); let was=done(); TUT.wait=setInterval(()=>{ const d=done(); if(d!==was){ was=d; show(); } },300);
+    const keep=()=>{ if(done()) TUT.mine=[0,1,2,3].map(k=>state.slots[k]); };
+    show(); keep(); let was=done(); TUT.wait=setInterval(()=>{ const d=done(); keep(); if(d!==was){ was=d; show(); } },300);
   } else if(kind==='play'){
     if(![0,1,2,3].every(k=>state.slots[k]!=null)) tutLoad([0,4,5,3]);
     coach($('play'), `再生ボタン（${IC_PLAY.replace('class="ic"','class="ic" style="width:.8em;height:.8em"')}）を押して、さっそく再生してみましょう。`, [backBtn()]);
     TUT.wait=setInterval(()=>{ if(playing){ clearInterval(TUT.wait);
-      coach($('play'), ico('note',13)+' 再生中……', [backBtn()]);
-      TUT.onLoopEnd=()=>coach($('play'),'どうですか？<br>いい曲はできましたか？', [backBtn(),nextBtn()]); } },200);
+      coach([$('play'),slotsEl], ico('note',13)+' 再生中……', [backBtn()]);   // 鳴っているマスが見えるように、吹き出しはマスからずらす
+      TUT.onLoopEnd=()=>coach([$('play'),slotsEl],'どうですか？<br>いい曲はできましたか？', [backBtn(),nextBtn()]); } },200);
   } else if(kind==='mood'){
     // 実践編：画面はふだんと同じ（色・帯もそのまま）で、説明はほかのチュートリアルと同じ吹き出しで出す
     tutStopAudio(); document.body.classList.remove('tutlite'); TUT.practice=true;
@@ -734,8 +807,8 @@ function runCoach(kind){
       tutLoadEx({degs:[],style:m.style,bpm:m.bpm}); TUT.moodInit=true; }
     const tgt=()=>[palette,slotsEl], quit=['やめる',()=>endTutorial(true),true];
     const show=()=>{
-      if(playing) coach([slotsEl,$('play')], `${ico('note',13)} 再生中……<br>「${m.name}」な感じになっているかな？`, [quit]);
-      else if(!moodDone()) coach(tgt(), `お題：<b>「${m.name}」</b>な進行を作ってみましょう。<br><small>ヒント：${m.hint}</small>`, [backBtn(),quit]);
+      if(playing) coach([slotsEl,$('play')], `${ico('note',13)} 再生中……<br>「${m.name}」${m.na||''}感じになっているかな？`, [quit]);
+      else if(!moodDone()) coach(tgt(), `お題：<b>「${m.name}」${m.na||''}進行</b>を作ってみましょう。<br><small>ヒント：${m.hint}</small>`, [backBtn(),quit]);
       else coach([slotsEl,$('play')], `4つ並びました！<br>再生して、<b>「${m.name}」</b>になっているか聴いてみましょう。`, [backBtn(),quit]); };
     show(); let was='';
     TUT.wait=setInterval(()=>{ const k=(playing?'p':'')+(moodDone()?'d':''); if(k===was) return; was=k;
@@ -764,7 +837,7 @@ function runCoach(kind){
     play();
   }
 }
-// アニメーションが終わるまでは「つぎへ」を薄くして「スキップ」にする（押すとアニメーションを飛ばす）
+// アニメーションが終わるまでは「つぎへ」を薄くして「ぜんぶ表示」にする（押すとアニメーションを飛ばす）
 function animEnd(){
   const st=$('tutStage'), now=performance.now(); let mx=0;
   st.querySelectorAll('.a,.pop,.brk span,.flow .arr').forEach(e=>{ if(e.closest('[hidden]')) return;
@@ -777,7 +850,7 @@ function setBusy(){
   const st=$('tutStage'), nb=$('tutNext'); st.classList.remove('skip');
   clearTimeout(TUT.busyT);
   const t=animEnd();
-  if(t>0.05){ nb.classList.add('busy'); nb.textContent='スキップ'; TUT.busyT=setTimeout(clearBusy,t*1000); }
+  if(t>0.05){ nb.classList.add('busy'); nb.textContent='ぜんぶ表示'; TUT.busyT=setTimeout(clearBusy,t*1000); }
   else clearBusy();
 }
 function clearBusy(){ const nb=$('tutNext'), sl=DECK[TUT.i]; nb.classList.remove('busy');
@@ -801,6 +874,7 @@ $('tutBack').onclick=()=>{ const sl=DECK[TUT.i];
   if(sl.steps && TUT.step>0){ TUT.step--; applyStep(); return; }
   showSlide(TUT.i-1); };
 $('tutSkip').onclick=()=>endTutorial(true);
+$('tutRev').onclick=openRev; $('revScrim').onclick=closeRev; $('revClose').onclick=closeRev;
 
 $('moodPopGo').onclick=()=>{ $('moodPop').hidden=true; const w=MOODPOP.whereN; MOODPOP.whereN=0; if(w){ showWhere(w); return; } if(!MOODPOP.all) startLevel(MOODPOP.level); };
 $('moodPopLater').onclick=()=>{ $('moodPop').hidden=true; toast('パレット右下の「NEXT」から、いつでも次のレベルに進めます'); };
@@ -813,3 +887,7 @@ window.addEventListener('resize',()=>{ if(TUT.on && !$('coach').hidden && DECK[T
 document.body.classList.toggle('pro',!!state.pro);
 if(!state.sOff){ const st=styleNow(); if(st) state.sOff=sOffOf(st); }
 renderAll(); frame(); ensureSounds();
+// マスが空のまま再生したら、コードを置く案内を出す（ドラムなどはそのまま鳴らす）
+$('play').addEventListener('click',()=>{ if(!playing || TUT.on || TUT.practice || !$('coach').hidden) return;
+  const n=Math.min(16,state.bars||4); if(state.slots.slice(0,n).some(v=>v!=null)) return;
+  toast('マスにコードを置いてみましょう'); });
