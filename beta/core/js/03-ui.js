@@ -242,7 +242,7 @@ function renderAll(){
     if(typeof renderTracks==='function') renderTracks(); }
   else { const st=styleNow(); $('arpLabel').textContent='伴奏'; $('arpName').textContent=(st?st.name:`${patName(DRUMS[state.drum])}＋${patName(ARPS[state.arp])}`)+' ・ '+instShort(); $('arpLane').setAttribute('aria-label','伴奏スタイルを選ぶ'); }
   $('bassName').textContent=state.bass?BASSES[state.bassPat||'auto'].name:'なし';
-  { const libOn=ULx()>=3; $('libBtn').hidden=!libOn; $('libOpen').closest('.sec').hidden=!libOn; }
+  { const libOn=ULx()>=3; $('libOpen').closest('.sec').hidden=!libOn; }
   const lb=$('lvBig'), showLv=MODE==='step' && LVL<LV_MAX && !TUT.on;
   lb.hidden=!showLv; document.body.classList.toggle('haslv',showLv);
   if(showLv){ const t=`LEVEL ${LVL+1}`; $('lvBigN').textContent=LEVELS[LVL].name;
@@ -380,7 +380,7 @@ function renderLib(){
 }
 function openLib(){ closeAll(); $('lib').hidden=false; renderLib(); $('lib').scrollTop=0; }
 function closeLib(){ libStop(); $('lib').hidden=true; }
-$('libOpen').onclick=openLib; $('libBtn').onclick=openLib; $('libClose').onclick=closeLib; $('libQ').oninput=renderLib;
+$('libOpen').onclick=openLib; $('libClose').onclick=closeLib; $('libQ').oninput=renderLib;
 const scrim=$('scrim'), drawer=$('drawer'), sheet=$('sheet');
 function closeAll(){ $('varSheet').classList.remove('on'); drawer.classList.remove('on'); sheet.classList.remove('on'); $('edSheet').classList.remove('on'); $('patSheet').classList.remove('on'); scrim.classList.remove('on'); }
 
@@ -471,7 +471,6 @@ function renderEditor(full){
 $('closeEd').onclick=closeAll;
 $('edPlay').onclick=()=>{ const v=getV(edIndex,edHalf); if(v!=null) preview(v); };
 $('edReset').onclick=()=>{ const o=edOrig[edIndex]; if(o){ state.slots[edIndex]=o[0]??null; state.segs[edIndex]=JSON.parse(JSON.stringify(o[1])); } if(edHalf>segsOf(edIndex).length) edHalf=0; renderSlots(); renderEditor(true); const v=getV(edIndex,edHalf); if(v!=null) preview(v); };
-$('edAll').onclick=()=>openEditor(page*4);
 $('menuBtn').onclick=()=>{ drawer.classList.add('on'); scrim.classList.add('on'); };
 $('closeDrawer').onclick=closeAll; $('closeSheet').onclick=closeAll; scrim.onclick=closeAll;
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeAll(); });
