@@ -843,3 +843,59 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .keeprow{display:flex;align-items:center;gap:10px;margin-top:6px}
 .keeprow>span{flex:none;width:3.6em;font-size:.82rem;font-weight:700;color:var(--muted)}
 .keeprow>.chips{flex:1;min-width:0}
+/* ---- 打ち込みの画面の切りかえ（13-inputs.js、ベータ版の試作） ---- */
+.pv{--ch:var(--s)}
+.pv .h,.dpad.h{--ch:var(--s)}.pv .s,.dpad.s{--ch:var(--d)}.pv .k,.dpad.k{--ch:var(--t)}
+.pv .now{outline:2px solid var(--warn);outline-offset:-1px}
+/* 縦のマス */
+.dtall{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:2.4em repeat(3,1fr);grid-template-rows:auto repeat(16,minmax(16px,1fr));gap:3px 6px}
+.dtall>b{font-size:.72rem;text-align:center;align-self:end;color:var(--ch)}
+.dtall>span{font-size:.66rem;color:var(--muted);align-self:center}
+.dtall i{border-radius:5px;background:color-mix(in srgb,var(--ch) 9%,var(--line));cursor:pointer}
+.dtall i.on{background:var(--ch)}
+.dtall .bt{margin-top:5px}
+/* 楽器ごとのパッド */
+.dpadw{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.dtabs{display:flex;gap:6px}
+.dtab{flex:1;height:40px;border-radius:12px;border:1.5px solid var(--ch);background:var(--surface);color:var(--ch);font-weight:800;cursor:pointer}
+.dtab[aria-pressed=true]{background:var(--ch);color:#fff}
+.dpad{display:grid;grid-template-columns:2.2em repeat(4,1fr);gap:7px;align-items:center}
+.dpad>span{font-size:.68rem;color:var(--muted)}
+.dpad i{aspect-ratio:1;max-height:15vh;border-radius:14px;background:color-mix(in srgb,var(--ch) 10%,var(--line));position:relative;cursor:pointer;display:flex;gap:3px;padding:7px;box-sizing:border-box;justify-content:flex-end;align-items:flex-start}
+.dpad i.on{background:var(--ch)}
+.dpad em{width:8px;height:8px;border-radius:50%;background:var(--ch);box-shadow:0 0 0 1.5px var(--surface)}
+/* リズムカード */
+.dcard{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:8px}
+.dcrow small{font-size:.7rem;font-weight:700;color:var(--ch)}
+.dcrow>div{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:2px}
+.dcslot,.dccard{border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);padding:7px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-size:.74rem}
+.dcslot[aria-pressed=true]{border-color:var(--ink);box-shadow:0 0 0 1.5px var(--ink)}
+.cdots{display:flex;gap:4px}
+.cdots i{width:9px;height:9px;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--ch) 45%,var(--line))}
+.cdots i.on{background:var(--ch);border-color:var(--ch)}
+.dchint{margin:6px 0 0;font-size:.74rem;color:var(--muted)}
+.dcpal{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.dccard b,.dcslot b{font-weight:700}
+/* 1小節ずつ・鍵盤で入れる */
+.mbarnav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mbarnav b{font-size:.8rem}
+.mscroll.mbar{overflow:hidden!important}
+.sv{display:flex;flex-direction:column;gap:2px}
+.svhd{position:relative;height:20px}
+.svhd span{position:absolute;top:0;font-size:.74rem;font-weight:700;white-space:nowrap;overflow:hidden;padding-left:3px;border-left:1px solid var(--line)}
+.svarea{position:relative;height:min(19vh,140px);border:1px solid var(--line);border-radius:8px;background-color:var(--surface);overflow:hidden}
+.svarea [data-c]{position:absolute;top:0;bottom:0;border-left:1px solid var(--line);cursor:pointer}
+.svarea [data-c].bt{border-left-color:color-mix(in srgb,var(--ink) 35%,transparent)}
+.svcur{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--warn) 30%,transparent);box-shadow:inset 2px 0 0 var(--warn);pointer-events:none}
+.svn{position:absolute;border-radius:5px;background:var(--d);color:#fff;font-size:.64rem;font-weight:800;display:flex;align-items:center;padding-left:4px;box-sizing:border-box;cursor:pointer}
+.svph{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);pointer-events:none}
+.svctl{display:flex;flex-direction:column;gap:6px}
+.svlen,.svmv{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.svlen small{font-size:.72rem;color:var(--muted);margin-right:2px}
+.svmv .chip{flex:1}
+.svkeys{display:flex;flex-direction:column;gap:6px}
+.svkeys>div{display:flex;gap:6px}
+.svk{flex:1;height:46px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-size:1rem;cursor:pointer}
+.svk.lit{background:color-mix(in srgb,var(--warn) 30%,var(--surface))}
+.svk.g-ok{border-color:var(--s);box-shadow:0 0 0 1.5px var(--s)}
+.svk.g-jump{border-color:var(--t);box-shadow:0 0 0 1.5px var(--t)}
