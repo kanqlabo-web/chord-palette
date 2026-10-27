@@ -1,15 +1,15 @@
-// ---------- 曲：保存・新しい曲・曲の一覧（マスの上の行の「曲1 ▾」から） ----------
+// ---------- 曲：保存・新しい曲・曲の一覧（設定メニューのレベルの下の「曲」の欄から） ----------
 // 作っている曲は state.songId（一覧の中のどれか）と state.songName（名前）で覚える。一覧は「保存した進行」と同じ場所（loadSongs）
 (function(){ const st=document.createElement('style'); st.textContent=`
-.songbtn{flex:none;display:inline-flex;align-items:center;gap:3px;max-width:9em;height:22px;padding:0 8px;margin-right:6px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:inherit;font-size:.74rem;font-weight:800;cursor:pointer;vertical-align:middle}
-.songbtn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.songbtn svg{flex:none;opacity:.6}
-.slothead>span:first-child{display:flex;align-items:center;min-width:0}
-.slothead #hint{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#songMenu{position:fixed;z-index:60;min-width:190px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:6px}
-#songMenu button{display:flex;flex-direction:column;align-items:flex-start;width:100%;border:0;background:transparent;color:var(--ink);font:inherit;font-weight:800;font-size:.88rem;padding:10px 12px;border-radius:10px;cursor:pointer;text-align:left}
-#songMenu button small{font-weight:700;font-size:.7rem;color:var(--muted);margin-top:2px}
-#songMenu button:active,#songMenu button:hover{background:var(--lane)}
+#songSec .songcur{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;border:2px solid var(--ink);background:var(--bg);border-radius:14px;padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer;position:relative}
+#songSec .songcur small{font-size:.68rem;font-weight:700;color:var(--muted)}
+#songSec .songcur b{font-family:var(--display);font-size:1.25rem;font-weight:900;max-width:calc(100% - 6em);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#songSec .songcur i{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;font-size:.72rem;font-weight:700;color:var(--muted)}
+#songSec .songacts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
+#songSec .songacts button{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:58px;justify-content:center;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;font:inherit;cursor:pointer;padding:6px 4px}
+#songSec .songacts b{font-size:.86rem;font-weight:800}
+#songSec .songacts small{font-size:.62rem;font-weight:700;color:var(--muted);text-align:center;line-height:1.25}
+#drawer .songold{display:none!important}
 #songScr{position:fixed;inset:0;z-index:46;background:var(--bg);display:flex;flex-direction:column}
 #songScr[hidden]{display:none}
 #songScr .phd{display:flex;align-items:center;gap:8px;padding:max(10px,env(safe-area-inset-top,0px)) 12px 10px;border-bottom:1px solid var(--line)}
@@ -48,21 +48,19 @@ function songRename(sg){ const n=(prompt('曲の名前',sg?sg.name:songLabel())|
   else state.songName=n;
   save(); songDraw(); renderSongs(); if($('songScr') && !$('songScr').hidden) drawSongs(); }
 
-// マスの上の行のボタン
-function songDraw(){ let b=$('songBtn'); if(!b){ const host=document.querySelector('.slothead>span:first-child'); if(!host) return;
-    b=document.createElement('button'); b.id='songBtn'; b.className='songbtn'; b.onclick=e=>{ e.stopPropagation(); songMenu(b); }; host.prepend(b); }
-  b.innerHTML=`<span></span><svg width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
-  b.hidden=!!(typeof TUT!=='undefined' && (TUT.on||TUT.practice));   // チュートリアル中は出さない
-  b.querySelector('span').textContent=songLabel(); b.setAttribute('aria-label',`曲：${songLabel()}（保存・新しい曲・曲の一覧）`); }
-function songMenuClose(){ const m=$('songMenu'); if(m) m.remove(); }
-function songMenu(btn){ if($('songMenu')) return songMenuClose();
-  const m=document.createElement('div'); m.id='songMenu'; const n=loadSongs().length;
-  const items=[['保存する',`「${songLabel()}」を曲の一覧に残します`,()=>songSave()],['新しい曲','今の曲は保存して、マスを空にします',songNew],['曲の一覧',n?`保存した曲（${n}曲）を開く`:'まだ保存した曲はありません',openSongs],['名前を変える','',()=>songRename(state.songId?loadSongs().find(s=>s.id===state.songId):null)]];
-  items.forEach(([t,s,f])=>{ const b=document.createElement('button'); b.innerHTML=`${t}${s?'<small></small>':''}`; if(s) b.querySelector('small').textContent=s; b.onclick=()=>{ songMenuClose(); f(); }; m.appendChild(b); });
-  document.body.appendChild(m); const r=btn.getBoundingClientRect(), h=m.offsetHeight;
-  m.style.left=Math.max(8,Math.min(innerWidth-m.offsetWidth-8,r.left))+'px';
-  m.style.top=(r.bottom+6+h<innerHeight ? r.bottom+6 : Math.max(8,r.top-6-h))+'px'; }
-document.addEventListener('pointerdown',e=>{ const m=$('songMenu'); if(m && !m.contains(e.target) && e.target.closest('#songBtn')==null) songMenuClose(); },true);
+// 設定メニュー（≡）のレベルの欄のすぐ下の「曲」の欄：今の曲の名前と、保存・新しい曲・曲の一覧
+function songDraw(){ let box=$('songSec'); if(!box){ const dr=$('drawer'), lv=dr&&$('lvNext')&&$('lvNext').closest('.sec'); if(!lv) return;
+    box=document.createElement('div'); box.id='songSec'; box.className='sec';
+    box.innerHTML=`<h3>曲</h3><button class="songcur" id="songCur"><small>いま作っている曲</small><b></b><i>名前を変える</i></button>
+      <div class="songacts"><button id="songSaveBtn"><b>保存する</b><small>曲の一覧に残す</small></button><button id="songNewBtn2"><b>新しい曲</b><small>今の曲は保存して空に</small></button><button id="songListBtn"><b>曲の一覧</b><small></small></button></div>`;
+    lv.after(box);   // レベルの欄のすぐ下
+    $('songCur').onclick=()=>songRename(state.songId?loadSongs().find(s=>s.id===state.songId):null);
+    $('songSaveBtn').onclick=()=>songSave();
+    $('songNewBtn2').onclick=()=>{ closeAll(); songNew(); };
+    $('songListBtn').onclick=()=>{ closeAll(); openSongs(); }; }
+  box.querySelector('#songCur b').textContent=songLabel();
+  const n=loadSongs().length; box.querySelector('#songListBtn small').textContent=n?`${n}曲`:'まだありません';
+  const sa=$('songAcc'); if(sa) sa.classList.add('songold'); }
 
 // 曲の一覧（全画面）
 function openSongs(){ let el=$('songScr'); if(!el){ el=document.createElement('div'); el.id='songScr'; el.hidden=true;
