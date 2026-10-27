@@ -58,6 +58,8 @@ function songDraw(){ let box=$('songSec'); if(!box){ const dr=$('drawer'), lv=dr
     $('songSaveBtn').onclick=()=>songSave();
     $('songNewBtn2').onclick=()=>{ closeAll(); songNew(); };
     $('songListBtn').onclick=()=>{ closeAll(); openSongs(); }; }
+  // リズム・メロディの画面では、その道のレベル（#pthSecs）の下に置く
+  { const lv=$('lvNext')&&$('lvNext').closest('.sec'), ps=$('pthSecs'), at=(ps&&!ps.hidden&&ps.firstElementChild)?ps.firstElementChild:lv; if(at && box.previousElementSibling!==at) at.after(box); }
   box.querySelector('#songCur b').textContent=songLabel();
   const n=loadSongs().length; box.querySelector('#songListBtn small').textContent=n?`${n}曲`:'まだありません';
   const sa=$('songAcc'); if(sa) sa.classList.add('songold'); }
@@ -84,4 +86,7 @@ function drawSongs(){ const box=$('songBody'), a=loadSongs(); box.innerHTML='';
 
 // 一覧が変わったとき・画面を描き直したときに、ボタンの名前も合わせる
 { const ra=renderAll; renderAll=function(){ const r=ra.apply(this,arguments); songDraw(); return r; }; }
+// リズム・メロディのメニューは pthMenu が作り直す（ほかの欄も後から足される）ので、終わってから置き直す
+if(typeof pthMenu==='function'){ const pm=pthMenu; pthMenu=function(){ const r=pm.apply(this,arguments); setTimeout(songDraw,0); return r; }; }
+$('menuBtn').addEventListener('click',()=>setTimeout(songDraw,0));
 songDraw();
