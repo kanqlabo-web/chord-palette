@@ -533,14 +533,14 @@ Object.assign(EX,{
 EX.half.roles2=['D','D','T','D'];
 // もとの4コードに、後半のコードが割って入るお手本（wd 秒後に、右から押し広げて入ってくる）
 function insExHTML(key,dl,wd){ const ex=EX[key];
-  return `<div class="exrow a" data-ex="${key}" style="--dl:${dl};grid-template-columns:repeat(4,minmax(0,1fr))">${ex.degs.map((d,k)=>{ const sg=(ex.segs[k]||[])[0];
-    return sg ? `<span class="halfbox ins" data-ti="${k}"><span class="tc ${ex.roles[k]}" data-hear="${HEAR(d)}"><b>${nm(d)}</b></span><span class="tc new ${(ex.roles2||[])[k]||''}" style="--wd:${wd+k*.25}s" data-hear="${HEAR(sg.v)}"><b>${nm(sg.v)}</b></span></span>`
-      : `<span class="tc ${ex.roles[k]}" data-ti="${k}" data-hear="${HEAR(d)}"><b>${nm(d)}</b><small>${ex.roles[k]}</small></span>`; }).join('')}</div>`; }
+  return `<div class="exrow" data-ex="${key}" style="grid-template-columns:repeat(4,minmax(0,1fr))">${ex.degs.map((d,k)=>{ const sg=(ex.segs[k]||[])[0];
+    return sg ? `<span class="halfbox ins" data-ti="${k}"><span class="tc ${ex.roles[k]} pop" style="--dl:${dl+k*.12}" data-hear="${HEAR(d)}"><b>${nm(d)}</b></span><span class="tc new ${(ex.roles2||[])[k]||''}" style="--wd:${wd+k*.25}s" data-hear="${HEAR(sg.v)}"><b>${nm(sg.v)}</b></span></span>`
+      : `<span class="tc ${ex.roles[k]} pop" style="--dl:${dl+k*.12}" data-ti="${k}" data-hear="${HEAR(d)}"><b>${nm(d)}</b><small>${ex.roles[k]}</small></span>`; }).join('')}</div>`; }
 // 1小節に2つのコードが入るお手本（マスを前半・後半に分けて表示）。各コードはタップで鳴らせる
 function segExHTML(key,dl){ const ex=EX[key];
-  return `<div class="exrow a" data-ex="${key}" style="--dl:${dl};grid-template-columns:repeat(4,minmax(0,1fr))">${ex.degs.map((d,k)=>{ const sg=(ex.segs[k]||[])[0];
-    return sg ? `<span class="halfbox" data-ti="${k}"><span class="tc ${ex.roles[k]}" data-hear="${HEAR(d)}"><b>${nm(d)}</b></span><span class="tc ${(ex.roles2||[])[k]||''}" data-hear="${HEAR(sg.v)}"><b>${nm(sg.v)}</b></span></span>`
-      : `<span class="tc ${ex.roles[k]}" data-ti="${k}" data-hear="${HEAR(d)}"><b>${nm(d)}</b><small>${ex.roles[k]}</small></span>`; }).join('')}</div>`; }
+  return `<div class="exrow" data-ex="${key}" style="grid-template-columns:repeat(4,minmax(0,1fr))">${ex.degs.map((d,k)=>{ const sg=(ex.segs[k]||[])[0];
+    return sg ? `<span class="halfbox" data-ti="${k}"><span class="tc ${ex.roles[k]} pop" style="--dl:${dl+k*.12}" data-hear="${HEAR(d)}"><b>${nm(d)}</b></span><span class="tc ${(ex.roles2||[])[k]||''} pop" style="--dl:${dl+k*.12+.06}" data-hear="${HEAR(sg.v)}"><b>${nm(sg.v)}</b></span></span>`
+      : `<span class="tc ${ex.roles[k]} pop" style="--dl:${dl+k*.12}" data-ti="${k}" data-hear="${HEAR(d)}"><b>${nm(d)}</b><small>${ex.roles[k]}</small></span>`; }).join('')}</div>`; }
 Object.assign(EX,{
   keyC:{degs:[0,4,5,3], roles:['T','D','T','S'], groups:[], style:'ポップス（定番）', bpm:96, key:'C'},
   keyG:{degs:[0,4,5,3], roles:['T','D','T','S'], groups:[], style:'ポップス（定番）', bpm:96, key:'G'},
