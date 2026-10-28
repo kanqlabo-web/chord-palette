@@ -124,7 +124,7 @@ const L_ADV={
   ],
 };
 LEVELS.push(
-  {name:'半音でつなぐコード①', goal:'となりのコードのあいだに、半音ずつつなぐコードを挟んでみましょう。', unlock:'dim7（ディミニッシュ）', chips:[['♯5dim','--d'],['♯1dim7','--d']], deck:()=>L_ADV.dim},
+  {name:'半音でつなぐコード①', goal:'となりのコードのあいだに、半音ずつつなぐコードを挟んでみましょう。', unlock:'dim・dim7（ディミニッシュ）', chips:[['♯5dim','--d'],['♯1dim7','--d']], deck:()=>L_ADV.dim},
   {name:'半音でつなぐコード②', goal:'音をなめらかにつなぐ、もう1つのコードを考えてみましょう。', unlock:'aug（オーギュメント）', chips:[['♭6aug','--d'],['1aug','--t']], deck:()=>L_ADV.aug},
   {name:'暗い音階からコードを借りる', goal:'暗い音階のコードを少しだけ混ぜてみましょう。', unlock:'', chips:[['1m','--t'],['♭6','--s'],['♭7','--d']], deck:()=>L_ADV.borrow},
 );
@@ -133,6 +133,8 @@ const _advDeck=levelDeck;
 levelDeck=function(n,review){ const d=_advDeck.apply(this,arguments); if(n!==12) return d;
   d[d.length-1]={last:true, btn:'とじる', html:()=>`<div class="eyebrow a">LEVEL 12</div><h2 class="a" style="--dl:.1">このつづきは準備中です</h2><p class="a" style="--dl:.5">レベル12は、ここまでです。</p>`, finish:()=>endTutorial(true)};
   return d; };
+// レベル12（暗い音階）は、メロディ1（音階）をクリアしてから
+C_EXTRA[12]=['M1'];
 // クリアしたあとの案内
 WHERE[9]=WHERE[9].map(st=>st.menu==='proChips'?{...st, x:'設定メニュー（≡）の「PRO」もオンにできます。'}:st);
 WHERE[10]=[tapSlot('1・2m・4・5 は <b>dim・dim7</b> にも変えられます。<br>コードの右側に同じコードを置いてから変えると、半音でつなげます。')];
