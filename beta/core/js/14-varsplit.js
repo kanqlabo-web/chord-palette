@@ -1,9 +1,9 @@
 // ベータ版だけ（試作）：ビギナーの「コードを変える」を、PRO のように「ルート・種類・数字・ベース」を別々に選ぶ形に
-// レベルで開く：数字 6（種類は sus まで）、ベース 7、種類の明るい⇄暗い 8、ルート 10（種類に dim・dim7 も）、aug 11
+// レベルで開く：数字 6（sus2・sus4 も数字の列に入れる）、ベース 7、種類（明るい⇄暗い）8、ルート 10（種類に dim・dim7 も）、aug 11
 const VS_EXT={maj:['','7','M7','6','add9','9','M9'], m:['','7','M7','add9','9','11','7add11'], sus2:['','7','add9'], sus4:['','7','add9'], dim:['','7'], aug:['','7']};
 const vsKind=sp=>sp.q==='m-5'?(sp.x==='dim7'?'dim7':'dim'):sp.q;
 const vsNat=o=>{ const d=STEPS.indexOf(o); return d<0?null:(DEG[d].q===''?'maj':DEG[d].q==='m-5'?'dim':DEG[d].q); };   // そのルートの、もとの種類
-function vsKinds(sp,lv){ const nat=vsNat(sp.o), L=[['maj','なし'],['m','m'],['sus2','sus2'],['sus4','sus4'],['dim','dim'],['dim7','dim7'],['aug','aug']];
+function vsKinds(sp,lv){ const nat=vsNat(sp.o), L=[['maj','なし'],['m','m'],['dim','dim'],['dim7','dim7'],['aug','aug']];
   const need=k=>k===nat?0 : k==='sus2'||k==='sus4'?6 : k==='maj'||k==='m'?8 : k==='dim'||k==='dim7'?10 : k==='aug'?11 : 99;
   const out=L.filter(([k])=>need(k)<=lv), now=vsKind(sp);
   if(!out.some(([k])=>k===now)) out.push([now, now==='dim7'?'dim7':QUAL_LABEL[sp.q]||now]);
@@ -21,7 +21,7 @@ function vsCols(){ const wh=$('varWheels'); if($('vsRoot')) return;
 function vsRender(){ const [i,h]=vsAt, v=getV(i,h); if(v==null) return; const sp={x:'',b:null,...specOf(v)}, lv=ULx(), kind=vsKind(sp);
   const rl=ctxRole(v,null,null,false);
   $('varNow').className='varnow '+rl; $('varNow').innerHTML=`<b>${nameOf(v,state.label,true)}</b><small>${nameOf(v,state.label==='alpha'?numK():'alpha',false)}</small><i>${rl}</i>`;
-  const show={vsRoot:lv>=10, vsKind:true, vsExt:true, vsBass:lv>=7};
+  const show={vsRoot:lv>=10, vsKind:lv>=8, vsExt:true, vsBass:lv>=7};
   document.querySelectorAll('#varWheels [data-vs]').forEach(c=>c.hidden=!show[c.dataset.vs]);
   $('varWheels').querySelector('.varcols').style.gridTemplateColumns=`repeat(${Object.values(show).filter(Boolean).length},minmax(0,1fr))`;
   if(show.vsRoot) wheel($('vsRoot'), [...Array(12).keys()].map(o=>[o, degNum(degOf(o,{...sp,o,b:null,sp:sp.q==='aug'&&!STEPS.includes(o)?'b':undefined}),'num')]), sp.o, o=>{
@@ -29,9 +29,13 @@ function vsRender(){ const [i,h]=vsAt, v=getV(i,h); if(v==null) return; const sp
   wheel($('vsKind'), vsKinds(sp,lv), kind, k=>{ const n={...sp}; delete n.sp;
     if(k==='dim7'){ n.q='m-5'; n.x='dim7'; } else { n.q=k==='dim'?'m-5':k; if(n.x==='dim7') n.x=''; if(!(VS_EXT[k]||[]).includes(n.x)) n.x=''; }
     vsSet(n); });
-  const ex=(VS_EXT[kind]||['']).slice(); if(kind!=='dim7' && !ex.includes(sp.x)) ex.push(sp.x);
+  // 数字の列：sus2・sus4 もここで選ぶ（値 'q:sus4' など）。sus から数字へ戻すときは、もとの種類（明るい・暗い）に戻す
+  const sus=/^sus/.test(kind), base=sus?(vsNat(sp.o)==='m'?'m':'maj'):kind, ex=(VS_EXT[base]||['']).slice();
+  if(!sus && kind!=='dim7' && !ex.includes(sp.x)) ex.push(sp.x);
+  if(base==='maj'||base==='m') ex.push('q:sus2','q:sus4');
   $('vsExt').closest('.edcol').classList.toggle('off', kind==='dim7');
-  wheel($('vsExt'), (kind==='dim7'?['']:ex).map(x=>[x, x?EXT_LABEL[x]||x:'なし']), kind==='dim7'?'':sp.x, x=>vsSet({...sp,x}));
+  wheel($('vsExt'), (kind==='dim7'?['']:ex).map(x=>[x, x.startsWith('q:')?x.slice(2):x?EXT_LABEL[x]||x:'なし']), kind==='dim7'?'':sus?'q:'+kind:sp.x,
+    x=>{ const n={...sp}; delete n.sp; if(x.startsWith('q:')){ n.q=x.slice(2); n.x=''; } else { if(sus) n.q=base; n.x=x; } vsSet(n); });
   if(show.vsBass){ const tones=[...new Set(QUAL[sp.q]||[0,4,7])];
     wheel($('vsBass'), tones.map(iv=>{ const b=iv?(sp.o+iv)%12:null; return [b, iv?degNum(bassDeg({...sp,b}),'num'):'そのまま']; }), (sp.b==null||sp.b===sp.o)?null:sp.b, b=>vsSet({...sp,b})); }
 }
