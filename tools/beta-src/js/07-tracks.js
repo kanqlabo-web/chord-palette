@@ -323,7 +323,7 @@ function renderTracks(){ if(trk.hidden) return; if(!state.pro){ trk.hidden=true;
     E.forEach((e,k)=>{ if(contOf(E,k)) return; const em=e.v===null||e.v===undefined, x0=Math.max(0,S[k]); let j=k+1; while(j<E.length&&contOf(E,j)) j++; const x1=j<E.length?S[j]:N*slotSteps();
       h+=`<button class="dcn" data-b="${e.b}" data-h="${e.h}" style="left:${x0*ps}px;max-width:${(x1-x0)*ps}px;color:${em?col.muted:roleCol(col,roleAt(e.b,e.h,e.v))}">${em?'—':esc(chordText(e.v))}</button>`; });
     rt.innerHTML=h; rt.querySelectorAll('.dcn').forEach(x=>x.onclick=()=>openEditor(+x.dataset.b,+x.dataset.h));
-    box.querySelectorAll('.dtrack').forEach((row,i)=>drawRegion(row.querySelector('canvas'),L[i].kind,bw,col));
+    box.querySelectorAll('.dtrack').forEach((row,i)=>L[i]&&drawRegion(row.querySelector('canvas'),L[i].kind,bw,col));
     const last=[...box.querySelectorAll('.dtrack')].pop(); if(last){ hd.style.height=(last.offsetTop+last.offsetHeight)+'px'; } });
   renderInsp(); }
 // 曲の中のコードの並び（マスをまたいで1列に）。pos＝16分の位置、ant＝食い（＋）・後ろ倒し（－）。決めていなければ null

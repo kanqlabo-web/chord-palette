@@ -79,7 +79,7 @@ function drawSongs(){ const box=$('songBody'), a=loadSongs(); box.innerHTML='';
     d.querySelector('div').onclick=()=>{ songId(sg); songRename(sg); };
     d.querySelector('[data-a="open"]').onclick=()=>songOpen(sg);
     d.querySelector('[data-a="share"]').onclick=()=>{ closeSongs(); $('drawer').classList.add('on'); scrim.classList.add('on'); shareSong(sg.data,sg.name); };
-    const del=d.querySelector('[data-a="del"]'); del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='もう一度押すと削除します'; return; }
+    const del=d.querySelector('[data-a="del"]'); del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='本当に削除'; return; }
       const all=loadSongs(), i=all.findIndex(s=>(sg.id?s.id===sg.id:(s.date===sg.date&&s.name===sg.name))); if(i>=0){ all.splice(i,1); saveSongs(all); }
       if(sg.id && sg.id===state.songId){ state.songId=null; save(); } songDraw(); renderSongs(); drawSongs(); };
     box.appendChild(d); }); }

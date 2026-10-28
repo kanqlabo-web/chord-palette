@@ -104,7 +104,7 @@ function renderSongs(){
     d.querySelector('b').textContent=sg.name;
     d.querySelector('[data-a="open"]').onclick=()=>{ if(playing) stop(); unpackSong(JSON.parse(JSON.stringify(sg.data))); closeAll(); toast(`「${sg.name}」を開きました`); };
     d.querySelector('[data-a="share"]').onclick=()=>shareSong(sg.data,sg.name);
-    const del=d.querySelector('[data-a="del"]'); del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='もう一度押すと削除します'; return; } const a=loadSongs(); a.splice(i,1); saveSongs(a); renderSongs(); };
+    const del=d.querySelector('[data-a="del"]'); del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='本当に削除'; return; } const a=loadSongs(); a.splice(i,1); saveSongs(a); renderSongs(); };
     box.appendChild(d); });
 }
 $('shareNow').onclick=()=>shareSong(packSong());
