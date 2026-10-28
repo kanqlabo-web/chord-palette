@@ -196,3 +196,5 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .tmkana .nu{animation:tmIn .35s calc(1.75s + var(--i)*.15s) both}
 @keyframes tmOut{to{opacity:0;transform:translateY(-4px)}}
 @keyframes tmIn{from{opacity:0;transform:translateY(4px)}}
+/* お手本をメロディの画面に出すとき：吹き出しの場所を空けるため、ロールは低めに */
+body.pex .modepanel .mroll{flex:none;height:min(46vh,320px)}

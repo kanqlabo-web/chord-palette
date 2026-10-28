@@ -183,17 +183,17 @@ const M1_DECK=[
     <p class="a" style="--dl:3.6">メロディの画面では、この数字で音を表します。コードの数字と区別するため、丸で囲みます。</p>`},
 ];
 const M2_DECK=[
-  {html:()=>`<h2 class="a">こんなメロディを<br>作ってみました</h2><p class="a" style="--dl:.2">コードと合わせて聴いてみましょう。</p>${MEX('melFaSi',M_FASI)}<p class="a" style="--dl:2">なんか、しっくりきませんね…。</p>`},
+  {coach:'mel', mex:['melFaSi',M_FASI,{},[0,4,5,3]], b:()=>`<b>こんなメロディを作ってみました。</b><br>コードと合わせて聴いてみましょう。`, a:()=>`なんか、しっくりきませんね…。`},
   {html:()=>`<h2 class="a">近すぎる音は、濁ります</h2><p class="a" style="--dl:.3">実は、音と音の間が近すぎると、きれいに響きません。</p>${kb12([0,4,5,11])}
     <p class="a" style="--dl:.9">とくに<b>${melLab(5)}（ファ）</b>と<b>${melLab(11)}（シ）</b>は、${melLab(4)}（ミ）や${melLab(0)}（ド）との間に一音もないので、音が濁りやすいのです。</p>`},
   {steps:1, onStep:k=>document.querySelectorAll('#tutStage .kb12 [data-o="5"],#tutStage .kb12 [data-o="11"]').forEach(b=>b.classList.toggle('gone',k>=1)),
    html:()=>`<h2 class="a">この2つは<br>なくしてしまいましょう</h2>${kb12([0,2,4,5,7,9,11])}<div data-st="1" data-dl=".3">${degRow([0,2,4,7,9])}</div>`},
-  {html:()=>`<h2 class="a">5つの音で作り直すと</h2>${MEX('melPenta',M_PENTA)}<p class="a" style="--dl:2">これで、音がぶつからずに、きれいなメロディになります。</p>`},
+  {coach:'mel', mex:['melPenta',M_PENTA,{},[0,4,5,3]], b:()=>`<b>5つの音で作り直すと……</b>`, a:()=>`これで、音がぶつからずに、きれいなメロディになります。`},
 ];
 const M3_DECK=[
-  {html:()=>`<h2 class="a">今度はこんなメロディ</h2>${MEX('melJump',M_JUMP)}<p class="a" style="--dl:2">これはこれでかっこいいですが、歌いにくいですね…。</p>`},
-  {html:()=>`<h2 class="a">となりの音へ、順々に</h2><p class="a" style="--dl:.2">音は、<b>となりの音へ順々に</b>移動するようにしてみましょう。</p>${MEX('melStep',M_STEP)}`},
-  {html:()=>`<h2 class="a">跳ぶなら ${melLab(0)}${melLab(4)}${melLab(7)} どうし</h2><p class="a" style="--dl:.2">音を跳ぶときは、<b>${melLab(0)}・${melLab(4)}・${melLab(7)}（ドミソ）</b>のどれかから、どれかへ跳ぶと、違和感なく跳べます。</p>${MEX('melLeap',M_LEAP)}`},
+  {coach:'mel', mex:['melJump',M_JUMP,{},[0,4,5,3]], b:()=>`<b>今度はこんなメロディを作ってみました。</b>`, a:()=>`これはこれでかっこいいですが、歌いにくいですね…。`},
+  {coach:'mel', mex:['melStep',M_STEP,{},[0,4,5,3]], b:()=>`音は、<b>となりの音へ順々に</b>移動するようにしてみましょう。`, a:()=>`歌いやすくなりましたね。`},
+  {coach:'mel', mex:['melLeap',M_LEAP,{},[0,4,5,3]], b:()=>`音を跳ぶときは、<b>${melLab(0)}・${melLab(4)}・${melLab(7)}（ドミソ）</b>のどれかから、どれかへ跳ぶと、違和感なく跳べます。`, a:()=>`跳んでも、違和感がありませんね。`},
   {html:()=>`<h2 class="a">跳ぶのは、ほどほどに</h2><p class="a" style="--dl:.3">音を跳ばすと、インパクトや躍動感のあるメロディを作れます。でも、跳ばしすぎるとしつこくなります。</p>
     <p class="a" style="--dl:.7">作りたい曲調に合わせて調整しましょう。</p>`},
 ];
@@ -209,13 +209,13 @@ const M4_DECK=[
     <p data-st="2" data-dl=".6">コードをタップすると、鍵盤に表示して鳴らします。</p>`},
   {html:()=>`<div class="eyebrow a">構成音</div><h2 class="a" style="--dl:.1">コードを作っている音</h2><p class="a" style="--dl:.2">このように、コードを作っている音を<b>構成音</b>といいます。メロディの画面では、そのとき鳴っているコードの構成音が光ります。</p>
     ${mRoll([[0,0,0],[0,16,0]],[0,4,5,3],{lit:true})}<p class="a" style="--dl:1">この構成音を使って、メロディを作ってみましょう。</p>`},
-  {html:()=>`<div class="eyebrow a">構成音を使う</div><h2 class="a" style="--dl:.1">構成音どうしなら跳べる</h2><p class="a" style="--dl:.2">音を跳ぶときは、${melLab(0)}${melLab(4)}${melLab(7)}（ドミソ）に加えて、<b>構成音どうし</b>でも跳べます。</p>${MEX('melCt',M_CTJUMP,{lit:true})}`},
-  {html:()=>`<div class="eyebrow a">構成音を使う</div><h2 class="a" style="--dl:.1">頭と、伸ばす音は構成音に</h2><p class="a" style="--dl:.2">コードの頭の音や、伸ばす音で構成音を使うと、<b>安定感</b>が出ます。</p>${MEX('melStable',M_STABLE,{lit:true})}`},
-  {html:()=>`<div class="eyebrow a">構成音を使う</div><h2 class="a" style="--dl:.1">外すと、ふわっとする</h2><p class="a" style="--dl:.2">逆に、構成音に沿わないメロディは、<b>浮遊感</b>を出せます。</p>${MEX('melFloat',M_FLOAT,{lit:true})}<p class="a" style="--dl:2">作りたい曲に合わせてみましょう。</p>`},
+  {coach:'mel', mex:['melCt',M_CTJUMP,{lit:true},[0,4,5,3]], b:()=>`音を跳ぶときは、${melLab(0)}${melLab(4)}${melLab(7)}（ドミソ）に加えて、<b>構成音どうし</b>でも跳べます。<br><small>光っている所が、構成音です。</small>`, a:()=>`光っている音どうしなら、跳んでも自然です。`},
+  {coach:'mel', mex:['melStable',M_STABLE,{lit:true},[0,4,5,3]], b:()=>`コードの頭の音や、伸ばす音で構成音を使うと、<b>安定感</b>が出ます。`, a:()=>`落ち着いて聞こえますね。`},
+  {coach:'mel', mex:['melFloat',M_FLOAT,{lit:true},[0,4,5,3]], b:()=>`逆に、構成音に沿わないメロディは、<b>浮遊感</b>を出せます。`, a:()=>`ふわっとした感じがしますね。<br>作りたい曲に合わせてみましょう。`},
 ];
 const M5_DECK=[
-  {html:()=>`<h2 class="a">2つのメロディを<br>作ってみました</h2><p class="a" style="--dl:.2">まずは①から聴いてみましょう。</p>${MEX('melRep',M_REP,{},DEG8)}`},
-  {html:()=>`<h2 class="a">こちらは②</h2>${MEX('melNoRep',M_NOREP,{},DEG8)}<p class="a" style="--dl:2">①の方が、キャッチーな感じがしませんか？</p>`},
+  {coach:'mel', mex:['melRep',M_REP,{},DEG8], b:()=>`<b>2つのメロディを作ってみました。</b><br>まずは①から聴いてみましょう。`, a:()=>`つぎは②を聴いてみましょう。`},
+  {coach:'mel', mex:['melNoRep',M_NOREP,{},DEG8], b:()=>`<b>こちらは②です。</b>`, a:()=>`①の方が、キャッチーな感じがしませんか？`},
   {steps:1, html:()=>`<div class="eyebrow a">見比べてみましょう</div><h2 class="a" style="--dl:.1">①は、同じ形がくり返す</h2>
     ${mRoll(M_REP,DEG8,{key:'melRep',tags:[{...TAG4[0],upto:0},...TAG4.slice(1),{a:0,b:0,t:'1小節目',st:1},{a:1,b:1,t:'2小節目',st:1}]})}
     <p class="a" style="--dl:.6" data-upto="0">AとC、BとDが、それぞれ同じ見た目をしています。</p>
@@ -224,8 +224,7 @@ const M5_DECK=[
     <p class="a" style="--dl:.6">A・B・C・Dが、まったく違う動きをしています。リズムもすべて違うので、覚えづらいのです。</p>`},
   {html:()=>`<h2 class="a">大事なのは「くり返し」</h2><p class="a" style="--dl:.3">シンプルなメロディをくり返すと、覚えやすく、口ずさみやすいメロディになります。</p>
     <p class="a" style="--dl:.8">ヒット曲には、くり返しのしかけがたくさん詰まっています。</p>`},
-  {html:()=>`<h2 class="a">いいタイミングで裏切る</h2><p class="a" style="--dl:.2">ただ、くり返しすぎるとしつこくなります。①の最後（D）だけ、変えてみました。</p>
-    ${MEX('melTwist',M_TWIST,{tags:[...TAG4.slice(0,3),{a:6,b:7,t:'D（変えた）'}]},DEG8)}<p class="a" style="--dl:2">キャッチーで、飽きにくいメロディになりました。</p>`},
+  {coach:'mel', mex:['melTwist',M_TWIST,{},DEG8], b:()=>`<b>いいタイミングで裏切る</b><br>ただ、くり返しすぎるとしつこくなります。①の最後（D）だけ、変えてみました。`, a:()=>`キャッチーで、飽きにくいメロディになりました。`},
 ];
 
 // ---------- コード・リズム・メロディの画面の切り替え（メイン画面の上のレバー） ----------
@@ -326,9 +325,9 @@ function melNextRows(o){ const R=melRows(), i=R.indexOf(o), step=[R[i-1],R[i],R[
   const jump=TRIAD.has(((o%12)+12)%12) ? R.filter(x=>TRIAD.has(((x%12)+12)%12) && !step.includes(x)) : [];
   return {step, jump}; }
 const melRef=()=>{ const ns=PD.mel.notes; return (MU.ref && ns.includes(MU.ref)) ? MU.ref : ns[ns.length-1]||null; };
-function drawMel(el){ melSnapRows(); const T=melT(), L=slotSteps(), kp=keyObj().pc, ROWS=melRows(), R=ROWS.length, lit4=pDone('M4'), guide=pDone('M3')&&PD.mel.guide;
+function drawMel(el){ if(!PEX) melSnapRows(); const NS=PEX?PEX.notes:PD.mel.notes, T=melT(), L=slotSteps(), kp=keyObj().pc, ROWS=PEX?PEX.rows:melRows(), R=ROWS.length, lit4=PEX?PEX.lit:pDone('M4'), guide=!PEX&&pDone('M3')&&PD.mel.guide;
   const sc0=el.querySelector('.mscroll'), x0=sc0?sc0.scrollLeft:0;
-  const W0=(el.clientWidth||360)-44; MU.cw=Math.max(16, Math.floor(W0/T)); const cw=MU.cw, W=T*cw;
+  const W0=(el.clientWidth||360)-44; MU.cw=Math.max(PEX?5:16, Math.floor(W0/T));   /* お手本は、なるべく全体が見えるように */ const cw=MU.cw, W=T*cw;
   const ri=o=>ROWS.indexOf(o), rowTop=k=>((R-1-k)/R*100)+'%', rh=(100/R)+'%';
   // コードの音の帯（メロディ4のあと）と、小節番号・コード名
   let lit='', head='';
@@ -336,7 +335,7 @@ function drawMel(el){ melSnapRows(); const T=melT(), L=slotSteps(), kp=keyObj().
     head+=`<span class="mchn" style="left:${x}px;width:${w}px">${bigHTML(c.v)}</span>`;
     if(lit4) ROWS.forEach((o,k)=>{ if(pcs.includes((kp+o)%12)) lit+=`<div class="mlit" style="left:${x}px;width:${w}px;top:${rowTop(k)};height:${rh}"></div>`; }); });
   for(let b=0;b<T/16;b++) head+=`<span class="mbarn" style="left:${b*16*cw}px">${b+1}</span>`;
-  const notes=PD.mel.notes.map((n,i)=>`<div class="mn" data-i="${i}" style="left:${n.st*cw}px;width:${Math.max(6,n.len*cw-2)}px;top:${rowTop(ri(n.o))};height:${rh}"><span>${melDeg(n.o)}</span></div>`).join('');
+  const notes=NS.map((n,i)=>`<div class="mn" data-i="${i}" style="left:${n.st*cw}px;width:${Math.max(6,n.len*cw-2)}px;top:${rowTop(ri(n.o))};height:${rh}"><span>${melDeg(n.o)}</span></div>`).join('');
   // ガイド：基準の音のあと（次の音まで。なければ2拍）に、行ける音の行を色の帯で出す
   let gband='';
   const ref=guide&&melRef();
@@ -345,13 +344,14 @@ function drawMel(el){ melSnapRows(); const T=melT(), L=slotSteps(), kp=keyObj().
       jump.forEach(o=>gband+=`<div class="mnext g-jump" style="left:${x}px;width:${w}px;top:${rowTop(ri(o))};height:${rh}"></div>`); } }
   const lines=`repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px ${16*cw}px),repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 35%,transparent) 0 1px,transparent 1px ${4*cw}px),repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px ${MU.G*cw}px),repeating-linear-gradient(180deg,transparent 0 calc(100%/${R} - 1px),var(--line) calc(100%/${R} - 1px) calc(100%/${R}))`;
   const gline = !guide ? '' : `<div class="mguide"><b>メロディガイド</b><span class="g-ok">となりの音</span><span class="g-jump">跳べる音（1・3・5どうし）</span><small>${ref?'最後に置いた音の次に行ける音を、色で出しています。':'音を置くと、次に行ける音を色で出します。'}</small></div>`;
-  el.innerHTML=`<div class="mphead"><b>メロディ</b><small>空いているマスをタップで音を置く・音をタップで消す・ドラッグで動かす・右はしで長さ。${lit4?'光っているのは、いま鳴っているコードの構成音です。':''}</small></div>
+  el.innerHTML=`<div class="mphead"><b>メロディ${PEX?'（お手本）':''}</b><small>${PEX?(lit4?'光っているのは、いま鳴っているコードの構成音です。':'お手本のメロディです。'):'空いているマスをタップで音を置く・音をタップで消す・ドラッグで動かす・右はしで長さ。'+(lit4?'光っているのは、いま鳴っているコードの構成音です。':'')}</small></div>
     ${gline}
     <div class="mroll"><div class="mlab"><span class="mhd"></span>${[...ROWS].reverse().map(o=>`<span>${melLab(o)}</span>`).join('')}</div>
       <div class="mscroll"><div class="mbox" style="width:${W}px"><div class="mhd">${head}</div>
         <div class="marea" id="mArea" style="background-image:${lines}">${lit}${gband}${notes}<div class="mph" id="mPh" hidden></div></div></div></div></div>
-    ${pBar('m')}`;
-  el.querySelector('.mscroll').scrollLeft=x0;
+    ${PEX?'':pBar('m')}`;
+  el.querySelector('.mscroll').scrollLeft=PEX?0:x0;
+  if(PEX) return;
   histBtns();
   pBarBind(el,'m');
   melBind(el); melLoad();
@@ -377,8 +377,8 @@ function melBind(el){ const A=$('mArea'), ROWS=melRows(), R=ROWS.length; let D=n
   A.onpointerup=up; A.onpointercancel=e=>{ if(D&&D.mode==='tap') D=null; else up(e); };
 }
 // 再生中は、いま鳴っているマスを光らせる
-function pMark(g,t){ if(PD.mode==='c'||document.hidden) return; const el=$('modePanel'); if(!el) return;
-  setTimeout(()=>{ if(!playing) return; el.querySelectorAll('.now').forEach(e=>e.classList.remove('now'));
+function pMark(g,t){ if((PD.mode==='c'&&!PEX)||document.hidden) return; const el=$('modePanel'); if(!el) return;
+  setTimeout(()=>{ if(!playing) return; if(PEX&&PD.mode!=='m'&&!document.body.classList.contains('mode-m')) return; el.querySelectorAll('.now').forEach(e=>e.classList.remove('now'));
     if(PD.mode==='r'){ const cs=el.querySelectorAll(`.pgrid i[data-s="${g%16}"]`); cs.forEach(e=>e.classList.add('now')); }
     else { const ph=$('mPh'), sc=el.querySelector('.mscroll'); if(ph&&sc){ const x=g*MU.cw; ph.hidden=false; ph.style.left=x+'px'; if(PD.mel.follow!==false&&(x<sc.scrollLeft||x>sc.scrollLeft+sc.clientWidth-20)) sc.scrollLeft=x-20; } } },
     Math.max(0,(t-ctx.currentTime)*1000)); }
@@ -394,7 +394,7 @@ function pDuck(on,t){ if(!ctx||!master) return; const d=on?DUCK:1; if(MB.d===d) 
 const _pthStep=scheduleStep;
 scheduleStep=function(g,t){
   const live=!TUT.on && !CAPTURE && !LIB.bk && !ENDED_EARLY;
-  if(live) pMark(g,t);
+  if(live||PEX) pMark(g,t);
   const melOn=live && PD.mel.on && pDone('M1') && PD.mel.notes.length>0; pDuck(melOn,t);
   if(melOn) pMelOut(()=>PD.mel.notes.forEach(n=>{ if(n.st===g) keyTone(melPitch(n.o),t,n.len*stepDur()*.92,.8,melInst()); }));
   // 解説のお手本（EX の mel）：進行に合わせてメロディも鳴らす
@@ -490,5 +490,23 @@ function pMelRow(){ const box=$('trkList'); if(!box||trk.hidden) return; box.que
   pMelRegion(row.querySelector('canvas'));
   const hd=$('dHead'); if(hd) hd.style.height=(row.offsetTop+row.offsetHeight)+'px'; }
 const _pthDawPage=dawPage; dawPage=function(){ const r=_pthDawPage.apply(this,arguments); try{ pMelRow(); }catch(e){} return r; };
+
+// ---- 解説のお手本を、実際のメロディの画面に出して、吹き出しで説明する（coach:'mel'） ----
+// 打ち込んだメロディや画面の切り替えは保存しない（PEX のあいだだけ、お手本を表示する）
+let PEX=null;
+function pExShow(sl){ PEX=null; document.body.classList.remove('pex');
+  if(!sl){ document.body.classList.toggle('mode-m',PD.mode==='m'); document.body.classList.toggle('mode-r',PD.mode==='r'); drawPanel(); return; }
+  const [key,mel,opt,degs]=sl.mex; EX[key]={degs, mel:mel.map(([st,o,len])=>({st,o,len}))};
+  tutLoadEx(EX[key]);
+  const ns=mel.map(([st,o,len])=>({st,o,len})), set=ns.some(n=>!PENT.includes(n.o))?[...MAJ,17,19,21]:PENT, lo=Math.min(...ns.map(n=>n.o)), hi=Math.max(...ns.map(n=>n.o));
+  PEX={notes:ns, lit:!!opt.lit, rows:set.filter(o=>o>=Math.min(lo,0)&&o<=hi)};
+  document.body.classList.add('mode-m','pex'); document.body.classList.remove('mode-r'); drawMel($('modePanel')); }
+function pMelCoach(){ const sl=DECK[TUT.i]; tutStopAudio(); pExShow(sl); const key=sl.mex[0], tg=()=>$('modePanel').querySelector('.mroll')||$('modePanel');
+  coach(tg(), sl.b()+`<br><small>${ico('note',12)} 再生中……</small>`, [backBtn()]);
+  TUT.playingEx=key; TUT.onLoopEnd=()=>coach(tg(), sl.a(), [backBtn(),['もう一度聴く',()=>{ tutStopAudio(); pMelCoach(); },true],['つぎへ',()=>{ tutStopAudio(); showSlide(TUT.i+1); }]]);
+  play(); }
+const _pthCoach=runCoach; runCoach=function(kind){ if(kind==='mel'){ document.body.classList.add('tutlite'); return pMelCoach(); } return _pthCoach.apply(this,arguments); };
+const _pthShow=showSlide; showSlide=function(){ if(PEX) pExShow(null); return _pthShow.apply(this,arguments); };
+const _pthEnd=endTutorial; endTutorial=function(){ if(PEX) pExShow(null); return _pthEnd.apply(this,arguments); };
 
 buildModeSw(); setMode(PD.mode);
