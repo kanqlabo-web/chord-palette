@@ -104,7 +104,7 @@ function renderSongs(){
     d.querySelector('b').textContent=sg.name;
     d.querySelector('[data-a="open"]').onclick=()=>{ if(playing) stop(); unpackSong(JSON.parse(JSON.stringify(sg.data))); closeAll(); toast(`「${sg.name}」を開きました`); };
     d.querySelector('[data-a="share"]').onclick=()=>shareSong(sg.data,sg.name);
-    const del=d.querySelector('[data-a="del"]'); del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='本当に消す'; return; } const a=loadSongs(); a.splice(i,1); saveSongs(a); renderSongs(); };
+    const del=d.querySelector('[data-a="del"]'); del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='もう一度押すと削除します'; return; } const a=loadSongs(); a.splice(i,1); saveSongs(a); renderSongs(); };
     box.appendChild(d); });
 }
 $('shareNow').onclick=()=>shareSong(packSong());
@@ -194,10 +194,10 @@ function armed(btn,label,fn){ btn.onclick=()=>{ if(!btn.dataset.armed){ btn.data
   clearTimeout(btn._t); btn._t=setTimeout(()=>{ delete btn.dataset.armed; btn.textContent=o; btn.classList.remove('danger'); },3000); return; }
   clearTimeout(btn._t); delete btn.dataset.armed; btn.classList.remove('danger'); fn(); }; }
 armed($('resetSlots'),'もう一度押すと空にします',()=>{ if(playing) stop(); state.slots=Array(16).fill(null); state.segs=Array.from({length:16},()=>[]); state.ant=Array(16).fill(null); page=0; selected=null; renderAll(); save(); closeAll(); toast('マスを空にしました'); $('resetSlots').textContent='マスを空にする'; });
-armed($('resetAll'),'もう一度押すと全部戻します',()=>{ if(playing) stop(); const keep={myDrums:state.myDrums,myArps:state.myArps,myBasses:state.myBasses};
+armed($('resetAll'),'もう一度押すとぜんぶ戻します',()=>{ if(playing) stop(); const keep={myDrums:state.myDrums,myArps:state.myArps,myBasses:state.myBasses};
   state={...JSON.parse(JSON.stringify(DEFAULT_STATE)),...keep, slots:Array(16).fill(null), segs:Array.from({length:16},()=>[]), ant:Array(16).fill(null), mix:{}};
   rebuildMy(); document.body.classList.toggle('pro',!!state.pro); page=0; selected=null; $('bpm').value=state.bpm; $('bpmOut').textContent=state.bpm;
-  renderAll(); save(); applyMix(); closeAll(); toast('最初の状態に戻しました'); $('resetAll').textContent='設定もすべて最初に戻す'; });
+  renderAll(); save(); applyMix(); closeAll(); toast('最初の状態に戻しました'); $('resetAll').textContent='設定もぜんぶ最初に戻す'; });
 $('menuBtn').addEventListener('click',renderSongs);
 // 共有リンクから開いたとき：その進行を読み込む（チュートリアルは自動では出さない）
 let OPENED_SHARE=false;
@@ -217,7 +217,7 @@ function showModePick(){ const el=$('modePick'); el.hidden=false; $('tsLevels').
   const hasSave=!FIRST_RUN || LVL>0;
   $('tsCont').hidden=!hasSave;
   $('tsContSub').textContent = MODE==='free' ? 'すべての機能で自由に作る'
-    : LVL>=LV_MAX ? '全レベルクリア・自由に作る' : LVL===0 ? 'レベル1から' : `レベル${LVL}までクリア・次は LEVEL ${LVL+1}「${LEVELS[LVL].name}」`;
+    : LVL>=LV_MAX ? '全レベルクリア・自由に作る' : LVL===0 ? 'レベル1から' : `レベル${LVL}までクリア・次はレベル${LVL+1}「${LEVELS[LVL].name}」`;
   $('tsCont').onclick=()=>{ close(); if(MODE==='step' && LVL===0) startLevel(1); };
   // はじめから：進み具合を消してレベル1から（進んでいるときは2回押しで）
   const nb=$('tsNew'); nb.classList.remove('armed'); $('tsNewSub').textContent='レベル1から、1つずつ覚えていきます。';

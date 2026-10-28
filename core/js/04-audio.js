@@ -85,7 +85,7 @@ function loadSet(name){
         const db=20*Math.log10(Math.sqrt(q/Math.max(1,N-a))||1e-6); z.gn=Math.max(.7,Math.min(1.8,Math.pow(10,(-11.5-db)/20))); });
       LOADED[name]=data; return data;
     }).catch(e=>{ FAILED[name]=true; console.warn('sound load failed',name,e); });
-    SETS[name].finally(()=>{ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中…':''); });
+    SETS[name].finally(()=>{ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中……':''); });
   }
   return SETS[name];
 }
@@ -101,7 +101,7 @@ function neededSets(){ const n=[]; if(state.kit!=='synth') n.push(...kitSets(sta
   return [...new Set(n)]; }
 function loadingNow(){ return neededSets().some(n=>!LOADED[n]&&!FAILED[n]); }
 function ensureSounds(){ const p=Promise.all(neededSets().map(loadSet)); renderBadge(); return p; }
-function renderBadge(){ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中…':''); }
+function renderBadge(){ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中……':''); }
 function playZone(zones,m,t,dur,vel,rel,cutoff,loop,atk){
   let z=zones.find(z=>m>=z.lo&&m<=z.hi);
   if(!z) z=zones.reduce((a,b)=>Math.abs((b.lo+b.hi)/2-m)<Math.abs((a.lo+a.hi)/2-m)?b:a);
@@ -356,7 +356,7 @@ function synthTone(m,t,dur,vel,I0=state.inst){
   return g;
 }
 // シンセベース（Moog Sub 37 風）：ノコギリ波2本（少しずらす）＋1オクターブ上の矩形波を軽くひずませ、
-// 24dB のローパス（12dB のフィルターを2段）にレゾナンスを少し。フィルターは弾くたびに開いて、すばやく閉じる「ブーン」としたアタック。
+// 24dB のローパス（12dB のフィルターを2段）にレゾナンスを少し。フィルターは弾くたびに開いて、すばやくとじる「ブーン」としたアタック。
 // 音程は本来のベースの高さ（倍音が多いので、スマホのスピーカーでも音程が聞こえる）
 let SAT_CURVE=null;
 function satCurve(){ if(SAT_CURVE) return SAT_CURVE; const n=1024, c=new Float32Array(n); for(let i=0;i<n;i++){ const x=i/(n-1)*2-1; c[i]=Math.tanh(1.8*x)/Math.tanh(1.8); } return SAT_CURVE=c; }

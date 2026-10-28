@@ -60,7 +60,7 @@ const tkPatName=kind=>withTrk(kind,kind=>{ if(kind==='drum') return patName(DRUM
 function trackSummary(){ const L=trackList(); return L.length+'つ ・ '+L.filter(t=>!isDrumK(t.kind)&&!isBassK(t.kind)).map(t=>tkInst(t.kind)).join('＋'); }
 
 // ---- 画面（DAW 風。部品とスタイルは、このファイルの中で作る） ----
-// 上：ミキサー・閉じる。下：メイン画面の再生ボタンとテンポ（同じものをこちらへ移して使う）
+// 上：ミキサー・とじる。下：メイン画面の再生ボタンとテンポ（同じものをこちらへ移して使う）
 // 左：トラックの頭（M・S と楽器の絵）。右：小節の目盛り（コード名つき）と、コードごとに色分けした帯
 // 帯をタップすると、その場所で実際に使っている弾き方（場面）を開く。楽器の絵をタップすると、そのトラックのミキサーが左から出る
 // 色は画面の明るさ（ライト・ダーク）に合わせて、アプリの色をそのまま使う
@@ -242,7 +242,7 @@ button.badge{font:inherit;font-size:.72rem;cursor:pointer}
   el.innerHTML=`<div class="dtop">
       <button class="dtb" id="dMix" aria-label="ミキサー" aria-pressed="false">${ICO.mix}</button>
       <span class="dsp"></span>
-      <button class="dtb dx" id="dClose" aria-label="閉じる">${ICO.close}</button></div>
+      <button class="dtb dx" id="dClose" aria-label="とじる">${ICO.close}</button></div>
     <div class="dbody"><div class="dinsp" id="dInsp" hidden></div><div class="dscroll" id="dScroll"><div class="dgrid" id="trkList"></div></div></div>
     <div class="dfoot" id="dFoot"></div>`;
   document.body.appendChild(el);
@@ -257,7 +257,7 @@ let TRK_SEL=null, TRK_STY=false;   // ミキサーを開いているトラック
 const TP=document.querySelector('.app>.transport'), TP_MARK=document.createComment('transport');
 function tpIn(){ if(TP && TP.parentNode!==$('dFoot')){ TP.parentNode.insertBefore(TP_MARK,TP); $('dFoot').appendChild(TP); } }
 function tpOut(){ if(TP_MARK.parentNode) TP_MARK.parentNode.replaceChild(TP,TP_MARK); }
-// トラック画面を開いているあいだは履歴を1つ積んでおき、ブラウザの「戻る」（iPhone の左はしからのスワイプなど）ではアプリを離れずに、ミキサー → トラック画面の順に閉じる
+// トラック画面を開いているあいだは履歴を1つ積んでおき、ブラウザの「戻る」（iPhone の左はしからのスワイプなど）ではアプリを離れずに、ミキサー → トラック画面の順にとじる
 function openTracks(){ trk.hidden=false; tpIn(); renderTracks(); requestAnimationFrame(dawFrame); if(!(history.state&&history.state.daw)) try{ history.pushState({daw:1},''); }catch(e){} }
 function closeTracks(fromPop){ trk.hidden=true; tpOut(); TRK_SEL=null; $('dInsp').hidden=true; renderAll(); if(fromPop!==true && history.state&&history.state.daw) history.back(); }
 $('dClose').onclick=()=>closeTracks();
@@ -410,7 +410,7 @@ function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=tru
       <div class="dims"><button data-k="m" aria-pressed="${!!x.m}">ミュート</button><button data-k="s" aria-pressed="${!!x.s}">ソロ</button></div></div></div>
     <div class="disec"><h3>エフェクト</h3><div class="dib">${FX_ROWS.map(([f,l,a,b])=>rng(f,l,a,b,x[f]||0,fxTxt(f,x[f]||0))).join('')}</div></div>
     <div class="disec"><h3>トラックの名前と色</h3><div class="dib"><input class="diname2" id="diName" maxlength="16" value="${esc(tkName(kind))}" aria-label="トラックの名前"><div class="tcolors" id="diColors"></div></div></div>
-    ${canDel?'<button class="didel" id="diDel">このトラックをなくす</button>':''}`;
+    ${canDel?'<button class="didel" id="diDel">このトラックを削除</button>':''}`;
   $('diPick').onclick=()=>(xType(kind)==='drum'||xType(kind)==='bass')?xPatPick(kind):openSheet(kind);
   $('diSnd').onclick=()=>{ const X=xOf(kind), done=()=>{ save(); renderAll(); ensureSounds(); applyMix(); renderTracks(); return false; };
     if(isBassK(kind)) openPicker('ベースの音を選ぶ', ()=>[['ベース',Object.entries(BASS_SNDS).map(([k,l])=>({k,label:l,ico:icoBass(k)}))]], X?(X.bassSnd||'bass'):(state.bassSnd||'bass'), v=>{ if(X) X.bassSnd=v; else state.bassSnd=v; return done(); });
@@ -420,7 +420,7 @@ function renderInsp(){ const p=$('dInsp'), kind=TRK_SEL; if(!kind){ p.hidden=tru
   p.querySelectorAll('.dims button').forEach(b=>b.onclick=()=>{ x[b.dataset.k]=!x[b.dataset.k]; applyMix(); save(); renderTracks(); });
   const nm=$('diName'); nm.onchange=()=>{ const v=nm.value.trim(); if(v) m.name=v; else delete m.name; save(); nm.blur(); renderTracks(); renderAll(); }; nm.onkeydown=e=>{ if(e.key==='Enter') nm.blur(); };
   const cl=$('diColors'); TRK_COLORS.forEach(c=>{ const b=document.createElement('button'); b.style.background=c; b.setAttribute('aria-label','色'); b.setAttribute('aria-pressed',tkColor(kind)===c); b.onclick=()=>{ m.color=c; save(); renderTracks(); }; cl.appendChild(b); });
-  const del=$('diDel'); if(del) del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed='1'; del.textContent='もう一度押すとなくします'; return; } removeTrack(kind); }; }
+  const del=$('diDel'); if(del) del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed='1'; del.textContent='もう一度押すと削除します'; return; } removeTrack(kind); }; }
 // メイン画面が描き直されたら、トラックの画面も合わせる（ミキサーで入力しているあいだは描き直さない）
 { const ra=renderAll; renderAll=function(){ const r=ra.apply(this,arguments); if(typeof trk!=='undefined' && !trk.hidden && !document.activeElement?.closest?.('#dInsp')) renderTracks(); return r; }; }
 addEventListener('resize',()=>{ if(!trk.hidden) renderTracks(); });
@@ -458,7 +458,7 @@ function removeTrack(kind){ const x=xOf(kind);
     Object.assign(state,{arp:state.arp2, inst:state.inst2||'epiano', rhLo:state.rhLo2??null, lhLo:state.lhLo2??null, rhOff:state.rhOff2||0, lhOff:state.lhOff2||0});
     state.mix=state.mix||{}; state.mix.arp=state.mix.arp2||{v:1,m:false,s:false}; state.tk=state.tk||{}; state.tk.arp=state.tk.arp2||{}; return removeTrack('arp2'); }
   TRK_SEL=null; applyMix(); save(); renderAll(); renderTracks(); }
-// パターンを直接編集する。いつもの伴奏（組み込みのパターン）は、自分用のコピーを作って開き、何も変えずに閉じたらコピーを消して元に戻す
+// パターンを直接編集する。いつもの伴奏（組み込みのパターン）は、自分用のコピーを作って開き、何も変えずに閉じたらコピーを消してもとに戻す
 let PAT_TMP=null;
 function editTrackPattern(kind,scene,where){ const k=patOf(kind);
   if((kind==='arp2'||xType(kind)==='chord') && (!k || !ARPS[k])) return openSheet(kind);
@@ -529,7 +529,7 @@ groupPick=function(el,G,names,cur,onPick){ const isKit=names===KITS, ico=isKit?i
 function pickRow(el,head,label,sub,ico,cv,open){ el.classList.remove('chips','gpick','tpane','opts'); el.innerHTML='';
   const b=document.createElement('button'); b.className='prow1'; b.innerHTML=`${cv?'<canvas></canvas>':(ico||'')}<span><small>${esc(head)}</small><b>${esc(label)}</b>${sub?`<em>${esc(sub)}</em>`:''}</span>${ICO.chev}`;
   b.onclick=open; el.appendChild(b); if(cv) requestAnimationFrame(()=>{ const c=b.querySelector('canvas'); if(c.clientWidth) cv(c); }); }
-// 全画面の選ぶ画面（GarageBand のサウンドライブラリのように）。onPick が true を返したら閉じる
+// 全画面の選ぶ画面（GarageBand のサウンドライブラリのように）。onPick が true を返したらとじる
 (function(){ const st=document.createElement('style'); st.textContent=`
 #pickScr{position:fixed;inset:0;z-index:46;background:var(--bg);display:flex;flex-direction:column}
 #pickScr[hidden]{display:none}
@@ -557,9 +557,9 @@ function pickRow(el,head,label,sub,ico,cv,open){ el.classList.remove('chips','gp
   document.body.appendChild(el); })();
 let PICK=null;
 // タップで選ぶだけ。「決定」で適用、赤字の「キャンセル」で取り消し。音色（live）は聴き比べられるようにタップで鳴らし、キャンセルなら開いたときの音色に戻す
-// live='play'（伴奏スタイル）：タップでその伴奏にして裏で鳴らす。決定しなければ元に戻す
+// live='play'（伴奏スタイル）：タップでその伴奏にして裏で鳴らす。決定しなければもとに戻す
 function openPicker(title,cats,cur,onPick,live){ if(live==null) live=/の音を選ぶ|楽器を選ぶ/.test(title)?true:/伴奏スタイル/.test(title)?'play':false;
-  const inst=sheet.classList.contains('on');   // 伴奏の設定シートから開いたとき：選んだ時点で決定して閉じる（伴奏スタイルはシートも閉じる）
+  const inst=sheet.classList.contains('on');   // 伴奏の設定シートから開いたとき：選んだ時点で決定してとじる（伴奏スタイルはシートもとじる）
   PICK={cats,cur,cur0:cur,onPick,live,inst,snap:live&&!inst?JSON.stringify(state):null}; $('pickTitle').textContent=title; $('pickOk').hidden=inst; $('pickScr').hidden=false; delete $('pickBody').dataset.g; drawPicker(); }
 function drawPicker(){ const P=PICK; twoPane($('pickBody'), P.cats(), P.cur, k=>{ P.cur=k;
   if(P.inst){ closePicker(); if(k!==P.cur0) P.onPick(k); if(P.live==='play') closeAll(); return; }
@@ -618,7 +618,7 @@ function bassCats(){ const col=colors(), used={}; STYLES.forEach(st=>{ if(st.bas
     return r; }; }
 const NO_WIDE=new Set(['epcity','lofi','dist']);   // 左右に広げても変わらない音色
 
-// ---------- シートの中で選んだものは、その時点で決定（決定ボタンはない。✕・外側タップは閉じるだけ） ----------
+// ---------- シートの中で選んだものは、その時点で決定（決定ボタンはない。✕・外側タップはとじるだけ） ----------
 function sheetSnap(){}
 
 // ---------- 4マスずつのページ：メイン画面のページ表示をトラックの画面の上へ移して、同じ page で切りかえる ----------
@@ -634,7 +634,7 @@ function dawPage(){ if(trk.hidden) return; const bw=parseFloat(trk.style.getProp
 // 曲の全部のマス（8小節なら8小節）を、その場所で実際に使う弾き方（場面）で並べて見せる。縦横にスクロール、2本指で拡大・縮小。
 // 同じ弾き方（場面）を何度も使うときは、編集できるのは1か所だけ。ほかはうすく表示（くり返し）、ダブルタップでそこを編集する所にできる。
 // 鉛筆と鍵（ガレージバンドと同じ）：鉛筆を押しているあいだ（鍵をかけるとずっと）音を置く・消す。外すと、音を選んで動かす。
-// いつもの伴奏（組み込みのパターン）は、開いたときに自分用のコピーへ切りかえて編集（そのまま「決定」ならコピーを消して元に戻す）。✕はキャンセル
+// いつもの伴奏（組み込みのパターン）は、開いたときに自分用のコピーへ切りかえて編集（そのまま「決定」ならコピーを消してもとに戻す）。✕はキャンセル
 // マイ演奏の画面は使わない（名前・リズムなどの設定だけ「設定」から開く）
 let BLKE=null, BSEGS=[], BD=null, PINCH=null;
 let BSW=18, BRH=30;   // 16分1つの幅・1行の高さ（拡大・縮小で変わる）
@@ -668,7 +668,7 @@ PR.blkLock=false;   // 鉛筆の固定（ガレージバンドと同じく、ふ
 #peEd .prn.gh b{display:none}
 #peEd .bph{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);pointer-events:none;z-index:3}
 #peEd .bhdl{position:absolute;z-index:4;width:24px;height:24px;margin:calc((var(--rh) - 24px)/2) 0 0 -12px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-size:.72rem;font-weight:900;font-style:normal;touch-action:none;box-shadow:0 0 0 2px var(--surface)}
-/* 閉じると編集が消えるボタンは、すべて赤字の「キャンセル」 */
+/* とじると編集が消えるボタンは、すべて赤字の「キャンセル」 */
 :root{--cancel:#C8372D}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--cancel:#FF7B6E}}
 :root[data-theme="dark"]{--cancel:#FF7B6E}
@@ -809,7 +809,7 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
     else if(D.mode==='resize' && !isDrum && D.n && !D.n.gh) PR.lastLen[patKind]=D.n.len;
     commitNotes(); };
   roll.onpointerup=up; roll.onpointercancel=e=>{ if(BD&&BD.pid===e.pointerId&&(BD.mode==='tap'||BD.mode==='rect')){ clearTimeout(BD.lp); if(rectEl){ rectEl.remove(); rectEl=null; } BD=null; } else up(e); };
-  // 行の名前を長押し：その高さの音をすべて選ぶ
+  // 行の名前を長押し：その高さの音をぜんぶ選ぶ
   let lp=null; const labs=$('bScroll').querySelector('.blabs');
   labs.onpointerdown=e=>{ const sp=e.target.closest('span'); if(!sp||blkDraw()) return; const i=[...labs.children].indexOf(sp), x0=e.clientX, y0=e.clientY;
     clearTimeout(lp); lp=setTimeout(()=>{ lp=null; const si=BLKE.act[BLKE.cur], s=BSEGS[si]; if(!s) return; const r=String(rows[i][0]); if(r[0]==='_') return;
@@ -849,7 +849,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape' && BLKE) blkCancel(
 // トラック画面は横にスクロールさせない（ページは上の四角で切りかえる）。ミキサーの開け閉めのあとも、いまのページの位置にもどす
 { const st=document.createElement('style'); st.textContent=`#trk .dscroll{overflow-x:hidden;overflow-y:auto}
 .mbtn{display:inline-grid;place-items:center}.mbtn svg{width:12px;height:12px}`; document.head.appendChild(st); }
-// スワイプでミキサーを開け閉め（指について動く）：トラックの頭（M・S・楽器の絵）を右へ → そのトラックのミキサー、どこでも左へ → 閉じる（左のはしはブラウザの「戻る」とぶつかるので使わない）
+// スワイプでミキサーを開け閉め（指について動く）：トラックの頭（M・S・楽器の絵）を右へ → そのトラックのミキサー、どこでも左へ → とじる（左のはしはブラウザの「戻る」とぶつかるので使わない）
 // スライダー・入力欄・色の帯（.dtl）の上では反応しない。タップで開け閉めしたときも横にすべらせる
 { const ins=$('dInsp'), body=ins.parentElement; let G=null, busy=false;
   const W=()=>ins.offsetWidth||Math.min(340,innerWidth*.68);
@@ -857,7 +857,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape' && BLKE) blkCancel(
   const rt=renderTracks;
   renderTracks=function(){
     const was=ins.hidden;
-    if(!was && !TRK_SEL && !trk.hidden && !busy && !G){ busy=true; setX(-W(),true);   // 閉じるときは左へすべらせてから
+    if(!was && !TRK_SEL && !trk.hidden && !busy && !G){ busy=true; setX(-W(),true);   // とじるときは左へすべらせてから
       setTimeout(()=>{ busy=false; rt.apply(this,arguments); setX(0,false); },140); return; }
     const r=rt.apply(this,arguments);
     if(was && !ins.hidden && !G){ setX(-W(),false); requestAnimationFrame(()=>requestAnimationFrame(()=>setX(0,true))); }   // 開くときは左から出す
@@ -882,7 +882,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape' && BLKE) blkCancel(
       if(g.mode==='close') settle(!(g.dx<-w/3 || (fast&&g.dx<-40)));
       else if(g.mode==='open') settle(g.dx>w/3 || (fast&&g.dx>40)); };
     tg.addEventListener('touchmove',mv,{passive:true}); tg.addEventListener('touchend',end); tg.addEventListener('touchcancel',end); },{passive:true}); }
-// ミキサーを開いているとき、右側（トラックの一覧）の何もない所をタップすると閉じる
+// ミキサーを開いているとき、右側（トラックの一覧）の何もない所をタップするととじる
 $('dScroll').addEventListener('click',e=>{ if(!TRK_SEL || e.target.closest('button,input,a,.dtl,canvas,.dmore')) return; TRK_SEL=null; renderTracks(); });
 // パソコンなど横に広い画面：下から出るシートと選ぶ画面は、まん中に適度な幅でまとめる。トラック画面は帯を高くして、縦の余白を減らす
 { const st=document.createElement('style'); st.textContent=`
@@ -902,7 +902,7 @@ const ICO_TRASH='<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="tr
 function delMyPat(kind,key){ const typ=k=>isDrumK(k)?'d':isBassK(k)?'b':'a', T=typ(kind), i=+key.slice(2), list=listOf(kind);
   const def=T==='d'?'pop':T==='b'?'auto':'piano4';
   trackList().map(t=>t.kind).filter(k=>typ(k)===T).forEach(k=>{ const p=patOf(k); if(!/^my\d+$/.test(p)) return; const j=+p.slice(2); if(j===i) setPatOf(k,def); else if(j>i) setPatOf(k,'my'+(j-1)); });
-  list.splice(i,1); rebuildMy(); save(); renderAll(); renderTracks(); toast('マイ演奏を消しました'); }
+  list.splice(i,1); rebuildMy(); save(); renderAll(); renderTracks(); toast('マイ演奏を削除しました'); }
 { const st=document.createElement('style'); st.textContent=`
 .tpi .tpdel{margin-left:auto;flex:none;min-width:30px;height:30px;padding:0 4px;border-radius:8px;display:grid;place-items:center;color:var(--muted);border:0;background:transparent;font-size:.75rem;font-weight:800;box-sizing:border-box}
 .tpi .tpdel[data-armed]{padding:0 8px}
@@ -990,19 +990,19 @@ function bCtx(x,y,onNote){ const c=$('blkCtx'), isDrum=isDrumK(BLKE.kind), isBas
   const row=(title,opts,cur,fn)=>{ h+=`<div class="ch">${title}</div><div class="crow">`+opts.map(([v,l],i)=>{ const id='r'+Object.keys(F).length; F[id]=()=>fn(v); return `<button data-f="${id}" class="${String(cur)===String(v)?'on':''}">${l}</button>`; }).join('')+'</div>'; };
   if(onNote && k){
     h+=`<div class="ch">${k>1?`選んだ${k}個の音`:'選んだ音'}</div>`;
-    add('切り取り',BK('X'),()=>bCopy(true)); add('コピー',BK('C'),()=>bCopy(false)); add('すぐうしろに複製',BK('D')+' / R',bDup); if(!isDrum) add('マス目にそろえる','Q',bQuant); add('消す','Delete',bDel);
+    add('切り取り',BK('X'),()=>bCopy(true)); add('コピー',BK('C'),()=>bCopy(false)); add('すぐうしろに複製',BK('D')+' / R',bDup); if(!isDrum) add('マス目にそろえる','Q',bQuant); add('削除','Delete',bDel);
     h+='<hr>'; const v0=Math.max(1,Math.round(n.vel*127)); h+=`<label class="cvel">強さ<input type="range" min="1" max="127" value="${v0}" id="bcVel"><b>${v0}</b></label>`;
     if(!isDrum){ const g=blkGrid(), L=[[.25,'1/4'],[.5,'1/2'],[1,'1マス'],[2,'2マス'],[4,'1拍'],[8,'2拍'],[16,'1小節']];
       row('長さ（マス）　数字キー 1〜7',L,n.gh?'':n.len,v=>bSetLen(v)); }
-    add(isDrum?'ゴースト（ごく弱く）':'ゴーストノート（ごく短く・弱く）','0',bGhost, isDrum?ns.every(x=>x.vel<=.3):ns.every(x=>x.gh));
+    add(isDrum?'ゴーストノート':'ゴーストノート','0',bGhost, isDrum?ns.every(x=>x.vel<=.3):ns.every(x=>x.gh));
     if(isArp){ h+='<hr>'; row('高さ',[[-12,'1オクターブ下'],[0,'そのまま'],[12,'1オクターブ上']],n.oc||0,v=>{ ns.forEach(x=>{ if(v) x.oc=v; else delete x.oc; }); commitNotes(); });
       if(!BSIDE()) add('弾き方・鳴らす小節…','',()=>{ bClose(); }); }
   } else {
     if(PR.clip && PR.clip.fam===blkFam(BLKE.kind)) add('ここに貼り付け',BK('V'),()=>{ const p=bPos(x,y); if(p&&p.s){ const g=blkGrid(); bPasteAt(p.s.off+Math.floor((p.x-p.s.x0)/g+1e-6)*g, p.s); } });
-    add('ここに音を置く','ダブルクリック',()=>bPlaceAt(x,y)); add('すべて選ぶ',BK('A'),bSelAll);
+    add('ここに音を置く','ダブルクリック',()=>bPlaceAt(x,y)); add('ぜんぶ選ぶ',BK('A'),bSelAll);
     if(PR.selSet.size) add('選択を外す','Esc',()=>{ PR.selSet.clear(); bRedraw(); });
   }
-  h+='<hr>'; add('元に戻す',BK('Z'),()=>{ histGo(-1); blkAfterHist(); }); add('ショートカット一覧','?',()=>bKeys(x,y));
+  h+='<hr>'; add('もとに戻す',BK('Z'),()=>{ histGo(-1); blkAfterHist(); }); add('ショートカット一覧','?',()=>bKeys(x,y));
   c.classList.remove('wide'); c.innerHTML=h; c.hidden=false;
   c.querySelectorAll('[data-f]').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); const f=F[b.dataset.f]; const keep=b.dataset.f[0]==='r'; if(!keep) bClose(); f(); if(keep && BLKE) bCtx(x,y,true); });
   const vi=$('bcVel'); if(vi){ const out=vi.nextElementSibling; vi.oninput=()=>{ const v=+vi.value; out.textContent=v; ns.forEach(q=>q.vel=v/127);
@@ -1011,11 +1011,11 @@ function bCtx(x,y,onNote){ const c=$('blkCtx'), isDrum=isDrumK(BLKE.kind), isBas
   bPlace(c,x,y); }
 function bPlace(c,x,y){ const w=c.offsetWidth, h=c.offsetHeight; c.style.left=Math.max(8,Math.min(innerWidth-w-8,x))+'px'; c.style.top=Math.max(8,Math.min(innerHeight-h-8,y))+'px'; }
 function bKeys(x,y){ const c=$('blkCtx'), K=[
-  ['<b>見る</b>',''],[`${BK('ホイール')}`,'横に拡大・縮小（拡大するとマス目が細かくなる）'],['Alt+ホイール','縦に拡大・縮小'],['Shift+ホイール','横にスクロール'],['H ／ G','拡大・縮小（Cubase）'],['＋ ／ −','拡大・縮小（Ableton）'],['Shift+F','全体を表示'],[`${BK('0')}`,'大きさを元に戻す'],
-  ['<b>置く・選ぶ</b>',''],['ダブルクリック','音を置く'],['B','鉛筆の固定を切りかえ（Ableton）'],['ドラッグ（何もない所）','囲んで選ぶ'],['Shift+クリック','選ぶ音を足す・外す'],[`${BK('ドラッグ')} / Alt+ドラッグ`,'コピーして動かす'],['右クリック','音ごとの設定'],[BK('A'),'すべて選ぶ'],['Esc','選択を外す'],
+  ['<b>見る</b>',''],[`${BK('ホイール')}`,'横に拡大・縮小（拡大するとマス目が細かくなる）'],['Alt+ホイール','縦に拡大・縮小'],['Shift+ホイール','横にスクロール'],['H ／ G','拡大・縮小（Cubase）'],['＋ ／ −','拡大・縮小（Ableton）'],['Shift+F','全体を表示'],[`${BK('0')}`,'大きさをもとに戻す'],
+  ['<b>置く・選ぶ</b>',''],['ダブルクリック','音を置く'],['B','鉛筆の固定を切りかえ（Ableton）'],['ドラッグ（何もない所）','囲んで選ぶ'],['Shift+クリック','選ぶ音を足す・外す'],[`${BK('ドラッグ')} / Alt+ドラッグ`,'コピーして動かす'],['右クリック','音ごとの設定'],[BK('A'),'ぜんぶ選ぶ'],['Esc','選択を外す'],
   ['<b>動かす</b>',''],['← →','1マス動かす'],['Shift+← →','1拍動かす'],['↑ ↓','1行動かす'],['Shift+↑ ↓','1オクターブ上・下（Cubase）'],['Q','マス目にそろえる（Cubase）'],
-  ['<b>長さ・強さ</b>',''],['1〜7','長さ：1/4・1/2・1・2マス・1拍・2拍・1小節（MuseScore の音価と同じ並び）'],['Alt+← →','短く・長く（いちばん短くするとゴースト）'],['0','ゴーストノート'],[BK('↑ ↓'),'強さ（Ableton）'],
-  ['<b>編集</b>',''],[BK('C')+' / '+BK('X')+' / '+BK('V'),'コピー・切り取り・貼り付け'],[BK('D')+' / R','すぐうしろに複製（R は MuseScore）'],['Delete','消す'],[BK('Z')+' / '+BK('Shift+Z')+' / '+BK('Y'),'元に戻す・やり直す'],
+  ['<b>長さ・強さ</b>',''],['1〜7','長さ：1/4・1/2・1・2マス・1拍・2拍・1小節（MuseScore の音価と同じ並び）'],['Alt+← →','短く・長く（いちばん短くするとゴーストノート）'],['0','ゴーストノート'],[BK('↑ ↓'),'強さ（Ableton）'],
+  ['<b>編集</b>',''],[BK('C')+' / '+BK('X')+' / '+BK('V'),'コピー・切り取り・貼り付け'],[BK('D')+' / R','すぐうしろに複製（R は MuseScore）'],['Delete','削除'],[BK('Z')+' / '+BK('Shift+Z')+' / '+BK('Y'),'もとに戻す・やり直す'],
   ['<b>そのほか</b>',''],['Space','再生・停止'],[BK('Enter'),'完了'],['?','この一覧']];
   c.classList.add('wide'); c.innerHTML=`<div class="ch">ショートカット（パソコン）</div><table>${K.map(([a,b])=>(b?`<tr><td>${a}</td><td>${b}</td></tr>`:`<tr><td colspan="2" style="padding-top:8px;color:var(--ink)">${a}</td></tr>`)).join('')}</table>`; c.hidden=false; bPlace(c,x,y); }
 { const sc=$('bScroll');

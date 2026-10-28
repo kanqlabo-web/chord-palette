@@ -66,12 +66,12 @@ function songDraw(){ let box=$('songSec'); if(!box){ const dr=$('drawer'), lv=dr
 
 // 曲の一覧（全画面）
 function openSongs(){ let el=$('songScr'); if(!el){ el=document.createElement('div'); el.id='songScr'; el.hidden=true;
-    el.innerHTML='<div class="phd"><button id="songBack">閉じる</button><h2>曲の一覧</h2><button id="songNewBtn">＋ 新しい曲</button></div><div class="sbody" id="songBody"></div>';
+    el.innerHTML='<div class="phd"><button id="songBack">とじる</button><h2>曲の一覧</h2><button id="songNewBtn">＋ 新しい曲</button></div><div class="sbody" id="songBody"></div>';
     document.body.appendChild(el); $('songBack').onclick=closeSongs; $('songNewBtn').onclick=()=>{ closeSongs(); songNew(); }; }
   el.hidden=false; drawSongs(); }
 function closeSongs(){ const el=$('songScr'); if(el) el.hidden=true; }
 function drawSongs(){ const box=$('songBody'), a=loadSongs(); box.innerHTML='';
-  if(!a.length){ box.innerHTML='<p class="empty">まだ保存した曲はありません。<br>マスの上の曲名から「保存する」で残せます。</p>'; return; }
+  if(!a.length){ box.innerHTML='<p class="empty">まだ保存した曲はありません。<br>設定メニュー（≡）の「曲」から「保存する」で残せます。</p>'; return; }
   const p=document.createElement('p'); p.className='snote'; p.textContent='たくさん作って、気に入ったものを残していきましょう。名前をタップすると変えられます。'; box.appendChild(p);
   a.forEach(sg=>{ const d=document.createElement('div'); d.className='srow'+(sg.id&&sg.id===state.songId?' cur':'');
     d.innerHTML='<div><b></b><small></small></div><button data-a="open">開く</button><button data-a="share">共有</button><button data-a="del" class="del">削除</button>';
@@ -79,7 +79,7 @@ function drawSongs(){ const box=$('songBody'), a=loadSongs(); box.innerHTML='';
     d.querySelector('div').onclick=()=>{ songId(sg); songRename(sg); };
     d.querySelector('[data-a="open"]').onclick=()=>songOpen(sg);
     d.querySelector('[data-a="share"]').onclick=()=>{ closeSongs(); $('drawer').classList.add('on'); scrim.classList.add('on'); shareSong(sg.data,sg.name); };
-    const del=d.querySelector('[data-a="del"]'); del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='本当に消す'; return; }
+    const del=d.querySelector('[data-a="del"]'); del.onclick=()=>{ if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='もう一度押すと削除します'; return; }
       const all=loadSongs(), i=all.findIndex(s=>(sg.id?s.id===sg.id:(s.date===sg.date&&s.name===sg.name))); if(i>=0){ all.splice(i,1); saveSongs(all); }
       if(sg.id && sg.id===state.songId){ state.songId=null; save(); } songDraw(); renderSongs(); drawSongs(); };
     box.appendChild(d); }); }

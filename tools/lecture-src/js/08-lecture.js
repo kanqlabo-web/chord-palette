@@ -36,7 +36,7 @@ function lecWatch(f){ lecUnwatch();
       if(!p.length) data=m.data; else { data=data||{}; let o=data; p.slice(0,-1).forEach(k=>o=o[k]=o[k]||{}); if(m.data===null) delete o[p[p.length-1]]; else o[p[p.length-1]]=m.data; }
       f(data); }catch(e){} };
   es.addEventListener('put',apply); es.addEventListener('patch',e=>{ try{ const m=JSON.parse(e.data); data=data||{}; let o=data; m.path.split('/').filter(Boolean).forEach(k=>o=o[k]=o[k]||{}); Object.assign(o,m.data); f(data); }catch(err){} });
-  es.onerror=()=>lecStatus('つながりなおしています…'); es.onopen=()=>lecStatus(''); }
+  es.onerror=()=>lecStatus('つながりなおしています……'); es.onopen=()=>lecStatus(''); }
 function lecUnwatch(){ if(LEC.es){ LEC.es.close(); LEC.es=null; } }
 function lecLocalMembers(f){ lecGet(lecPath()).then(d=>{ const m={}; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k.startsWith('cplec-room:'+lecPath()+'/m/')) m[k.split('/').pop()]=+localStorage.getItem(k); } f({...(d||{}),m}); }); }
 
@@ -114,7 +114,7 @@ function lecStatus(t){ const el=$('lecSt'); if(el) el.textContent=t; }
 // 先生はスマホで操作する（PC はスライドに使う）。先生の画面にはパレットを出さず、部屋の情報・レベルの一覧・終了だけ
 // レベル1は、部屋を作った時点で開放（見方を説明してから QR コードを配るため）
 const LEC_GET=n=>n===1?'パレットのコードを並べて鳴らす':LEVELS[n-1].unlock;   // そのレベルで使えるようになるもの
-async function lecStartTeacher(){ const btn=$('lecTeacher'); btn.querySelector('span').textContent='部屋を作っています…';
+async function lecStartTeacher(){ const btn=$('lecTeacher'); btn.querySelector('span').textContent='部屋を作っています……';
   try{ for(let k=0;k<6;k++){ LEC.room=String(Math.floor(1000+Math.random()*9000)); LEC.pw=Math.random().toString(36).slice(2,6);
       if(!(await lecGet(lecPath()))) break; }
     LEC.role='teacher'; LEC.lv=1; if(LEC_ON()) await fbAuth();
@@ -132,7 +132,7 @@ function renderLecBar(){ const P=$('lecPanel');
   P.hidden=false; const n=LEC.lv, qr=P.dataset.qr==='1';
   P.innerHTML=`<div class="lpin">
     <div class="lphead"><div><small>部屋番号</small><b>${LEC.room}</b></div><div><small>パスワード</small><b>${LEC.pw}</b></div><div><small>参加</small><b id="lecMem">${LEC.members}人</b></div></div>
-    <button class="lpbtn" id="lecQrB">${qr?'QR コード・リンクを閉じる':'QR コード・リンクを出す'}</button>
+    <button class="lpbtn" id="lecQrB">${qr?'QR コード・リンクをとじる':'QR コード・リンクを出す'}</button>
     <div class="lpqr" ${qr?'':'hidden'}>
       <div class="lqbox"><h4>受講者用</h4><img class="lqimg" id="lecQrS" alt="受講者用の QR コード"><span class="llink">${lecLink()}</span>
         <div class="lqbtns"><a class="lpbtn" id="lecDlS" download="講義_部屋${LEC.room}_受講者用QR.png">QR を画像で保存</a><button class="lpbtn" id="lecCopy">リンクをコピー</button></div></div>
@@ -140,7 +140,7 @@ function renderLecBar(){ const P=$('lecPanel');
         <div class="lqbtns"><a class="lpbtn" id="lecDlT" download="講義_部屋${LEC.room}_先生用QR.png">QR を画像で保存</a><button class="lpbtn" id="lecCopyT">先生用リンクをコピー</button></div></div></div>
     <h3>開放するレベル<small>タップすると、そのレベルまで開放します（とばしても、戻してもOK）</small></h3>
     <div class="lplist">${LEVELS.map((l,i)=>{ const k=i+1, st=k<n?'done':k===n?'now':'';
-      return `<button class="lplv ${st}" data-lv="${k}"><span class="lpn">LEVEL ${k}</span><b>${l.name}</b><small>使えるようになるもの：${LEC_GET(k)}</small>${k===n?'<em>ここまで開放中</em>':''}</button>`; }).join('')}</div>
+      return `<button class="lplv ${st}" data-lv="${k}"><span class="lpn">LEVEL ${k}</span><b>${l.name}</b><small>アンロック：${LEC_GET(k)}</small>${k===n?'<em>ここまで開放中</em>':''}</button>`; }).join('')}</div>
     <button class="lpend" id="lecEndB">講義を終了する</button>
     <p class="lpnote">終了すると、受講者の画面は「通常版」に切りかわり、開放したレベルまで使える状態で自由に遊べます。</p></div>`;
   $('lecQrB').onclick=()=>{ P.dataset.qr=qr?'':'1'; renderLecBar(); };

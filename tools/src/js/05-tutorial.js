@@ -687,7 +687,7 @@ function endTutorial(restore){
   histReset();
 }
 function showSlide(i){
-  if(i>=DECK.length && DECK.onEnd){ DECK.onEnd(); return; }   // チャプターの最後（吹き出しの「つぎへ」）で閉じる
+  if(i>=DECK.length && DECK.onEnd){ DECK.onEnd(); return; }   // チャプターの最後（吹き出しの「つぎへ」）でとじる
   if(TUT.practice && !(DECK[i]&&DECK[i].coach)) TUT.practice=false;
   clearTimeout(TUT.timer); clearInterval(TUT.wait); tutStopAudio();
   TUT.i=Math.max(0,Math.min(DECK.length-1,i));
@@ -789,7 +789,7 @@ function runCoach(kind){
   if(kind==='place'){
     tutLoad([]);
     const done=()=>[0,1,2,3].every(k=>state.slots[k]!==null&&state.slots[k]!==undefined);
-    const show=()=>coach([palette,slotsEl], done() ? 'いいですね！4つ並びました。' : (wideLayout()?'左のパレットから、右の4つのマスに':'上のパレットから、下の4つのマスに')+'好きなコードをドラッグしてはめてみましょう。<br><small>（タップして選んでから、マスをタップしてもOK）</small>', done()?[backBtn(),nextBtn()]:[backBtn(),['あとで',()=>showSlide(TUT.i+1),true]]);
+    const show=()=>coach([palette,slotsEl], done() ? 'いいですね！4つ並びました。' : (wideLayout()?'左のパレットから、右の4つのマスに':'上のパレットから、下の4つのマスに')+'好きなコードをドラッグしてはめてみましょう。<br><small>（タップして選んでから、マスをタップしてもOK）</small>', done()?[backBtn(),nextBtn()]:[backBtn(),['とばす',()=>showSlide(TUT.i+1),true]]);
     const keep=()=>{ if(done()) TUT.mine=[0,1,2,3].map(k=>state.slots[k]); };
     show(); keep(); let was=done(); TUT.wait=setInterval(()=>{ const d=done(); keep(); if(d!==was){ was=d; show(); } },300);
   } else if(kind==='play'){

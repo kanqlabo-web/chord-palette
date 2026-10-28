@@ -265,9 +265,9 @@ const selNotes=()=>{ if(!PR.selSet.size) return []; const a=curNotes(); return a
 const selOnly=n=>{ PR.selSet=new Set(n?[n]:[]); };
 function renderPatEditor(){
   const isDrum=isDrumK(patKind), g=$('patGrid');
-  $('patTitle').textContent = isDrum ? 'ドラムのマイ演奏' : isBassK(patKind) ? 'ベースのマイ演奏' : patKind==='arp2' ? '重ねる楽器のマイ演奏' : xOf(patKind) ? `${xOf(patKind).name||'足した楽器'}のマイ演奏` : 'コードのマイ演奏';
+  $('patTitle').textContent = isDrum ? 'ドラムのマイ演奏' : isBassK(patKind) ? 'ベースのマイ演奏' : patKind==='arp2' ? '重ねる楽器のマイ演奏' : xOf(patKind) ? `${xOf(patKind).name||'トラック'}のマイ演奏` : 'コードのマイ演奏';
   const nm=$('patName'); nm.value=curMy().name; nm.oninput=()=>{ curMy().name=nm.value||'マイ演奏'; rebuildMy(); save(); renderAll(); };
-  $('patDel').textContent='この演奏を消す'; $('patDel').dataset.armed='';
+  $('patDel').textContent='この演奏を削除'; $('patDel').dataset.armed='';
   updHelp();
   const rows = isDrum ? DRUM_ROWS : isBassK(patKind) ? BASS_ROWS : (curMy().melody?[...MEL_ROWS,...KEY_ROWS]:KEY_ROWS);
   const sceneBar = scenesOf(patKind) ? `<div class="scenebar"><div class="chips" id="sceneChips"></div><p class="small" id="sceneNote"></p></div>` : '';
@@ -277,7 +277,7 @@ function renderPatEditor(){
     $('sceneNote').textContent = sc==='bar' ? '1小節目の叩き方です。2小節目を作らなければ、これをくり返します。' : '2小節目の叩き方です（1・2小節目を交互にくり返します）。空っぽなら1小節目と同じです。'; }
   if(isArpK(patKind)){ const sc=curScene(), m=curMy();
     chips($('sceneChips'), SCENES.map(([k,l])=>[k, l+(k!=='bar'&&(m.sitNotes||{})[k]&&m.sitNotes[k].length?' ●':'')]), sc, v=>{ PR.scene=v; PR.selSet.clear(); renderPatEditor(); });
-    $('sceneNote').textContent = sc==='bar' ? '1小節ずっと同じコードのときの演奏です（ほかの場面を作っていないときも、これを使います）。'
+    $('sceneNote').textContent = sc==='bar' ? '1小節ずっと同じコードのときの演奏です（ほかのときの演奏を作っていないときも、これを使います）。'
       : sc==='bar2' ? '2小節目の演奏です（1・2小節目を交互にくり返します）。空っぽなら1小節目と同じです。'
       : sc==='bar3rd' ? '4小節ひとまとまりの3小節目の演奏です。空っぽなら1小節目と同じです（3・4小節目を作ると、4小節ごとにくり返します）。'
       : sc==='bar4th' ? '4小節ひとまとまりの4小節目の演奏です。空っぽなら2小節目（なければ1小節目）と同じです。'
@@ -348,7 +348,7 @@ function fallRow(){ const el=$('prFall'); if(!el) return; const ns=selNotes(), n
 // 編集モード／選択モードの切りかえと、選んだ音へのまとめ操作
 function modeRow(){ const el=$('prMode'); if(!el) return; const k=selNotes().length;
   el.innerHTML='<div class="chips" id="prModeChips"></div><span class="sep"></span>'
-    +`<button class="chip" id="prSelAll">すべて選ぶ</button>`+(k?`<button class="chip" id="prSelNone">選択を外す</button><button class="chip" id="prSelDel">選んだ${k}個を消す</button>`:'');
+    +`<button class="chip" id="prSelAll">ぜんぶ選ぶ</button>`+(k?`<button class="chip" id="prSelNone">選択を外す</button><button class="chip" id="prSelDel">選んだ${k}個を削除</button>`:'');
   chips($('prModeChips'),[['edit','編集'],['sel','選択']],PR.mode,v=>{ PR.mode=v; modeRow(); updHelp(); });
   $('prSelAll').onclick=()=>{ PR.selSet=new Set(curNotes()); drawNotes(); };
   if(k){ $('prSelNone').onclick=()=>{ PR.selSet.clear(); drawNotes(); };

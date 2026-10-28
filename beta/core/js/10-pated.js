@@ -146,7 +146,7 @@ const peSel=()=>peNotes().filter(n=>PR.selSet.has(n));
  #peInsp.on{visibility:visible;position:static;width:272px;flex:none;max-height:none;border-radius:0;border-top:0;border-left:1px solid var(--line);box-shadow:none;background:color-mix(in srgb,var(--ink) 2%,var(--surface));padding:6px 14px 14px}
 }`; document.head.appendChild(st); }
 
-{ const el=document.createElement('div'); el.id='peEd'; el.hidden=true; el.setAttribute('role','dialog'); el.setAttribute('aria-label','演奏の編集');
+{ const el=document.createElement('div'); el.id='peEd'; el.hidden=true; el.setAttribute('role','dialog'); el.setAttribute('aria-label','演奏を編集');
   const I=(d)=>`<svg viewBox="0 0 16 16" aria-hidden="true">${d}</svg>`;
   el.innerHTML=`<div class="ph"><button class="xcancel" id="peX">キャンセル</button>
     <h2 id="peTitle" class="nophrase"></h2><button class="ptb pfol" id="peFol" aria-pressed="true" title="再生中、鳴っている所をロールが追いかける（F）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h9M8 4.5L11.5 8 8 11.5" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 3v10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>追いかける</span></button><button class="pplay" id="pePlay" aria-label="再生"></button><button id="peOk">完了</button></div>
@@ -154,7 +154,7 @@ const peSel=()=>peNotes().filter(n=>PR.selSet.has(n));
     <button class="ptb on" id="peToolSel" aria-label="選ぶ" title="選ぶ（V）">${I('<path d="M3 2l9 5-4 1.2L6 12z" fill="currentColor"/>')}</button>
     <button class="ptb" id="peToolPen" aria-label="鉛筆" title="鉛筆（B）">${I('<path d="M3 13l1-3.5L11 2.5l2.5 2.5L6.5 12z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>')}</button>
     <span class="psep"></span>
-    <button class="ptb" id="peUndo" aria-label="元に戻す">${I('<path d="M5 4L2 7l3 3M2.5 7H10a3.5 3.5 0 010 7H7" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>')}</button>
+    <button class="ptb" id="peUndo" aria-label="もとに戻す">${I('<path d="M5 4L2 7l3 3M2.5 7H10a3.5 3.5 0 010 7H7" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>')}</button>
     <button class="ptb" id="peRedo" aria-label="やり直す">${I('<path d="M11 4l3 3-3 3M13.5 7H6a3.5 3.5 0 000 7h3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>')}</button>
     <span class="psep"></span>
     <button class="ptb pzm" id="peZo" aria-label="縮小" title="縮小（G）">−</button><button class="ptb pzm" id="peZi" aria-label="拡大" title="拡大（H）">＋</button>
@@ -167,16 +167,16 @@ const peSel=()=>peNotes().filter(n=>PR.selSet.has(n));
   </div>
   <div class="pbar" id="peBar"></div>
   <div class="pbody">
-    <nav id="peScenes" aria-label="場面"></nav>
+    <nav id="peScenes" aria-label="演奏するとき"></nav>
     <div class="pmain" id="peMain">
     </div>
     <aside id="peInsp" aria-label="選んだ音の設定"></aside>
-    <div id="peSceneSheet" hidden><div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>場面</b><button class="ptb" id="peSceneClose">閉じる</button></div><div id="peSceneSheetBody"></div></div></div>
+    <div id="peSceneSheet" hidden><div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>演奏するとき</b><button class="ptb" id="peSceneClose">とじる</button></div><div id="peSceneSheetBody"></div></div></div>
   </div>`;
   document.body.appendChild(el);
   const s=document.createElement('div'); s.id='peSet'; s.hidden=true; document.body.appendChild(s); }
 
-// ---------- 開く・閉じる ----------
+// ---------- 開く・とじる ----------
 function peOpen(kind,scene,mode,x0){ const k=patOf(kind);
   if((kind==='arp2'||xType(kind)==='chord') && (!k || !ARPS[k])) return openSheet(kind);
   closeAll(); if(typeof BLKE!=='undefined' && BLKE) hideBlk();
@@ -185,10 +185,10 @@ function peOpen(kind,scene,mode,x0){ const k=patOf(kind);
   PE={kind, snap, wasMy, prev:k, nm:tkPatName(kind), fold:{}};
   patKind=kind; PR.selSet=new Set();
   if(mode==='new') newMy(kind,null); else if(!wasMy) newMy(kind, k||'auto');
-  if(!wasMy){ const m=curMy(); m.tmp=true; m.name=(mode==='new'?'新しい演奏':(src?src.name:PE.nm)).replace(/（(自分用|この曲用)）$/,'').slice(0,14)+'（この曲用）'; rebuildMy(); }
+  if(!wasMy){ const m=curMy(); m.tmp=true; m.name=(mode==='new'?'新しい演奏':(src?src.name:PE.nm)).replace(/（(自分用|この曲用)）$/,'').slice(0,14)+'（自分用）'; rebuildMy(); }
   peGC();
   PE.copy=PE.wasMy?null:JSON.stringify(curMy());
-  clearTimeout(HIST.t); histCommit(); PE.h0=HIST.undo.length;   // 開いた時点を記録して、元に戻すで画面を開く前まで戻らないようにする
+  clearTimeout(HIST.t); histCommit(); PE.h0=HIST.undo.length;   // 開いた時点を記録して、もとに戻すで画面を開く前まで戻らないようにする
   const okScene = isDrumK(kind) ? ['bar','B'] : isBassK(kind) ? ['bar'] : SCENES.map(s=>s[0]);
   PE.scene = okScene.includes(scene) ? scene : 'bar'; PR.scene=PE.scene;
   // 音のないまとまりは、はじめはたたむ（メロディ行は、使っているときだけ開く）
@@ -264,17 +264,17 @@ function peMerge(){ const P=pePlace(); if(!P||!P.base) return; const {base,p}=P,
   const made=(PE.made||{})[base+':'+p]||[], del=(p===0?(made.length?made.slice():K.slice(1)):[...new Set([K[p],...made])]).filter(peHas);
   // もとから入っていた演奏（写したものでない）が消えるときは、確かめる
   const lost=del.filter(k=>!made.includes(k)), nn=lost.reduce((a,k)=>a+peSceneNotes(k).length,0), mel=lost.some(k=>peSceneNotes(k).some(n=>isDeg(n.r)));
-  if(lost.length && !confirm(`${lost.map(SCENE_NAME).join('・')}だけの演奏（${nn}音${mel?'、メロディを含む':''}）が消えて、ほかの所と同じになります。よろしいですか？（あとで「元に戻す」でも戻せます）`)) return;
+  if(lost.length && !confirm(`${lost.map(SCENE_NAME).join('・')}だけの演奏（${nn}音${mel?'、メロディを含む':''}）が消えて、ほかの所と同じになります。よろしいですか？（あとで「もとに戻す」でも戻せます）`)) return;
   del.forEach(k=>{ delete m.sitNotes[k]; const i=made.indexOf(k); if(i>=0) made.splice(i,1); });
   // 分けたときに写しただけの小節（中身が戻り先と同じ）は、まとめなおす
   for(let q=K.length-1;q>0;q--){ const k=K[q], f=peResolve(PE_FALL[k]); if(peHas(k) && JSON.stringify(peSceneNotes(k))===JSON.stringify(peSceneNotes(f))) delete m.sitNotes[k]; }
   const si=BLKE.act[PR.scene]; PR.scene=PE.scene=BLKE.cur=p===0?K[0]:peSrc(base,p); BLKE.act[PR.scene]=si; PR.selSet.clear(); rebuildMy(); save(); clearTimeout(HIST.t); histCommit(); peDraw();
-  toast(p===0?'ほかの所も、この演奏にそろえました（元に戻すで戻せます）':'ほかの所と同じ演奏に戻しました（元に戻すで戻せます）'); }
+  toast(p===0?'ほかの所も、この演奏にそろえました（もとに戻すで戻せます）':'ほかの所と同じ演奏に戻しました（もとに戻すで戻せます）'); }
 function peBarDraw(){ const el=$('peBar'), P=pePlace(); let h='';
   if(peArp()){ const nm=[curMy().notes||[],...Object.values(curMy().sitNotes||{})].flat().filter(n=>isDeg(n.r)).length;
     h+=`<div class="pseg" role="group" aria-label="編集する層"><button class="${PE.layer!=='mel'?'on':''}" data-l="acc">伴奏</button><button class="${PE.layer==='mel'?'on':''}" data-l="mel">メロディ${nm?`<small>${nm}</small>`:''}</button></div>`; }
   if(P && P.s){ const lab=chordText(P.s.v)+'・'+SCENE_NAME(P.s.key), shared=P.n>1, can=!!P.base;
-    const one=can&&P.own, tip=!can?'この場面は、曲の中で1種類だけです':P.base==='bar'?'1小節の演奏は4小節ごとにくり返します':'3拍の演奏は2小節ごとにくり返します';
+    const one=can&&P.own, tip=!can?'このときの演奏は、曲の中で1種類だけです':P.base==='bar'?'1小節の演奏は4小節ごとにくり返します':'3拍の演奏は2小節ごとにくり返します';
     const msg=!can&&P.n<2||P.n<2&&!one?'この演奏を使っているのは、ここだけです':one?`${esc(lab)}：この小節だけの演奏です。ほかの所は変わりません`:`${esc(lab)}：曲の${P.n}か所で同じ演奏です。今は全部いっしょに変わります`;
     PE.pop=(P.n>1&&!one)?`${P.n}か所いっしょに変わります`:''; h+=`<span class="pwhere">${msg}</span><div class="pseg" role="group" aria-label="くり返しの編集" title="${esc(tip)}"><button class="${one?'':'on'}" data-r="all">まとめて${!one&&shared?`<small>${P.n}か所</small>`:''}</button><button class="${one?'on':''}" data-r="one" ${can?'':'disabled'}>ここだけ${one&&shared?`<small>${P.base==='bar'?'4':'2'}小節ごと</small>`:''}</button></div>`; }
   el.innerHTML=h; el.hidden=!h;
@@ -294,7 +294,7 @@ function peGC(){ const typ=k=>isDrumK(k)?'d':isBassK(k)?'b':'a';
       ks.forEach(k=>{ const p=patOf(k); if(/^my\d+$/.test(p||'') && +p.slice(2)>i) setPatOf(k,'my'+(+p.slice(2)-1)); }); list.splice(i,1); } });
   rebuildMy(); }
 // マイ演奏に登録（ほかの曲・ほかの楽器でも選べるようになる）
-function peReg(){ const m=curMy(); if(!m) return; const def=m.name.replace(/（この曲用）$/,''), nm=prompt('マイ演奏に登録する名前',def); if(nm==null) return; const name=nm.trim().slice(0,20)||def;
+function peReg(){ const m=curMy(); if(!m) return; const def=m.name.replace(/（(自分用|この曲用)）$/,''), nm=prompt('マイ演奏に登録する名前',def); if(nm==null) return; const name=nm.trim().slice(0,20)||def;
   if(m.tmp){ delete m.tmp; m.name=name; } else { const c=JSON.parse(JSON.stringify(m)); c.name=name; listOf(PE.kind).push(c); }
   rebuildMy(); save(); clearTimeout(HIST.t); histCommit(); PE.wasMy=true; peDraw(); toast(`マイ演奏「${name}」に登録しました`); }
 $('peReg').onclick=peReg; $('peX').onclick=peCancel; $('peOk').onclick=peOk;
@@ -306,7 +306,7 @@ $('peToolSel').onclick=()=>{ PR.blkLock=false; drawBlk(); }; $('peToolPen').oncl
 $('peZo').onclick=()=>zoomBtn(.8); $('peZi').onclick=()=>zoomBtn(1.25);
 function peTools(){ $('peToolSel').classList.toggle('on',!blkDraw()); $('peToolPen').classList.toggle('on',blkDraw()); }
 function peSetScene(k){ if(!PE) return; PE.scene=k; PR.scene=k; PR.selSet.clear(); $('peSceneSheet').hidden=true; peDraw();
-  if(!peScrollTo(k)) toast('この場面は、今の曲では使われていません（コードの長さを変えると使われます）'); }
+  if(!peScrollTo(k)) toast('このときの演奏は、今の曲では使われていません（コードの長さを変えると使われます）'); }
 // 編集している所のそばに、短いメッセージをポンと出す（くり返しをまとめて編集しているときなど）
 function pePop(t){ let el=$('pePop'); if(!el){ el=document.createElement('div'); el.id='pePop'; el.setAttribute('role','status'); $('peMain').appendChild(el); }
   const sc=$('bScroll'), s=BSEGS[BLKE.act[PR.scene]], W=$('peMain').clientWidth;
@@ -327,7 +327,7 @@ function peChrome(){ const m=curMy();
   // ドラムは1・2小節目のタブ
   $('peDrumBars').innerHTML=peDrum()?['bar','B'].map(k=>{ const made=peSceneNotes(k).length; return `<button class="ptb${PE.scene===k?' on':''}" data-k="${k}" style="${!made&&k==='B'?'border-style:dashed':''}">${k==='bar'?'1小節目':'2小節目'+(made||k==='bar'?'':'（1と同じ）')}</button>`; }).join(' '):'';
   $('peDrumBars').querySelectorAll('button').forEach(b=>b.onclick=()=>peSetScene(b.dataset.k));
-  const sb=$('peSceneBtn'); sb.hidden=!peArp(); sb.textContent='場面：'+SCENE_NAME(PE.scene)+' ▾';
+  const sb=$('peSceneBtn'); sb.hidden=!peArp(); sb.textContent=(n=>/とき$/.test(n)?n:n+'のとき')(SCENE_NAME(PE.scene))+' ▾';
 }
 function peSceneHTML(){ const m=curMy(), made=k=>peSceneNotes(k).length>0;
   let h='<div class="pesc"><div></div>'+[1,2,3,4].map(i=>`<div class="hd">${i}</div>`).join('');
@@ -336,10 +336,10 @@ function peSceneHTML(){ const m=curMy(), made=k=>peSceneNotes(k).length>0;
       h+=`<button class="${mk?'made':'empty'}${PE.scene===k?' cur':''}" data-k="${k}" title="${esc(tip)}" aria-label="${esc(tip)}">${mk?'':'＝'}</button>`; } });
   h+='</div>';
   const fb=PE_FALL[PE.scene], empty=!made(PE.scene);
-  h+=`<div class="pescnote"><b style="color:var(--ink)">${esc(SCENE_NAME(PE.scene))}</b><br>${empty?(fb?`空っぽなので「${esc(SCENE_NAME(fb))}」と同じに鳴ります。音を置くと、この場面だけの演奏になります。`:'空っぽなので、次のコードの弾き始めを先に弾いて小節の頭までのばします。'):'この場面の演奏を編集しています。'}${PE.scene==='bar'&&m.contNotes?'<br>（コードが続くとき用の演奏も入っています。1小節を編集するとそちらは消えます）':''}</div>`;
+  h+=`<div class="pescnote"><b style="color:var(--ink)">${esc(SCENE_NAME(PE.scene))}</b><br>${empty?(fb?`空っぽなので「${esc(SCENE_NAME(fb))}」と同じに鳴ります。音を置くと、このときだけの演奏になります。`:'空っぽなので、次のコードの弾き始めを先に弾いて小節の頭までのばします。'):'このときの演奏を編集しています。'}${PE.scene==='bar'&&m.contNotes?'<br>（コードが続くとき用の演奏も入っています。1小節を編集するとそちらは消えます）':''}</div>`;
   return h; }
 function peScenes(){ const nav=$('peScenes'); if(!peArp()){ nav.style.display='none'; return; } nav.style.display='';
-  nav.innerHTML='<h3>場面</h3><div style="font-size:.68rem;color:var(--muted)">コードの長さと、何小節目か</div>'+peSceneHTML();
+  nav.innerHTML='<h3>演奏するとき</h3><div style="font-size:.68rem;color:var(--muted)">コードの長さと、何小節目か</div>'+peSceneHTML();
   nav.querySelectorAll('button[data-k]').forEach(b=>b.onclick=()=>peSetScene(b.dataset.k));
   const sh=$('peSceneSheetBody'); if(!$('peSceneSheet').hidden){ sh.innerHTML=peSceneHTML(); sh.querySelectorAll('button[data-k]').forEach(b=>b.onclick=()=>peSetScene(b.dataset.k)); } }
 $('peSceneBtn').onclick=()=>{ $('peSceneSheet').hidden=false; peScenes(); };
@@ -351,13 +351,13 @@ function peInsp(){ const el=$('peInsp'), ns=peSel(), k=ns.length;
   el.className='on'; const n=ns[k-1], F={}; let id=0; const fn=f=>{ const q='f'+(id++); F[q]=f; return q; };
   const row=(opts,cur,set)=>`<div class="irow">${opts.map(([v,l])=>`<button class="${cur(v)?'on':''}" data-f="${fn(()=>set(v))}">${esc(l)}</button>`).join('')}</div>`;
   const all=f=>ns.every(f);
-  let h=`<div class="ih"><b>${k>1?`選んだ${k}個の音`:'選んだ音'}</b><small>${peWide()?'Delete で消す・? でショートカット':'もう一度押すと外す'}</small></div>`;
+  let h=`<div class="ih"><b>${k>1?`選んだ${k}個の音`:'選んだ音'}</b><small>${peWide()?'Delete で削除・? でショートカット':'もう一度押すと外す'}</small></div>`;
   if(peArp()) h+=`<h4>弾く向き</h4>`+row([['','おまかせ'],['d','ダウン ↓'],['u','アップ ↑']],v=>all(x=>(x.dir||'')===v),v=>{ ns.forEach(x=>{ if(v) x.dir=v; else delete x.dir; }); peCommit(); });
   const v0=Math.round(n.vel*127), dy=BDYN.find(([,v])=>Math.abs(v-n.vel)<.02);
   h+=`<h4>強さ<span>${dy?dy[0]+' ':''}${v0}</span></h4><input type="range" min="1" max="127" value="${v0}" id="peIVel" aria-label="強さ">`
     + row(BDYN.map(([l,v])=>[v,l]),v=>all(x=>Math.abs(x.vel-v)<.02),v=>{ ns.forEach(x=>x.vel=v); peCommit(); });
-  if(!peDrum()) h+=`<h4>ゴースト</h4>`+row([[false,'ふつう'],[true,'ゴースト']],v=>all(x=>!!x.gh===v),v=>{ ns.forEach(x=>{ if(v){ x.gh=true; x.len=Math.min(x.len,GHOST_LEN); } else delete x.gh; }); peCommit(); });
-  else h+=`<h4>ゴースト</h4>`+row([[false,'ふつう'],[true,'ごく弱く']],v=>all(x=>(x.vel<=.3)===v),v=>{ ns.forEach(x=>x.vel=v?.25:.8); peCommit(); });
+  if(!peDrum()) h+=`<h4>ゴーストノート</h4>`+row([[false,'ふつう'],[true,'ゴーストノート']],v=>all(x=>!!x.gh===v),v=>{ ns.forEach(x=>{ if(v){ x.gh=true; x.len=Math.min(x.len,GHOST_LEN); } else delete x.gh; }); peCommit(); });
+  else h+=`<h4>ゴーストノート</h4>`+row([[false,'ふつう'],[true,'ゴーストノート']],v=>all(x=>(x.vel<=.3)===v),v=>{ ns.forEach(x=>x.vel=v?.25:.8); peCommit(); });
   if(peArp()){ const mel=ns.some(x=>isDeg(x.r)), cur=bFxOf(n);
     h+=`<h4>飾り${cur?`<span>${esc((BFX.flatMap(x=>x[1]).find(x=>x[0]===cur)||[,,''])[2].replace(/\n/g,''))}</span>`:''}</h4><div class="igrid">`;
     BFX.forEach(([,L])=>L.filter(x=>!(x[0]==='up'&&mel)).forEach(([v,ico,lab,tip])=>{ h+=`<button class="${all(x=>bFxOf(x)===v)?'on':''}" title="${esc(tip)}" data-f="${fn(()=>{ bSetFx(v); clearTimeout(HIST.t); histCommit(); peDraw(); })}"><i>${ico}</i><span>${esc(lab).replace(/\n/g,'<br>')}</span></button>`; }));
@@ -393,7 +393,7 @@ function peSettings(){ const box=$('peSet'), m=curMy(), kind=PE.kind, F={}; let 
   } else {
     h+=sec('すべり（ポルタメント）',opt('音を重ねたときの、すべる速さ',[[.035,'速い'],[.08,'ふつう'],[.16,'ゆっくり']],m.glide||.08,v=>set('glide',v)));
   }
-  box.innerHTML=`<div role="dialog" aria-label="演奏の設定"><div class="sh"><h3>演奏の設定<small class="nophrase">${esc(m.name||'')}・すべての場面に効きます</small></h3><button class="ptb" id="peSetReg" ${m.tmp?"":"disabled"}>${m.tmp?"マイ演奏に登録":"登録済み"}</button><button class="ptb" id="peSetPick">ほかの演奏を下書きに</button><button class="ptb" id="peSetX">閉じる</button></div><div class="sb">${h}</div></div>`;
+  box.innerHTML=`<div role="dialog" aria-label="演奏の設定"><div class="sh"><h3>演奏の設定<small class="nophrase">${esc(m.name||'')}・どのときの演奏にも効きます</small></h3><button class="ptb" id="peSetReg" ${m.tmp?"":"disabled"}>${m.tmp?"マイ演奏に登録":"登録済み"}</button><button class="ptb" id="peSetPick">ほかの演奏を下書きに</button><button class="ptb" id="peSetX">とじる</button></div><div class="sb">${h}</div></div>`;
   box.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ const f=F[b.dataset.f]; if(f) f(); });
   $('peSetReg').onclick=()=>{ box.hidden=true; peReg(); }; $('peSetPick').onclick=()=>{ box.hidden=true; $('pePick').click(); }; $('peSetX').onclick=()=>{ box.hidden=true; }; box.onclick=e=>{ if(e.target===box) box.hidden=true; };
   box.hidden=false; }

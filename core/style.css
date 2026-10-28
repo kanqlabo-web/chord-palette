@@ -671,3 +671,7 @@ body.tutlite .slot.warn{box-shadow:none}
 body.tutlite .tile.dual{background:color-mix(in srgb,var(--muted) 10%,var(--surface));border-color:color-mix(in srgb,var(--muted) 40%,var(--line))}
 body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body.tutlite .slothead .right,body.tutlite .pages{visibility:hidden}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}.tutstage .a,.tutstage .pop,.brk span,.flow .arr{animation-duration:.01s!important;animation-delay:0s!important}}
+/* 伴奏スタイルを変えたとき：楽器／テンポ の行 */
+.keeprow{display:flex;align-items:center;gap:10px;margin-top:6px}
+.keeprow>span{flex:none;width:3.6em;font-size:.82rem;font-weight:700;color:var(--muted)}
+.keeprow>.chips{flex:1;min-width:0}
