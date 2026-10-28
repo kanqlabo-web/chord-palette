@@ -605,9 +605,9 @@ function levelClear(n){ if(LVL>=n) return; LVL=n; saveLv();
   renderAll(); }
 function renderLevels(){ document.body.classList.toggle('freemode',MODE==='free');   // すべての機能で始めたときは、レベルの案内を隠す（style.css）
   const el=$('levelList'); if(!el) return;
-  const nx=Math.min(LVL+1,LV_MAX), all=LVL>=LV_MAX;
+  const nx=Math.min(LVL+1,LV_MAX), all=LVL>=LV_MAX, NL=LEVELS[nx-1]||{name:'',goal:''};   // ベータ版はレベル10〜をあとで足す
   $('lvCount').textContent=`${LVL} / ${LV_MAX} クリア`;
-  $('lvNext').innerHTML = all ? '<i>ALL CLEAR</i><b>全レベルクリア</b><small>一覧から好きなレベルを見返せます</small>' : `<i>${LVL?'つづきから':'はじめから'} ・ LEVEL ${nx}</i><b>${LEVELS[nx-1].name}</b><small>${LEVELS[nx-1].unlock?'クリアすると：'+LEVELS[nx-1].unlock:LEVELS[nx-1].goal}</small>`;
+  $('lvNext').innerHTML = all ? '<i>ALL CLEAR</i><b>全レベルクリア</b><small>一覧から好きなレベルを見返せます</small>' : `<i>${LVL?'つづきから':'はじめから'} ・ LEVEL ${nx}</i><b>${NL.name}</b><small>${NL.unlock?'クリアすると：'+NL.unlock:NL.goal}</small>`;
   $('lvNext').onclick=()=>{ if(!all) startLevel(nx); else $('lvAcc').open=true; };
   el.innerHTML=LEVELS.map((l,k)=>{ const n=k+1, done=LVL>=n, open=UL()>=n-1;
     return `<button data-l="${n}"${open?'':' class="lock"'}><span class="lvtag">LEVEL ${n}</span><b>${l.name}${done?'<span class="chapdone" aria-label="クリア">✓</span>':open?'':' '+ico('lock',13)}</b>${l.unlock?`<small>${l.unlock}</small>`:''}</button>`; }).join('');

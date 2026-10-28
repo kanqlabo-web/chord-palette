@@ -147,3 +147,5 @@ WHERE[9]=WHERE[9].map(st=>st.menu==='proChips'?{...st, x:'<span style="white-spa
 WHERE[10]=[tapSlot('1・2m・4・5 は <b>dim・dim7</b> にも変えられます。<br>コードの右側に同じコードを置いてから変えると、半音でつなげます。')];
 WHERE[11]=[tapSlot('1 と 6m は <b>aug</b> にも変えられます。')];
 renderAll();
+// タイトル画面はレベル10〜12を足す前に作られるので、出ていれば作り直す（レベル9〜11まで進んだ人の「つづきから」などが動かなかった）
+renderLevels(); if(!$('modePick').hidden) showModePick();

@@ -245,9 +245,9 @@ function renderAll(){
   { const libOn=ULx()>=3; $('libOpen').closest('.sec').hidden=!libOn; }
   const lb=$('lvBig'), showLv=MODE==='step' && LVL<LV_MAX && !TUT.on;
   lb.hidden=!showLv; document.body.classList.toggle('haslv',showLv);
-  if(showLv){ const t=`LEVEL ${LVL+1}`; $('lvBigN').textContent=LEVELS[LVL].name;
+  if(showLv){ const t=`LEVEL ${LVL+1}`; $('lvBigN').textContent=LEVELS[LVL]?.name||'';
     if($('lvBigT').textContent!==t){ $('lvBigT').textContent=t; lb.classList.remove('fresh'); void lb.offsetWidth; lb.classList.add('fresh'); }
-    lb.setAttribute('aria-label',`次のレベル：レベル${LVL+1}「${LEVELS[LVL].name}」をはじめる`); }
+    lb.setAttribute('aria-label',`次のレベル：レベル${LVL+1}「${LEVELS[LVL]?.name||''}」をはじめる`); }
   const hideAcc=ULx()<3; [$('arpLane'),$('drumLane'),$('bpm').closest('.bpm')].forEach(e=>{ e.hidden=false; e.classList.toggle('accOff',hideAcc); });   // レベル3（雰囲気）までは伴奏とテンポを見せない（場所は空けておき、画面の形をそろえる。チュートリアルの吹き出しもここに出る）
   buildMenu(); applyMix();
 }

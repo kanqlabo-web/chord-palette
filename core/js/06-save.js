@@ -217,7 +217,7 @@ function showModePick(){ const el=$('modePick'); el.hidden=false; $('tsLevels').
   const hasSave=!FIRST_RUN || LVL>0;
   $('tsCont').hidden=!hasSave;
   $('tsContSub').textContent = MODE==='free' ? 'すべての機能で自由に作る'
-    : LVL>=LV_MAX ? '全レベルクリア・自由に作る' : LVL===0 ? 'レベル1から' : `レベル${LVL}までクリア・次はレベル${LVL+1}「${LEVELS[LVL].name}」`;
+    : LVL>=LV_MAX ? '全レベルクリア・自由に作る' : LVL===0 ? 'レベル1から' : `レベル${LVL}までクリア・次はレベル${LVL+1}「${LEVELS[LVL]?.name||''}」`;
   $('tsCont').onclick=()=>{ close(); if(MODE==='step' && LVL===0) startLevel(1); };
   // はじめから：進み具合を消してレベル1から（進んでいるときは2回押しで）
   const nb=$('tsNew'); nb.classList.remove('armed'); $('tsNewSub').textContent='レベル1から、1つずつ覚えていきます。';
@@ -230,4 +230,5 @@ function showModePick(){ const el=$('modePick'); el.hidden=false; $('tsLevels').
   // 「すべての機能で始める」
   $('tsFree').onclick=()=>{ MODE='free'; saveLv(); MOODPOP.pending=false; close(); toast('すべての機能を使えます'); };
 }
+// ベータ版はレベルをあとのファイルで足すので、名前がまだなくても止まらないようにしてある（足したあとに出し直す）
 if(!OPENED_SHARE) showModePick();
