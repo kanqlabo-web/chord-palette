@@ -375,18 +375,15 @@ function pthMenu(){ const k=PD.mode, dr=$('drawer'); if(!dr) return;
     <details class="acc" style="margin-top:8px"><summary><span>レベル一覧（クリアしたレベルは見返せます）</span></summary><div class="acclist">${list.map(l=>{ const done=pDone(l.id), open=pOpen(l.id)&&!!l.deck;
       return `<button data-lv="${l.id}"${open||done?'':' class="lock"'}><span class="lvtag">${pName(l.id)}</span><b>${l.name}${done?'<span class="chapdone" aria-label="クリア">✓</span>':''}</b><small>${!l.deck?'準備中':!pOpen(l.id)?pReq(l.id).filter(r=>!pDone(r)).map(pName).join('・')+' が必要':(l.unlock||'')}</small></button>`; }).join('')}</div></details>
     <button class="lvnext pthbtn" style="margin-top:8px" data-map><i>試作</i><b>3本の道の地図</b><small>コード・リズム・メロディのつながりを見る</small></button></div>`;
-  const setHTML = k==='r' ? (pDone('R2')?`<div class="sec"><h3>ドラム</h3><div class="chips" data-set="on"></div><h3 style="margin-top:10px">ドラムの音</h3><div class="chips" data-set="kit"></div><h3 style="margin-top:10px">打ち込み</h3><div class="chips"><button class="chip" data-dpre="8">8ビートを入れる</button><button class="chip" data-dpre="0">ぜんぶ削除</button></div></div>`:'')
-    : (pDone('M1')?`<div class="sec"><h3>メロディ</h3><div class="chips" data-set="mon"></div><h3 style="margin-top:10px">メロディの楽器</h3><div class="chips" data-set="inst"></div>${pDone('M2')?'<h3 style="margin-top:10px">使う音</h3><div class="chips" data-set="five"></div>':''}${pDone('M3')?'<h3 style="margin-top:10px">メロディガイド</h3><div class="chips" data-set="guide"></div>':''}<h3 style="margin-top:10px">再生中の画面</h3><div class="chips" data-set="follow"></div><h3 style="margin-top:10px">マスの細かさ</h3><div class="chips" data-set="grid"></div><div class="chips" style="margin-top:10px"><button class="chip" data-mclr>メロディをぜんぶ削除</button></div></div>`:'');
+  const setHTML = k==='r' ? (pDone('R2')?`<div class="sec"><h3>ドラムの打ち込み</h3><div class="chips"><button class="chip" data-dpre="8">8ビートを入れる</button><button class="chip" data-dpre="0">ぜんぶ削除</button></div></div>`:'')
+    : (pDone('M1')?`<div class="sec"><h3>メロディ</h3><div class="chips" data-set="mon"></div>${pDone('M2')?'<h3 style="margin-top:10px">使う音</h3><div class="chips" data-set="five"></div>':''}${pDone('M3')?'<h3 style="margin-top:10px">メロディガイド</h3><div class="chips" data-set="guide"></div>':''}<h3 style="margin-top:10px">マスの細かさ</h3><div class="chips" data-set="grid"></div><div class="chips" style="margin-top:10px"><button class="chip" data-mclr>メロディをぜんぶ削除</button></div></div>`:'');
   box.hidden=false; box.innerHTML=lvHTML+setHTML;
   const redraw=()=>{ pthSave(); drawPanel(); pthMenu(); };
   const C=(sel,opts,cur,f)=>{ const el=box.querySelector(`[data-set="${sel}"]`); if(el) chips(el,opts,cur,v=>{ f(v); redraw(); }); };
-  C('on',[[true,'打ち込んだドラムで鳴らす'],[false,'伴奏のドラムで鳴らす']],!!PD.drum.on,v=>PD.drum.on=v);
-  C('kit',Object.entries(KITS).map(([id,n])=>[id,n]),state.kit,v=>{ state.kit=v; ensureSounds(); save(); if(!playing) previewKit(); });
+  // ドラムで鳴らすか・ドラムの音・メロディの楽器・追いかけるかは、画面の下のボタンにあるのでメニューには出さない
   C('mon',[[true,'メロディを鳴らす'],[false,'鳴らさない']],!!PD.mel.on,v=>PD.mel.on=v);
-  const mi=box.querySelector('[data-set="inst"]'); if(mi){ mi.innerHTML=`<button class="chip">${INSTS[melInst()]||melInst()} ・ 変える</button>`; mi.firstChild.onclick=()=>{ drawer.classList.remove('on'); scrim.classList.remove('on'); melPick(); }; }
   C('five',[[true,'5つの音だけ'],[false,'7つの音']],melFive(),v=>{ melSnap(); PD.mel.five=v; melSnapRows(); melTidy(); });
   C('guide',[[true,'表示する'],[false,'表示しない']],!!PD.mel.guide,v=>PD.mel.guide=v);
-  C('follow',[[true,'鳴っている所を追いかける'],[false,'動かさない']],PD.mel.follow!==false,v=>PD.mel.follow=v);
   C('grid',[[2,'8分（ふつう）'],[1,'16分（細かい）']],MU.G,v=>{ MU.G=v; MU.last=Math.max(MU.G,MU.last); });
   box.querySelectorAll('[data-dpre]').forEach(b=>b.onclick=()=>{ drawer.classList.remove('on'); scrim.classList.remove('on'); drumPreset(b.dataset.dpre==='8'); });
   const mc=box.querySelector('[data-mclr]'); if(mc) mc.onclick=()=>{ drawer.classList.remove('on'); scrim.classList.remove('on'); melClear(); };

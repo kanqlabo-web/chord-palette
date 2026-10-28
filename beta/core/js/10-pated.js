@@ -171,7 +171,7 @@ const peSel=()=>peNotes().filter(n=>PR.selSet.has(n));
     <div class="pmain" id="peMain">
     </div>
     <aside id="peInsp" aria-label="選んだ音の設定"></aside>
-    <div id="peSceneSheet" hidden><div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>演奏するとき</b><button class="ptb" id="peSceneClose">とじる</button></div><div id="peSceneSheetBody"></div></div></div>
+    <div id="peSceneSheet" hidden><div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>演奏するとき</b><button class="ptb" id="peSceneClose" aria-label="とじる">${ICO.close}</button></div><div id="peSceneSheetBody"></div></div></div>
   </div>`;
   document.body.appendChild(el);
   const s=document.createElement('div'); s.id='peSet'; s.hidden=true; document.body.appendChild(s); }
@@ -393,7 +393,7 @@ function peSettings(){ const box=$('peSet'), m=curMy(), kind=PE.kind, F={}; let 
   } else {
     h+=sec('すべり（ポルタメント）',opt('音を重ねたときの、すべる速さ',[[.035,'速い'],[.08,'ふつう'],[.16,'ゆっくり']],m.glide||.08,v=>set('glide',v)));
   }
-  box.innerHTML=`<div role="dialog" aria-label="演奏の設定"><div class="sh"><h3>演奏の設定<small class="nophrase">${esc(m.name||'')}・どのときの演奏にも効きます</small></h3><button class="ptb" id="peSetReg" ${m.tmp?"":"disabled"}>${m.tmp?"マイ演奏に登録":"登録済み"}</button><button class="ptb" id="peSetPick">ほかの演奏を下書きに</button><button class="ptb" id="peSetX">とじる</button></div><div class="sb">${h}</div></div>`;
+  box.innerHTML=`<div role="dialog" aria-label="演奏の設定"><div class="sh"><h3>演奏の設定<small class="nophrase">${esc(m.name||'')}・どのときの演奏にも効きます</small></h3><button class="ptb" id="peSetReg" ${m.tmp?"":"disabled"}>${m.tmp?"マイ演奏に登録":"登録済み"}</button><button class="ptb" id="peSetPick">ほかの演奏を下書きに</button><button class="ptb" id="peSetX" aria-label="とじる">${ICO.close}</button></div><div class="sb">${h}</div></div>`;
   box.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ const f=F[b.dataset.f]; if(f) f(); });
   $('peSetReg').onclick=()=>{ box.hidden=true; peReg(); }; $('peSetPick').onclick=()=>{ box.hidden=true; $('pePick').click(); }; $('peSetX').onclick=()=>{ box.hidden=true; }; box.onclick=e=>{ if(e.target===box) box.hidden=true; };
   box.hidden=false; }

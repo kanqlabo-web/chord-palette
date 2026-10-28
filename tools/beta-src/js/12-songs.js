@@ -66,7 +66,7 @@ function songDraw(){ let box=$('songSec'); if(!box){ const dr=$('drawer'), lv=dr
 
 // 曲の一覧（全画面）
 function openSongs(){ let el=$('songScr'); if(!el){ el=document.createElement('div'); el.id='songScr'; el.hidden=true;
-    el.innerHTML='<div class="phd"><button id="songBack">とじる</button><h2>曲の一覧</h2><button id="songNewBtn">＋ 新しい曲</button></div><div class="sbody" id="songBody"></div>';
+    el.innerHTML='<div class="phd"><button id="songBack" aria-label="とじる" style="padding:0;width:40px;display:grid;place-items:center">'+ICO.close+'</button><h2>曲の一覧</h2><button id="songNewBtn">＋ 新しい曲</button></div><div class="sbody" id="songBody"></div>';
     document.body.appendChild(el); $('songBack').onclick=closeSongs; $('songNewBtn').onclick=()=>{ closeSongs(); songNew(); }; }
   el.hidden=false; drawSongs(); }
 function closeSongs(){ const el=$('songScr'); if(el) el.hidden=true; }
