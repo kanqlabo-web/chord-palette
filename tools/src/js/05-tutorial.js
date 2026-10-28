@@ -398,20 +398,20 @@ const TASKS={
     check:()=>state.slots[7]!=null && tokOf(state.slots[7])===0,
     ok:'2回目の終わりが 1 になって、ひと区切りついた感じになりました。', ng:'8つ目のコードを 1 にしてみましょう。'},
   tension:{load:[3,4,2,5], style:'ポップス（定番）', bpm:92,
-    text:'置いたコードをタップして、<b>数字のついたコード</b>に入れ替えてみましょう。', hint:'2つ以上入れ替えたら、再生して聴いてみましょう',
+    text:'置いたコードを2回タップして、<b>数字のついたコード</b>に入れ替えてみましょう。', hint:'2つ以上入れ替えたら、再生して聴いてみましょう',
     check:()=>slotsSpec().filter(sp=>/\d/.test(sp.x||'')).length>=2,
     ok:'響きが一気に洗練されました。', ng:'数字のついたコードを、もう少し増やしてみましょう。'},
   secdom:{load:[0,5,1,4], style:'ポップス（定番）', bpm:96,
-    text:'「1 → 6m → 2m → 5」の <b>6m をタップして、明るい 6(7)</b> に変えてみましょう。', hint:'6(7) から数えて4つ目は 2m。次の 2m へ強く進みます',
+    text:'「1 → 6m → 2m → 5」の <b>6m を2回タップして、明るい 6(7)</b> に変えてみましょう。', hint:'6(7) から数えて4つ目は 2m。次の 2m へ強く進みます',
     check:()=>{ const v=state.slots[1]; return v!=null&&!isNum(v)&&specOf(v).o===9&&specOf(v).q==='maj'; },
-    ok:'6(7) から 2m へ、引き寄せられるように進みました。', ng:'2つ目の 6m をタップして、6(7) を選んでみましょう。'},
+    ok:'6(7) から 2m へ、引き寄せられるように進みました。', ng:'2つ目の 6m を2回タップして、6(7) を選んでみましょう。'},
   minor4:{load:[0,3,3,0], style:'バラード', bpm:76,
-    text:'2つ並んだ 4 の<b>うしろの方を 4m</b> にして、「4 → 4m → 1」を作ってみましょう。', hint:'3つ目の 4 をタップして、4m を選びます',
+    text:'2つ並んだ 4 の<b>うしろの方を 4m</b> にして、「4 → 4m → 1」を作ってみましょう。', hint:'3つ目の 4 を2回タップして、4m を選びます',
     check:()=>{ const v=state.slots[2]; return tokOf(state.slots[1])===3 && v!=null&&!isNum(v)&&specOf(v).o===5&&specOf(v).q==='m'; },
-    ok:'明るい 4 から暗い 4m へ。切なさが一瞬だけ差し込みました。', ng:'3つ目の 4 をタップして、4m を選んでみましょう。'},
+    ok:'明るい 4 から暗い 4m へ。切なさが一瞬だけ差し込みました。', ng:'3つ目の 4 を2回タップして、4m を選んでみましょう。'},
   key:{load:[0,5,1,4], style:'ポップス（定番）', bpm:96, keys:['C','G','D','A','E','F']},
   smooth:{load:[3,0,4,5], style:'ポップス（定番）', bpm:92,
-    text:'「4 → 1 → 5 → 6m」は、ベースが大きく跳んでいます。コードをタップして<b>ベースの音を変え</b>、なめらかにしてみましょう。', hint:'どのコードのベースを変えると、となりのベースに近づくか考えてみましょう',
+    text:'「4 → 1 → 5 → 6m」は、ベースが大きく跳んでいます。コードを2回タップして<b>ベースの音を変え</b>、なめらかにしてみましょう。', hint:'どのコードのベースを変えると、となりのベースに近づくか考えてみましょう',
     check:()=>[0,1,2,3].some(k=>{ const v=state.slots[k]; return v!=null&&!isNum(v)&&specOf(v).b!=null; }) && bassLeap()<bassLeap([3,0,4,5]),
     ok:'ベースの動きが小さくなって、つながりがなめらかになりました。', ng:'ベースが前後のコードのベースに近くなるように、ベースの音を選び直してみましょう。'},
   split:{load:[0,5,3,4], style:'ポップス（定番）', bpm:96,
@@ -648,7 +648,7 @@ function openTutorial(deck){
 // クリアしたあと：実際の画面で、新しく使えるようになった所を光らせて説明する
 const shown=el=>{ if(!el||el.hidden) return null; const r=el.getBoundingClientRect(); return r.width>4&&r.height>4?el:null; };
 const firstSlot=()=>shown([...slotsEl.querySelectorAll('.slot.filled')][0])||slotsEl;
-const tapSlot=what=>({t:()=>firstSlot(), x:`置いたコードを<b>タップ</b>すると、${what}`});
+const tapSlot=what=>({t:()=>firstSlot(), x:`置いたコードを<b>2回タップ</b>すると、${what}`});
 const WHERE={
   2:[{t:()=>document.querySelector('.slotwrap'), x:'マスの上に出ているのが<b>進行ガイド</b>です。<br>役割の流れや、お手本どおりかを教えてくれます。<br><small>表示・非表示は、設定メニュー（≡）の「進行ガイド」で切り替えられます。</small>'}],
   3:[{t:()=>[shown($('arpLane')),shown($('drumLane'))].filter(Boolean), x:'<b>伴奏</b>の帯をタップすると、伴奏スタイルを選べます。'},

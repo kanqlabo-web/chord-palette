@@ -281,6 +281,7 @@ function sceneAt(kind,b,cell){ if(xType(kind)==='drum') return withTrk(kind,k=>s
   while(!S[k] && fb[k]) k=fb[k]; if(!S[k]) k='bar';
   const list=S[k], i=bar%list.length, key=(SIT_KEYS[k]||[k])[i]||k;
   return {key, evs:list[i].evs, len, bar, off:0}; }
+let dcnTap=null;
 const SCENE_NAME=k=>((typeof SCENES!=='undefined'?SCENES:[]).concat(typeof DRUM_SCENES!=='undefined'?DRUM_SCENES:[]).find(x=>x[0]===k)||[k,k])[1];
 
 // 1マスの幅：メイン画面と同じく4マスずつ画面に収める（8・16マスは上のページで切りかえ。横にはスクロールしない）
@@ -292,7 +293,7 @@ function renderTracks(){ if(trk.hidden) return; if(!state.pro){ trk.hidden=true;
   const L=trackList(), solo=L.some(t=>mixOf(mixKey(t.kind)).s), N=state.bars, col=colors();
   if(TRK_SEL && !L.some(t=>t.kind===TRK_SEL)) TRK_SEL=null;
   $('dMix').setAttribute('aria-pressed',!!TRK_SEL);
-  // 目盛り：小節の番号と、そこで鳴るコード（タップでコードを編集）
+  // 目盛り：小節の番号と、そこで鳴るコード（2回タップでコードを編集）
   const ru=document.createElement('div'); ru.className='drow druler'; ru.innerHTML=`<div class="dh"></div><div class="dtl"></div>`; box.appendChild(ru);
   L.forEach(({kind})=>{ const mk=mixKey(kind), x=mixOf(mk), row=document.createElement('div');
     row.className='drow dtrack'+(TRK_SEL===kind?' sel':''); row.dataset.kind=kind; row.classList.toggle('silent', solo?!x.s:!!x.m); row.style.setProperty('--tc',tkColor(kind));
@@ -322,7 +323,8 @@ function renderTracks(){ if(trk.hidden) return; if(!state.pro){ trk.hidden=true;
     const E=chordLine(), S=effStarts('arp',E), ps=bw/slotSteps();
     E.forEach((e,k)=>{ if(contOf(E,k)) return; const em=e.v===null||e.v===undefined, x0=Math.max(0,S[k]); let j=k+1; while(j<E.length&&contOf(E,j)) j++; const x1=j<E.length?S[j]:N*slotSteps();
       h+=`<button class="dcn" data-b="${e.b}" data-h="${e.h}" style="left:${x0*ps}px;max-width:${(x1-x0)*ps}px;color:${em?col.muted:roleCol(col,roleAt(e.b,e.h,e.v))}">${em?'—':esc(chordText(e.v))}</button>`; });
-    rt.innerHTML=h; rt.querySelectorAll('.dcn').forEach(x=>x.onclick=()=>openEditor(+x.dataset.b,+x.dataset.h));
+    rt.innerHTML=h; rt.querySelectorAll('.dcn').forEach(x=>x.onclick=()=>{ const b=+x.dataset.b, hh=+x.dataset.h, now=performance.now(), v=getV(b,hh);   // メイン画面と同じ：1回で鳴らす、2回タップでコードの編集
+      if(dcnTap && dcnTap.b===b && dcnTap.h===hh && now-dcnTap.t<380){ dcnTap=null; openEditor(b,hh); return; } dcnTap={b,h:hh,t:now}; if(v!=null) preview(v); });
     box.querySelectorAll('.dtrack').forEach((row,i)=>L[i]&&drawRegion(row.querySelector('canvas'),L[i].kind,bw,col));
     const last=[...box.querySelectorAll('.dtrack')].pop(); if(last){ hd.style.height=(last.offsetTop+last.offsetHeight)+'px'; } });
   renderInsp(); }
@@ -787,7 +789,7 @@ function bindBig(rows){ const roll=$('bRoll'), isDrum=isDrumK(BLKE.kind);
       if(!s){ if(D.draw) toast('ここにはコードがありません'); else if(PR.selSet.size){ PR.selSet.clear(); drawBlk(); } return; }
       if(PE && BLKE.act[s.key]!==BSEGS.indexOf(s)){ toScene(s); if(!D.draw){ PR.selSet.clear(); drawBlk(); return; } }   // 押した所を「編集している所」に
       if(s.loop){ if(dbl){ BLKE.act[s.key]=BSEGS.indexOf(s); BLKE.cur=s.key; PR.scene=s.key; PR.selSet.clear(); BLKE.lastTap=null; drawBlk(); }   // ダブルタップ：ここを編集する所に
-        else BLKE.tapT=setTimeout(()=>toast('うすい所は、同じ演奏のくり返しです。ダブルタップでここを編集できます'),420); return; }
+        else BLKE.tapT=setTimeout(()=>toast('うすい所は、同じ演奏のくり返しです。2回タップでここを編集できます'),420); return; }
       const g=blkGrid(), st=s.off+Math.floor((D.p.x-s.x0)/g+1e-6)*g;
       if(!D.draw){   // 選ぶ：何もない所をタップで選択を外す
         if(PR.selSet.size){ PR.selSet.clear(); drawBlk(); }
@@ -977,7 +979,7 @@ function bOct(d){ if(!isArpK(BLKE.kind)) return; const ns=selNotes(); if(!ns.len
 function bFit(){ const sc=$('bScroll'), W=(sc.clientWidth-BLW-8)/(state.bars*slotSteps()); BSW=Math.max(7,Math.min(BSW_MAX,W)); drawBlk(); sc.scrollLeft=0; }
 // 数字キー＝長さ（MuseScore と同じ：3＝16分＝1マス、4＝8分、5＝4分…）
 const BNUM={1:.25,2:.5,3:1,4:2,5:4,6:8,7:16};
-function bPlaceAt(cx,cy){ const p=bPos(cx,cy); if(!p||!p.s) return; const s=p.s; if(s.loop){ toast('うすい所は、ダブルタップでそこを編集できるようにしてから'); return; }
+function bPlaceAt(cx,cy){ const p=bPos(cx,cy); if(!p||!p.s) return; const s=p.s; if(s.loop){ toast('うすい所は、2回タップでそこを編集できるようにしてから'); return; }
   BLKE.cur=s.key; PR.scene=s.key; const g=blkGrid(), isDrum=isDrumK(BLKE.kind), st=s.off+Math.floor((p.x-s.x0)/g+1e-6)*g, key=String(blkRows()[p.row][0]), list=curNotes();
   if(list.some(n=>String(n.r)===key && (isDrum?n.st===st:(n.st<=st && n.st+n.len>st)))) return;
   const nx=Math.min(s.off+s.len,...list.filter(x=>String(x.r)===key&&x.st>st).map(x=>x.st));

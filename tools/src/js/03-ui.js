@@ -681,15 +681,16 @@ function end(e){
   if(d.source.type==='tile'){ selected = selected===d.source.deg?null:d.source.deg; preview(d.source.deg); }
   else { const i=d.source.index, now=performance.now();
     const tcell=e.target&&e.target.closest?e.target.closest('.cell'):null, th=tcell?+tcell.dataset.h:0;   // 分けたマスはタップした区切り
-    if(state.pro && selected===null && lastTap && lastTap.i===i && lastTap.h===th && now-lastTap.t<380){ lastTap=null; openEditor(i,th); return; }   // ダブルタップで編集
+    if(selected===null && lastTap && lastTap.i===i && lastTap.h===th && now-lastTap.t<380 && getV(i,th)!=null){ lastTap=null;   // 2回タップ：PRO はコードの編集、ビギナーは響きを変える
+      if(state.pro) openEditor(i,th); else if((!TUT.on||TUT.practice) && ULx()>=6) openVar(i,th); renderTiles(); renderSlots(); return; }
     lastTap={i,h:th,t:now};
     if(selected!==null){
       const tc=e.target&&e.target.closest?e.target.closest('.cell'):null;
       setV(i, tc?+tc.dataset.h:0, selected); preview(selected); selected=null; }
-    else if(getV(i,th)!==null&&getV(i,th)!==undefined){ preview(getV(i,th)); if(!state.pro && (!TUT.on||TUT.practice)){ if(ULx()>=6) openVar(i,th); } } }
+    else if(getV(i,th)!==null&&getV(i,th)!==undefined) preview(getV(i,th)); }
   renderTiles(); renderSlots();
 }
-// ビギナー：置いたコードをタップすると、同じ役割のバリエーションを選べる
+// ビギナー：置いたコードを2回タップすると、同じ役割のバリエーションを選べる
 function openVar(i,h){
   const v=getV(i,h); let g=varGroupOf(v);
   if(g===null && v!=null && !isNum(v)){ const sp=specOf(v); g=varGroupOf({...sp,b:null}); if(g===null){ const d=STEPS.indexOf(sp.o); g=d>=0?d:null; } }
