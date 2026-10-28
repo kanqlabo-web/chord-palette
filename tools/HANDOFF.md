@@ -17,7 +17,7 @@
 - `tools/src/` が本体: `head.html`・`style.css`・`body.html`・`js/01-music.js` 〜 `js/06-save.js`
   - JS はふつうの `<script>` を順に読む形。トップレベルの変数は共有されるが、**関数の巻き上げはファイルをまたがない**（後のファイルの関数を、前のファイルの読み込み中に呼ばない）
   - 保存データのキーは `STK('chord-palette-v3')` のように書く（版ごとに `''`・`cpbeta-`・`cplec-` が前に付く）。音源の場所は `CP.snd`
-- `tools/beta-src/`: ベータ版で**差しかえるファイルだけ**を置く（同じ名前のファイルが本体の代わりになる。5.25.000 で、チュートリアルのステージ分け・おさらい・言葉の直し（05-tutorial.js の全体と、body.html・style.css のその部分）は通常版へ移した。5.27.000 でメロディ・リズム以外はすべて通常版へ移した。今のベータ版だけのもの: 3本の道 `js/11-paths.js` と、style.css のその部分（「ベータ版（試作）：3本の道…」から「すべての機能で始める…」まで。上の Key・楽器の表示を消す行もここ）。本体の style.css を直すときは、beta-src/style.css にも同じ直しを入れる）
+- `tools/beta-src/`: ベータ版で**差しかえるファイルだけ**を置く（同じ名前のファイルが本体の代わりになる。5.25.000 で、チュートリアルのステージ分け・おさらい・言葉の直し（05-tutorial.js の全体と、body.html・style.css のその部分）は通常版へ移した。5.27.000 でメロディ・リズム以外はすべて通常版へ移した。ver 5.27.005 から、ベータ版は「違う所だけ」を持つ：CSS は `beta-src/beta.css`（通常版の style.css のあとに読む）、JS は新しい名前のファイルを足す（11-paths.js・13-chordadv.js など）。通常版と同じ名前のファイルを置くと丸ごと差しかえになり、build.py が警告を出す。本体の style.css を直しても、ベータ版への写しはいらない）
 - `tools/lecture-src/`: 講義版で足すファイル（`js/08-lecture.js`）。本体＋これ
 - `tools/build.py` が、`index.html`＋`core/`、`beta/index.html`＋`beta/core/`（差しかえ分だけ）、`lecture/` を作る。`window.CP_CONF={store,snd,kind}` で版を見分ける。最後に JS をつなげて `node --check` する
 - **直すのは tools/ の中だけ**（index.html や core/ を直接直さない）

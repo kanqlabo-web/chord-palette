@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """版ごとのページを組み立てる。
   共通の部品は tools/src/（通常版の中身）。公開するときは core/ に置き、どの版もそこを読み込む。
-  ベータ版（beta）・講義版（lecture）は tools/<版>-src/ に「通常版と違うファイルだけ」を置く。
-    同じ名前のファイルがあれば、その版ではそちらを使う（<版>/core/ に置く）。新しいファイルは足される。
+  ベータ版（beta）・講義版（lecture）は tools/<版>-src/ に「通常版と違う所だけ」を置く。
+    新しい名前の JS は、通常版の JS のあとに足される（同じ名前の関数を書けば上書きになる）。
+    style.css 以外の CSS（例: beta.css）は、通常版の style.css のあとに読む（同じ指定なら後の方が勝つ）。
+    同じ名前のファイルを置くと丸ごと差しかえ（<版>/core/ に置く）。通常版の直しが届かなくなるので、警告を出す。
     中身が通常版と同じになったファイルは、自動で ../core/ を読む。
   版数は tools/VERSION（1行目：版数、2行目：日付）。
 使い方: python3 tools/build.py
@@ -44,13 +46,18 @@ def build(name,dirn,over,cfg):
     for rel,p in main.items():
       if rel.endswith(('.css','.js')): write(os.path.join(R,'core',rel),rd(p))
   js=sorted(r for r in allf if r.startswith('js/') and r.endswith('.js'))
+  extra_css=sorted(r for r in ov if r.endswith('.css') and r!='style.css')   # 版だけの CSS（例: beta.css）。通常版の style.css のあとに読む
+  for r in sorted(ov):   # 通常版と同じ名前のファイルを丸ごと写すと、通常版の直しが届かなくなる
+    if name!='main' and r in main and r.endswith(('.css','.js')) and rd(ov[r])!=rd(main[r]):
+      print(f'  注意（{name}）: {r} を丸ごと差しかえています。違う所だけを別のファイル（CSS は {name}.css、JS は後ろの番号の新しいファイル）に分けてください')
   sub=lambda s:s.replace('{{TITLE}}',cfg['title']).replace('{{VER}}',f'ver {VER}（{DATE}）').replace('{{BADGE}}',
         f'<small style="font-size:.55em;margin-left:4px;color:var(--d)">{cfg["badge"]}</small>' if cfg['badge'] else '')
   import json
   html=('<!doctype html>\n<html lang="ja">\n<head>\n<meta charset="utf-8">\n'
     '<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">\n'
     '<style>body{margin:0}[hidden]{display:none!important}</style>\n'+sub(rd(allf['head.html']))+
-    f'<link rel="stylesheet" href="{ref("style.css")}">\n</head>\n<body>\n'+sub(rd(allf['body.html']))+
+    f'<link rel="stylesheet" href="{ref("style.css")}">\n'+
+    ''.join(f'<link rel="stylesheet" href="{ref(r)}">\n' for r in extra_css)+'</head>\n<body>\n'+sub(rd(allf['body.html']))+
     (f'<script>window.CP_CONF={json.dumps(cfg["conf"],ensure_ascii=False)};</script>\n' if cfg['conf'] else '')+
     ''.join(f'<script src="{ref(r)}"></script>\n' for r in js)+'</body>\n</html>\n')
   write(os.path.join(out,'index.html'),html)

@@ -1,0 +1,191 @@
+/* ベータ版だけの CSS。通常版の style.css のあとに読み込む（build.py）。通常版と違う所だけをここに書く */
+/* ベータ版（試作）：3本の道の地図と、ドラム・メロディの打ち込み */
+.pthmap{position:fixed;inset:0;z-index:55;background:var(--bg);overflow-y:auto;padding:14px max(12px,env(safe-area-inset-left,0px)) 24px}
+.pthmap>*{max-width:560px;margin-left:auto;margin-right:auto}
+.phead{display:flex;justify-content:space-between;align-items:flex-start}
+.phead h2{font-family:var(--display);font-weight:900;font-size:1.3rem;margin:2px 0 0}
+.psub{font-size:.85rem;color:var(--muted);line-height:1.6;margin:6px auto 12px}
+.pthtools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.pthtool{border:2px solid var(--warn);background:color-mix(in srgb,var(--warn) 16%,var(--surface));border-radius:14px;padding:10px 8px;font-family:var(--display);font-weight:900;font-size:.9rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.pthtool small{font-family:var(--body);font-weight:400;font-size:.68rem;color:var(--muted)}
+.pthtool.lock{border-color:var(--line);background:var(--surface);color:var(--muted)}
+.pcols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pcol{display:flex;flex-direction:column;gap:6px}
+.pcol h3{font-family:var(--display);font-size:.9rem;margin:0 0 2px;text-align:center}
+.pcol:nth-child(1) h3{color:var(--t)}.pcol:nth-child(2) h3{color:var(--s)}.pcol:nth-child(3) h3{color:var(--d)}
+.plv{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:7px 6px;text-align:left;display:flex;flex-direction:column;gap:2px;cursor:pointer;min-height:64px}
+.plv i{font-style:normal;font-size:.62rem;color:var(--muted);letter-spacing:.04em}
+.plv b{font-size:.78rem;line-height:1.35}
+.plv .pst{font-size:.6rem;color:var(--muted);line-height:1.4}
+.plv .pst.go{color:var(--s);font-weight:700}.plv .pst.done{color:var(--warnText);font-weight:700}
+.plv.done{border-color:var(--warn)}
+.plv.lock{opacity:.6;background:var(--lane)}
+.pdemo{width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:10px 8px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.pdemo small{font-size:.75rem;color:var(--muted)}
+.prow{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:2px;width:100%;align-items:center}
+.prow:has(span){grid-template-columns:4.2em repeat(16,minmax(0,1fr))}
+.prow span{font-size:.62rem;color:var(--muted);white-space:nowrap}
+.prow i{height:18px;border-radius:4px;background:var(--lane);border-left:1px solid transparent}
+.prow i.bt{box-shadow:inset 2px 0 0 var(--muted)}
+.prow i.on{background:var(--ink)}
+.prow.k i.on{background:var(--t)}.prow.s i.on{background:var(--d)}.prow.h i.on{background:var(--s)}
+.prow i.now{outline:2px solid var(--warn);outline-offset:-1px}
+.prow.big i{height:34px;cursor:pointer}
+.pgrid{display:flex;flex-direction:column;gap:5px;margin:8px 0 10px}
+.mdemo{display:flex;flex-direction:column;gap:2px;width:70%}
+.mrow{display:grid;grid-template-columns:2em repeat(8,1fr);gap:2px;align-items:center}
+.mrow span,.mlab span{font-size:.7rem;color:var(--muted)}
+.mrow i,.mcol i{height:20px;border-radius:4px;background:var(--lane)}
+.mrow i.lit,.mcol i.lit{background:color-mix(in srgb,var(--warn) 38%,var(--surface))}
+.mrow i.bt{box-shadow:inset 2px 0 0 var(--muted)}
+.mgrid{display:flex;gap:4px;margin:8px 0 10px}
+.mlab{display:flex;flex-direction:column;gap:2px;flex:none;width:2.2em}
+.mlab span{height:26px;display:flex;align-items:center}
+.mlab sup{font-size:.55rem}
+.mscroll{overflow-x:auto;flex:1;min-width:0}
+.mcols{display:grid;grid-template-columns:repeat(var(--n),26px);gap:2px}
+.mcol{display:flex;flex-direction:column;gap:2px}
+.mcol i{height:26px;cursor:pointer}
+.mcol.bt i{box-shadow:inset 2px 0 0 var(--muted)}
+.mcol.bar i{box-shadow:inset 3px 0 0 var(--ink)}
+.mcol i.on{background:var(--d)}
+.mcol i.lit.on{background:var(--d)}
+.lvnext.pthbtn{border-style:dashed}
+/* コード・リズム・メロディの切り替え（メイン画面の上） */
+/* タイトルの行に入れる（パレットの大きさを変えないため）。スマホではタイトルの文字を隠す */
+.modesw{flex:1;min-width:0;max-width:380px;display:grid;grid-template-columns:repeat(3,1fr);background:var(--lane);border-radius:11px;padding:3px;gap:2px}
+.modesw button{border:0;background:transparent;border-radius:8px;padding:5px 0;font-family:var(--display);font-weight:900;font-size:.8rem;white-space:nowrap;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px}
+.modesw button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.modesw button[data-m="c"][aria-selected="true"]{color:var(--t)}.modesw button[data-m="r"][aria-selected="true"]{color:var(--s)}.modesw button[data-m="m"][aria-selected="true"]{color:var(--d)}
+.modepanel{display:none;min-height:0;flex-direction:column;gap:8px;overflow:hidden}
+body.mode-r .modepanel,body.mode-m .modepanel{display:flex}
+/* 上の「Key C」「ピアノ」の表示はなくす（キーは設定メニュー、楽器は伴奏の帯から変えられる） */
+.app>.top .badges{display:none}
+@media (max-width:640px){ .app>.top:has(.modesw) h1{display:none} }
+body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,body.mode-m .app>.slotwrap,body.mode-r .app>.lane,body.mode-m .app>.lane{display:none}
+@media (min-width:820px) and (min-aspect-ratio:5/4){
+  .app>.modepanel{grid-column:1;grid-row:2/-1}
+  body.mode-r .app>.slotwrap,body.mode-m .app>.slotwrap{display:flex}
+  body.mode-r .app>.lane:not([hidden]),body.mode-m .app>.lane:not([hidden]){display:flex}
+}
+.mphead{display:flex;flex-direction:column;gap:2px}
+.mphead b{font-family:var(--display);font-weight:900;font-size:1rem}
+.mphead small{font-size:.76rem;color:var(--muted);line-height:1.5}
+.modepanel .pgrid{flex:1;justify-content:center;gap:8px}
+.modepanel .prow.big i{height:auto;aspect-ratio:1/2.2;max-height:70px}
+.modepanel .chips{display:flex;flex-wrap:wrap;gap:6px}
+.modepanel .mgrid{flex:1;min-height:0;margin:0}
+.modepanel .mlab,.modepanel .mcol{display:flex;flex-direction:column;gap:2px}
+.modepanel .mlab span,.modepanel .mcol i{flex:1;min-height:18px;height:auto}
+.modepanel .mlab .mch,.modepanel .mcol .mch{flex:none;height:22px;min-height:22px;font-size:.78rem;font-weight:700;white-space:nowrap;overflow:visible;color:var(--ink)}
+.modepanel .mcols{height:100%;grid-template-columns:repeat(var(--n),30px)}
+.modepanel .mscroll{display:flex}
+.mcol.now i{outline:2px solid var(--warn);outline-offset:-1px}
+.mlock{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;color:var(--muted)}
+.mlock h2{font-family:var(--display);font-weight:900;font-size:1.1rem;margin:0;color:var(--ink)}
+.mlock p{margin:0;font-size:.86rem;line-height:1.6}
+/* ドラム：1段のまま画面の幅に収める（縦に長いマス） */
+.droll{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.dlab{display:flex;flex-direction:column;gap:8px;flex:none;white-space:nowrap}
+.dlab span{height:40px;display:flex;align-items:center;font-size:.66rem;color:var(--muted)}
+.dlab span:first-child{height:18px}
+.pdscroll{flex:none;min-width:0;overflow:hidden}
+.dleg{display:flex;justify-content:center;gap:16px;font-size:.74rem;color:var(--muted)}
+.dleg span{display:flex;align-items:center;gap:5px}
+.dleg i{width:12px;height:12px;border-radius:3px}
+.modepanel .dgrid .prow.h i:not(.on){background:color-mix(in srgb,var(--s) 9%,var(--line))}.modepanel .dgrid .prow.s i:not(.on){background:color-mix(in srgb,var(--d) 9%,var(--line))}.modepanel .dgrid .prow.k i:not(.on){background:color-mix(in srgb,var(--t) 9%,var(--line))}
+.dleg .h i{background:var(--s)}.dleg .s i{background:var(--d)}.dleg .k i{background:var(--t)}
+.modepanel .pgrid.dgrid{display:flex;flex-direction:column;gap:8px;width:100%;margin:0}
+.dbeats{display:grid;grid-template-columns:repeat(4,1fr);height:18px;font-size:.72rem;color:var(--muted)}
+.dbeats b{font-weight:700;padding-left:3px}
+.modepanel .dgrid .prow,.modepanel .dgrid .prow:has(span){grid-template-columns:repeat(16,minmax(0,1fr));gap:2px}
+.modepanel .dgrid .prow.big i{aspect-ratio:auto;height:40px;max-height:none;border-radius:5px}
+.modepanel .dgrid .prow i:nth-child(4n+1):not(:first-child){margin-left:4px}
+/* メロディ：ピアノロール */
+.mtools{display:flex;gap:6px;flex-wrap:wrap;flex:none}
+.mtools .chip{flex:none;padding:6px 10px;font-size:.78rem}
+.mtools .chip:disabled{opacity:.45}
+.mtools select.chip{appearance:none;-webkit-appearance:none;padding-right:12px}
+.mroll{flex:1;min-height:0;display:flex;gap:4px}
+.modepanel .mroll .mlab{display:flex;flex-direction:column;gap:0;width:2.4em;flex:none}
+.modepanel .mroll .mlab span{flex:1;min-height:0;height:auto;display:flex;align-items:center;font-size:.72rem;color:var(--muted)}
+.modepanel .mroll .mlab .mhd{flex:none;height:22px}
+.modepanel .mroll .mscroll{flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;display:block}
+.mbox{height:100%;display:flex;flex-direction:column}
+.mbox>.mhd{position:relative;height:22px;flex:none}
+.mchn{position:absolute;top:0;height:22px;display:flex;align-items:center;padding-left:6px;font-size:.78rem;font-weight:800;white-space:nowrap;overflow:hidden}
+.mbarn{position:absolute;top:-2px;font-size:.58rem;color:var(--muted);transform:translateX(-50%)}
+.marea{position:relative;flex:1;min-height:0;background-color:var(--surface);border:1px solid var(--line);border-radius:8px;touch-action:pan-x;overflow:hidden}
+.mlit{position:absolute;background:color-mix(in srgb,var(--warn) 30%,transparent);pointer-events:none}
+.mn{position:absolute;margin-left:1px;border-radius:6px;background:var(--d);color:#fff;display:flex;align-items:center;padding-left:4px;font-size:.66rem;font-weight:800;touch-action:none;cursor:grab;box-shadow:inset -4px 0 0 rgba(0,0,0,.18);box-sizing:border-box;border:1px solid color-mix(in srgb,var(--d) 70%,#000)}
+.mn span{pointer-events:none;overflow:hidden}
+.mn.drag{opacity:.85;box-shadow:0 3px 10px rgba(0,0,0,.3)}
+.mph{position:absolute;top:0;bottom:0;width:2px;background:var(--warn);pointer-events:none}
+/* メロディの数字（丸で囲む。コードの数字と区別する） */
+.mdeg{font-style:normal;display:inline-grid;place-items:center;width:1.45em;height:1.45em;border-radius:50%;border:1.5px solid currentColor;font-size:.82em;font-weight:800;line-height:1;font-family:var(--body)}
+.modepanel .mroll .mlab span{gap:1px;color:var(--ink)}
+.mn span{font-size:.72rem}
+.degrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.degrow span{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:1.2rem;color:var(--d)}
+.degrow small{font-size:.7rem;color:var(--muted)}
+.kb12{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;width:100%;max-width:420px}
+.kb12 button{height:64px;border-radius:6px;border:1.5px solid var(--line);background:var(--surface);display:flex;align-items:flex-end;justify-content:center;padding:0 0 4px;cursor:pointer}
+.kb12 button.kbb{background:var(--ink);border-color:var(--ink);height:48px}
+.kb12 button.mk{background:color-mix(in srgb,var(--d) 22%,var(--surface));border-color:var(--d)}
+.kb12 button.kbb.mk{background:var(--d)}
+.kb12 small{font-size:.6rem;color:var(--ink)}
+.chip.pplay.on{opacity:.6}
+/* メロディガイド */
+.mguide{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:.72rem;flex:none}
+.mguide b{font-family:var(--display);font-size:.78rem}
+.mguide span{display:inline-flex;align-items:center;gap:4px}
+.mguide span::before{content:"";width:14px;height:3px;border-radius:2px;background:currentColor}
+.mguide small{flex-basis:100%;color:var(--muted)}
+.g-ok{color:var(--s)}.g-jump{color:var(--t)}
+.mnext{position:absolute;pointer-events:none;border-radius:4px;background:color-mix(in srgb,currentColor 26%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,currentColor 70%,transparent)}
+#pthSecs{display:contents}   /* 設定メニューの並び（すき間）をそのまま使う */
+/* リズム・メロディの画面の下：切り替え・楽器・次のレベル */
+.pthbar{display:flex;align-items:stretch;gap:10px;flex:none}
+.pbtns{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;justify-content:center}
+.pswitch,.pinst{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:6px 12px;border:1.5px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.pswitch span{font-size:.84rem;font-weight:700}
+.pswitch i{flex:none;position:relative;width:38px;height:22px;border-radius:11px;background:var(--line);transition:background .2s}
+.pswitch i::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:var(--bg);box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
+.pswitch[aria-pressed="true"] i{background:var(--ink)}
+.pswitch[aria-pressed="true"] i::after{transform:translateX(16px)}
+.pinst .pico{flex:none;display:flex;width:30px;height:30px;color:var(--muted)}
+.pinst .pico svg{width:100%;height:100%}
+.pinst>span:last-child{display:flex;flex-direction:column;min-width:0}
+.pinst small{font-size:.66rem;color:var(--muted)}
+.pinst b{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.modepanel .lvbig.pnext{grid-column:auto;grid-row:auto;flex:none;align-self:stretch;height:auto;width:min(30vw,128px);aspect-ratio:auto;padding:8px}
+/* 「すべての機能で始める」：レベルに関する案内（設定のレベル欄・道の地図・リズム／メロディのレベル）を出さない。タイトル画面へ は残す */
+.freemode .sec:has(#lvNext)>h3,.freemode #lvNext,.freemode #lvAcc,.freemode .pthbtn,.freemode #pthSecs>.sec:first-child{display:none!important}
+/* 解説の中のメロディの画面（見本） */
+.tmr{display:flex;flex-direction:column;gap:8px;width:100%;max-width:460px}
+.tmline{display:flex;flex-direction:column;gap:2px}
+.tmtags{position:relative;height:18px;margin-left:calc(2.4em + 4px)}
+.tmtag{position:absolute;top:0;height:16px;border-bottom:2px solid var(--d);font-size:.66rem;font-weight:800;color:var(--d);text-align:center;box-sizing:border-box;padding:0 2px;white-space:nowrap}
+.tmtag.sub{border-color:var(--warn);color:var(--ink)}
+.tmgrid{display:flex;gap:4px}
+.tmr .mlab{width:2.4em;gap:0}
+.tmr .mlab span{flex:1;height:auto;min-height:0;display:flex;align-items:center;font-size:.66rem;color:var(--ink)}
+.tmr .mlab em{font-style:normal}
+.tmr .mlab .tmhd{flex:none;height:18px}
+.tmbox{flex:1;min-width:0;display:flex;flex-direction:column}
+.tmbox>.tmhd{position:relative;height:18px;flex:none}
+.tmbox>.tmhd span{position:absolute;top:0;padding-left:5px;font-size:.72rem;font-weight:800;white-space:nowrap}
+.tmarea{position:relative;height:calc(var(--rows)*16px);min-height:64px;background-color:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;
+  background-image:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px calc(100%/var(--per))),repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 25%,transparent) 0 1px,transparent 1px calc(100%/var(--per)/4)),repeating-linear-gradient(180deg,transparent 0 calc(100%/var(--rows) - 1px),var(--line) calc(100%/var(--rows) - 1px) calc(100%/var(--rows)))}
+.tmbar{position:absolute;top:0;bottom:0;pointer-events:none;transition:background .15s}
+.tmbar.now{background:color-mix(in srgb,var(--warn) 22%,transparent)}
+.tmr .mn{cursor:default;font-size:.6rem;padding-left:2px;min-width:3px}
+.tmr .mn span{font-size:.6rem}
+.kb12 button.now{outline:3px solid var(--warn);outline-offset:-2px}
+.kb12 button.gone{opacity:.2;background:var(--lane);border-style:dashed}
+.tmr.sm{gap:4px}
+.tmr.sm .tmarea{height:calc(var(--rows)*11px);min-height:0}
+.tmr.sm .mlab span{font-size:.5rem}
+.tmr.sm .tmhd,.tmr.sm .tmbox>.tmhd,.tmr.sm .mlab .tmhd{height:15px}
+.tmr.sm .tmbox>.tmhd span{font-size:.64rem}
+.tmr.sm .tmtags{height:15px}
