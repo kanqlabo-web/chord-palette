@@ -27,7 +27,8 @@
 1. clone: `git clone --depth 1 https://github.com/kanqlabo-web/chord-palette`
 2. 手元で確認: リポジトリの直下で `python3 -m http.server 8765` → Playwright（`NODE_PATH=$(npm root -g) node tools/t*.js`）で `http://localhost:8765/`（`/beta/`・`/lecture/`）を開く
    - サーバーはターンをまたぐと止まることがある。止まっていたら起動し直す
-3. 公開: `bash tools/deploy.sh [patch|minor|major] "コミットメッセージ"`
+3. 公開: `bash tools/deploy.sh [patch|minor|major|beta] "コミットメッセージ"`
+   - **ベータ版だけの更新は `beta`**（ver 5.27.007 から）：通常版の版数はそのままで、ベータ版だけ「ver 5.27.007-β1」のように β の番号が上がる。tools/src・tools/lecture-src を変えたときは使えない。通常版の版数を上げると β は 0 に戻る（ベータ版も通常版と同じ版数の表示になる）。`tools/VERSION` の3行目が「βN 日付」
    - `tools/VERSION`（1行目が版数、2行目が日付）を上げて build.py で作り、commit・push する。省略時は patch
    - minor・major のときは `CHANGELOG.md` に1行足してから
    - コミットに付ける行は `COMMIT_TRAILER="..." bash tools/deploy.sh ...` で渡す

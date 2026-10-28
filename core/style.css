@@ -683,3 +683,7 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
 .slothead .right{flex:0 1 auto;min-width:0}
 .slothead #progName{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:400px){ body.pro .slothead #progName{display:none} }   /* PRO の狭い画面は進行名を出さない */
+/* 上の「Key C」「ピアノ」の表示はなくす（キーは設定メニュー、楽器は伴奏の帯から変えられる） */
+.app>.top .badges{display:none}
+/* 「すべての機能で始める」：設定のレベル欄の案内を出さない。タイトル画面へ は残す */
+.freemode .sec:has(#lvNext)>h3,.freemode #lvNext,.freemode #lvAcc{display:none!important}

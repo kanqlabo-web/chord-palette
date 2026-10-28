@@ -59,8 +59,6 @@
 .modesw button[data-m="c"][aria-selected="true"]{color:var(--t)}.modesw button[data-m="r"][aria-selected="true"]{color:var(--s)}.modesw button[data-m="m"][aria-selected="true"]{color:var(--d)}
 .modepanel{display:none;min-height:0;flex-direction:column;gap:8px;overflow:hidden}
 body.mode-r .modepanel,body.mode-m .modepanel{display:flex}
-/* 上の「Key C」「ピアノ」の表示はなくす（キーは設定メニュー、楽器は伴奏の帯から変えられる） */
-.app>.top .badges{display:none}
 @media (max-width:640px){ .app>.top:has(.modesw) h1{display:none} }
 body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,body.mode-m .app>.slotwrap,body.mode-r .app>.lane,body.mode-m .app>.lane{display:none}
 @media (min-width:820px) and (min-aspect-ratio:5/4){
@@ -159,8 +157,8 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .pinst small{font-size:.66rem;color:var(--muted)}
 .pinst b{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .modepanel .lvbig.pnext{grid-column:auto;grid-row:auto;flex:none;align-self:stretch;height:auto;width:min(30vw,128px);aspect-ratio:auto;padding:8px}
-/* 「すべての機能で始める」：レベルに関する案内（設定のレベル欄・道の地図・リズム／メロディのレベル）を出さない。タイトル画面へ は残す */
-.freemode .sec:has(#lvNext)>h3,.freemode #lvNext,.freemode #lvAcc,.freemode .pthbtn,.freemode #pthSecs>.sec:first-child{display:none!important}
+/* 「すべての機能で始める」：道の地図・リズム／メロディのレベルも出さない（設定のレベル欄は通常版の style.css） */
+.freemode .pthbtn,.freemode #pthSecs>.sec:first-child{display:none!important}
 /* 解説の中のメロディの画面（見本） */
 .tmr{display:flex;flex-direction:column;gap:8px;width:100%;max-width:460px}
 .tmline{display:flex;flex-direction:column;gap:2px}

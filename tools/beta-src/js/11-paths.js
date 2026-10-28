@@ -410,8 +410,6 @@ levelClear=function(n){ const b=pOpenSet(), r=_pthClear.apply(this,arguments), o
   if(n===3 && !PD.inv3){ PD.inv3=true; pthSave(); pInvite('リズムとメロディの道もあります','コードの道と同じように、好きなところから進められます。ドラムやメロディを自分で作れるようになります。',pOpenSet().filter(x=>x[0]!=='C')); }
   else if(opened.length) pInvite('ほかの道のレベルが開きました','',opened);
   return r; };
-// 上の「Key」「楽器」の表示はなくしたので、キーのレベルのあとの案内からも外す
-if(WHERE[4]) WHERE[4]=WHERE[4].filter(st=>!/keyBadge/.test(String(st.t)));
 // レベルの解説は、コードの画面で行う（課題でパレットやマスを使うため）
 const _pthOpenTut=openTutorial; openTutorial=function(){ if(PD.mode!=='c') setMode('c'); return _pthOpenTut.apply(this,arguments); };
 // 曲（コード・小節数・キー）が変わったら、メロディの画面も描き直す

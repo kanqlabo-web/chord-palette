@@ -6,12 +6,14 @@
     style.css 以外の CSS（例: beta.css）は、通常版の style.css のあとに読む（同じ指定なら後の方が勝つ）。
     同じ名前のファイルを置くと丸ごと差しかえ（<版>/core/ に置く）。通常版の直しが届かなくなるので、警告を出す。
     中身が通常版と同じになったファイルは、自動で ../core/ を読む。
-  版数は tools/VERSION（1行目：版数、2行目：日付）。
+  版数は tools/VERSION（1行目：版数、2行目：日付、3行目：ベータ版だけの更新の番号 βN とその日付）。
+    ベータ版は「ver 5.27.007-β2」のように、通常版の版数のあとに βN を付けて出す（N が 0 なら付けない）。
 使い方: python3 tools/build.py
 """
 import hashlib, os, re, shutil, subprocess, sys
 T=os.path.dirname(os.path.abspath(__file__)); R=os.path.dirname(T)
-VER,DATE=(open(os.path.join(T,'VERSION')).read().split()+[''])[:2]
+_V=open(os.path.join(T,'VERSION')).read().split()+['','','']
+VER,DATE=_V[:2]; BN=int((_V[2] or 'β0').lstrip('β') or 0); BDATE=_V[3] or DATE
 VARIANTS=[  # 名前, 置き場所, 上書きの元, 設定
   ('main','',None,{'title':'コード進行パレット','badge':'','conf':{}}),
   ('beta','beta','beta-src',{'title':'コード進行パレット β','badge':'β','conf':{'store':'cpbeta-','snd':'../snd/','kind':'beta','lvMax':12}}),
@@ -50,7 +52,8 @@ def build(name,dirn,over,cfg):
   for r in sorted(ov):   # 通常版と同じ名前のファイルを丸ごと写すと、通常版の直しが届かなくなる
     if name!='main' and r in main and r.endswith(('.css','.js')) and rd(ov[r])!=rd(main[r]):
       print(f'  注意（{name}）: {r} を丸ごと差しかえています。違う所だけを別のファイル（CSS は {name}.css、JS は後ろの番号の新しいファイル）に分けてください')
-  sub=lambda s:s.replace('{{TITLE}}',cfg['title']).replace('{{VER}}',f'ver {VER}（{DATE}）').replace('{{BADGE}}',
+  vtxt=f'ver {VER}-β{BN}（{BDATE}）' if name=='beta' and BN else f'ver {VER}（{DATE}）'
+  sub=lambda s:s.replace('{{TITLE}}',cfg['title']).replace('{{VER}}',vtxt).replace('{{BADGE}}',
         f'<small style="font-size:.55em;margin-left:4px;color:var(--d)">{cfg["badge"]}</small>' if cfg['badge'] else '')
   import json
   html=('<!doctype html>\n<html lang="ja">\n<head>\n<meta charset="utf-8">\n'
@@ -65,5 +68,5 @@ def build(name,dirn,over,cfg):
   big='\n'.join(rd(allf[r]) for r in js); tmp=os.path.join('/tmp',f'cp-{name}.js'); write(tmp,big)
   r=subprocess.run(['node','--check',tmp],capture_output=True,text=True)
   if r.returncode: print(r.stderr); sys.exit(f'syntax error in {name}')
-  print('built',name or 'main', f'ver {VER}', f'own files: {sorted(ov)}' if ov else '')
+  print('built',name or 'main', vtxt.split('（')[0], f'own files: {sorted(ov)}' if ov else '')
 for v in VARIANTS: build(*v)
