@@ -165,7 +165,8 @@ const plainLabel=v=>nameOf(v,state.label,false).replace('-5','⁻⁵');
 const LABELS={num:'数字',roman:'ローマ数字',alpha:'アルファベット'};
 // ボイシング：左手はルート（分数コードならその音）、右手は前の和音から近い形を選ぶ（なめらかなボイスリーディング）
 // 音の番号: 0=左手 1〜3=右手（低→高） 4=左手5度 5=左手オクターブ 6〜8=右手のオクターブ上 9,10=右手4音目
-function voiceFor(pcs,prev,minLo=56,accTop=null,mid=64,bassPc=null){   // mid：好む高さの中心（平均がここから離れるほど選ばれにくい）
+function voiceFor(pcs,prev,minLo=56,accTop=null,mid=64,bassPc=null,lh=null,prevLh=null){   // lh／prevLh：いまと前の左手（外声の連結を見るため。再生中だけ）
+    // mid：好む高さの中心（平均がここから離れるほど選ばれにくい）
   const cands=[];
   const hiLo = accTop!=null ? Math.max(minLo+12, accTop) : minLo+12;   // アクセントのあとは、上へつなげられるよう高い形も候補に入れる
   // 4音のコードで、ベース（左手）と同じ音を右手から抜いた形も候補にする（M7 の「ラドミファ」のように半音がはしにくる形をさけるため）
@@ -182,7 +183,17 @@ function voiceFor(pcs,prev,minLo=56,accTop=null,mid=64,bassPc=null){   // mid：
     + 2*Math.max(0,Math.abs(a.reduce((s,m)=>s+m,0)/a.length-mid)-2.5)*a.length;
   // 音域の外の形：全部の声が前の和音から2度以内（なめらか）に動けるなら少しの罰点、そうでなければ大きな罰点
   const step=a=>prev&&prev.length>=a.length&&a.every((m,i)=>Math.abs(m-prev[i])<=2), outP=a=>{ const o=Math.max(0,minLo-a[0])+Math.max(0,a[0]-(minLo+12)); return o?(step(a)?o*.5:1000+o):0; };
-  const dist0=dist; const distO=a=>dist0(a)+outP(a)+(edge(a)?1000:0)+(a.drop?500:0);   // 音を抜くのは、どの形でもはしが半音でぶつかるときだけ
+  // 和声法の外声の連結（左手と右手のいちばん上の音）：連続5度・8度をさけ、隠伏5度・8度も少しさける。同じ向きより反対向きの動きを少し好む。
+  // 上の音の導音（キーの7番目の音）は主音へ上がって解決。上の音の大きな跳躍（4半音より大きい）も少しさける
+  const harm=a=>{ if(!prev||lh==null||prevLh==null) return 0; const t=a[a.length-1], pt=prev[prev.length-1], mb=lh-prevLh, ms=t-pt,
+      i0=((pt-prevLh)%12+12)%12, i1=((t-lh)%12+12)%12, same=mb&&ms&&Math.sign(mb)===Math.sign(ms), K=keyObj().pc; let k=0;
+    if(mb&&ms&&i0===i1&&(i1===0||i1===7)) k+=40;
+    if(same&&(i1===0||i1===7)&&Math.abs(ms)>2) k+=6;
+    if(same) k+=2;
+    if(((pt%12)+12)%12===(K+11)%12 && pcs.includes(K) && ms!==1) k+=6;
+    if(Math.abs(ms)>4) k+=Math.abs(ms)-4;
+    return k; };
+  const dist0=dist; const distO=a=>dist0(a)+harm(a)+outP(a)+(edge(a)?1000:0)+(a.drop?500:0);   // 音を抜くのは、どの形でもはしが半音でぶつかるときだけ
   cands.sort((a,b)=>distO(a)-distO(b));
   // 直前の最後の音がアクセント（高い音）だったときは、次の和音のいちばん上の音をアクセントと同じか少し上（〜5半音）に上げて、上でつなげる
   if(accTop!=null){ const top=a=>a[a.length-1], pick=f=>{ const up=cands.filter(a=>f(a)&&!edge(a)&&!a.drop); up.sort((a,b)=>Math.abs(top(a)-accTop)-Math.abs(top(b)-accTop)||dist(a)-dist(b)); return up[0]; };
@@ -319,7 +330,7 @@ function chordNotes(v,prev){
   // ・決めた音域から大きくはみ出さない
   if(LHCTX.use) L=leadTo(L, bpc, lo, LHCTX.prev, 6);
   // 左手のオクターブも弾くパターンでは、右手のいちばん下の音を左手オクターブより短3度以上上にして、音がぶつからないようにする
-  const pat=ARPS[state.arp], R0=voiceFor(pcs,prev, (pat&&pat.rhAbove ? Math.max(56,L+12+3) : 56)+rhOff+((pat&&pat.rhShift)||0), LHCTX.use?LHCTX.accTop:null, 64+((pat&&pat.rhMid)||0), bpc);   // rhMid：右手の和音を置く高さの好み   // rhShift：パターンごとの高さ（ブラスは少し上）   // 右手：A♭3から上
+  const pat=ARPS[state.arp], R0=voiceFor(pcs,prev, (pat&&pat.rhAbove ? Math.max(56,L+12+3) : 56)+rhOff+((pat&&pat.rhShift)||0), LHCTX.use?LHCTX.accTop:null, 64+((pat&&pat.rhMid)||0), bpc, LHCTX.use?L:null, LHCTX.use?LHCTX.prev:null);   // rhMid：右手の和音を置く高さの好み   // rhShift：パターンごとの高さ（ブラスは少し上）   // 右手：A♭3から上
   // 平行移動：同じ形のコードが半音・全音で動くとき（Cm7→Bm7→B♭m7 など）は、前の和音の形をそのまま滑らせる（ブラスのセクションのように）
   let R=R0; if(prev&&prev.length===R0.length){ const want=[...pcs].map(x=>((x%12)+12)%12).sort((a,b)=>a-b).join();
     if(pcs.length===prev.length) for(const d of [-1,1,-2,2]){ const sh=prev.map(x=>x+d); if([...sh].map(x=>((x%12)+12)%12).sort((a,b)=>a-b).join()===want){ R=sh; break; } } }

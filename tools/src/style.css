@@ -675,3 +675,9 @@ body.tutlite .lane,body.tutlite .leg,body.tutlite .badges,body.tutlite .bpm,body
 .keeprow{display:flex;align-items:center;gap:10px;margin-top:6px}
 .keeprow>span{flex:none;width:3.6em;font-size:.82rem;font-weight:700;color:var(--muted)}
 .keeprow>.chips{flex:1;min-width:0}
+/* マスの上の行：案内・進行名を1行に収める（あふれたら案内と進行名を「…」で省く） */
+.slothead>span:first-child{flex:1 1 auto;min-width:0;display:flex;align-items:center}
+.slothead #hint{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slothead .right{flex:0 1 auto;min-width:0}
+.slothead #progName{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:400px){ body.pro .slothead #progName{display:none} }   /* PRO の狭い画面は進行名を出さない */
