@@ -187,3 +187,12 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .tmr.sm .tmhd,.tmr.sm .tmbox>.tmhd,.tmr.sm .mlab .tmhd{height:15px}
 .tmr.sm .tmbox>.tmhd span{font-size:.64rem}
 .tmr.sm .tmtags{height:15px}
+.kb12 button{transition:background .5s,border-color .5s}
+.kb12.nolab small{visibility:hidden}
+/* ドレミ → 数字：下の行から順に入れかわる */
+.tmkana{display:grid!important;align-items:center}
+.tmkana em{grid-area:1/1}
+.tmkana .ka{animation:tmOut .35s calc(1.6s + var(--i)*.15s) both}
+.tmkana .nu{animation:tmIn .35s calc(1.75s + var(--i)*.15s) both}
+@keyframes tmOut{to{opacity:0;transform:translateY(-4px)}}
+@keyframes tmIn{from{opacity:0;transform:translateY(4px)}}

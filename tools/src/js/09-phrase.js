@@ -18,9 +18,12 @@
       depth=Math.max(0, depth+(w.match(/[（(]/g)||[]).length-(w.match(/[）)]/g)||[]).length);
       if(cut||last==null) out.push(w); else out[out.length-1]+=w; prev=w; }
     return out; }
-  function wrapText(n){ const t=n.nodeValue; if(t.length<6 || !JA.test(t)) return;
-    const ps=phrases(t); if(ps.length<2) return;
-    const f=document.createDocumentFragment(); ps.forEach((p,i)=>{ if(i) f.appendChild(document.createElement('wbr')); f.appendChild(document.createTextNode(p)); });
+  // かっこを含む文節は、かっこの前後・中で折り返さない（1行に入る長さのときだけ）
+  const BRK=/[（(「『）)」』]/, keep=p=>{ const s=document.createElement('span'); s.className='nophrase'; s.style.whiteSpace='nowrap'; s.textContent=p; return s; };
+  function wrapText(n){ const t=n.nodeValue; if(!JA.test(t) || t.length<6 && !BRK.test(t)) return;
+    const ps=phrases(t), nw=p=>BRK.test(p) && p.trim().length<=16;
+    if(ps.length<2 && !nw(ps[0])) return;
+    const f=document.createDocumentFragment(); ps.forEach((p,i)=>{ if(i) f.appendChild(document.createElement('wbr')); f.appendChild(nw(p)?keep(p):document.createTextNode(p)); });
     const pe=n.parentElement; pe.style.wordBreak='keep-all'; pe.style.overflowWrap='break-word';   // 文節で切るのは <wbr> を入れた所だけ（数字や短い名前には効かせない）
     n.parentNode.replaceChild(f,n); }
   function walk(root){ if(root.nodeType===3){ const p=root.parentElement; if(p && !p.closest(SKIP)) wrapText(root); return; }
