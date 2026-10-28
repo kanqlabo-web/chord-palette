@@ -73,7 +73,7 @@ const mtof=m=>440*Math.pow(2,(m-69)/12);
 const SETS={}, LOADED={}, FAILED={};
 function decode(ab){ return new Promise((res,rej)=>{ const p=ctx.decodeAudioData(ab,res,rej); if(p&&p.then) p.then(res,rej); }); }
 async function decZone(z){ if(z.buf) return; const bin=atob(z.f), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); z.buf=await decode(u.buffer); delete z.f; }
-const SND_FILE={strings3:'strings3c',brass3:'brass3c',piano:'piano-sp'};   // piano-sp：Splendid Grand Piano（パブリックドメイン）。弱め・強めの2種類の録音  // ベータ版だけ：新しい音源（Chaos）を使う
+const SND_FILE={strings3:'strings3c',brass3:'brass3c'};  // ベータ版だけ：新しい音源（Chaos）を使う
 function loadSet(name){
   if(!SETS[name]){
     if(!ctx) ensureAudio(true);
