@@ -56,18 +56,10 @@ function melNote(m,bt){ if(!bt||bt.rpc==null||!bt.ivs) return m; let x=melFix(m,
     CT=[...new Set([...bt.ivs.map(i=>(bt.rpc+i)%12), ...(bt.bpc!=null?[bt.bpc]:[])])], inK=S=>CT.every(q=>S.includes(pc(q-K)));
   if(inK(SC_MAJ)||inK(SC_MIN)) return x;
   if(CT.some(q=>q!==bt.rpc && q===pc(x-1))) x-=1; return x; }
-// 飾りの音（次のコードのいちばん上の音 T へつなぐ）：nt＝T、ntd＝T の1つ下、ntu＝T の1つ上。どれも ornScaleOf の音階の中から選ぶ
+// 飾りの音（次のコードのいちばん上の音 T へつなぐ）：nt＝T、ntd＝T の1つ下、ntu＝T の1つ上。どれも今のコードの音階の中から選ぶ
 //  ・T が今の音階にない（次のコードがキーの外の音）ときは、nt を今の音階の隣の音（上から入るのを優先）に替える
 //  ・隣の音まで3半音以上ある（増2度になる）ときは、不自然なので弾かない
-//  ・音階は「キーの音階」を元にする（サブドミナントマイナーの B♭m で A♭ を飾りに使う、のようなキーの外の音は出さない）。
-//    コードの音がキーの外にあるときだけ、その音で、変化する前のキーの音を置きかえる（長3度は半音下の音を、ほかは半音上の音を置きかえる）。
-//    そのとき、コードの音とぶつかる音（ルートの半音下・コードの音の半音上）も使わない（B♭m の上の A など）
-function ornScaleOf(bt){ if(!bt||bt.rpc==null||!bt.ivs) return null; if(bt._osc) return bt._osc;
-  const K=keyObj().pc, r=bt.rpc, S=new Set(SC_MAJ.map(d=>(K+d)%12)), ct=[...new Set([...bt.ivs.map(i=>(r+i)%12), ...(bt.bpc!=null?[bt.bpc]:[])])];
-  ct.forEach(pc=>{ if(S.has(pc)) return; const q=(pc+(pc===(r+4)%12?11:1))%12; if(!ct.includes(q)) S.delete(q); S.add(pc); });
-  if(ct.some(pc=>!SC_MAJ.includes(((pc-K)%12+12)%12))) S.forEach(pc=>{ if(ct.includes(pc)) return; if(pc===(r+11)%12 || ct.includes((pc+11)%12)) S.delete(pc); });
-  return bt._osc=S; }
-function ornPitch(kind,bt){ const T=nextTop(bt,0); if(T==null) return null; const S=ornScaleOf(bt); if(!S) return kind==='nt'?T:nextTop(bt,kind==='ntd'?-1:1);
+function ornPitch(kind,bt){ const T=nextTop(bt,0); if(T==null) return null; const S=chordScaleOf(bt); if(!S) return kind==='nt'?T:nextTop(bt,kind==='ntd'?-1:1);
   const inS=m=>S.has(((m%12)+12)%12), up=m=>{ let x=m+1; while(!inS(x)) x++; return x; }, dn=m=>{ let x=m-1; while(!inS(x)) x--; return x; };
   if(kind==='nt'){ if(inS(T)) return T; const a=up(T), b=dn(T); return a-T<=2?a:T-b<=2?b:null; }
   if(kind==='ntu'){ const a=up(T); return a-T<=2?a:null; }
