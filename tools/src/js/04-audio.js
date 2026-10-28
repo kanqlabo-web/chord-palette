@@ -73,7 +73,7 @@ const mtof=m=>440*Math.pow(2,(m-69)/12);
 const SETS={}, LOADED={}, FAILED={};
 function decode(ab){ return new Promise((res,rej)=>{ const p=ctx.decodeAudioData(ab,res,rej); if(p&&p.then) p.then(res,rej); }); }
 async function decZone(z){ if(z.buf) return; const bin=atob(z.f), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); z.buf=await decode(u.buffer); delete z.f; }
-const SND_FILE={strings3:'strings3c',brass3:'brass3c'};  // ベータ版だけ：新しい音源（Chaos）を使う
+const SND_FILE={strings3:'strings3c',brass3:'brass3c',piano:'piano-sp'};   // piano-sp：Splendid Grand Piano（パブリックドメイン）。弱め・強めの2種類の録音  // ベータ版だけ：新しい音源（Chaos）を使う
 function loadSet(name){
   if(!SETS[name]){
     if(!ctx) ensureAudio(true);
@@ -83,6 +83,7 @@ function loadSet(name){
       // 弦楽器：音源の音域ごとの大きさの差（3〜4dB 小さい音域がある）をそろえて、内声だけ引っこまないように
       if(/^strings/.test(name)) zones.forEach(z=>{ if(!z.buf) return; const d=z.buf.getChannelData(0), N=Math.min(d.length,Math.floor(z.buf.sampleRate*.8)), a=Math.floor(N*.25); let q=0; for(let i=a;i<N;i++) q+=d[i]*d[i];
         const db=20*Math.log10(Math.sqrt(q/Math.max(1,N-a))||1e-6); z.gn=Math.max(.7,Math.min(1.8,Math.pow(10,(-11.5-db)/20))); });
+      if(Array.isArray(data)&&data.length&&data[0].vl!=null) data.vel=true;   // 弾く強さで録音を切り替える音源
       LOADED[name]=data; return data;
     }).catch(e=>{ FAILED[name]=true; console.warn('sound load failed',name,e); });
     SETS[name].finally(()=>{ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中……':''); });
@@ -102,8 +103,10 @@ function neededSets(){ const n=[]; if(state.kit!=='synth') n.push(...kitSets(sta
 function loadingNow(){ return neededSets().some(n=>!LOADED[n]&&!FAILED[n]); }
 function ensureSounds(){ const p=Promise.all(neededSets().map(loadSet)); renderBadge(); return p; }
 function renderBadge(){ $('instBadge').textContent=instShort()+(loadingNow()?' 読込中……':''); }
+let VEL_NOW=.7;   // いま鳴らす音の強さ（0〜1）。強さで録音を切り替える音源が使う
 function playZone(zones,m,t,dur,vel,rel,cutoff,loop,atk){
-  let z=zones.find(z=>m>=z.lo&&m<=z.hi);
+  const V=zones.vel?Math.round(Math.max(1,Math.min(127,VEL_NOW*127))):0;
+  let z=zones.find(z=>m>=z.lo&&m<=z.hi&&(!V||(V>=z.vl&&V<=z.vh)));
   if(!z) z=zones.reduce((a,b)=>Math.abs((b.lo+b.hi)/2-m)<Math.abs((a.lo+a.hi)/2-m)?b:a);
   if(!z||!z.buf) return false;
   const s=ctx.createBufferSource(); s.buffer=z.buf;
@@ -181,7 +184,7 @@ const HUM={}, HUM_AMP=.08;
 function humV(k,t){ if(CAPTURE||!playing) return 1; const c=HUM[k]||(HUM[k]={p1:Math.random()*6.28,p2:Math.random()*6.28,T1:3.3+Math.random(),T2:8+Math.random()*2});
   return 1+HUM_AMP*(Math.sin(t*6.283/c.T1+c.p1)*.6+Math.sin(t*6.283/c.T2+c.p2)*.4); }
 function keyTone(m,t,dur,v,inst){
-  v*=humV('k',t); v=Math.max(.05,Math.min(1,v)); if(CAPTURE){ CAPTURE.push({k:PARTN===0?'key':'key'+(PARTN+1),n:m,t,d:dur,v}); return null; }
+  VEL_NOW=v; v*=humV('k',t); v=Math.max(.05,Math.min(1,v)); if(CAPTURE){ CAPTURE.push({k:PARTN===0?'key':'key'+(PARTN+1),n:m,t,d:dur,v}); return null; }
   const BUS=PARTN===0?compBus:PARTN===1?compBus2:xBus(PARTN);
   const I=inst||state.inst;
   if(I==='epcity' && LOADED.epcity){
