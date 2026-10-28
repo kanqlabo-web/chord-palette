@@ -67,11 +67,11 @@ const L_ADV={
      <div data-st="2">${chipRow([4,DIM(8),5],.2)}</div>
      ${kxHTML(.6)}
      <p class="a" style="--dl:.7" data-upto="0">5 から 6m の間をなめらかにつなぐコードを作ってみましょう。<br>間に何もないように見えますが……。</p>
-     <p data-st="1" data-upto="1" data-dl=".4">鍵盤で見ると、5（ソ）と 6（ラ）の間に、もう1つ音があります。</p>
-     <p class="sub" data-st="1" data-upto="1" data-dl="1.2">鍵盤のとなりどうし（黒い鍵盤もふくめて）の間を<b>半音</b>といいます。</p>
-     <p data-st="2" data-upto="2" data-dl=".4">5（ソ・シ・レ）のいちばん下の音を半音上げた、こんなコードを挟んでみます。</p>
+     <p data-st="1" data-upto="1" data-dl=".4">鍵盤で見ると、<span style="white-space:nowrap">5（ソ）</span>と <span style="white-space:nowrap">6（ラ）</span>の間に、もう1つ音があります。</p>
+     <p class="sub" data-st="1" data-upto="1" data-dl="1.2">黒い鍵盤もふくめて、鍵盤のとなりどうしの間を<b>半音</b>といいます。</p>
+     <p data-st="2" data-upto="2" data-dl=".4"><span style="white-space:nowrap">5（ソ・シ・レ）</span>のいちばん下の音を半音上げた、こんなコードを挟んでみます。</p>
      <div data-st="2" data-dl=".8" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${listenBtn('dimBase').replace('聴いてみる','挟まない').replace('--dl:1.6','--dl:0')}${listenBtn('dimPass').replace('聴いてみる','挟んだ進行').replace('--dl:1.6','--dl:0')}</div>
-     <p data-st="3" data-dl=".2">さっきより、さらに滑らかになりました。<br>このコードを、<b>dim（ディミニッシュ）</b>と呼びます。</p>`},
+     <p data-st="3" data-dl=".2">さっきより、さらに滑らかになりました。<br>このコードを、<span style="white-space:nowrap"><b>dim（ディミニッシュ）</b></span>と呼びます。</p>`},
     {html:()=>`<div class="eyebrow a">なめらかに下がる</div>
      <h2 class="a" style="--dl:.1">なめらかに<br>下がることもできます</h2>
      ${segExHTML('dimDown',.4)}
@@ -102,7 +102,7 @@ const L_ADV={
      <p class="a" style="--dl:.9" data-upto="0">今度はこんな進行をなめらかにつないでみましょう。<br>6m と 1/5 は、音が1つだけ違います。</p>
      <p data-st="1" data-upto="1" data-dl=".4">ラの音を半音下げて、こんなコードを挟んでみましょう。</p>
      <div data-st="1" data-dl=".8" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${listenBtn('augBase').replace('聴いてみる','挟まない').replace('--dl:1.6','--dl:0')}${listenBtn('augPass').replace('聴いてみる','挟んだ進行').replace('--dl:1.6','--dl:0')}</div>
-     <p data-st="2" data-dl=".2">コードとコードを、さらになめらかにつなげられました。<br>このコードを、<b>aug（オーギュメント）</b>と呼びます。</p>`},
+     <p data-st="2" data-dl=".2">コードとコードを、さらになめらかにつなげられました。<br>このコードを、<span style="white-space:nowrap"><b>aug（オーギュメント）</b></span>と呼びます。</p>`},
     {html:()=>`<div class="eyebrow a">上がっていくと期待がふくらむ</div>
      <h2 class="a" style="--dl:.1">上の音を<br>半音ずつ上げる</h2>
      ${segExHTML('augUp',.4)}
@@ -124,8 +124,8 @@ const L_ADV={
   ],
 };
 LEVELS.push(
-  {name:'半音でつなぐコード①', goal:'となりのコードのあいだに、半音ずつつなぐコードを挟んでみましょう。', unlock:'dim・dim7（ディミニッシュ）', chips:[['♯5dim','--d'],['♯1dim7','--d']], deck:()=>L_ADV.dim},
-  {name:'半音でつなぐコード②', goal:'音をなめらかにつなぐ、もう1つのコードを考えてみましょう。', unlock:'aug（オーギュメント）', chips:[['♭6aug','--d'],['1aug','--t']], deck:()=>L_ADV.aug},
+  {name:'半音でつなぐコード①', goal:'となりのコードのあいだに、半音ずつつなぐコードを挟んでみましょう。', unlock:'<span style="white-space:nowrap">dim・dim7（ディミニッシュ）</span>', chips:[['♯5dim','--d'],['♯1dim7','--d']], deck:()=>L_ADV.dim},
+  {name:'半音でつなぐコード②', goal:'音をなめらかにつなぐ、もう1つのコードを考えてみましょう。', unlock:'<span style="white-space:nowrap">aug（オーギュメント）</span>', chips:[['♭6aug','--d'],['1aug','--t']], deck:()=>L_ADV.aug},
   {name:'暗い音階からコードを借りる', goal:'暗い音階のコードを少しだけ混ぜてみましょう。', unlock:'', chips:[['1m','--t'],['♭6','--s'],['♭7','--d']], deck:()=>L_ADV.borrow},
 );
 // レベル12は文章が途中まで：クリアの画面の代わりに「準備中」を出して、クリアにはしない
@@ -136,7 +136,7 @@ levelDeck=function(n,review){ const d=_advDeck.apply(this,arguments); if(n!==12)
 // レベル12（暗い音階）は、メロディ1（音階）をクリアしてから
 C_EXTRA[12]=['M1'];
 // クリアしたあとの案内
-WHERE[9]=WHERE[9].map(st=>st.menu==='proChips'?{...st, x:'設定メニュー（≡）の「PRO」もオンにできます。'}:st);
+WHERE[9]=WHERE[9].map(st=>st.menu==='proChips'?{...st, x:'<span style="white-space:nowrap">設定メニュー（≡）</span>の「PRO」もオンにできます。'}:st);
 WHERE[10]=[tapSlot('1・2m・4・5 は <b>dim・dim7</b> にも変えられます。<br>コードの右側に同じコードを置いてから変えると、半音でつなげます。')];
 WHERE[11]=[tapSlot('1 と 6m は <b>aug</b> にも変えられます。')];
 renderAll();
