@@ -33,10 +33,8 @@ function advAt(list){ const sl=DECK[TUT.i]; list.forEach(([sec,fn])=>setTimeout(
 const arrow='<span style="color:var(--muted);font-weight:700">→</span>';
 const chipRow=(list,dl)=>`<div class="chips7 a" style="--dl:${dl};display:flex;align-items:center;gap:6px;justify-content:center">${list.map((d,k)=>tc(d,'',dl+k*.15)).join(arrow)}</div>`;
 const C15=VSP(0,'maj','',7);
-// 2つのコードの間に、あとから1つ割り込んで入る並び（wd 秒後）。crNow(k) で、いま鳴っているコードを光らせる
-(()=>{ const st=document.createElement('style'); st.textContent='@keyframes advIns{0%{max-width:0;opacity:0;transform:translateY(-12px) scale(.7)}60%{opacity:1}100%{max-width:240px;opacity:1;transform:none}}'; document.head.appendChild(st); })();
-const insRow=(a,mid,b,dl,wd)=>`<div class="chips7" style="display:flex;align-items:center;gap:6px;justify-content:center">${tc(a,'cr0',dl)}<span style="display:flex;align-items:center;gap:6px;overflow:hidden;animation:advIns .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:${wd}s">${arrow}${tc(mid,'cr1',wd)}</span>${arrow}${tc(b,'cr2',dl+.15)}</div>`;
-const crNow=k=>document.querySelectorAll('.tut [class*="cr"].tc').forEach(e=>e.classList.toggle('now',e.classList.contains('cr'+k)));
+// 割り込む前のコード（0）・割り込んだコード（1）を光らせる。-1 で消す
+const crNow=k=>{ const h=document.querySelector('.tut .halfbox.ins'); if(!h) return; [...h.children].forEach((e,i)=>e.classList.toggle('now',i===k)); };
 
 // ---------- お手本 ----------
 Object.assign(EX,{
@@ -75,7 +73,7 @@ const L_ADV={
      <p class="sub a" style="--dl:3.8">黒い鍵盤もふくめて、となりどうしの間を<b>半音</b>といいます。</p>`},
     {enter:()=>{ advEnter(); advAt([[1.2,()=>{ crNow(0); kxShow([7,11,14],{play:true}); }],[3.4,()=>{ crNow(1); kxShow([8,11,14],{play:true}); }],[6,()=>crNow(-1)]]); }, html:()=>`<div class="eyebrow a">さらに滑らかにコードをつなぐ</div>
      <h2 class="a" style="--dl:.1">半音上げたコードを<br>挟んでみる</h2>
-     ${insRow(4,DIM(8),5,.3,3.2)}
+     ${insExHTML('dimPass',.3,2.9)}
      ${kxHTML(.8)}
      <p class="a" style="--dl:1">${NWR('5（ソ・シ・レ）')}のいちばん下の音を半音上げた、こんなコードを挟んでみます。</p>
      <div class="a" style="--dl:5.6;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${listenBtn('dimBase').replace('聴いてみる','挟まない').replace('--dl:1.6','--dl:5.6')}${listenBtn('dimPass').replace('聴いてみる','挟んだ進行').replace('--dl:1.6','--dl:5.8')}</div>
@@ -109,7 +107,7 @@ const L_ADV={
      <p class="a" style="--dl:5">6m と 1/5 は、音が1つだけ違います。</p>`},
     {enter:()=>{ advEnter(); advAt([[1.2,()=>{ crNow(0); kxShow([9,12,16],{play:true}); }],[3.4,()=>{ crNow(1); kxShow([8,12,16],{play:true}); }],[6,()=>crNow(-1)]]); }, html:()=>`<div class="eyebrow a">半音でつなぐ</div>
      <h2 class="a" style="--dl:.1">ラの音を<br>半音下げてみる</h2>
-     ${insRow(5,AUG(8,'','b'),C15,.3,3.2)}
+     ${insExHTML('augPass',.3,3.15)}
      ${kxHTML(.8)}
      <p class="a" style="--dl:1">ラの音を半音下げて、こんなコードを挟んでみましょう。</p>
      <div class="a" style="--dl:5.6;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${listenBtn('augBase').replace('聴いてみる','挟まない').replace('--dl:1.6','--dl:5.6')}${listenBtn('augPass').replace('聴いてみる','挟んだ進行').replace('--dl:1.6','--dl:5.8')}</div>
