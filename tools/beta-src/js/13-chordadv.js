@@ -14,7 +14,7 @@ varLv=function(g,x){ if(!isNum(x)){ const a=ADV_VARS.find(([h,v])=>h===g&&sameSp
 
 // ---------- 黒い鍵盤も光らせる鍵盤（ド〜ファ、半音の数で指定） ----------
 const KX_W=[0,2,4,5,7,9,11,12,14,16,17], KX_B=[[0,1],[1,3],[3,6],[4,8],[5,10],[7,13],[8,15]];
-const kxHTML=(dl)=>`<div class="kbd a" id="kbx" style="--dl:${dl??.3}">${KX_W.map((s,i)=>`<div class="wk" data-s="${s}"><b>${KN[i%7]}</b><small>${'CDEFGAB'[i%7]}</small></div>`).join('')}${KX_B.map(([i,s])=>`<i class="bk" data-s="${s}" style="left:calc(${(i+1)/11*100}% - 3%)"></i>`).join('')}</div>`;
+const kxHTML=(dl)=>`<div class="kbd a" id="kbx" style="--dl:${dl??.3};height:76px;margin-bottom:12px;flex-shrink:0">${KX_W.map((s,i)=>`<div class="wk" data-s="${s}"><b>${KN[i%7]}</b><small>${'CDEFGAB'[i%7]}</small></div>`).join('')}${KX_B.map(([i,s])=>`<i class="bk" data-s="${s}" style="left:calc(${(i+1)/11*100}% - 3%)"></i>`).join('')}</div>`;
 function kxShow(list,o){ const k=$('kbx'); if(!k) return; o=o||{};
   k.querySelectorAll('[data-s]').forEach(e=>{ e.classList.remove('on'); e.style.transitionDelay=''; if(e.tagName==='I'){ e.style.background=''; e.style.opacity=''; } });
   (list||[]).forEach((s,n)=>{ const e=k.querySelector(`[data-s="${s}"]`); if(!e) return; if(o.play) e.style.transitionDelay=(n*.4)+'s';
@@ -27,6 +27,9 @@ function kxShow(list,o){ const k=$('kbx'); if(!k) return; o=o||{};
 const KX=(list,label,o)=>`<button class="tc hear" style="border:1.5px solid var(--line)" data-kx="${JSON.stringify(list)}"${o&&o.scale?' data-scale="1"':''}><b>${label}</b></button>`;
 const bindKx=()=>document.querySelectorAll('.tut [data-kx]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); document.querySelectorAll('.tut [data-kx]').forEach(x=>x.classList.toggle('now',x===b)); kxShow(JSON.parse(b.dataset.kx),{play:true,scale:!!b.dataset.scale}); });
 const advEnter=()=>{ bindHear(); bindKx(); };
+// 同じ話題のあいだは「つぎへ」を押さずに続けて見せる：鍵盤を光らせて鳴らすのも、文字の出る時間に合わせる（ほかのスライドへ移ったらやめる）
+const NWR=t=>`<span style="white-space:nowrap">${t}</span>`;   // カッコの前後で改行しない
+function advAt(list){ const sl=DECK[TUT.i]; list.forEach(([sec,fn])=>setTimeout(()=>{ if(TUT.on&&DECK[TUT.i]===sl) fn(); },sec*1000)); }
 const arrow='<span style="color:var(--muted);font-weight:700">→</span>';
 const chipRow=(list,dl)=>`<div class="chips7 a" style="--dl:${dl};display:flex;align-items:center;gap:6px;justify-content:center">${list.map((d,k)=>tc(d,'',dl+k*.15)).join(arrow)}</div>`;
 const C15=VSP(0,'maj','',7);
@@ -59,31 +62,32 @@ Object.assign(TASKS,{
 // ---------- スライド ----------
 const L_ADV={
   dim:[
-    {steps:3, enter:advEnter, onStep:k=>{ if(k===1) kxShow([7,9]); if(k===1) setTimeout(()=>kxShow([7,8,9]),900); if(k>=2) kxShow([8,11,14],{play:k===2}); if(k===0) kxShow([]); }, html:()=>`<div class="eyebrow a">さらに滑らかにコードをつなぐ</div>
-     <h2 class="a" style="--dl:.1" data-upto="0">5 から 6m の間を<br>なめらかにつなぐ</h2>
-     <h2 data-st="1" data-upto="1" data-dl=".1">5 と 6 の間に<br>もう1つ音がある</h2>
-     <h2 data-st="2" data-dl=".1">半音上げたコードを<br>挟んでみる</h2>
-     <div data-upto="1">${chipRow([4,5],.4)}</div>
-     <div data-st="2">${chipRow([4,DIM(8),5],.2)}</div>
-     ${kxHTML(.6)}
-     <p class="a" style="--dl:.7" data-upto="0">5 から 6m の間をなめらかにつなぐコードを作ってみましょう。<br>間に何もないように見えますが……。</p>
-     <p data-st="1" data-upto="1" data-dl=".4">鍵盤で見ると、<span style="white-space:nowrap">5（ソ）</span>と <span style="white-space:nowrap">6（ラ）</span>の間に、もう1つ音があります。</p>
-     <p class="sub" data-st="1" data-upto="1" data-dl="1.2">黒い鍵盤もふくめて、鍵盤のとなりどうしの間を<b>半音</b>といいます。</p>
-     <p data-st="2" data-upto="2" data-dl=".4"><span style="white-space:nowrap">5（ソ・シ・レ）</span>のいちばん下の音を半音上げた、こんなコードを挟んでみます。</p>
-     <div data-st="2" data-dl=".8" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${listenBtn('dimBase').replace('聴いてみる','挟まない').replace('--dl:1.6','--dl:0')}${listenBtn('dimPass').replace('聴いてみる','挟んだ進行').replace('--dl:1.6','--dl:0')}</div>
-     <p data-st="3" data-dl=".2">さっきより、さらに滑らかになりました。<br>このコードを、<span style="white-space:nowrap"><b>dim（ディミニッシュ）</b></span>と呼びます。</p>`},
+    {enter:()=>{ advEnter(); advAt([[1.6,()=>kxShow([7,9],{play:true})],[3.4,()=>kxShow([7,8,9])]]); }, html:()=>`<div class="eyebrow a">さらに滑らかにコードをつなぐ</div>
+     <h2 class="a" style="--dl:.1">5 から 6m の間を<br>なめらかにつなぐ</h2>
+     ${chipRow([4,5],.4)}
+     <p class="a" style="--dl:.8">間に何もないように見えますが……。</p>
+     ${kxHTML(1.4)}
+     <p class="a" style="--dl:3.2">鍵盤で見ると、${NWR('5（ソ）')}と ${NWR('6（ラ）')}の間に、もう1つ音があります。</p>
+     <p class="sub a" style="--dl:3.8">黒い鍵盤もふくめて、となりどうしの間を<b>半音</b>といいます。</p>`},
+    {enter:()=>{ advEnter(); advAt([[1.2,()=>kxShow([8,11,14],{play:true})]]); }, html:()=>`<div class="eyebrow a">さらに滑らかにコードをつなぐ</div>
+     <h2 class="a" style="--dl:.1">半音上げたコードを<br>挟んでみる</h2>
+     ${chipRow([4,DIM(8),5],.3)}
+     ${kxHTML(.8)}
+     <p class="a" style="--dl:1">${NWR('5（ソ・シ・レ）')}のいちばん下の音を半音上げた、こんなコードを挟んでみます。</p>
+     <div class="a" style="--dl:2.4;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${listenBtn('dimBase').replace('聴いてみる','挟まない').replace('--dl:1.6','--dl:2.4')}${listenBtn('dimPass').replace('聴いてみる','挟んだ進行').replace('--dl:1.6','--dl:2.6')}</div>
+     <p class="a" style="--dl:3">さっきより、さらに滑らかになりました。このコードを、${NWR('<b>dim（ディミニッシュ）</b>')}と呼びます。</p>`},
     {html:()=>`<div class="eyebrow a">なめらかに下がる</div>
      <h2 class="a" style="--dl:.1">なめらかに<br>下がることもできます</h2>
      ${segExHTML('dimDown',.4)}
      <div class="exnote"><p class="a" style="--dl:1.2;--fn:var(--s)">3m7 と 2m7 のあいだに ♭3dim7 を挟むと、ベースが<br><b>ミ → ミ♭ → レ</b> と半音ずつ下りていきます。</p><p class="a" style="--dl:1.5;--fn:var(--t)">上品で、少しだけ不思議な響きになります。</p></div>
      <p class="sub a" style="--dl:1.8">dim7 は、dim にもう1つ音を重ねたコードです。</p>
      ${listenBtn('dimDown')}`},
-    {steps:1, enter:advEnter, html:()=>`<div class="eyebrow a">セブンスの代わりとして使う</div>
+    {enter:()=>{ advEnter(); advAt([[1,()=>kxShow([8,11,14],{play:true})],[3.6,()=>kxShow([4,8,11,14],{play:true})]]); }, html:()=>`<div class="eyebrow a">セブンスの代わりとして使う</div>
      <h2 class="a" style="--dl:.1">♯5dim と 3(7) を<br>見比べてみましょう</h2>
      ${kxHTML(.3)}
      <div class="chips7 kbtns a" style="--dl:.5">${KX([8,11,14],nm(DIM(8)))}${KX([4,8,11,14],nm(SP(4,'maj','7')))}</div>
      <p class="a" style="--dl:.8">コードをタップすると、鍵盤に表示して鳴らします。</p>
-     <p data-st="1" data-dl=".2">ミの音がないだけで、ほとんど同じですよね。<br>この2つのコードは響きも役割もほとんど同じなので、<b>代わりに使う</b>ことができます。</p>`},
+     <p class="a" style="--dl:6">ミの音がないだけで、ほとんど同じですよね。この2つのコードは響きも役割もほとんど同じなので、<b>代わりに使う</b>ことができます。</p>`},
     {html:()=>`<div class="eyebrow a">セブンスの代わりとして使う</div>
      <h2 class="a" style="--dl:.1">3(7) の代わりに<br>♯5dim を使う</h2>
      ${exampleHTML(EX.subE7)}
@@ -92,17 +96,20 @@ const L_ADV={
      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${listenBtn('subE7').replace('聴いてみる','3(7)')}${listenBtn('subDim').replace('聴いてみる','♯5dim')}</div>`},
     {coach:'task', task:'dimLadder'}],
   aug:[
-    {steps:2, enter:advEnter, onStep:k=>{ if(k>=1) kxShow([8,12,16],{play:k===1}); }, html:()=>`<div class="eyebrow a">半音でつなぐ</div>
-     <h2 class="a" style="--dl:.1" data-upto="0">6m → 1/5 を<br>なめらかにつなぐ</h2>
-     <h2 data-st="1" data-dl=".1">ラの音を<br>半音下げてみる</h2>
-     <div data-upto="0">${chipRow([5,C15],.4)}</div>
-     <div data-st="1">${chipRow([5,AUG(8,'','b'),C15],.2)}</div>
-     ${kxHTML(.5)}
-     <div class="chips7 kbtns a" style="--dl:.7" data-upto="0">${KX([9,12,16],nm(5))}${KX([7,12,16],nm(C15))}</div>
-     <p class="a" style="--dl:.9" data-upto="0">今度はこんな進行をなめらかにつないでみましょう。<br>6m と 1/5 は、音が1つだけ違います。</p>
-     <p data-st="1" data-upto="1" data-dl=".4">ラの音を半音下げて、こんなコードを挟んでみましょう。</p>
-     <div data-st="1" data-dl=".8" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${listenBtn('augBase').replace('聴いてみる','挟まない').replace('--dl:1.6','--dl:0')}${listenBtn('augPass').replace('聴いてみる','挟んだ進行').replace('--dl:1.6','--dl:0')}</div>
-     <p data-st="2" data-dl=".2">コードとコードを、さらになめらかにつなげられました。<br>このコードを、<span style="white-space:nowrap"><b>aug（オーギュメント）</b></span>と呼びます。</p>`},
+    {enter:()=>{ advEnter(); advAt([[1.4,()=>kxShow([9,12,16],{play:true})],[3.4,()=>kxShow([7,12,16],{play:true})]]); }, html:()=>`<div class="eyebrow a">半音でつなぐ</div>
+     <h2 class="a" style="--dl:.1">6m → 1/5 を<br>なめらかにつなぐ</h2>
+     ${chipRow([5,C15],.4)}
+     <p class="a" style="--dl:.8">今度はこんな進行をなめらかにつないでみましょう。</p>
+     ${kxHTML(1)}
+     <div class="chips7 kbtns a" style="--dl:1.2">${KX([9,12,16],nm(5))}${KX([7,12,16],nm(C15))}</div>
+     <p class="a" style="--dl:5">6m と 1/5 は、音が1つだけ違います。</p>`},
+    {enter:()=>{ advEnter(); advAt([[1.2,()=>kxShow([8,12,16],{play:true})]]); }, html:()=>`<div class="eyebrow a">半音でつなぐ</div>
+     <h2 class="a" style="--dl:.1">ラの音を<br>半音下げてみる</h2>
+     ${chipRow([5,AUG(8,'','b'),C15],.3)}
+     ${kxHTML(.8)}
+     <p class="a" style="--dl:1">ラの音を半音下げて、こんなコードを挟んでみましょう。</p>
+     <div class="a" style="--dl:2.4;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${listenBtn('augBase').replace('聴いてみる','挟まない').replace('--dl:1.6','--dl:2.4')}${listenBtn('augPass').replace('聴いてみる','挟んだ進行').replace('--dl:1.6','--dl:2.6')}</div>
+     <p class="a" style="--dl:3">さらになめらかにつなげられました。このコードを、${NWR('<b>aug（オーギュメント）</b>')}と呼びます。</p>`},
     {html:()=>`<div class="eyebrow a">上がっていくと期待がふくらむ</div>
      <h2 class="a" style="--dl:.1">上の音を<br>半音ずつ上げる</h2>
      ${segExHTML('augUp',.4)}
@@ -110,12 +117,12 @@ const L_ADV={
      ${listenBtn('augUp')}`},
     {coach:'task', task:'augPass'}],
   borrow:[
-    {steps:1, enter:advEnter, html:()=>`<div class="eyebrow a">親戚の音階</div>
+    {enter:()=>{ advEnter(); advAt([[1.2,()=>kxShow([0,2,4,5,7,9,11,12],{play:true,scale:true})],[5.2,()=>kxShow([0,2,3,5,7,8,10,12],{play:true,scale:true})]]); }, html:()=>`<div class="eyebrow a">親戚の音階</div>
      <h2 class="a" style="--dl:.1">Key C には<br>『暗い』音階もあります</h2>
      ${kxHTML(.3)}
      <div class="chips7 kbtns a" style="--dl:.5">${KX([0,2,4,5,7,9,11,12],'明るい音階',{scale:1})}${KX([0,2,3,5,7,8,10,12],'暗い音階',{scale:1})}</div>
-     <p class="a" style="--dl:.8">ドレミファソラシドは、Key C の『明るい』音階でしたね。</p>
-     <p data-st="1" data-dl=".2">ほかにも、Key C には『暗い』音階もあります。<br>タップすると、鍵盤に表示して鳴らします。</p>`},
+     <p class="a" style="--dl:1">ドレミファソラシドは、Key C の『明るい』音階でしたね。</p>
+     <p class="a" style="--dl:5">ほかにも、Key C には『暗い』音階もあります。タップすると、鍵盤に表示して鳴らします。</p>`},
     {enter:bindHear, html:()=>`<div class="eyebrow a">暗い音階のコード</div>
      <h2 class="a" style="--dl:.1">暗い音階で<br>コードを作る</h2>
      <p class="a" style="--dl:.3">この暗い音階を使って、コードを作ってみましょう。</p>
