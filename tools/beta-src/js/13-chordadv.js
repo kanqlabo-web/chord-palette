@@ -1,16 +1,9 @@
 // ベータ版だけ（試作）：コードのレベル10〜12（ユーザーの文章「チュートリアル文章（コード レベル10以降）」より）
 // ・レベル10 半音でつなぐコード①（dim・dim7）、レベル11 半音でつなぐコード②（aug）
 // ・レベル12 暗い音階からコードを借りる：文章が途中までなので、最初の2枚と「準備中」だけ（クリアにはならない）
-// ・ビギナーの「響きを変える」に dim・dim7・aug を足す（1・2m・4・5 → ♯の dim・dim7、1 → aug、6m → ♭6aug）
+// ・dim・dim7・aug は、コードを変える画面の「ルート」「種類」で選ぶ（14-varsplit.js）
 // レベルの数は CP_CONF.lvMax（build.py）で 12。PRO などが開くのは、これまでどおりレベル9（LV_ALL）
 const DIM=(o,x,sp)=>({o,q:'m-5',x:x||'',b:null,...(sp?{sp}:{})}), AUG=(o,x,sp)=>({o,q:'aug',x:x||'',b:null,...(sp?{sp}:{})});
-
-// ---------- 響きを変える（ビギナー）に足すコード ----------
-const ADV_VARS=[[0,DIM(1),10],[0,DIM(1,'dim7'),10],[1,DIM(3),10],[1,DIM(3,'dim7'),10],[3,DIM(6),10],[3,DIM(6,'dim7'),10],[4,DIM(8),10],[4,DIM(8,'dim7'),10],
-  [0,AUG(0),11],[5,AUG(8,'','b'),11]];
-ADV_VARS.forEach(([g,v])=>VARS[g].push(v));
-const _advVarLv=varLv;
-varLv=function(g,x){ if(!isNum(x)){ const a=ADV_VARS.find(([h,v])=>h===g&&sameSpec(v,x)); if(a) return a[2]; } return _advVarLv.apply(this,arguments); };
 
 // ---------- 黒い鍵盤も光らせる鍵盤（ド〜ファ、半音の数で指定） ----------
 const KX_W=[0,2,4,5,7,9,11,12,14,16,17], KX_B=[[0,1],[1,3],[3,6],[4,8],[5,10],[7,13],[8,15]];
@@ -146,8 +139,6 @@ levelDeck=function(n,review){ const d=_advDeck.apply(this,arguments); if(n!==12)
 C_EXTRA[12]=['M1'];
 // クリアしたあとの案内
 WHERE[9]=WHERE[9].map(st=>st.menu==='proChips'?{...st, x:'<span style="white-space:nowrap">設定メニュー（≡）</span>の「PRO」もオンにできます。'}:st);
-WHERE[10]=[tapSlot('1・2m・4・5 は <b>dim・dim7</b> にも変えられます。<br>コードの右側に同じコードを置いてから変えると、半音でつなげます。')];
-WHERE[11]=[tapSlot('1 と 6m は <b>aug</b> にも変えられます。')];
 renderAll();
 // タイトル画面はレベル10〜12を足す前に作られるので、出ていれば作り直す（レベル9〜11まで進んだ人の「つづきから」などが動かなかった）
 renderLevels(); if(!$('modePick').hidden) showModePick();

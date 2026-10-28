@@ -76,7 +76,9 @@ function frame(){
     if(n){ const changed=!cur||n.b!==cur.b; cur=n;
       if(changed){ slotsEl.querySelectorAll('.slot').forEach(el=>el.classList.toggle('now',+el.dataset.abs===n.b)); renderPages(); }
       $('play').classList.toggle('beat',!!n.beat);
-      if(TUT.on) document.querySelectorAll(TUT.playingEx&&document.querySelector(`.tut :not(.listen)[data-ex="${TUT.playingEx}"]`)?`.tut :not(.listen)[data-ex="${TUT.playingEx}"] [data-ti]`:'.tut [data-ti]').forEach(e=>e.classList.toggle('now', +e.dataset.ti===n.b)); }
+      if(TUT.on) document.querySelectorAll(TUT.playingEx&&document.querySelector(`.tut :not(.listen)[data-ex="${TUT.playingEx}"]`)?`.tut :not(.listen)[data-ex="${TUT.playingEx}"] [data-ti]`:'.tut [data-ti]').forEach(e=>{ const on=+e.dataset.ti===n.b;
+        if(e.dataset.hb){ const k=n.s>=(+e.dataset.hb-1)*4?1:0; [...e.children].forEach((c,j)=>c.classList.toggle('now',on&&j===k)); }   // 1小節に2つのコードは、鳴っている方だけ光らせる
+        else e.classList.toggle('now',on); }); }
     dirty=true;
   }
   if(dirty){ drawLane($('drumCv'),'drum'); drawLane($('arpCv'),'arp'); if(state.pro){ drawLane($('bassCv'),'bass'); drawLane($('arp2Cv'),'arp2'); } dirty=false; }
@@ -534,12 +536,12 @@ EX.half.roles2=['D','D','T','D'];
 // もとの4コードに、後半のコードが割って入るお手本（wd 秒後に、右から押し広げて入ってくる）
 function insExHTML(key,dl,wd){ const ex=EX[key];
   return `<div class="exrow" data-ex="${key}" style="grid-template-columns:repeat(4,minmax(0,1fr))">${ex.degs.map((d,k)=>{ const sg=(ex.segs[k]||[])[0];
-    return sg ? `<span class="halfbox ins" data-ti="${k}"><span class="tc ${ex.roles[k]} pop" style="--dl:${dl+k*.12}" data-hear="${HEAR(d)}"><b>${nm(d)}</b></span><span class="tc new ${(ex.roles2||[])[k]||''}" style="--wd:${wd+k*.25}s" data-hear="${HEAR(sg.v)}"><b>${nm(sg.v)}</b></span></span>`
+    return sg ? `<span class="halfbox ins" data-ti="${k}" data-hb="${sg.beat}"><span class="tc ${ex.roles[k]} pop" style="--dl:${dl+k*.12}" data-hear="${HEAR(d)}"><b>${nm(d)}</b></span><span class="tc new ${(ex.roles2||[])[k]||''}" style="--wd:${wd+k*.25}s" data-hear="${HEAR(sg.v)}"><b>${nm(sg.v)}</b></span></span>`
       : `<span class="tc ${ex.roles[k]} pop" style="--dl:${dl+k*.12}" data-ti="${k}" data-hear="${HEAR(d)}"><b>${nm(d)}</b><small>${ex.roles[k]}</small></span>`; }).join('')}</div>`; }
 // 1小節に2つのコードが入るお手本（マスを前半・後半に分けて表示）。各コードはタップで鳴らせる
 function segExHTML(key,dl){ const ex=EX[key];
   return `<div class="exrow" data-ex="${key}" style="grid-template-columns:repeat(4,minmax(0,1fr))">${ex.degs.map((d,k)=>{ const sg=(ex.segs[k]||[])[0];
-    return sg ? `<span class="halfbox" data-ti="${k}"><span class="tc ${ex.roles[k]} pop" style="--dl:${dl+k*.12}" data-hear="${HEAR(d)}"><b>${nm(d)}</b></span><span class="tc ${(ex.roles2||[])[k]||''} pop" style="--dl:${dl+k*.12+.06}" data-hear="${HEAR(sg.v)}"><b>${nm(sg.v)}</b></span></span>`
+    return sg ? `<span class="halfbox" data-ti="${k}" data-hb="${sg.beat}"><span class="tc ${ex.roles[k]} pop" style="--dl:${dl+k*.12}" data-hear="${HEAR(d)}"><b>${nm(d)}</b></span><span class="tc ${(ex.roles2||[])[k]||''} pop" style="--dl:${dl+k*.12+.06}" data-hear="${HEAR(sg.v)}"><b>${nm(sg.v)}</b></span></span>`
       : `<span class="tc ${ex.roles[k]} pop" style="--dl:${dl+k*.12}" data-ti="${k}" data-hear="${HEAR(d)}"><b>${nm(d)}</b><small>${ex.roles[k]}</small></span>`; }).join('')}</div>`; }
 Object.assign(EX,{
   keyC:{degs:[0,4,5,3], roles:['T','D','T','S'], groups:[], style:'ポップス（定番）', bpm:96, key:'C'},
@@ -633,7 +635,7 @@ function tutDots(){
   TUT.lastBar={S,k:kNow,segs:segs.map(s=>s.f)};
   markSeen(); closeRev(); const rb=$('tutRev'); if(rb) rb.hidden=!revTerms().length;
 }
-function tutStopAudio(){ TUT.onLoopEnd=null; TUT.playingEx=null; document.querySelectorAll('.tut [data-ti].now').forEach(e=>e.classList.remove('now')); clearTimeout(TUT.stopT); TUT.stopping=false; if(playing) stop(); document.querySelectorAll('.listen.on').forEach(b=>b.classList.remove('on')); }
+function tutStopAudio(){ TUT.onLoopEnd=null; TUT.playingEx=null; document.querySelectorAll('.tut [data-ti].now, .tut [data-hb] .now').forEach(e=>e.classList.remove('now')); clearTimeout(TUT.stopT); TUT.stopping=false; if(playing) stop(); document.querySelectorAll('.listen.on').forEach(b=>b.classList.remove('on')); }
 function tutLoad(degs,segs,ant){ state.slots=Array.from({length:16},(_,j)=>degs[j]??null); state.segs=Array.from({length:16},(_,j)=>segs&&segs[j]?JSON.parse(JSON.stringify(segs[j])):[]); state.bars=degs.length<=4?4:8; state.len=4; state.ant=Array.from({length:16},(_,j)=>ant&&ant[j]||null); page=0; renderAll(); }
 function openTutorial(deck){
   if(TUT.on) return;
