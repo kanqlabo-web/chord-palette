@@ -845,3 +845,31 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 .slothead .right{flex:0 1 auto;min-width:0}
 .slothead #progName{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:400px){ body.pro .slothead #progName{display:none} }   /* PRO の狭い画面は進行名を出さない */
+/* 解説の中のメロディの画面（見本） */
+.tmr{display:flex;flex-direction:column;gap:8px;width:100%;max-width:460px}
+.tmline{display:flex;flex-direction:column;gap:2px}
+.tmtags{position:relative;height:18px;margin-left:calc(2.4em + 4px)}
+.tmtag{position:absolute;top:0;height:16px;border-bottom:2px solid var(--d);font-size:.66rem;font-weight:800;color:var(--d);text-align:center;box-sizing:border-box;padding:0 2px;white-space:nowrap}
+.tmtag.sub{border-color:var(--warn);color:var(--ink)}
+.tmgrid{display:flex;gap:4px}
+.tmr .mlab{width:2.4em;gap:0}
+.tmr .mlab span{flex:1;height:auto;min-height:0;display:flex;align-items:center;font-size:.66rem;color:var(--ink)}
+.tmr .mlab em{font-style:normal}
+.tmr .mlab .tmhd{flex:none;height:18px}
+.tmbox{flex:1;min-width:0;display:flex;flex-direction:column}
+.tmbox>.tmhd{position:relative;height:18px;flex:none}
+.tmbox>.tmhd span{position:absolute;top:0;padding-left:5px;font-size:.72rem;font-weight:800;white-space:nowrap}
+.tmarea{position:relative;height:calc(var(--rows)*16px);min-height:64px;background-color:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;
+  background-image:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px calc(100%/var(--per))),repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 25%,transparent) 0 1px,transparent 1px calc(100%/var(--per)/4)),repeating-linear-gradient(180deg,transparent 0 calc(100%/var(--rows) - 1px),var(--line) calc(100%/var(--rows) - 1px) calc(100%/var(--rows)))}
+.tmbar{position:absolute;top:0;bottom:0;pointer-events:none;transition:background .15s}
+.tmbar.now{background:color-mix(in srgb,var(--warn) 22%,transparent)}
+.tmr .mn{cursor:default;font-size:.6rem;padding-left:2px;min-width:3px}
+.tmr .mn span{font-size:.6rem}
+.kb12 button.now{outline:3px solid var(--warn);outline-offset:-2px}
+.kb12 button.gone{opacity:.2;background:var(--lane);border-style:dashed}
+.tmr.sm{gap:4px}
+.tmr.sm .tmarea{height:calc(var(--rows)*11px);min-height:0}
+.tmr.sm .mlab span{font-size:.5rem}
+.tmr.sm .tmhd,.tmr.sm .tmbox>.tmhd,.tmr.sm .mlab .tmhd{height:15px}
+.tmr.sm .tmbox>.tmhd span{font-size:.64rem}
+.tmr.sm .tmtags{height:15px}
