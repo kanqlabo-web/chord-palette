@@ -328,7 +328,7 @@ function melNextRows(o){ const R=melRows(), i=R.indexOf(o), step=[R[i-1],R[i],R[
 const melRef=()=>{ const ns=PD.mel.notes; return (MU.ref && ns.includes(MU.ref)) ? MU.ref : ns[ns.length-1]||null; };
 function drawMel(el){ if(!PEX) melSnapRows(); const NS=PEX?PEX.notes:PD.mel.notes, T=melT(), L=slotSteps(), kp=keyObj().pc, ROWS=PEX?PEX.rows:melRows(), R=ROWS.length, lit4=PEX?PEX.lit:pDone('M4'), guide=!PEX&&pDone('M3')&&PD.mel.guide;
   const sc0=el.querySelector('.mscroll'), x0=sc0?sc0.scrollLeft:0;
-  const W0=(el.clientWidth||360)-44; MU.cw=Math.max(PEX?5:16, Math.floor(W0/T));   /* お手本は、なるべく全体が見えるように */ const cw=MU.cw, W=T*cw;
+  const W0=(el.clientWidth||360)-44; MU.cw=Math.max(16, Math.floor(W0/T)); const cw=MU.cw, W=T*cw;
   const ri=o=>ROWS.indexOf(o), rowTop=k=>((R-1-k)/R*100)+'%', rh=(100/R)+'%';
   // コードの音の帯（メロディ4のあと）と、小節番号・コード名
   let lit='', head='';
@@ -381,7 +381,7 @@ function melBind(el){ const A=$('mArea'), ROWS=melRows(), R=ROWS.length; let D=n
 function pMark(g,t){ if((PD.mode==='c'&&!PEX)||document.hidden) return; const el=$('modePanel'); if(!el) return;
   setTimeout(()=>{ if(!playing) return; if(PEX&&PD.mode!=='m'&&!document.body.classList.contains('mode-m')) return; el.querySelectorAll('.now').forEach(e=>e.classList.remove('now'));
     if(PD.mode==='r'){ const cs=el.querySelectorAll(`.pgrid i[data-s="${g%16}"]`); cs.forEach(e=>e.classList.add('now')); }
-    else { const ph=$('mPh'), sc=el.querySelector('.mscroll'); if(ph&&sc){ const x=g*MU.cw; ph.hidden=false; ph.style.left=x+'px'; if(PD.mel.follow!==false&&(x<sc.scrollLeft||x>sc.scrollLeft+sc.clientWidth-20)) sc.scrollLeft=x-20; } } },
+    else { const ph=$('mPh'), sc=el.querySelector('.mscroll'); if(ph&&sc){ const x=g*MU.cw; ph.hidden=false; ph.style.left=x+'px'; if((PEX||PD.mel.follow!==false)&&(x<sc.scrollLeft||x>sc.scrollLeft+sc.clientWidth-20)) sc.scrollLeft=x-20; } } },
     Math.max(0,(t-ctx.currentTime)*1000)); }
 
 // ---------- 再生に重ねる ----------
@@ -499,8 +499,8 @@ function pExShow(sl){ PEX=null; document.body.classList.remove('pex');
   if(!sl){ document.body.classList.toggle('mode-m',PD.mode==='m'); document.body.classList.toggle('mode-r',PD.mode==='r'); drawPanel(); return; }
   const [key,mel,opt,degs]=sl.mex; EX[key]={degs, mel:mel.map(([st,o,len])=>({st,o,len}))};
   tutLoadEx(EX[key]);
-  const ns=mel.map(([st,o,len])=>({st,o,len})), set=ns.some(n=>!PENT.includes(n.o))?[...MAJ,17,19,21]:PENT, lo=Math.min(...ns.map(n=>n.o)), hi=Math.max(...ns.map(n=>n.o));
-  PEX={notes:ns, lit:!!opt.lit, rows:set.filter(o=>o>=Math.min(lo,0)&&o<=hi)};
+  const ns=mel.map(([st,o,len])=>({st,o,len})), set=ns.some(n=>!PENT.includes(n.o))?[...MAJ,17,19,21]:PENT;
+  PEX={notes:ns, lit:!!opt.lit, rows:set};   // 行もマスの幅も、ふだんのメロディの画面と同じ
   document.body.classList.add('mode-m','pex'); document.body.classList.remove('mode-r'); drawMel($('modePanel')); }
 function pMelCoach(){ const sl=DECK[TUT.i]; tutStopAudio(); pExShow(sl); const key=sl.mex[0], tg=()=>$('modePanel').querySelector('.mroll')||$('modePanel');
   coach(tg(), sl.b()+`<br><small>${ico('note',12)} 再生中……</small>`, [backBtn()]);
