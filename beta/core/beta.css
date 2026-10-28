@@ -198,3 +198,6 @@ body.mode-r .app>.palette,body.mode-m .app>.palette,body.mode-r .app>.slotwrap,b
 @keyframes tmIn{from{opacity:0;transform:translateY(4px)}}
 /* お手本をメロディの画面に出すとき：吹き出しの場所を空けるため、ロールは低めに */
 body.pex .modepanel .mroll{flex:none;height:min(46vh,320px)}
+/* つぎへを押さずに、ファとシが消える */
+.kb12 button[data-fade]{animation:kbGone .6s 1.2s both}
+@keyframes kbGone{to{opacity:.2;background:var(--lane);border-style:dashed}}

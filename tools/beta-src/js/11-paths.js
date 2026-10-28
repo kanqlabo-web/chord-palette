@@ -118,7 +118,7 @@ const mPre=ids=>ids.filter(id=>!pDone(id)).map(id=>M_PRE[id]);
 // 解説の中で鳴らす：12の音の鍵盤（タップで鳴る）と、メロディだけの短いフレーズ
 const KB12=[0,1,2,3,4,5,6,7,8,9,10,11], BLACK=new Set([1,3,6,8,10]);
 const kb12=(mark=[],lab=true)=>`<div class="kb12 a" style="--dl:.5">${KB12.map(o=>`<button class="${BLACK.has(o)?'kbb':'kbw'}${mark.includes(o)?' mk':''}" data-o="${o}" onclick="kbHear(${o})">${lab&&DO_NM[o]?`<small>${DO_NM[o]}</small>`:''}</button>`).join('')}</div>`;
-const PMEL={}, PCHD={};
+const PMEL={}, PCHD={}, PKB={t:0};
 // 解説の鍵盤は、ピアノの音で鳴らす
 const kbHear=o=>{ ensureAudio(); ensureSounds(); keyTone(melPitch(o),ctx.currentTime+.01,.5,.8,'piano'); };
 // 鳴らしながら、鍵盤の同じ音を光らせる。PCHD にコードがあれば、最後にそのコードを「ジャーン」と鳴らす
@@ -132,7 +132,7 @@ const melBtn=(key,notes,lab='聴いてみる',chord)=>{ PMEL[key]=notes; if(chor
 const degRow=(os,sub=true)=>`<div class="degrow a" style="--dl:.5">${os.map(o=>`<span>${melLab(o)}${sub?`<small>${DO_NM[o%12]}</small>`:''}</span>`).join('')}</div>`;
 // 解説の中のメロディの画面（見本。メロディの画面と同じ見た目で、触っても変わらない）
 //  notes：[16分の位置, キーの1から何半音上か, 長さ]　degs：小節ごとのコード（度数）
-//  opt：lit＝構成音を光らせる　per＝1段の小節数　tags＝[{a:始まりの小節, b:終わりの小節, t:'ラベル', st?・upto?:出す段階}]　rows＝行（ないときは5音か7音）　kana＝行の名前をドレミから数字へ、下から順に変える（アニメ）　key＝聴くボタンと結ぶ名前
+//  opt：lit＝構成音を光らせる　per＝1段の小節数　tags＝[{a:始まりの小節, b:終わりの小節, t:'ラベル', st?・upto?:出す段階}]　sub＝あとから出す、もう1段のラベル　rows＝行（ないときは5音か7音）　kana＝行の名前をドレミから数字へ、下から順に変える（アニメ）　key＝聴くボタンと結ぶ名前
 const SCALE7=[0,2,4,5,7,9,11], chordPcs=d=>[0,2,4].map(k=>SCALE7[(d+k)%7]);
 function mRoll(notes,degs,opt={}){
   const per=opt.per||Math.min(4,degs.length), S=per*16, set=opt.rows||(notes.some(n=>!PENT.includes(n[1]))?[...MAJ,17,19,21]:PENT);
@@ -145,7 +145,8 @@ function mRoll(notes,degs,opt={}){
     const bars=bs.map((d,i)=>`<i class="tmbar" data-ti="${b0+i}" style="left:${pc(i*16)};width:${pc(16)}"></i>`).join('');
     const lit=!opt.lit?'':bs.map((d,i)=>rows.map((o,k)=>chordPcs(d).includes(o%12)?`<i class="mlit" style="left:${pc(i*16)};width:${pc(16)};top:${top(k)};height:${h}"></i>`:'').join('')).join('');
     const ns=notes.filter(n=>n[2]>0&&n[0]>=b0*16&&n[0]<(b0+per)*16).map(([st,o,len])=>`<i class="mn" style="left:${pc(st-b0*16)};width:calc(${pc(len)} - 2px);top:${top(rows.indexOf(o))};height:${h}">${len>=per*.75&&opt.kana==null?`<span>${melDeg(o)}</span>`:''}</i>`).join('');
-    return `<div class="tmline">${opt.tags?`<div class="tmtags">${tags}</div>`:''}<div class="tmgrid"><div class="mlab"><span class="tmhd"></span>${[...rows].reverse().map((o,k)=>lab(o,R-1-k)).join('')}</div>
+    const sub=(opt.sub||[]).filter(t=>t.a>=b0&&t.a<b0+per).map(t=>`<span class="tmtag sub" style="left:${pc((t.a-b0)*16)};width:${pc((t.b-t.a+1)*16)}">${t.t}</span>`).join('');
+    return `<div class="tmline">${sub?`<div class="tmtags a" style="--dl:2">${sub}</div>`:''}${opt.tags?`<div class="tmtags">${tags}</div>`:''}<div class="tmgrid"><div class="mlab"><span class="tmhd"></span>${[...rows].reverse().map((o,k)=>lab(o,R-1-k)).join('')}</div>
       <div class="tmbox"><div class="tmhd">${head}</div><div class="tmarea" style="--per:${per};--rows:${R}">${bars}${lit}${ns}</div></div></div></div>`; };
   return `<div class="tmr a${degs.length>per?' sm':''}" style="--dl:.4"${opt.key?` data-ex="${opt.key}"`:''}>${Array.from({length:Math.ceil(degs.length/per)},(_,L)=>line(L)).join('')}</div>`; }
 // コードと合わせて聴くお手本：メロディの画面の見本＋聴くボタン（進行はふつう 1・5・6m・4）
@@ -171,10 +172,10 @@ const M_NOREP=[[0,4,6],[6,7,2],[8,9,4],[12,7,4],[16,2,2],[18,4,2],[20,7,8],[28,9
 const DEG8=[0,4,5,3,0,4,5,3], TAG4=[{a:0,b:1,t:'A'},{a:2,b:3,t:'B'},{a:4,b:5,t:'C'},{a:6,b:7,t:'D'}];
 const M1_DECK=[
   // 1枚のまま、鍵盤を残してドレミだけを光らせる（つぎへで：光らせる → 音階の説明）
-  {steps:2, onStep:k=>{ const kb=document.querySelector('#tutStage .kb12'); if(!kb) return; kb.classList.toggle('nolab',k<1); kb.querySelectorAll('.kbw').forEach(b=>b.classList.toggle('mk',k>=1)); },
+  {steps:1, onStep:k=>{ const kb=document.querySelector('#tutStage .kb12'); if(!kb) return; kb.classList.toggle('nolab',k<1); kb.querySelectorAll('.kbw').forEach(b=>b.classList.toggle('mk',k>=1)); },
    html:()=>`<div class="eyebrow a">音階とは？</div><h2 class="a" style="--dl:.1" data-upto="0">音は、12個あります</h2><h2 data-st="1" data-dl=".1">ドレミファソラシドを<br>抜き取ってみましょう</h2>${kb12([],true).replace('class="kb12 ','class="kb12 nolab ')}
     <p class="sub a" style="--dl:.9" data-upto="0">鍵盤をタップすると鳴らせます。</p>
-    <p data-st="2" data-dl=".2">このように、音を雰囲気に沿って抜き取って、低い順に並べたものを<b>音階</b>といいます。</p>`},
+    <p data-st="1" data-dl="1.4">このように、音を雰囲気に沿って抜き取って、低い順に並べたものを<b>音階</b>といいます。</p>`},
   {html:()=>`<div class="eyebrow a">いろんな音階</div><h2 class="a" style="--dl:.1">ドレミは、明るい音階</h2>${kb12([0,2,4,5,7,9,11])}${melBtn('scale',M_SCALE,'聴いてみる',[0,4,7])}`},
   {html:()=>`<div class="eyebrow a">いろんな音階</div><h2 class="a" style="--dl:.1">ほかにも、暗い音階など<br>さまざまな音階があります</h2>${kb12([0,2,3,5,7,8,10])}${melBtn('minor',M_MINOR,'聴いてみる',[0,3,7])}
     <p class="a" style="--dl:1.2">メロディは、基本的にドレミの音階をもとに作ります。</p>`},
@@ -186,8 +187,7 @@ const M2_DECK=[
   {coach:'mel', mex:['melFaSi',M_FASI,{},[0,4,5,3]], b:()=>`<b>こんなメロディを作ってみました。</b><br>コードと合わせて聴いてみましょう。`, a:()=>`なんか、しっくりきませんね…。`},
   {html:()=>`<h2 class="a">近すぎる音は、濁ります</h2><p class="a" style="--dl:.3">実は、音と音の間が近すぎると、きれいに響きません。</p>${kb12([0,4,5,11])}
     <p class="a" style="--dl:.9">とくに<b>${melLab(5)}（ファ）</b>と<b>${melLab(11)}（シ）</b>は、${melLab(4)}（ミ）や${melLab(0)}（ド）との間に一音もないので、音が濁りやすいのです。</p>`},
-  {steps:1, onStep:k=>document.querySelectorAll('#tutStage .kb12 [data-o="5"],#tutStage .kb12 [data-o="11"]').forEach(b=>b.classList.toggle('gone',k>=1)),
-   html:()=>`<h2 class="a">この2つは<br>なくしてしまいましょう</h2>${kb12([0,2,4,5,7,9,11])}<div data-st="1" data-dl=".3">${degRow([0,2,4,7,9])}</div>`},
+  {html:()=>`<h2 class="a">この2つは<br>なくしてしまいましょう</h2>${kb12([0,2,4,5,7,9,11]).replace(/(data-o="(5|11)")/g,'$1 data-fade')}<div class="a" style="--dl:2">${degRow([0,2,4,7,9])}</div>`},
   {coach:'mel', mex:['melPenta',M_PENTA,{},[0,4,5,3]], b:()=>`<b>5つの音で作り直すと……</b>`, a:()=>`これで、音がぶつからずに、きれいなメロディになります。`},
 ];
 const M3_DECK=[
@@ -198,15 +198,13 @@ const M3_DECK=[
     <p class="a" style="--dl:.7">作りたい曲調に合わせて調整しましょう。</p>`},
 ];
 const M4_DECK=[
-  {steps:2, enter:bindKbd, onStep:k=>{ if(k===1) kbdShow(0,true); if(k===0) kbdShow(null); }, html:()=>`<div class="eyebrow a">構成音</div>
-    <h2 class="a" style="--dl:.1" data-upto="0">コードは、音階から作ります</h2>
-    <h2 data-st="1" data-upto="1" data-dl=".1">1つ飛ばしで<br>3つの音を選ぶと……</h2>
-    <h2 data-st="2" data-dl=".1">ほかのコードも同じです</h2>
+  {enter:()=>{ bindKbd(); clearTimeout(PKB.t); PKB.t=setTimeout(()=>kbdShow(0,true),1500); }, html:()=>`<div class="eyebrow a">構成音</div>
+    <h2 class="a" style="--dl:.1">コードは、音階から作ります</h2>
     ${kbdHTML()}
-    <p class="a" style="--dl:.6" data-upto="0">基本的なコードは、音階から1つ飛ばしで、3つの音を選んで作ります。</p>
-    <p data-st="1" data-upto="1" data-dl="2">たとえば C は、ド（C）から1つ飛ばしで、ミ（E）・ソ（G）と選ぶと完成します。</p>
-    <div class="chips7 kbtns" data-st="2" data-dl=".3">${[0,1,2,3,4,5,6].map(d=>`<button class="tc hear" data-kd="${d}"><b>${al(d)}</b></button>`).join('')}</div>
-    <p data-st="2" data-dl=".6">コードをタップすると、鍵盤に表示して鳴らします。</p>`},
+    <p class="a" style="--dl:.6">基本的なコードは、音階から1つ飛ばしで、3つの音を選んで作ります。</p>
+    <p class="a" style="--dl:2.4">たとえば C は、ド（C）から1つ飛ばしで、ミ（E）・ソ（G）と選ぶと完成します。ほかのコードも同じです。</p>
+    <div class="chips7 kbtns a" style="--dl:4.2">${[0,1,2,3,4,5,6].map(d=>`<button class="tc hear" data-kd="${d}"><b>${al(d)}</b></button>`).join('')}</div>
+    <p class="sub a" style="--dl:4.4">コードをタップすると、鍵盤に表示して鳴らします。</p>`},
   {html:()=>`<div class="eyebrow a">構成音</div><h2 class="a" style="--dl:.1">コードを作っている音</h2><p class="a" style="--dl:.2">このように、コードを作っている音を<b>構成音</b>といいます。メロディの画面では、そのとき鳴っているコードの構成音が光ります。</p>
     ${mRoll([[0,0,0],[0,16,0]],[0,4,5,3],{lit:true})}<p class="a" style="--dl:1">この構成音を使って、メロディを作ってみましょう。</p>`},
   {coach:'mel', mex:['melCt',M_CTJUMP,{lit:true},[0,4,5,3]], b:()=>`音を跳ぶときは、${melLab(0)}${melLab(4)}${melLab(7)}（ドミソ）に加えて、<b>構成音どうし</b>でも跳べます。<br><small>光っている所が、構成音です。</small>`, a:()=>`光っている音どうしなら、跳んでも自然です。`},
@@ -216,10 +214,10 @@ const M4_DECK=[
 const M5_DECK=[
   {coach:'mel', mex:['melRep',M_REP,{},DEG8], b:()=>`<b>2つのメロディを作ってみました。</b><br>まずは①から聴いてみましょう。`, a:()=>`つぎは②を聴いてみましょう。`},
   {coach:'mel', mex:['melNoRep',M_NOREP,{},DEG8], b:()=>`<b>こちらは②です。</b>`, a:()=>`①の方が、キャッチーな感じがしませんか？`},
-  {steps:1, html:()=>`<div class="eyebrow a">見比べてみましょう</div><h2 class="a" style="--dl:.1">①は、同じ形がくり返す</h2>
-    ${mRoll(M_REP,DEG8,{key:'melRep',tags:[{...TAG4[0],upto:0},...TAG4.slice(1),{a:0,b:0,t:'1小節目',st:1},{a:1,b:1,t:'2小節目',st:1}]})}
-    <p class="a" style="--dl:.6" data-upto="0">AとC、BとDが、それぞれ同じ見た目をしています。</p>
-    <p data-st="1" data-dl=".3">しかも、Aの中の1小節目と2小節目も、リズムや音の動き方が同じです。</p>`},
+  {html:()=>`<div class="eyebrow a">見比べてみましょう</div><h2 class="a" style="--dl:.1">①は、同じ形がくり返す</h2>
+    ${mRoll(M_REP,DEG8,{key:'melRep',tags:TAG4,sub:[{a:0,b:0,t:'1小節目'},{a:1,b:1,t:'2小節目'}]})}
+    <p class="a" style="--dl:.6">AとC、BとDが、それぞれ同じ見た目をしています。</p>
+    <p class="a" style="--dl:2.4">しかも、Aの中の1小節目と2小節目も、リズムや音の動き方が同じです。</p>`},
   {html:()=>`<div class="eyebrow a">見比べてみましょう</div><h2 class="a" style="--dl:.1">②は、ぜんぶ違う動き</h2>${mRoll(M_NOREP,DEG8,{key:'melNoRep',tags:TAG4})}
     <p class="a" style="--dl:.6">A・B・C・Dが、まったく違う動きをしています。リズムもすべて違うので、覚えづらいのです。</p>`},
   {html:()=>`<h2 class="a">大事なのは「くり返し」</h2><p class="a" style="--dl:.3">シンプルなメロディをくり返すと、覚えやすく、口ずさみやすいメロディになります。</p>
