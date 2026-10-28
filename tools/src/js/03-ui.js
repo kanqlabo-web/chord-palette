@@ -10,7 +10,7 @@ if(state.myArp){ state.myArps=[{name:'マイ演奏1',...state.myArp}]; if(state.
 rebuildMy();
 if(ARP_ALIAS[state.arp]) state.arp=ARP_ALIAS[state.arp]; if(!DRUMS[state.drum]) state.drum='pop'; if(!ARPS[state.arp]) state.arp='piano4'; migrateLay(state); ensureArp2(); if(state.arp2&&!ARPS[state.arp2]) state.arp2=ARP_ALIAS[state.arp2]||''; if(!INSTS[state.inst2]) state.inst2='epiano'; if(!BASSES[state.bassPat]) state.bassPat='auto'; state.bassSnd=fixBass(state.bassSnd); if(!BASS_SNDS[state.bassSnd]) state.bassSnd='bass';
 // ---- レベル（ステップモード）：クリアしたレベルの数。前から使っている人は全部クリア扱い
-const LV_KEY=STK('chord-palette-level'), MODE_KEY=STK('chord-palette-mode'), LV_MAX=9;
+const LV_KEY=STK('chord-palette-level'), MODE_KEY=STK('chord-palette-mode'), LV_MAX=CP.lvMax||9, LV_ALL=9;   // LV_ALL：全部の機能（PRO など）が開くレベル。ベータ版はレベルが多い（CP_CONF.lvMax）
 let LVL=(()=>{ try{ const v=localStorage.getItem(LV_KEY); if(v!==null) return +v||0; }catch(e){} return FIRST_RUN?0:LV_MAX; })();
 // モード：'step'＝ステップモード（レベルをクリアするたびに機能が増える）／'free'＝「すべての機能で始める」（最初から全部）
 let MODE=(()=>{ try{ const v=localStorage.getItem(MODE_KEY); if(v) return v; }catch(e){} return FIRST_RUN?'step':'free'; })();
@@ -268,19 +268,19 @@ function buildMenu(){
   const unit = state.len<4 ? 'マス' : '小節';
   $('barChips').closest('.sec').hidden=UL()<5;
   if(UL()>=5) chips($('barChips'), [[4,'4'+unit],[8,'8'+unit],[16,'16'+unit]], state.bars, v=>{ state.bars=v; if(page*4>=v) page=0; renderAll(); });
-  $('lenSec').hidden=UL()<LV_MAX && state.len===4;   // 1マスの長さ・数字の書き方は、全レベルクリアまで出さない（初めての人には要らない）
+  $('lenSec').hidden=UL()<LV_ALL && state.len===4;   // 1マスの長さ・数字の書き方は、全レベルクリアまで出さない（初めての人には要らない）
   chips($('lenChips'), [[4,'4拍（1小節）'],[2,'2拍'],[1,'1拍']], state.len, v=>{ state.len=v; renderAll(); });
   $('lenNote').textContent = '2拍にすると、1マスが半分の長さになります。';
   if(state.label==='roman'){ state.label='num'; state.numStyle='roman'; }   // 前の設定（ローマ数字）からの引き継ぎ
   if(state.label!=='alpha') state.label=numK();
   chips($('labelChips'), [['num','数字'],['alpha','アルファベット']], state.label==='alpha'?'alpha':'num', v=>{ state.label=v==='alpha'?'alpha':numK(); save(); renderAll(); });
-  { const adv=UL()<LV_MAX && state.numStyle!=='roman'; $('numChips').hidden=adv; $('numChips').previousElementSibling.hidden=adv; }
+  { const adv=UL()<LV_ALL && state.numStyle!=='roman'; $('numChips').hidden=adv; $('numChips').previousElementSibling.hidden=adv; }
   chips($('numChips'), [['arabic','1・2・3（アラビア数字）'],['roman','Ⅰ・Ⅱ・Ⅲ（ローマ数字）']], state.numStyle==='roman'?'roman':'arabic', v=>{ state.numStyle=v; if(state.label!=='alpha') state.label=numK(); save(); renderAll(); });
   $('guideChips').closest('.sec').hidden=UL()<2;
   if(UL()>=2) chips($('guideChips'), [[true,'表示する'],[false,'表示しない']], state.guide, v=>{ state.guide=v; renderAll(); });
-  $('proChips').closest('.sec').hidden=UL()<LV_MAX && !state.pro;
+  $('proChips').closest('.sec').hidden=UL()<LV_ALL && !state.pro;
   $('accNote').hidden=UL()<3;
-  if(!(UL()<LV_MAX && !state.pro)) chips($('proChips'), [[true,'オン'],[false,'オフ']], state.pro, v=>{ state.pro=v; document.body.classList.toggle('pro',v); renderAll(); });
+  if(!(UL()<LV_ALL && !state.pro)) chips($('proChips'), [[true,'オン'],[false,'オフ']], state.pro, v=>{ state.pro=v; document.body.classList.toggle('pro',v); renderAll(); });
   renderLevels();
 }
 // 有名な進行の一覧：名前・雰囲気のタグ・数字で絞り込める
@@ -706,7 +706,7 @@ function openVar(i,h){
       box.appendChild(b); }); }
   else {
     // スロット：左＝響き（バリエーション）、右＝ベース（そのコードの構成音から選ぶ）
-    const plain=x=>{ const t=specOf(x); return {o:t.o,q:t.q,x:t.x||'',b:null}; };
+    const plain=x=>{ const t=specOf(x); return {o:t.o,q:t.q,x:t.x||'',b:null,...(t.sp?{sp:t.sp}:{})}; };   // sp（♯・♭の書き方）は残す
     const kinds=[]; opts.forEach(x=>{ if(!isNum(x) && specOf(x).b!=null) return; if(!kinds.some(k=>sameSpec(plain(k),plain(x)))) kinds.push(x); });
     const sp=specOf(v), cur=plain(v); let ki=kinds.findIndex(k=>sameSpec(plain(k),cur)); if(ki<0){ kinds.push(cur); ki=kinds.length-1; }
     const apply=(kx,b)=>{ const t=plain(kx), tones=(QUAL[t.q]||[0,4,7]).map(iv=>(t.o+iv)%12);

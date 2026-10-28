@@ -12,7 +12,7 @@ T=os.path.dirname(os.path.abspath(__file__)); R=os.path.dirname(T)
 VER,DATE=(open(os.path.join(T,'VERSION')).read().split()+[''])[:2]
 VARIANTS=[  # 名前, 置き場所, 上書きの元, 設定
   ('main','',None,{'title':'コード進行パレット','badge':'','conf':{}}),
-  ('beta','beta','beta-src',{'title':'コード進行パレット β','badge':'β','conf':{'store':'cpbeta-','snd':'../snd/','kind':'beta'}}),
+  ('beta','beta','beta-src',{'title':'コード進行パレット β','badge':'β','conf':{'store':'cpbeta-','snd':'../snd/','kind':'beta','lvMax':12}}),
   ('lecture','lecture','lecture-src',{'title':'コード進行パレット 講義','badge':'講義','conf':{'store':'cplec-','snd':'../snd/','kind':'lecture'}}),
 ]
 rd=lambda p:open(p,encoding='utf-8').read()
